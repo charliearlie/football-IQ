@@ -1,26 +1,241 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.5rem;
+
+  /* Light mode - Clean, minimal for daytime play */
+  --background: oklch(0.98 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  /* Primary - Vibrant green for CTAs and success */
+  --primary: oklch(0.72 0.24 150);
+  --primary-foreground: oklch(0.1 0 0);
+
+  /* Secondary - Purple for premium features */
+  --secondary: oklch(0.85 0.04 270);
+  --secondary-foreground: oklch(0.15 0 0);
+
+  --muted: oklch(0.95 0.01 0);
+  --muted-foreground: oklch(0.45 0 0);
+
+  /* Accent - Electric blue for highlights */
+  --accent: oklch(0.7 0.18 220);
+  --accent-foreground: oklch(0.1 0 0);
+
+  /* Destructive - Red for errors/wrong answers */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.92 0 0);
+  --ring: oklch(0.72 0.24 150);
+
+  /* Charts - Team colors palette */
+  --chart-1: oklch(0.72 0.24 150); /* Green */
+  --chart-2: oklch(0.65 0.25 220); /* Blue */
+  --chart-3: oklch(0.75 0.25 50); /* Gold */
+  --chart-4: oklch(0.6 0.25 20); /* Red */
+  --chart-5: oklch(0.6 0.15 270); /* Purple */
+
+  /* Sidebar */
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.72 0.24 150);
+  --sidebar-primary-foreground: oklch(0.1 0 0);
+  --sidebar-accent: oklch(0.95 0.01 0);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.9 0 0);
+  --sidebar-ring: oklch(0.72 0.24 150);
+}
+
+.dark {
+  /* Dark mode - Rich, immersive for evening play */
+  --background: oklch(0.1 0.01 250);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.15 0.01 250);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.15 0.01 250);
+  --popover-foreground: oklch(0.98 0 0);
+
+  /* Primary - Neon green for high contrast */
+  --primary: oklch(0.85 0.3 150);
+  --primary-foreground: oklch(0.1 0.01 250);
+
+  /* Secondary - Bright purple */
+  --secondary: oklch(0.25 0.02 250);
+  --secondary-foreground: oklch(0.98 0 0);
+
+  --muted: oklch(0.2 0.01 250);
+  --muted-foreground: oklch(0.65 0 0);
+
+  /* Accent - Electric blue */
+  --accent: oklch(0.65 0.25 220);
+  --accent-foreground: oklch(0.98 0 0);
+
+  /* Destructive - Bright red for visibility */
+  --destructive: oklch(0.65 0.25 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(1 0 0 / 15%);
+  --input: oklch(1 0 0 / 20%);
+  --ring: oklch(0.85 0.3 150);
+
+  /* Charts - Vibrant team colors */
+  --chart-1: oklch(0.85 0.3 150); /* Neon Green */
+  --chart-2: oklch(0.65 0.25 220); /* Electric Blue */
+  --chart-3: oklch(0.8 0.25 50); /* Bright Gold */
+  --chart-4: oklch(0.65 0.25 25); /* Bright Red */
+  --chart-5: oklch(0.65 0.2 270); /* Bright Purple */
+
+  /* Sidebar */
+  --sidebar: oklch(0.12 0.01 250);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.85 0.3 150);
+  --sidebar-primary-foreground: oklch(0.1 0.01 250);
+  --sidebar-accent: oklch(0.2 0.01 250);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 15%);
+  --sidebar-ring: oklch(0.85 0.3 150);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* Custom focus states for better accessibility */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* Smooth transitions for theme switching */
+  * {
+    @apply transition-colors duration-200;
+  }
+
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom utility classes for the football quiz */
+@layer utilities {
+  /* Gradient backgrounds */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary to-accent;
+  }
+
+  .gradient-gold {
+    @apply bg-gradient-to-r from-chart-3 to-yellow-500;
+  }
+
+  .gradient-card-dark {
+    @apply dark:bg-gradient-to-br dark:from-card dark:to-secondary;
+  }
+
+  /* Button gradient with hover effect */
+  .btn-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold;
+    @apply hover:shadow-[0_8px_24px_rgba(0,255,135,0.3)] hover:-translate-y-0.5;
+    @apply transition-all duration-300;
+  }
+
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    @apply shadow-[0_0_20px_rgba(0,255,135,0.5)];
+  }
+
+  .glow-accent {
+    @apply shadow-[0_0_20px_rgba(0,168,255,0.5)];
+  }
+
+  /* Animation utilities */
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 }
