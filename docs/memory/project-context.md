@@ -507,3 +507,123 @@ src/features/transfer-guess/
 ### Navigation
 - Route: `/transfer-guess`
 - Accessible from Games tab card
+
+## Goalscorer Recall Game Mode
+Initialized: 2025-12-24
+
+### Overview
+Timed challenge where players must name all goalscorers from a classic football match within 60 seconds. Tests football memory with multi-goal handling and fuzzy name matching.
+
+### Puzzle Content Structure
+```typescript
+interface GoalscorerRecallContent {
+  home_team: string;        // e.g., "Arsenal"
+  away_team: string;        // e.g., "Leicester"
+  home_score: number;       // Final home score
+  away_score: number;       // Final away score
+  competition: string;      // e.g., "Premier League"
+  match_date: string;       // Display format: "15 May 2023"
+  goals: Array<{
+    scorer: string;         // Player name
+    minute: number;         // Minute scored
+    team: 'home' | 'away';  // Which team
+    isOwnGoal?: boolean;    // Own goals auto-revealed
+  }>;
+}
+```
+
+### Game State
+```
+gameStatus: 'idle' | 'playing' | 'won' | 'lost'
+timeRemaining: 60 → counts down to 0
+foundScorers: Set<string> → unique scorers guessed
+goals: GoalWithState[] → all goals with found status
+```
+
+### Key Mechanics
+| Mechanic | Behavior |
+|----------|----------|
+| Timer | 60 seconds, turns red at 10s |
+| Multi-goal | Naming a player fills ALL their slots |
+| Own goals | Auto-revealed at start, excluded from scoring |
+| Duplicates | Silently ignored (no feedback) |
+| Give Up | Always available, ends game |
+
+### Scoring System
+```
+Percentage: (scorersFound / totalScorers) × 100
+Time Bonus: timeRemaining × 2 (only if ALL found)
+Won: allFound && timeRemaining > 0
+```
+
+### Score Display (Emoji Grid)
+Format: `⏱️42s | ✅✅✅❌❌`
+- `⏱️` + time remaining
+- `✅` = Goal found
+- `❌` = Goal missed
+- Own goals excluded from grid
+
+### Validation
+Reuses Career Path's fuzzy matching from `validation.ts`:
+- Case insensitive, accent normalization
+- Partial name matching (surname only)
+- Typo tolerance (0.85 threshold)
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `GoalscorerRecallScreen` | Main screen with timer + scoreboard |
+| `MatchHeader` | Match info in GlassCard |
+| `Scoreboard` | Two-column goal layout (home/away) |
+| `GoalSlot` | Individual goal (locked/revealed) |
+| `TimerDisplay` | Circular countdown (green→red at 10s) |
+| `RecallActionZone` | TextInput + Guess/Give Up buttons |
+| `StartOverlay` | Pre-game overlay with Start button |
+| `GoalFlash` | "GOAL!" celebration animation |
+| `RecallResultModal` | Result modal with share |
+
+### Animations
+- **TimerDisplay**: Color transition green→red via `interpolateColor`
+- **GoalSlot**: Spring entrance when found
+- **GoalFlash**: Scale + fade "GOAL!" text
+- **RecallActionZone**: Shake on incorrect guess
+
+### Hooks
+| Hook | Purpose |
+|------|---------|
+| `useGoalscorerRecallGame` | Main game reducer + timer integration |
+| `useCountdownTimer` | Reusable 1-second tick countdown |
+
+### Files
+```
+src/features/goalscorer-recall/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── GoalscorerRecallScreen.tsx
+  ├── components/
+  │   ├── MatchHeader.tsx
+  │   ├── Scoreboard.tsx
+  │   ├── GoalSlot.tsx
+  │   ├── TimerDisplay.tsx
+  │   ├── RecallActionZone.tsx
+  │   ├── StartOverlay.tsx
+  │   ├── GoalFlash.tsx
+  │   └── RecallResultModal.tsx
+  ├── hooks/
+  │   ├── useGoalscorerRecallGame.ts
+  │   └── useCountdownTimer.ts
+  ├── utils/
+  │   ├── scoring.ts              # Score calculation
+  │   ├── scoreDisplay.ts         # Emoji grid generation
+  │   └── share.ts                # Share functionality
+  ├── types/
+  │   └── goalscorerRecall.types.ts
+  └── __tests__/
+      ├── timer.test.ts           # Countdown timer tests
+      ├── recallLogic.test.ts     # Multi-goal, fuzzy matching tests
+      └── scoring.test.ts         # Percentage + time bonus tests
+```
+
+### Navigation
+- Route: `/goalscorer-recall`
+- Accessible from Games tab card ('goalscorers')

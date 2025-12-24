@@ -157,6 +157,69 @@ generateTransferEmojiGrid(score)
 await shareResult();
 ```
 
+## Goalscorer Recall Game
+```typescript
+import {
+  GoalscorerRecallScreen,
+  useGoalscorerRecallGame,
+  useCountdownTimer,
+  calculateGoalscorerScore,
+  generateGoalscorerEmojiGrid,
+} from '@/features/goalscorer-recall';
+
+// Puzzle content structure
+interface GoalscorerRecallContent {
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  competition: string;
+  match_date: string;
+  goals: Array<{
+    scorer: string;
+    minute: number;
+    team: 'home' | 'away';
+    isOwnGoal?: boolean;
+  }>;
+}
+
+// Hook usage (internal to GoalscorerRecallScreen)
+const {
+  state,
+  timeRemaining,
+  totalScorers,
+  foundScorersCount,
+  homeGoals,
+  awayGoals,
+  startGame,
+  submitGuess,
+  giveUp,
+} = useGoalscorerRecallGame(puzzle);
+
+// State values
+state.gameStatus         // 'idle' | 'playing' | 'won' | 'lost'
+state.foundScorers       // Set<string> of found scorer names
+state.lastGuessCorrect   // Triggers "GOAL!" flash
+state.lastGuessIncorrect // Triggers shake animation
+
+// Timer hook (reusable)
+const timer = useCountdownTimer({
+  initialSeconds: 60,
+  onTick: (remaining) => console.log(remaining),
+  onFinish: () => console.log('Time up!'),
+});
+timer.start();
+timer.stop();
+timer.reset();
+
+// Scoring: percentage + time bonus if all found
+calculateGoalscorerScore(3, 5, 30, true)
+// { percentage: 60, timeBonus: 60, won: true }
+
+// Emoji grid: ⏱️42s | ✅✅✅❌❌
+generateGoalscorerEmojiGrid(goals, 42);
+```
+
 ## Key Files
 - PRD: `docs/app-prd.md`
 - Design System: `docs/design-system.md`
@@ -166,6 +229,7 @@ await shareResult();
 - Puzzle Feature: `src/features/puzzles/`
 - Career Path: `src/features/career-path/`
 - Transfer Guess: `src/features/transfer-guess/`
+- Goalscorer Recall: `src/features/goalscorer-recall/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
@@ -175,6 +239,7 @@ app/
   (tabs)/_layout.tsx    # Tab navigator
   career-path.tsx       # Career Path game route
   transfer-guess.tsx    # Transfer Guess game route
+  goalscorer-recall.tsx # Goalscorer Recall game route
   design-lab.tsx        # Component showcase
 src/
   components/           # ElevatedButton, GlassCard
@@ -191,6 +256,7 @@ src/
     puzzles/           # PuzzleProvider, usePuzzle, sync services
     career-path/       # CareerPathScreen, useCareerPathGame
     transfer-guess/    # TransferGuessScreen, useTransferGuessGame
+    goalscorer-recall/ # GoalscorerRecallScreen, useGoalscorerRecallGame
     home/
     games/
     archive/

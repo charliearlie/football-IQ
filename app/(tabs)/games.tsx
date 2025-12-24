@@ -48,6 +48,9 @@ export default function GamesScreen() {
       case 'transfer-guess':
         router.push('/transfer-guess');
         break;
+      case 'goalscorers':
+        router.push('/goalscorer-recall');
+        break;
       // TODO: Add routes for other game modes
       default:
         // Game mode not yet implemented
