@@ -161,6 +161,18 @@ export async function getPuzzleByDateAndMode(
   return row ? parsePuzzle(row) : null;
 }
 
+/**
+ * Get all puzzles from local storage.
+ * Returns parsed puzzles ordered by date descending.
+ */
+export async function getAllPuzzles(): Promise<ParsedLocalPuzzle[]> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<LocalPuzzle>(
+    'SELECT * FROM puzzles ORDER BY puzzle_date DESC'
+  );
+  return rows.map(parsePuzzle);
+}
+
 // ============ ATTEMPT OPERATIONS ============
 
 /**

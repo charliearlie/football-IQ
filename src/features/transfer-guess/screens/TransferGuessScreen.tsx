@@ -1,0 +1,156 @@
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePuzzle } from '@/features/puzzles';
+import { colors, spacing, textStyles, layout } from '@/theme';
+import { useTransferGuessGame } from '../hooks/useTransferGuessGame';
+import { TransferCard } from '../components/TransferCard';
+import { HintsSection } from '../components/HintsSection';
+import { TransferActionZone } from '../components/TransferActionZone';
+import { TransferResultModal } from '../components/TransferResultModal';
+
+/**
+ * TransferGuessScreen - The main Guess the Transfer game screen.
+ *
+ * Displays transfer details (clubs, year, fee) and allows players
+ * to guess the footballer. Players can reveal hints for point penalties.
+ */
+export function TransferGuessScreen() {
+  const insets = useSafeAreaInsets();
+  const { puzzle, isLoading } = usePuzzle('guess_the_transfer');
+  const {
+    state,
+    transferContent,
+    answer,
+    hints,
+    canRevealHint,
+    guessesRemaining,
+    isGameOver,
+    revealHint,
+    submitGuess,
+    giveUp,
+    setCurrentGuess,
+    shareResult,
+  } = useTransferGuessGame(puzzle);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={colors.pitchGreen} />
+        <Text style={[textStyles.body, styles.loadingText]}>
+          Loading puzzle...
+        </Text>
+      </View>
+    );
+  }
+
+  // No puzzle available
+  if (!puzzle || !transferContent) {
+    return (
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
+        <Text style={textStyles.h2}>No Puzzle Today</Text>
+        <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
+          Check back later for today's Transfer challenge
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={textStyles.h1}>Guess the Transfer</Text>
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Transfer Card */}
+        <TransferCard
+          fromClub={transferContent.from_club}
+          toClub={transferContent.to_club}
+          year={transferContent.year}
+          fee={transferContent.fee}
+          testID="transfer-card"
+        />
+
+        {/* Hints Section */}
+        <HintsSection
+          hints={hints as [string, string, string]}
+          hintsRevealed={state.hintsRevealed}
+          testID="hints-section"
+        />
+
+        {/* Spacer for action zone */}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+
+      {/* Game Result Modal */}
+      {state.score && (
+        <TransferResultModal
+          visible={isGameOver}
+          won={state.gameStatus === 'won'}
+          score={state.score}
+          correctAnswer={answer}
+          onShare={shareResult}
+          testID="transfer-result-modal"
+        />
+      )}
+
+      {/* Action Zone */}
+      <TransferActionZone
+        currentGuess={state.currentGuess}
+        onGuessChange={setCurrentGuess}
+        onSubmit={submitGuess}
+        onRevealHint={revealHint}
+        onGiveUp={giveUp}
+        canRevealHint={canRevealHint}
+        guessesRemaining={guessesRemaining}
+        shouldShake={state.lastGuessIncorrect}
+        isGameOver={isGameOver}
+        incorrectGuesses={state.guesses.length}
+        testID="action-zone"
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.stadiumNavy,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.stadiumNavy,
+    gap: spacing.md,
+    padding: layout.screenPadding,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+  },
+  noPuzzleText: {
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  header: {
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: spacing.lg,
+  },
+  bottomSpacer: {
+    height: spacing.xl,
+  },
+});

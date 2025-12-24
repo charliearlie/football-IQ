@@ -13,6 +13,7 @@ import {
   AuthLoadingScreen,
   FirstRunModal,
 } from '@/features/auth';
+import { PuzzleProvider } from '@/features/puzzles';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -35,7 +36,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <PuzzleProvider>
       {children}
       <FirstRunModal
         visible={needsDisplayName ?? false}
@@ -45,7 +46,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         }}
         testID="first-run-modal"
       />
-    </>
+    </PuzzleProvider>
   );
 }
 

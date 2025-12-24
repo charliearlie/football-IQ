@@ -64,12 +64,108 @@ await saveAttempt({ id, puzzle_id, completed: 1, score, synced: 0 });
 const unsynced = await getUnsyncedAttempts();
 ```
 
+## Puzzle Sync
+```typescript
+import { PuzzleProvider, usePuzzleContext, usePuzzle } from '@/features/puzzles';
+
+// Get puzzle state and sync actions
+const { puzzles, syncStatus, syncPuzzles, syncAttempts } = usePuzzleContext();
+
+// Get today's puzzle for a game mode
+const { puzzle, isLoading, refetch } = usePuzzle('career_path');
+
+// Sync status values: 'idle' | 'syncing' | 'success' | 'error'
+// Use syncStatus to show "Downloading Puzzles..." vs "Ready to Play"
+```
+
+## Career Path Game
+```typescript
+import {
+  CareerPathScreen,
+  useCareerPathGame,
+  validateGuess,
+  calculateScore,
+  generateScoreDisplay,
+  shareGameResult,
+} from '@/features/career-path';
+
+// Puzzle content structure
+interface CareerPathContent {
+  answer: string;
+  career_steps: Array<{ type: 'club' | 'loan'; text: string; year: string }>;
+}
+
+// Hook usage (internal to CareerPathScreen)
+const { state, careerSteps, revealNext, submitGuess, shareResult } = useCareerPathGame(puzzle);
+
+// State values
+state.revealedCount      // Number of steps shown (starts at 1)
+state.gameStatus         // 'playing' | 'won' | 'lost'
+state.score              // GameScore | null (set on game end)
+state.attemptSaved       // Whether saved to local DB
+state.lastGuessIncorrect // Triggers shake animation
+
+// Validation (fuzzy matching)
+validateGuess('Messi', 'Lionel Messi')    // { isMatch: true, score: 0.95 }
+validateGuess('Ozil', 'Özil')             // { isMatch: true, score: 1.0 }
+
+// Scoring: Score = Total Steps - (Revealed - 1)
+calculateScore(10, 3, true)  // { points: 8, maxPoints: 10, won: true }
+
+// Share: opens native sheet or copies to clipboard
+await shareResult();  // Returns ShareResult { success, method }
+```
+
+## Transfer Guess Game
+```typescript
+import {
+  TransferGuessScreen,
+  useTransferGuessGame,
+  calculateTransferScore,
+  generateTransferEmojiGrid,
+  shareTransferResult,
+} from '@/features/transfer-guess';
+
+// Puzzle content structure
+interface TransferGuessContent {
+  answer: string;
+  from_club: string;
+  to_club: string;
+  year: number;
+  fee: string;
+  hints: [string, string, string]; // [nationality, position, achievement]
+}
+
+// Hook usage (internal to TransferGuessScreen)
+const { state, transferContent, hints, revealHint, submitGuess, giveUp, shareResult } = useTransferGuessGame(puzzle);
+
+// State values
+state.hintsRevealed       // Number of hints shown (starts at 0)
+state.guesses             // Array of incorrect guesses
+state.gameStatus          // 'playing' | 'won' | 'lost'
+state.score               // TransferGuessScore | null
+
+// Scoring: 10 - (hints × 2) - (wrong × 1), min 1
+calculateTransferScore(2, 0, true)   // { points: 6, ... } (2 hints, 0 wrong)
+calculateTransferScore(3, 4, true)   // { points: 1, ... } (min score on win)
+calculateTransferScore(0, 5, false)  // { points: 0, ... } (5 wrong = lost)
+
+// Emoji grid: 🟡🟡⚫ ❌❌✅
+generateTransferEmojiGrid(score)
+
+// Share: opens native sheet or copies to clipboard
+await shareResult();
+```
+
 ## Key Files
 - PRD: `docs/app-prd.md`
 - Design System: `docs/design-system.md`
 - Roadmap: `docs/roadmap.md`
 - RLS Tests: `tests/supabase_rls_test.sql`
 - Auth Feature: `src/features/auth/`
+- Puzzle Feature: `src/features/puzzles/`
+- Career Path: `src/features/career-path/`
+- Transfer Guess: `src/features/transfer-guess/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
@@ -77,6 +173,8 @@ const unsynced = await getUnsyncedAttempts();
 app/
   _layout.tsx           # Root layout (fonts, DB init, AuthProvider)
   (tabs)/_layout.tsx    # Tab navigator
+  career-path.tsx       # Career Path game route
+  transfer-guess.tsx    # Transfer Guess game route
   design-lab.tsx        # Component showcase
 src/
   components/           # ElevatedButton, GlassCard
@@ -90,6 +188,9 @@ src/
     database.ts        # Local DB types
   features/
     auth/              # AuthProvider, useAuth, useProfile
+    puzzles/           # PuzzleProvider, usePuzzle, sync services
+    career-path/       # CareerPathScreen, useCareerPathGame
+    transfer-guess/    # TransferGuessScreen, useTransferGuessGame
     home/
     games/
     archive/

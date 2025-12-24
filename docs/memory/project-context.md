@@ -151,6 +151,72 @@ Database initializes in `app/_layout.tsx` via `useEffect`, blocking splash scree
 ### Migration Strategy
 Uses `PRAGMA user_version` for incremental schema versioning.
 
+## Sync Engine
+Initialized: 2025-12-24
+
+### Purpose
+Bridges Supabase (cloud) and SQLite (local) for offline-first puzzle data:
+1. Downloads puzzles from Supabase to SQLite for offline play
+2. Pushes local attempts to Supabase when online
+3. Respects 3-tier RLS access model automatically
+
+### Architecture
+```
+PuzzleProvider (wraps app inside AuthGate)
+  └─ usePuzzleContext() - state + sync actions
+       ├─ puzzles: ParsedLocalPuzzle[]
+       ├─ syncStatus: 'idle' | 'syncing' | 'success' | 'error'
+       ├─ syncPuzzles() - Supabase → SQLite
+       └─ syncAttempts() - SQLite → Supabase
+```
+
+### Sync Flow
+
+#### Puzzle Sync (Supabase → SQLite)
+```
+1. PuzzleProvider mounts
+2. Load cached puzzles from SQLite
+3. Load lastSyncedAt from AsyncStorage
+4. Call syncPuzzles():
+   - Query Supabase daily_puzzles (RLS filters by user tier)
+   - Premium users: incremental sync via lastSyncedAt
+   - Transform JSON → stringified JSON
+   - Upsert to local SQLite
+5. Update state → UI shows "Ready to Play"
+```
+
+#### Attempt Sync (SQLite → Supabase)
+```
+1. User completes puzzle
+2. saveAttempt() with synced=0
+3. (Later) syncAttempts():
+   - Get local attempts where synced=0
+   - Add user_id from auth context
+   - Insert to Supabase puzzle_attempts
+   - markAttemptSynced() on success
+```
+
+### Key Hooks
+| Hook | Purpose |
+|------|---------|
+| `usePuzzleContext()` | Full puzzle state + sync actions |
+| `usePuzzle(gameMode)` | Today's puzzle for specific game mode |
+
+### Persistence
+- `lastSyncedAt` stored in AsyncStorage (`@puzzles_last_synced_at`)
+- Enables incremental sync for premium users across app restarts
+
+### Files
+```
+src/features/puzzles/
+  ├── context/PuzzleContext.tsx     # Provider + usePuzzleContext
+  ├── hooks/usePuzzle.ts            # usePuzzle(gameMode)
+  ├── services/
+  │   ├── puzzleSyncService.ts      # Supabase → SQLite
+  │   └── attemptSyncService.ts     # SQLite → Supabase
+  └── types/puzzle.types.ts         # Type definitions
+```
+
 ## Mobile App Architecture
 Initialized: 2025-12-23
 
@@ -202,3 +268,242 @@ src/
 ### Navigation
 - Bottom tabs: Home, Games, Archive, Stats
 - Icons: lucide-react-native (2px stroke)
+
+## Career Path Game Mode
+Initialized: 2025-12-24
+Updated: 2025-12-24 (Validation, Scoring, Persistence)
+
+### Overview
+Flagship game mode where players guess a footballer based on their career history. Career steps are revealed sequentially, with each incorrect guess revealing the next step as a penalty.
+
+### Puzzle Content Structure
+```typescript
+interface CareerPathContent {
+  answer: string;  // Correct player name
+  career_steps: Array<{
+    type: 'club' | 'loan';
+    text: string;   // Club name
+    year: string;   // Year range
+  }>;
+}
+```
+
+### Game State
+```
+revealedCount: 1 → starts with first step revealed
+gameStatus: 'playing' | 'won' | 'lost'
+score: GameScore | null → calculated on game end
+attemptSaved: boolean → tracks persistence to SQLite
+lastGuessIncorrect: triggers shake animation
+```
+
+### Validation (Fuzzy Matching)
+Uses `string-similarity` library with Dice coefficient for intelligent name matching:
+- **Case insensitive**: "MESSI" matches "Messi"
+- **Accent normalization**: "Ozil" matches "Özil", "Sorloth" matches "Sørloth"
+- **Partial names**: "Messi" matches "Lionel Messi" (surname matching)
+- **Typo tolerance**: "Rogrers" matches "Rogers" (threshold: 0.85)
+
+### Scoring System
+Dynamic scoring based on career steps revealed:
+```
+Formula: Score = Total Steps - (Revealed Steps - 1)
+
+Examples (10-step career):
+- Guessed on step 1: 10 points (perfect)
+- Guessed on step 3: 8 points
+- Lost (all revealed): 0 points
+```
+
+### Score Display (Wordle-style)
+Emoji grid for sharing results:
+- `⬛` = Hidden step (never revealed)
+- `⬜` = Revealed step
+- `🟩` = Winning step
+- `🟥` = Final step (lost)
+
+Example: `⬜⬜🟩⬛⬛` (won on step 3/5)
+
+### Game Persistence
+On game end (win/loss):
+1. Generate score and emoji display
+2. Save attempt to local SQLite via `saveAttempt()`
+3. Queue for Supabase sync (synced: 0)
+4. Mark `attemptSaved: true` in state
+
+### Reveal Logic
+1. **Manual Reveal**: "Reveal Next" button (Warning Orange #FF4D00)
+2. **Penalty Reveal**: Incorrect guess auto-reveals next step
+3. **Safety Net**: Reveal button hidden when all steps shown
+4. **Lost State**: All steps revealed without correct guess
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `CareerPathScreen` | Main screen with FlatList + ActionZone |
+| `CareerStepCard` | Revealed career step with spring animation |
+| `LockedCard` | Blurred locked step with lock icon |
+| `ActionZone` | TextInput + Submit/Reveal buttons |
+| `GameResultModal` | Full-screen modal with confetti + share |
+| `Confetti` | Animated confetti effect on win |
+| `GameResultBanner` | Legacy inline result display |
+
+### Animations
+- **Card entrance**: Spring animation (damping: 12, stiffness: 100)
+- **Shake on error**: withSequence oscillation on input
+- **Auto-scroll**: scrollToEnd on FlatList when step revealed
+- **Confetti**: 30 animated pieces using Reanimated
+
+### Files
+```
+src/features/career-path/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── CareerPathScreen.tsx
+  ├── components/
+  │   ├── CareerStepCard.tsx
+  │   ├── LockedCard.tsx
+  │   ├── ActionZone.tsx
+  │   ├── GameResultModal.tsx     # NEW: Result modal with share
+  │   ├── Confetti.tsx            # NEW: Win celebration
+  │   └── GameResultBanner.tsx
+  ├── hooks/
+  │   └── useCareerPathGame.ts    # Fuzzy validation + scoring
+  ├── utils/                       # NEW: Utility functions
+  │   ├── validation.ts           # Fuzzy matching logic
+  │   ├── scoring.ts              # Score calculation
+  │   ├── scoreDisplay.ts         # Emoji grid generation
+  │   └── share.ts                # Clipboard/share
+  ├── types/
+  │   └── careerPath.types.ts     # Includes GameScore
+  └── __tests__/
+      ├── CareerGame.test.tsx
+      ├── Scrolling.test.tsx
+      ├── validation.test.ts      # NEW: Fuzzy matching tests
+      └── scoring.test.ts         # NEW: Score calculation tests
+```
+
+### Dependencies Added
+- `string-similarity` - Fuzzy string matching
+- `expo-clipboard` - Clipboard for sharing
+- `uuid` - Generate attempt IDs
+
+## Guess the Transfer Game Mode
+Initialized: 2025-12-24
+
+### Overview
+Game mode where players guess a footballer based on transfer details (clubs, year, fee). Players can reveal hints for point penalties. Unlike Career Path, incorrect guesses do NOT reveal hints - hint revelation is voluntary.
+
+### Puzzle Content Structure
+```typescript
+interface TransferGuessContent {
+  answer: string;           // Correct player name
+  from_club: string;        // Origin club name
+  to_club: string;          // Destination club name
+  year: number;             // Transfer year
+  fee: string;              // e.g., "€80M", "Free"
+  hints: [string, string, string];  // [nationality, position, achievement]
+}
+```
+
+### Game State
+```
+hintsRevealed: 0 → starts with no hints (voluntary reveal)
+guesses: string[] → tracks all incorrect guesses
+gameStatus: 'playing' | 'won' | 'lost'
+score: TransferGuessScore | null → calculated on game end
+attemptSaved: boolean → tracks persistence to SQLite
+lastGuessIncorrect: triggers shake animation
+```
+
+### Key Differences from Career Path
+| Aspect | Career Path | Transfer Guess |
+|--------|-------------|----------------|
+| Initial reveals | 1 step | 0 hints |
+| Wrong guess penalty | Reveals next step | No reveal (just counts) |
+| Max wrong guesses | Until all revealed | 5 fixed |
+| Give Up option | No | Yes |
+| Scoring | totalSteps - (revealed - 1) | 10 - (hints×2) - (wrong×1), min 1 |
+
+### Scoring System
+Dynamic scoring with penalties:
+```
+Formula: Score = 10 - (hintsRevealed × 2) - (incorrectGuesses × 1)
+
+Constants:
+- Base: 10 points
+- -2 per hint revealed (max -6)
+- -1 per incorrect guess (max -4)
+- Minimum: 1 point if eventually correct
+- Loss: 0 points
+
+Examples:
+- Perfect (0 hints, 0 wrong): 10 points
+- 2 hints, 0 wrong: 6 points
+- 0 hints, 4 wrong: 6 points
+- 3 hints, 4 wrong: 1 point (minimum)
+```
+
+### Score Display (Emoji Grid)
+```
+Hints:
+- ⚫ = Hint not revealed
+- 🟡 = Hint revealed
+
+Guesses:
+- ❌ = Incorrect guess
+- ✅ = Correct guess (won)
+- 💀 = Gave up or lost
+
+Example: 🟡🟡⚫ ❌❌✅ (2 hints, 2 wrong, then correct)
+```
+
+### Validation
+Reuses Career Path's fuzzy matching from `validation.ts`:
+- Case insensitive, accent normalization
+- Partial name matching (surname only)
+- Typo tolerance (0.85 threshold)
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `TransferGuessScreen` | Main screen with ScrollView layout |
+| `TransferCard` | Transfer details with floating animation |
+| `HintSlot` | Individual hint (locked/revealed) |
+| `HintsSection` | Container for 3 hint slots |
+| `TransferActionZone` | Input + Submit/Reveal/Give Up buttons |
+| `TransferResultModal` | Result modal with confetti + share |
+
+### Animations
+- **TransferCard float**: Subtle up/down hover using `withRepeat`
+- **HintSlot entrance**: Spring animation on reveal
+- **Shake on error**: Same pattern as Career Path ActionZone
+
+### Files
+```
+src/features/transfer-guess/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── TransferGuessScreen.tsx
+  ├── components/
+  │   ├── TransferCard.tsx
+  │   ├── HintSlot.tsx
+  │   ├── HintsSection.tsx
+  │   ├── TransferActionZone.tsx
+  │   └── TransferResultModal.tsx
+  ├── hooks/
+  │   └── useTransferGuessGame.ts
+  ├── utils/
+  │   ├── transferScoring.ts      # Scoring logic
+  │   ├── transferScoreDisplay.ts # Emoji grid generation
+  │   └── transferShare.ts        # Share functionality
+  ├── types/
+  │   └── transferGuess.types.ts
+  └── __tests__/
+      ├── transferScoring.test.ts # TDD scoring tests
+      └── HintSlot.test.tsx       # UI visibility tests
+```
+
+### Navigation
+- Route: `/transfer-guess`
+- Accessible from Games tab card

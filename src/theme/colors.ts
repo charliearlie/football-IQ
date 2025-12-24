@@ -25,6 +25,10 @@ export const colors = {
   // Errors, incorrect guesses
   redCard: '#EF4444',
 
+  // Warning orange for "sacrifice" actions (e.g., Reveal Next)
+  warningOrange: '#FF4D00',
+  warningOrangeShadow: '#CC3D00',
+
   // Glass card effects
   glassBackground: 'rgba(255, 255, 255, 0.05)',
   glassBorder: 'rgba(255, 255, 255, 0.1)',
