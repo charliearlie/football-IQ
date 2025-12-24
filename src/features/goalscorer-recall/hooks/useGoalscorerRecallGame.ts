@@ -8,7 +8,7 @@
  */
 
 import { useReducer, useCallback, useEffect, useMemo, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import {
   GoalscorerRecallState,
   GoalscorerRecallAction,
@@ -390,7 +390,7 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
         const now = new Date().toISOString();
 
         const attempt: LocalAttempt = {
-          id: uuidv4(),
+          id: Crypto.randomUUID(),
           puzzle_id: puzzle.id,
           completed: 1,
           score: state.score!.percentage,

@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useRef, useMemo, useCallback } from 'react';
 import { FlatList } from 'react-native';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { saveAttempt } from '@/lib/database';
@@ -256,7 +256,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     ) {
       const saveGameAttempt = async () => {
         try {
-          const attemptId = uuidv4();
+          const attemptId = Crypto.randomUUID();
           const now = new Date().toISOString();
 
           const attempt: LocalAttempt = {

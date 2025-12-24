@@ -27,8 +27,8 @@ jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('uuid', () => ({
-  v4: () => 'test-uuid-123',
+jest.mock('expo-crypto', () => ({
+  randomUUID: () => 'test-uuid-123',
 }));
 
 
