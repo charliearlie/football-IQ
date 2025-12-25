@@ -45,6 +45,9 @@ export default function GamesScreen() {
       case 'career-path':
         router.push('/career-path');
         break;
+      case 'tic-tac-toe':
+        router.push('/tic-tac-toe');
+        break;
       case 'transfer-guess':
         router.push('/transfer-guess');
         break;

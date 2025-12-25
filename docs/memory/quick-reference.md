@@ -220,6 +220,65 @@ calculateGoalscorerScore(3, 5, 30, true)
 generateGoalscorerEmojiGrid(goals, 42);
 ```
 
+## Tic Tac Toe Game
+```typescript
+import {
+  TicTacToeScreen,
+  useTicTacToeGame,
+  validateCellGuess,
+  checkWin,
+  checkDraw,
+  generateTicTacToeEmojiGrid,
+  shareTicTacToeResult,
+} from '@/features/tic-tac-toe';
+
+// Puzzle content structure
+interface TicTacToeContent {
+  rows: [string, string, string];      // e.g., ["Real Madrid", "Barcelona", "Man City"]
+  columns: [string, string, string];   // e.g., ["Brazil", "Argentina", "France"]
+  valid_answers: {
+    [cellIndex: string]: string[];     // "0" → ["Vinícius Júnior", "Rodrygo"]
+  };
+}
+
+// Hook usage (internal to TicTacToeScreen)
+const {
+  state,
+  puzzleContent,
+  isGameOver,
+  isPlayerTurn,
+  selectedCellCategories,
+  selectCell,
+  deselectCell,
+  submitGuess,
+  shareResult,
+} = useTicTacToeGame(puzzle);
+
+// State values
+state.cells              // Array of 9 CellState objects
+state.gameStatus         // 'playing' | 'won' | 'lost' | 'draw'
+state.selectedCell       // CellIndex (0-8) or null
+state.currentTurn        // 'player' | 'ai'
+state.winningLine        // [CellIndex, CellIndex, CellIndex] or null
+
+// Validation: check if player name is valid for a specific cell
+validateCellGuess('Vinícius Júnior', 0, puzzleContent)
+// { isValid: true, matchedPlayer: 'Vinícius Júnior', score: 1.0 }
+
+// Win detection
+checkWin(cells, 'player')  // Returns winning line or null
+checkDraw(cells)           // Returns true if draw
+
+// Scoring: Win=10, Draw=5, Loss=0
+// { points: 10, maxPoints: 10, result: 'win', playerCells: 4, aiCells: 3 }
+
+// Emoji grid:
+// 🟢🔴⬜
+// 🔴🟢⬜
+// ⬜⬜🟢
+generateTicTacToeEmojiGrid(cells);
+```
+
 ## Key Files
 - PRD: `docs/app-prd.md`
 - Design System: `docs/design-system.md`
@@ -230,6 +289,7 @@ generateGoalscorerEmojiGrid(goals, 42);
 - Career Path: `src/features/career-path/`
 - Transfer Guess: `src/features/transfer-guess/`
 - Goalscorer Recall: `src/features/goalscorer-recall/`
+- Tic Tac Toe: `src/features/tic-tac-toe/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
@@ -238,6 +298,7 @@ app/
   _layout.tsx           # Root layout (fonts, DB init, AuthProvider)
   (tabs)/_layout.tsx    # Tab navigator
   career-path.tsx       # Career Path game route
+  tic-tac-toe.tsx       # Tic Tac Toe game route
   transfer-guess.tsx    # Transfer Guess game route
   goalscorer-recall.tsx # Goalscorer Recall game route
   design-lab.tsx        # Component showcase
@@ -255,6 +316,7 @@ src/
     auth/              # AuthProvider, useAuth, useProfile
     puzzles/           # PuzzleProvider, usePuzzle, sync services
     career-path/       # CareerPathScreen, useCareerPathGame
+    tic-tac-toe/       # TicTacToeScreen, useTicTacToeGame
     transfer-guess/    # TransferGuessScreen, useTransferGuessGame
     goalscorer-recall/ # GoalscorerRecallScreen, useGoalscorerRecallGame
     home/

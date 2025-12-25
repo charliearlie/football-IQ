@@ -627,3 +627,109 @@ src/features/goalscorer-recall/
 ### Navigation
 - Route: `/goalscorer-recall`
 - Accessible from Games tab card ('goalscorers')
+
+## Tic Tac Toe Game Mode
+Initialized: 2025-12-24
+
+### Overview
+3x3 grid game where players compete against AI. Each cell requires naming a footballer who satisfies BOTH the row category (e.g., "Real Madrid") and column category (e.g., "Brazil"). Turn-based gameplay with random AI opponent.
+
+### Puzzle Content Structure
+```typescript
+interface TicTacToeContent {
+  rows: [string, string, string];      // Row categories (left side)
+  columns: [string, string, string];   // Column categories (top)
+  valid_answers: {
+    [cellIndex: string]: string[];     // Cell 0-8 → array of valid player names
+  };
+}
+```
+
+### Game State
+```
+cells: CellState[9] → each cell has owner ('player' | 'ai' | null) and playerName
+gameStatus: 'playing' | 'won' | 'lost' | 'draw'
+selectedCell: CellIndex | null → currently targeted cell
+currentTurn: 'player' | 'ai' → whose turn
+winningLine: [CellIndex, CellIndex, CellIndex] | null → winning combination
+```
+
+### Key Mechanics
+| Mechanic | Behavior |
+|----------|----------|
+| Cell Selection | Tap empty cell to target it |
+| Validation | Fuzzy matching against valid_answers for that cell |
+| AI Turn | 600ms delay, picks random empty cell with random valid player |
+| Win Detection | Standard Tic-Tac-Toe (3 in row/column/diagonal) |
+| Draw | All 9 cells filled with no winner |
+
+### Scoring System
+```
+Win:  10 points
+Draw: 5 points
+Loss: 0 points
+```
+
+### Score Display (Emoji Grid)
+3x3 grid format:
+- 🟢 = Player's cell
+- 🔴 = AI's cell
+- ⬜ = Empty cell
+
+Example:
+```
+🟢🔴⬜
+🔴🟢⬜
+⬜⬜🟢
+```
+
+### Validation
+Reuses Career Path's fuzzy matching from `validation.ts`:
+- Case insensitive, accent normalization
+- Partial name matching (surname only)
+- Typo tolerance (0.85 threshold)
+- Checks against all valid_answers for the specific cell
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `TicTacToeScreen` | Main screen with grid + action zone |
+| `TicTacToeGrid` | 3x3 grid with category headers |
+| `GridCell` | Individual cell (empty/player/AI states) |
+| `TicTacToeActionZone` | Input when cell selected |
+| `TicTacToeResultModal` | Result modal with confetti + share |
+
+### Animations
+- **GridCell press**: Spring-based 3D button effect
+- **Winning line**: Animated strike-through overlay
+- **Win pulse**: Scale animation on winning cells
+- **Action zone**: Slide-in/out + shake on error
+
+### Files
+```
+src/features/tic-tac-toe/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── TicTacToeScreen.tsx
+  ├── components/
+  │   ├── GridCell.tsx
+  │   ├── TicTacToeGrid.tsx
+  │   ├── TicTacToeActionZone.tsx
+  │   └── TicTacToeResultModal.tsx
+  ├── hooks/
+  │   └── useTicTacToeGame.ts
+  ├── utils/
+  │   ├── validation.ts           # Cell-specific validation
+  │   ├── gameLogic.ts            # Win/draw detection, AI logic
+  │   ├── scoreDisplay.ts         # Emoji grid generation
+  │   └── share.ts                # Share functionality
+  ├── types/
+  │   └── ticTacToe.types.ts
+  └── __tests__/
+      ├── GridLogic.test.ts       # Cell validation tests
+      └── WinCondition.test.ts    # 8 winning combinations tests
+```
+
+### Navigation
+- Route: `/tic-tac-toe`
+- Accessible from Games tab card ('tic-tac-toe')
