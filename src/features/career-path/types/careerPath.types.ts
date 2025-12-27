@@ -20,6 +20,10 @@ export interface CareerStep {
   text: string;
   /** Year or year range (e.g., "2019-2023") */
   year: string;
+  /** Number of appearances (optional) */
+  apps?: number;
+  /** Number of goals scored (optional) */
+  goals?: number;
 }
 
 /**

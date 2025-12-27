@@ -92,7 +92,13 @@ import {
 // Puzzle content structure
 interface CareerPathContent {
   answer: string;
-  career_steps: Array<{ type: 'club' | 'loan'; text: string; year: string }>;
+  career_steps: Array<{
+    type: 'club' | 'loan';
+    text: string;
+    year: string;
+    apps?: number;   // Appearances (optional)
+    goals?: number;  // Goals scored (optional)
+  }>;
 }
 
 // Hook usage (internal to CareerPathScreen)
@@ -370,6 +376,21 @@ npm test             # Run Jest tests
 npm run ios          # Run on iOS simulator
 npm run android      # Run on Android emulator
 ```
+
+## Admin Tools
+
+### Content Creator
+```
+# Open in browser to create puzzles
+open tools/content-creator.html
+
+# Configure
+1. Enter Supabase URL + Service Role Key (saved to localStorage)
+2. Select date/mode/difficulty
+3. Fill form → Review JSON → Push to Supabase
+```
+
+Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`
 
 ## Migrations
 ```

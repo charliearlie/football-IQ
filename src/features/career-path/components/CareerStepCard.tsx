@@ -107,6 +107,20 @@ export function CareerStepCard({
               )}
             </View>
             <Text style={styles.year}>{step.year}</Text>
+            {/* Stats row (apps/goals) - only render if either exists */}
+            {(step.apps !== undefined || step.goals !== undefined) && (
+              <View style={styles.statsRow}>
+                {step.apps !== undefined && (
+                  <Text style={styles.statText}>{step.apps} Apps</Text>
+                )}
+                {step.apps !== undefined && step.goals !== undefined && (
+                  <Text style={styles.statSeparator}>•</Text>
+                )}
+                {step.goals !== undefined && (
+                  <Text style={styles.statText}>{step.goals} Gls</Text>
+                )}
+              </View>
+            )}
           </View>
         </View>
       </GlassCard>
@@ -171,5 +185,19 @@ const styles = StyleSheet.create({
   },
   year: {
     ...textStyles.bodySmall,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  statText: {
+    ...textStyles.caption,
+    color: 'rgba(248, 250, 252, 0.8)', // floodlightWhite at 80% opacity
+  },
+  statSeparator: {
+    ...textStyles.caption,
+    color: 'rgba(248, 250, 252, 0.5)', // muted separator
   },
 });

@@ -284,6 +284,8 @@ interface CareerPathContent {
     type: 'club' | 'loan';
     text: string;   // Club name
     year: string;   // Year range
+    apps?: number;  // Appearances (optional)
+    goals?: number; // Goals scored (optional)
   }>;
 }
 ```
@@ -949,3 +951,42 @@ src/features/puzzles/context/PuzzleContext.tsx
 
 ### Migrations Applied
 5. `005_create_puzzle_catalog_rpc` - RPC function for catalog sync
+
+## Admin Tools
+Initialized: 2025-12-27
+
+### Content Creator
+**Location:** `tools/content-creator.html`
+
+A standalone HTML/JS utility for Product Owners to manually create and push puzzle data to Supabase's `daily_puzzles` table.
+
+#### Features
+- **Supabase Configuration**: URL + Service Role Key stored in localStorage
+- **4 Game Mode Forms**: Career Path, Transfer Guess, Goalscorer Recall, Tic Tac Toe
+- **Live JSON Preview**: Updates as user types
+- **Pre-flight Validation**: Blocks incomplete puzzles
+- **Push to Supabase**: Upserts directly with `status: 'live'`
+- **Toast Notifications**: Success/error feedback
+- **Reset Form**: Quick clear for rapid entry
+
+#### Usage
+1. Open `tools/content-creator.html` in a browser
+2. Enter Supabase URL and Service Role Key (saved to localStorage)
+3. Select date, game mode, and difficulty
+4. Fill out the form for the selected game mode
+5. Review JSON preview
+6. Click "Pre-flight Check" to validate
+7. Click "Push to Supabase" to insert/update
+
+#### Tech Stack
+- Tailwind CSS (via CDN)
+- Supabase JS SDK (via CDN)
+- Vanilla JavaScript (no build required)
+
+#### Supported Game Modes
+| Mode | Fields |
+|------|--------|
+| Career Path | answer, career_steps[] (type, text, year) |
+| Transfer Guess | answer, from_club, to_club, year, fee, hints[3] |
+| Goalscorer Recall | home_team, away_team, scores, competition, match_date, goals[] |
+| Tic Tac Toe | rows[3], columns[3], valid_answers{0-8: string[]} |

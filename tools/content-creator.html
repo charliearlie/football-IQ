@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football IQ - Content Creator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pitchGreen: '#58CC02',
+            grassShadow: '#46A302',
+            stadiumNavy: '#0F172A',
+            floodlightWhite: '#F8FAFC',
+            cardYellow: '#FACC15',
+            redCard: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .form-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      background-color: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      color: #ffffff;
+      font-size: 0.875rem;
+    }
+    .form-input::placeholder {
+      color: #94a3b8;
+    }
+    .form-input:focus {
+      outline: none;
+      ring: 2px;
+      border-color: #58CC02;
+      box-shadow: 0 0 0 2px rgba(88, 204, 2, 0.3);
+    }
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-bottom: 0.25rem;
+    }
+    .btn-primary {
+      padding: 0.5rem 1rem;
+      background-color: #58CC02;
+      color: #0F172A;
+      font-weight: 700;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: #46A302;
+    }
+    .btn-secondary {
+      padding: 0.5rem 1rem;
+      background-color: #334155;
+      color: #ffffff;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+    .btn-danger {
+      padding: 0.5rem 1rem;
+      background-color: #EF4444;
+      color: #ffffff;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+    .card {
+      background-color: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      padding-right: 2.5rem;
+    }
+    textarea.form-input {
+      resize: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-stadiumNavy text-floodlightWhite">
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-700 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">⚽</span>
+        <h1 class="text-2xl font-bold">Football IQ Content Creator</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="connection-status" class="w-3 h-3 rounded-full bg-slate-500"></span>
+        <span id="connection-text" class="text-sm text-slate-400">Not connected</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-6">
+    <!-- Config Section -->
+    <section id="config-section" class="card mb-6">
+      <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+        <span>⚙️</span> Supabase Configuration
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="form-label">Supabase URL</label>
+          <input type="text" id="supabase-url" class="form-input" placeholder="https://xxxxx.supabase.co">
+        </div>
+        <div>
+          <label class="form-label">Service Role Key</label>
+          <input type="password" id="supabase-key" class="form-input" placeholder="eyJhbGc...">
+        </div>
+        <div class="flex items-end">
+          <button onclick="saveConfig()" class="btn-primary">Save & Connect</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Puzzle Header -->
+    <section class="card mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="form-label">Puzzle Date</label>
+          <input type="date" id="puzzle-date" class="form-input">
+        </div>
+        <div>
+          <label class="form-label">Game Mode</label>
+          <select id="game-mode" class="form-input" onchange="switchGameMode()">
+            <option value="career_path">Career Path</option>
+            <option value="guess_the_transfer">Transfer Guess</option>
+            <option value="guess_the_goalscorers">Goalscorer Recall</option>
+            <option value="tic_tac_toe">Tic Tac Toe</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Difficulty</label>
+          <select id="difficulty" class="form-input">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Form Section -->
+      <section class="card">
+        <h2 class="text-lg font-bold mb-4" id="form-title">Career Path</h2>
+
+        <!-- Career Path Form -->
+        <div id="career-path-form" class="form-section">
+          <div class="mb-4">
+            <label class="form-label">Answer (Player Name)</label>
+            <input type="text" id="cp-answer" class="form-input" placeholder="e.g., Harry Kane" oninput="updatePreview()">
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Career Steps</label>
+            <div id="cp-steps" class="space-y-3"></div>
+            <button onclick="addCareerStep()" class="btn-secondary mt-3 text-sm">+ Add Step</button>
+          </div>
+        </div>
+
+        <!-- Transfer Guess Form -->
+        <div id="transfer-guess-form" class="form-section hidden">
+          <div class="mb-4">
+            <label class="form-label">Answer (Player Name)</label>
+            <input type="text" id="tg-answer" class="form-input" placeholder="e.g., Cristiano Ronaldo" oninput="updatePreview()">
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">From Club</label>
+              <input type="text" id="tg-from-club" class="form-input" placeholder="e.g., Manchester United" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">To Club</label>
+              <input type="text" id="tg-to-club" class="form-input" placeholder="e.g., Real Madrid" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Year</label>
+              <input type="number" id="tg-year" class="form-input" placeholder="2023" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Fee</label>
+              <input type="text" id="tg-fee" class="form-input" placeholder="e.g., €80M, Free" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="form-label">Hint 1 (Nationality)</label>
+              <input type="text" id="tg-hint1" class="form-input" placeholder="e.g., Portuguese" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Hint 2 (Position)</label>
+              <input type="text" id="tg-hint2" class="form-input" placeholder="e.g., Forward" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Hint 3 (Achievement)</label>
+              <input type="text" id="tg-hint3" class="form-input" placeholder="e.g., 5× Ballon d'Or winner" oninput="updatePreview()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Goalscorer Recall Form -->
+        <div id="goalscorer-recall-form" class="form-section hidden">
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Home Team</label>
+              <input type="text" id="gr-home-team" class="form-input" placeholder="e.g., Arsenal" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Away Team</label>
+              <input type="text" id="gr-away-team" class="form-input" placeholder="e.g., Chelsea" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Home Score</label>
+              <input type="number" id="gr-home-score" class="form-input" placeholder="3" min="0" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Away Score</label>
+              <input type="number" id="gr-away-score" class="form-input" placeholder="1" min="0" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Competition</label>
+              <input type="text" id="gr-competition" class="form-input" placeholder="e.g., Premier League" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Match Date</label>
+              <input type="text" id="gr-match-date" class="form-input" placeholder="e.g., 15 May 2023" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Goals</label>
+            <div id="gr-goals" class="space-y-3"></div>
+            <button onclick="addGoal()" class="btn-secondary mt-3 text-sm">+ Add Goal</button>
+          </div>
+        </div>
+
+        <!-- Tic Tac Toe Form -->
+        <div id="tic-tac-toe-form" class="form-section hidden">
+          <div class="mb-4">
+            <label class="form-label">Row Categories (Left Side)</label>
+            <div class="space-y-2">
+              <input type="text" id="ttt-row-0" class="form-input" placeholder="Row 1 (e.g., Real Madrid)" oninput="updatePreview()">
+              <input type="text" id="ttt-row-1" class="form-input" placeholder="Row 2 (e.g., Barcelona)" oninput="updatePreview()">
+              <input type="text" id="ttt-row-2" class="form-input" placeholder="Row 3 (e.g., Bayern Munich)" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Column Categories (Top)</label>
+            <div class="space-y-2">
+              <input type="text" id="ttt-col-0" class="form-input" placeholder="Column 1 (e.g., Brazil)" oninput="updatePreview()">
+              <input type="text" id="ttt-col-1" class="form-input" placeholder="Column 2 (e.g., France)" oninput="updatePreview()">
+              <input type="text" id="ttt-col-2" class="form-input" placeholder="Column 3 (e.g., Germany)" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Valid Answers Grid (comma-separated players per cell)</label>
+            <div class="grid grid-cols-4 gap-2 mt-2">
+              <!-- Header row -->
+              <div></div>
+              <div class="text-center text-xs text-slate-400 truncate" id="ttt-header-0">Col 1</div>
+              <div class="text-center text-xs text-slate-400 truncate" id="ttt-header-1">Col 2</div>
+              <div class="text-center text-xs text-slate-400 truncate" id="ttt-header-2">Col 3</div>
+              <!-- Row 0 -->
+              <div class="text-right text-xs text-slate-400 self-center truncate" id="ttt-label-0">Row 1</div>
+              <textarea id="ttt-cell-0" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <textarea id="ttt-cell-1" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <textarea id="ttt-cell-2" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <!-- Row 1 -->
+              <div class="text-right text-xs text-slate-400 self-center truncate" id="ttt-label-1">Row 2</div>
+              <textarea id="ttt-cell-3" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <textarea id="ttt-cell-4" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <textarea id="ttt-cell-5" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <!-- Row 2 -->
+              <div class="text-right text-xs text-slate-400 self-center truncate" id="ttt-label-2">Row 3</div>
+              <textarea id="ttt-cell-6" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <textarea id="ttt-cell-7" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+              <textarea id="ttt-cell-8" class="form-input text-xs h-16 resize-none" placeholder="Player1, Player2" oninput="updatePreview()"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview Section -->
+      <section class="card">
+        <h2 class="text-lg font-bold mb-4">📋 JSON Preview</h2>
+        <pre id="json-preview" class="bg-slate-900 rounded-lg p-4 overflow-x-auto text-sm text-green-400 font-mono max-h-96 overflow-y-auto">{}</pre>
+      </section>
+    </div>
+
+    <!-- Validation Messages -->
+    <section id="validation-section" class="card mt-6 hidden">
+      <h3 class="text-cardYellow font-bold mb-2">⚠️ Validation Errors</h3>
+      <ul id="validation-errors" class="list-disc list-inside text-cardYellow text-sm space-y-1"></ul>
+    </section>
+
+    <!-- Action Buttons -->
+    <section class="flex justify-between items-center mt-6">
+      <button onclick="resetForm()" class="btn-secondary">🔄 Reset Form</button>
+      <div class="flex gap-3">
+        <button onclick="runPreflight()" class="btn-secondary">✓ Pre-flight Check</button>
+        <button onclick="pushToSupabase()" class="btn-primary">🚀 Push to Supabase</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ============ State ============
+    let supabaseClient = null;
+    let careerSteps = [];
+    let goals = [];
+
+    // ============ Initialization ============
+    document.addEventListener('DOMContentLoaded', () => {
+      loadConfig();
+      setDefaultDate();
+      addCareerStep(); // Start with one step
+      addCareerStep();
+      addCareerStep(); // Minimum 3 steps
+      addGoal(); // Start with one goal
+      updatePreview();
+      updateTicTacToeLabels();
+    });
+
+    function setDefaultDate() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('puzzle-date').value = tomorrow.toISOString().split('T')[0];
+    }
+
+    // ============ Config Management ============
+    function loadConfig() {
+      const url = localStorage.getItem('fiq_supabase_url');
+      const key = localStorage.getItem('fiq_supabase_key');
+      if (url) document.getElementById('supabase-url').value = url;
+      if (key) document.getElementById('supabase-key').value = key;
+      if (url && key) {
+        initSupabase(url, key);
+      }
+    }
+
+    function saveConfig() {
+      const url = document.getElementById('supabase-url').value.trim();
+      const key = document.getElementById('supabase-key').value.trim();
+
+      if (!url || !key) {
+        showToast('Please fill in both URL and Key', 'error');
+        return;
+      }
+
+      localStorage.setItem('fiq_supabase_url', url);
+      localStorage.setItem('fiq_supabase_key', key);
+      initSupabase(url, key);
+      showToast('Configuration saved!', 'success');
+    }
+
+    async function initSupabase(url, key) {
+      try {
+        supabaseClient = supabase.createClient(url, key);
+        // Test connection
+        const { error } = await supabaseClient.from('daily_puzzles').select('id').limit(1);
+        if (error) throw error;
+
+        document.getElementById('connection-status').className = 'w-3 h-3 rounded-full bg-pitchGreen';
+        document.getElementById('connection-text').textContent = 'Connected';
+      } catch (err) {
+        console.error('Connection error:', err);
+        document.getElementById('connection-status').className = 'w-3 h-3 rounded-full bg-redCard';
+        document.getElementById('connection-text').textContent = 'Connection failed';
+        supabaseClient = null;
+      }
+    }
+
+    // ============ Form Switching ============
+    function switchGameMode() {
+      const mode = document.getElementById('game-mode').value;
+      const forms = document.querySelectorAll('.form-section');
+      forms.forEach(f => f.classList.add('hidden'));
+
+      const titles = {
+        'career_path': 'Career Path',
+        'guess_the_transfer': 'Transfer Guess',
+        'guess_the_goalscorers': 'Goalscorer Recall',
+        'tic_tac_toe': 'Tic Tac Toe'
+      };
+
+      document.getElementById('form-title').textContent = titles[mode];
+
+      if (mode === 'career_path') {
+        document.getElementById('career-path-form').classList.remove('hidden');
+      } else if (mode === 'guess_the_transfer') {
+        document.getElementById('transfer-guess-form').classList.remove('hidden');
+      } else if (mode === 'guess_the_goalscorers') {
+        document.getElementById('goalscorer-recall-form').classList.remove('hidden');
+      } else if (mode === 'tic_tac_toe') {
+        document.getElementById('tic-tac-toe-form').classList.remove('hidden');
+      }
+
+      updatePreview();
+    }
+
+    // ============ Career Path Form ============
+    function addCareerStep() {
+      const id = Date.now();
+      careerSteps.push({ id, type: 'club', text: '', year: '', apps: '', goals: '' });
+      renderCareerSteps();
+    }
+
+    function removeCareerStep(id) {
+      if (careerSteps.length <= 3) {
+        showToast('Minimum 3 career steps required', 'error');
+        return;
+      }
+      careerSteps = careerSteps.filter(s => s.id !== id);
+      renderCareerSteps();
+      updatePreview();
+    }
+
+    function renderCareerSteps() {
+      const container = document.getElementById('cp-steps');
+      container.innerHTML = careerSteps.map((step, index) => `
+        <div class="flex gap-2 items-start bg-slate-900/50 p-3 rounded-lg" data-step-id="${step.id}">
+          <span class="text-slate-500 text-sm mt-2">${index + 1}.</span>
+          <select class="form-input w-24" onchange="updateStepType(${step.id}, this.value)">
+            <option value="club" ${step.type === 'club' ? 'selected' : ''}>Club</option>
+            <option value="loan" ${step.type === 'loan' ? 'selected' : ''}>Loan</option>
+          </select>
+          <input type="text" class="form-input flex-1" placeholder="Club name"
+            value="${escapeHtml(step.text)}" oninput="updateStepText(${step.id}, this.value); updatePreview()">
+          <input type="text" class="form-input w-28" placeholder="Year(s)"
+            value="${escapeHtml(step.year)}" oninput="updateStepYear(${step.id}, this.value); updatePreview()">
+          <input type="number" class="form-input w-16" placeholder="Apps" min="0"
+            value="${step.apps}" oninput="updateStepApps(${step.id}, this.value); updatePreview()">
+          <input type="number" class="form-input w-16" placeholder="Gls" min="0"
+            value="${step.goals}" oninput="updateStepGoals(${step.id}, this.value); updatePreview()">
+          <button onclick="removeCareerStep(${step.id})" class="text-redCard hover:text-red-400 p-2">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function updateStepType(id, value) {
+      const step = careerSteps.find(s => s.id === id);
+      if (step) step.type = value;
+      updatePreview();
+    }
+
+    function updateStepText(id, value) {
+      const step = careerSteps.find(s => s.id === id);
+      if (step) step.text = value;
+    }
+
+    function updateStepYear(id, value) {
+      const step = careerSteps.find(s => s.id === id);
+      if (step) step.year = value;
+    }
+
+    function updateStepApps(id, value) {
+      const step = careerSteps.find(s => s.id === id);
+      if (step) step.apps = value;
+    }
+
+    function updateStepGoals(id, value) {
+      const step = careerSteps.find(s => s.id === id);
+      if (step) step.goals = value;
+    }
+
+    // ============ Goalscorer Recall Form ============
+    function addGoal() {
+      const id = Date.now();
+      goals.push({ id, scorer: '', minute: '', team: 'home', isOwnGoal: false });
+      renderGoals();
+    }
+
+    function removeGoal(id) {
+      goals = goals.filter(g => g.id !== id);
+      renderGoals();
+      updatePreview();
+    }
+
+    function renderGoals() {
+      const container = document.getElementById('gr-goals');
+      container.innerHTML = goals.map((goal, index) => `
+        <div class="flex gap-2 items-center bg-slate-900/50 p-3 rounded-lg" data-goal-id="${goal.id}">
+          <span class="text-slate-500 text-sm">${index + 1}.</span>
+          <input type="text" class="form-input flex-1" placeholder="Scorer name"
+            value="${goal.scorer}" onchange="updateGoalScorer(${goal.id}, this.value)" oninput="updatePreview()">
+          <input type="number" class="form-input w-20" placeholder="Min" min="1" max="120"
+            value="${goal.minute}" onchange="updateGoalMinute(${goal.id}, this.value)" oninput="updatePreview()">
+          <select class="form-input w-24" onchange="updateGoalTeam(${goal.id}, this.value)">
+            <option value="home" ${goal.team === 'home' ? 'selected' : ''}>Home</option>
+            <option value="away" ${goal.team === 'away' ? 'selected' : ''}>Away</option>
+          </select>
+          <label class="flex items-center gap-1 text-sm text-slate-400">
+            <input type="checkbox" ${goal.isOwnGoal ? 'checked' : ''}
+              onchange="updateGoalOwnGoal(${goal.id}, this.checked)">
+            OG
+          </label>
+          <button onclick="removeGoal(${goal.id})" class="text-redCard hover:text-red-400 p-2">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    function updateGoalScorer(id, value) {
+      const goal = goals.find(g => g.id === id);
+      if (goal) goal.scorer = value;
+    }
+
+    function updateGoalMinute(id, value) {
+      const goal = goals.find(g => g.id === id);
+      if (goal) goal.minute = value;
+    }
+
+    function updateGoalTeam(id, value) {
+      const goal = goals.find(g => g.id === id);
+      if (goal) goal.team = value;
+      updatePreview();
+    }
+
+    function updateGoalOwnGoal(id, value) {
+      const goal = goals.find(g => g.id === id);
+      if (goal) goal.isOwnGoal = value;
+      updatePreview();
+    }
+
+    // ============ Tic Tac Toe Form ============
+    function updateTicTacToeLabels() {
+      // Update column headers
+      for (let i = 0; i < 3; i++) {
+        const colInput = document.getElementById(`ttt-col-${i}`);
+        const header = document.getElementById(`ttt-header-${i}`);
+        colInput.addEventListener('input', () => {
+          header.textContent = colInput.value || `Col ${i + 1}`;
+        });
+      }
+      // Update row labels
+      for (let i = 0; i < 3; i++) {
+        const rowInput = document.getElementById(`ttt-row-${i}`);
+        const label = document.getElementById(`ttt-label-${i}`);
+        rowInput.addEventListener('input', () => {
+          label.textContent = rowInput.value || `Row ${i + 1}`;
+        });
+      }
+    }
+
+    // ============ JSON Preview ============
+    function generateContent() {
+      const mode = document.getElementById('game-mode').value;
+
+      if (mode === 'career_path') {
+        return {
+          answer: document.getElementById('cp-answer').value.trim(),
+          career_steps: careerSteps.map(s => {
+            const step = {
+              type: s.type,
+              text: s.text.trim(),
+              year: s.year.trim()
+            };
+            // Only include apps/goals if they have values
+            if (s.apps !== '' && s.apps !== null && s.apps !== undefined) {
+              step.apps = parseInt(s.apps, 10);
+            }
+            if (s.goals !== '' && s.goals !== null && s.goals !== undefined) {
+              step.goals = parseInt(s.goals, 10);
+            }
+            return step;
+          }).filter(s => s.text || s.year)
+        };
+      }
+
+      if (mode === 'guess_the_transfer') {
+        return {
+          answer: document.getElementById('tg-answer').value.trim(),
+          from_club: document.getElementById('tg-from-club').value.trim(),
+          to_club: document.getElementById('tg-to-club').value.trim(),
+          year: parseInt(document.getElementById('tg-year').value) || 0,
+          fee: document.getElementById('tg-fee').value.trim(),
+          hints: [
+            document.getElementById('tg-hint1').value.trim(),
+            document.getElementById('tg-hint2').value.trim(),
+            document.getElementById('tg-hint3').value.trim()
+          ]
+        };
+      }
+
+      if (mode === 'guess_the_goalscorers') {
+        return {
+          home_team: document.getElementById('gr-home-team').value.trim(),
+          away_team: document.getElementById('gr-away-team').value.trim(),
+          home_score: parseInt(document.getElementById('gr-home-score').value) || 0,
+          away_score: parseInt(document.getElementById('gr-away-score').value) || 0,
+          competition: document.getElementById('gr-competition').value.trim(),
+          match_date: document.getElementById('gr-match-date').value.trim(),
+          goals: goals.map(g => ({
+            scorer: g.scorer.trim(),
+            minute: parseInt(g.minute) || 0,
+            team: g.team,
+            ...(g.isOwnGoal && { isOwnGoal: true })
+          })).filter(g => g.scorer)
+        };
+      }
+
+      if (mode === 'tic_tac_toe') {
+        const valid_answers = {};
+        for (let i = 0; i < 9; i++) {
+          const cell = document.getElementById(`ttt-cell-${i}`).value.trim();
+          const players = cell.split(',').map(p => p.trim()).filter(p => p);
+          if (players.length > 0) {
+            valid_answers[i.toString()] = players;
+          }
+        }
+        return {
+          rows: [
+            document.getElementById('ttt-row-0').value.trim(),
+            document.getElementById('ttt-row-1').value.trim(),
+            document.getElementById('ttt-row-2').value.trim()
+          ],
+          columns: [
+            document.getElementById('ttt-col-0').value.trim(),
+            document.getElementById('ttt-col-1').value.trim(),
+            document.getElementById('ttt-col-2').value.trim()
+          ],
+          valid_answers
+        };
+      }
+
+      return {};
+    }
+
+    function updatePreview() {
+      const content = generateContent();
+      document.getElementById('json-preview').textContent = JSON.stringify(content, null, 2);
+    }
+
+    // ============ Validation ============
+    function validate() {
+      const errors = [];
+      const mode = document.getElementById('game-mode').value;
+      const content = generateContent();
+
+      // Common validation
+      if (!document.getElementById('puzzle-date').value) {
+        errors.push('Puzzle date is required');
+      }
+
+      if (mode === 'career_path') {
+        if (!content.answer) errors.push('Answer (player name) is required');
+        if (content.career_steps.length < 3) errors.push('At least 3 career steps required');
+        content.career_steps.forEach((step, i) => {
+          if (!step.text) errors.push(`Step ${i + 1}: Club name is required`);
+          if (!step.year) errors.push(`Step ${i + 1}: Year is required`);
+        });
+      }
+
+      if (mode === 'guess_the_transfer') {
+        if (!content.answer) errors.push('Answer (player name) is required');
+        if (!content.from_club) errors.push('From club is required');
+        if (!content.to_club) errors.push('To club is required');
+        if (!content.year) errors.push('Year is required');
+        if (!content.fee) errors.push('Fee is required');
+        if (!content.hints[0]) errors.push('Hint 1 (Nationality) is required');
+        if (!content.hints[1]) errors.push('Hint 2 (Position) is required');
+        if (!content.hints[2]) errors.push('Hint 3 (Achievement) is required');
+      }
+
+      if (mode === 'guess_the_goalscorers') {
+        if (!content.home_team) errors.push('Home team is required');
+        if (!content.away_team) errors.push('Away team is required');
+        if (!content.competition) errors.push('Competition is required');
+        if (!content.match_date) errors.push('Match date is required');
+        if (content.goals.length === 0) errors.push('At least 1 goal is required');
+
+        // Validate goal count matches score
+        const homeGoals = content.goals.filter(g => g.team === 'home').length;
+        const awayGoals = content.goals.filter(g => g.team === 'away').length;
+        if (homeGoals !== content.home_score) {
+          errors.push(`Home goals count (${homeGoals}) doesn't match home score (${content.home_score})`);
+        }
+        if (awayGoals !== content.away_score) {
+          errors.push(`Away goals count (${awayGoals}) doesn't match away score (${content.away_score})`);
+        }
+
+        content.goals.forEach((goal, i) => {
+          if (!goal.scorer) errors.push(`Goal ${i + 1}: Scorer name is required`);
+          if (!goal.minute) errors.push(`Goal ${i + 1}: Minute is required`);
+        });
+      }
+
+      if (mode === 'tic_tac_toe') {
+        if (!content.rows[0]) errors.push('Row 1 category is required');
+        if (!content.rows[1]) errors.push('Row 2 category is required');
+        if (!content.rows[2]) errors.push('Row 3 category is required');
+        if (!content.columns[0]) errors.push('Column 1 category is required');
+        if (!content.columns[1]) errors.push('Column 2 category is required');
+        if (!content.columns[2]) errors.push('Column 3 category is required');
+
+        for (let i = 0; i < 9; i++) {
+          if (!content.valid_answers[i.toString()] || content.valid_answers[i.toString()].length === 0) {
+            const row = Math.floor(i / 3) + 1;
+            const col = (i % 3) + 1;
+            errors.push(`Cell (Row ${row}, Col ${col}) needs at least one valid player`);
+          }
+        }
+      }
+
+      return errors;
+    }
+
+    function runPreflight() {
+      const errors = validate();
+      const section = document.getElementById('validation-section');
+      const list = document.getElementById('validation-errors');
+
+      if (errors.length === 0) {
+        section.classList.add('hidden');
+        showToast('Pre-flight check passed! Ready to push.', 'success');
+      } else {
+        section.classList.remove('hidden');
+        list.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+        showToast(`Found ${errors.length} validation error(s)`, 'error');
+      }
+    }
+
+    // ============ Supabase Push ============
+    async function pushToSupabase() {
+      const errors = validate();
+      if (errors.length > 0) {
+        runPreflight();
+        return;
+      }
+
+      if (!supabaseClient) {
+        showToast('Please configure and connect to Supabase first', 'error');
+        return;
+      }
+
+      const puzzleDate = document.getElementById('puzzle-date').value;
+      const gameMode = document.getElementById('game-mode').value;
+      const difficulty = document.getElementById('difficulty').value;
+      const content = generateContent();
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('daily_puzzles')
+          .upsert({
+            game_mode: gameMode,
+            puzzle_date: puzzleDate,
+            content: content,
+            difficulty: difficulty,
+            source: 'manual',
+            status: 'live'
+          }, {
+            onConflict: 'game_mode,puzzle_date'
+          })
+          .select();
+
+        if (error) throw error;
+
+        showToast(`Puzzle pushed successfully! ID: ${data[0]?.id || 'created'}`, 'success');
+
+        // Hide validation errors
+        document.getElementById('validation-section').classList.add('hidden');
+
+      } catch (err) {
+        console.error('Push error:', err);
+        showToast(`Push failed: ${err.message}`, 'error');
+      }
+    }
+
+    // ============ Reset Form ============
+    function resetForm() {
+      const hasData = document.getElementById('cp-answer').value ||
+                      document.getElementById('tg-answer').value ||
+                      document.getElementById('gr-home-team').value ||
+                      document.getElementById('ttt-row-0').value;
+
+      if (hasData && !confirm('Are you sure you want to reset the form? All data will be lost.')) {
+        return;
+      }
+
+      // Reset Career Path
+      document.getElementById('cp-answer').value = '';
+      careerSteps = [];
+      addCareerStep();
+      addCareerStep();
+      addCareerStep();
+
+      // Reset Transfer Guess
+      document.getElementById('tg-answer').value = '';
+      document.getElementById('tg-from-club').value = '';
+      document.getElementById('tg-to-club').value = '';
+      document.getElementById('tg-year').value = '';
+      document.getElementById('tg-fee').value = '';
+      document.getElementById('tg-hint1').value = '';
+      document.getElementById('tg-hint2').value = '';
+      document.getElementById('tg-hint3').value = '';
+
+      // Reset Goalscorer Recall
+      document.getElementById('gr-home-team').value = '';
+      document.getElementById('gr-away-team').value = '';
+      document.getElementById('gr-home-score').value = '';
+      document.getElementById('gr-away-score').value = '';
+      document.getElementById('gr-competition').value = '';
+      document.getElementById('gr-match-date').value = '';
+      goals = [];
+      addGoal();
+
+      // Reset Tic Tac Toe
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`ttt-row-${i}`).value = '';
+        document.getElementById(`ttt-col-${i}`).value = '';
+        document.getElementById(`ttt-header-${i}`).textContent = `Col ${i + 1}`;
+        document.getElementById(`ttt-label-${i}`).textContent = `Row ${i + 1}`;
+      }
+      for (let i = 0; i < 9; i++) {
+        document.getElementById(`ttt-cell-${i}`).value = '';
+      }
+
+      // Hide validation
+      document.getElementById('validation-section').classList.add('hidden');
+
+      updatePreview();
+      showToast('Form reset!', 'success');
+    }
+
+    // ============ Toast Notifications ============
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const bgColor = type === 'success' ? 'bg-pitchGreen' :
+                      type === 'error' ? 'bg-redCard' : 'bg-slate-700';
+      const textColor = type === 'success' ? 'text-stadiumNavy' : 'text-white';
+
+      toast.className = `${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slide-in`;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-2 opacity-70 hover:opacity-100">✕</button>
+      `;
+
+      container.appendChild(toast);
+
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
+    }
+  </script>
+
+  <style>
+    @keyframes slide-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .animate-slide-in {
+      animation: slide-in 0.3s ease-out;
+    }
+  </style>
+</body>
+</html>
