@@ -11,6 +11,7 @@ import { useAuth } from '@/features/auth';
 import { getAllPuzzles } from '@/lib/database';
 import { syncPuzzlesFromSupabase } from '../services/puzzleSyncService';
 import { syncAttemptsToSupabase } from '../services/attemptSyncService';
+import { syncCatalogFromSupabase } from '@/features/archive/services/catalogSyncService';
 import {
   PuzzleContextValue,
   SyncStatus,
@@ -80,6 +81,11 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
         const timestamp = new Date().toISOString();
         setLastSyncedAt(timestamp);
         await AsyncStorage.setItem(LAST_SYNC_KEY, timestamp);
+
+        // Sync puzzle catalog for Archive screen (runs in parallel, non-blocking)
+        syncCatalogFromSupabase().catch((err) => {
+          console.warn('Catalog sync failed:', err);
+        });
 
         // Refresh local puzzles to reflect new data
         await refreshLocalPuzzles();

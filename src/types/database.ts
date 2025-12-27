@@ -63,3 +63,16 @@ export interface ParsedLocalAttempt
   completed: boolean;
   synced: boolean;
 }
+
+/**
+ * Catalog entry for puzzle metadata (used for Archive screen).
+ * Lightweight metadata without content, synced separately from full puzzles.
+ * Allows showing "locked" placeholders for premium puzzles.
+ */
+export interface LocalCatalogEntry {
+  id: string;
+  game_mode: string;
+  puzzle_date: string;
+  difficulty: string | null;
+  synced_at: string | null;
+}

@@ -851,3 +851,101 @@ Development seed includes:
 - 35 puzzles: 5 modes × 7 days (CURRENT_DATE -3 to +3)
 - 10 match_data rows for Goalscorer Recall
 - All puzzles set to `status: 'live'` for RLS access
+
+## Archive Screen
+Initialized: 2025-12-27
+
+### Overview
+The Archive screen is the primary value proposition for Premium tier. It displays all historical puzzles with visual gating for premium content. Free users see 7 days of playable puzzles + locked placeholders for older content.
+
+### Architecture
+
+#### Puzzle Catalog (Metadata Sync)
+To show locked puzzles that aren't in local SQLite (RLS blocks them for free users), we use a separate catalog table:
+
+1. **Supabase RPC function** `get_puzzle_catalog()`: Returns puzzle metadata (id, game_mode, puzzle_date, difficulty) without content. Uses `SECURITY DEFINER` to bypass RLS.
+2. **SQLite `puzzle_catalog` table**: Stores catalog entries for all users.
+3. **Merge logic**: If puzzle exists in `puzzles` table → unlocked, else → locked based on 7-day rule.
+
+#### Lock Logic
+```typescript
+function isPuzzleLocked(puzzleDate: string, isPremium: boolean): boolean {
+  if (isPremium) return false;
+  const date = new Date(puzzleDate);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return date < sevenDaysAgo;
+}
+```
+
+### Screen Layout
+```
+Archive Screen
+├── Header: "Archive" (h1)
+├── GameModeFilter: Horizontal scroll chips (All, Career Path, etc.)
+├── ArchiveList (SectionList)
+│   ├── MonthHeader: "December 2024" (sticky, cardYellow)
+│   ├── ArchivePuzzleCard (unlocked) OR LockedArchiveCard (locked)
+│   └── ... more cards
+└── PremiumUpsellModal (shown on locked card tap)
+```
+
+### Card States
+| Card Type | Condition | UI |
+|-----------|-----------|-----|
+| ArchivePuzzleCard | Puzzle in local SQLite | Date, mode icon, Play/Resume/Done |
+| LockedArchiveCard | Puzzle NOT in local SQLite OR date > 7 days (free user) | Blurred, lock icon overlay |
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `GameModeFilter` | Horizontal scroll filter chips |
+| `ArchiveList` | SectionList with month grouping |
+| `ArchivePuzzleCard` | Unlocked puzzle with play status |
+| `LockedArchiveCard` | Blurred card with lock icon |
+| `MonthHeader` | Sticky section header |
+| `PremiumUpsellModal` | Upgrade prompt (placeholder) |
+
+### Hooks
+| Hook | Purpose |
+|------|---------|
+| `useArchivePuzzles(filter)` | Main data hook with pagination and grouping |
+
+### Navigation
+- Tapping unlocked puzzle → `router.push(`/${route}/${puzzleId}`)`
+- Tapping locked puzzle → Opens PremiumUpsellModal
+
+### Files
+```
+src/features/archive/
+  ├── index.ts                    # Feature exports
+  ├── types/
+  │   └── archive.types.ts        # ArchivePuzzle, ArchiveSection, etc.
+  ├── hooks/
+  │   └── useArchivePuzzles.ts    # Main data hook
+  ├── components/
+  │   ├── ArchiveList.tsx         # SectionList
+  │   ├── ArchivePuzzleCard.tsx   # Unlocked card
+  │   ├── LockedArchiveCard.tsx   # Locked card with blur
+  │   ├── GameModeFilter.tsx      # Filter chips
+  │   ├── MonthHeader.tsx         # Section header
+  │   └── PremiumUpsellModal.tsx  # Upgrade modal
+  ├── services/
+  │   └── catalogSyncService.ts   # Supabase RPC sync
+  ├── utils/
+  │   └── dateGrouping.ts         # Month grouping, lock logic
+  └── __tests__/
+      └── Gating.test.tsx         # Lock visibility tests
+
+src/lib/database.ts (additions)
+  ├── puzzle_catalog table        # Migration v2
+  ├── saveCatalogEntries()        # Bulk upsert
+  ├── getCatalogEntriesPaginated()# With filter
+  └── getCatalogEntryCount()      # For pagination
+
+src/features/puzzles/context/PuzzleContext.tsx
+  └── Calls syncCatalogFromSupabase() after puzzle sync
+```
+
+### Migrations Applied
+5. `005_create_puzzle_catalog_rpc` - RPC function for catalog sync

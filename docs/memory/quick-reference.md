@@ -279,6 +279,30 @@ checkDraw(cells)           // Returns true if draw
 generateTicTacToeEmojiGrid(cells);
 ```
 
+## Archive Screen
+```typescript
+import {
+  useArchivePuzzles,
+  ArchiveList,
+  GameModeFilter,
+  PremiumUpsellModal,
+  ArchivePuzzle,
+  isPuzzleLocked,
+  formatPuzzleDate,
+} from '@/features/archive';
+
+// Hook usage
+const { sections, isLoading, isRefreshing, hasMore, loadMore, refresh } = useArchivePuzzles('all');
+const { sections } = useArchivePuzzles('career_path'); // Filter by mode
+
+// Lock check
+isPuzzleLocked('2024-12-15', false) // true (>7 days, non-premium)
+isPuzzleLocked('2024-12-15', true)  // false (premium sees all)
+
+// Date formatting
+formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"
+```
+
 ## Key Files
 - PRD: `docs/app-prd.md`
 - Design System: `docs/design-system.md`
@@ -290,6 +314,7 @@ generateTicTacToeEmojiGrid(cells);
 - Transfer Guess: `src/features/transfer-guess/`
 - Goalscorer Recall: `src/features/goalscorer-recall/`
 - Tic Tac Toe: `src/features/tic-tac-toe/`
+- Archive: `src/features/archive/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
@@ -352,4 +377,5 @@ npm run android      # Run on Android emulator
 002_enable_rls_policies
 003_create_triggers
 004_security_fixes
+005_create_puzzle_catalog_rpc
 ```

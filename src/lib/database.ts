@@ -6,10 +6,11 @@ import {
   SyncQueueItem,
   ParsedLocalPuzzle,
   ParsedLocalAttempt,
+  LocalCatalogEntry,
 } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -104,8 +105,26 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     `);
   }
 
+  // Migration v2: Add puzzle_catalog table for Archive screen
+  if (currentVersion < 2) {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS puzzle_catalog (
+        id TEXT PRIMARY KEY NOT NULL,
+        game_mode TEXT NOT NULL,
+        puzzle_date TEXT NOT NULL,
+        difficulty TEXT,
+        synced_at TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_catalog_date ON puzzle_catalog(puzzle_date);
+      CREATE INDEX IF NOT EXISTS idx_catalog_game_mode ON puzzle_catalog(game_mode);
+
+      PRAGMA user_version = 2;
+    `);
+  }
+
   // Future migrations would go here:
-  // if (currentVersion < 2) { ... }
+  // if (currentVersion < 3) { ... }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -341,6 +360,114 @@ export async function removeSyncQueueItem(id: number): Promise<void> {
 export async function clearSyncQueue(): Promise<void> {
   const database = getDatabase();
   await database.runAsync('DELETE FROM sync_queue');
+}
+
+// ============ CATALOG OPERATIONS ============
+
+/**
+ * Save multiple catalog entries to local storage.
+ * Uses INSERT OR REPLACE to handle both insert and update.
+ */
+export async function saveCatalogEntries(
+  entries: LocalCatalogEntry[]
+): Promise<void> {
+  if (entries.length === 0) return;
+
+  const database = getDatabase();
+  const syncedAt = new Date().toISOString();
+
+  // Use a transaction for bulk insert
+  await database.withTransactionAsync(async () => {
+    for (const entry of entries) {
+      await database.runAsync(
+        `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at)
+         VALUES ($id, $game_mode, $puzzle_date, $difficulty, $synced_at)`,
+        {
+          $id: entry.id,
+          $game_mode: entry.game_mode,
+          $puzzle_date: entry.puzzle_date,
+          $difficulty: entry.difficulty,
+          $synced_at: syncedAt,
+        }
+      );
+    }
+  });
+}
+
+/**
+ * Get all catalog entries from local storage.
+ * Returns entries ordered by date descending.
+ */
+export async function getAllCatalogEntries(): Promise<LocalCatalogEntry[]> {
+  const database = getDatabase();
+  return database.getAllAsync<LocalCatalogEntry>(
+    'SELECT * FROM puzzle_catalog ORDER BY puzzle_date DESC'
+  );
+}
+
+/**
+ * Get catalog entries with pagination and optional game mode filter.
+ * Used for Archive screen infinite scroll.
+ *
+ * @param offset - Number of entries to skip
+ * @param limit - Maximum number of entries to return
+ * @param gameMode - Optional game mode filter (null for all modes)
+ */
+export async function getCatalogEntriesPaginated(
+  offset: number,
+  limit: number,
+  gameMode?: string | null
+): Promise<LocalCatalogEntry[]> {
+  const database = getDatabase();
+
+  if (gameMode) {
+    return database.getAllAsync<LocalCatalogEntry>(
+      `SELECT * FROM puzzle_catalog
+       WHERE game_mode = $gameMode
+       ORDER BY puzzle_date DESC
+       LIMIT $limit OFFSET $offset`,
+      { $gameMode: gameMode, $limit: limit, $offset: offset }
+    );
+  }
+
+  return database.getAllAsync<LocalCatalogEntry>(
+    `SELECT * FROM puzzle_catalog
+     ORDER BY puzzle_date DESC
+     LIMIT $limit OFFSET $offset`,
+    { $limit: limit, $offset: offset }
+  );
+}
+
+/**
+ * Get the total count of catalog entries, with optional game mode filter.
+ * Used for pagination calculations.
+ */
+export async function getCatalogEntryCount(
+  gameMode?: string | null
+): Promise<number> {
+  const database = getDatabase();
+
+  if (gameMode) {
+    const result = await database.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM puzzle_catalog WHERE game_mode = $gameMode',
+      { $gameMode: gameMode }
+    );
+    return result?.count ?? 0;
+  }
+
+  const result = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM puzzle_catalog'
+  );
+  return result?.count ?? 0;
+}
+
+/**
+ * Clear all catalog entries.
+ * Used for full resync scenarios.
+ */
+export async function clearCatalog(): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync('DELETE FROM puzzle_catalog');
 }
 
 // ============ UTILITY FUNCTIONS ============
