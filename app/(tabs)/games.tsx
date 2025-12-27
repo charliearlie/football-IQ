@@ -27,7 +27,7 @@ const GAME_MODES = [
   {
     id: 'topical-quiz',
     title: 'Topical Quiz',
-    description: '10 multiple-choice questions on current football events',
+    description: '5 multiple-choice questions on current football events',
   },
 ];
 
@@ -54,9 +54,11 @@ export default function GamesScreen() {
       case 'goalscorers':
         router.push('/goalscorer-recall');
         break;
-      // TODO: Add routes for other game modes
+      case 'topical-quiz':
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.push('/topical-quiz' as any);
+        break;
       default:
-        // Game mode not yet implemented
         break;
     }
   };

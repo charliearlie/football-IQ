@@ -7,7 +7,6 @@ import {
   Grid3X3,
   HelpCircle,
   CheckCircle,
-  Lock,
 } from 'lucide-react-native';
 import { GlassCard, ElevatedButton } from '@/components';
 import { colors, textStyles, spacing } from '@/theme';
@@ -91,9 +90,9 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
     case 'topical_quiz':
       return {
         title: 'Quiz',
-        subtitle: 'Coming Soon',
-        icon: <HelpCircle color={colors.textSecondary} size={32} />,
-        iconColor: colors.textSecondary,
+        subtitle: '5 questions',
+        icon: <HelpCircle color={colors.cardYellow} size={32} />,
+        iconColor: colors.cardYellow,
       };
     default:
       return {
@@ -112,7 +111,6 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
  * - play: "Play" button (green)
  * - resume: "Resume" button (yellow)
  * - done: Score emoji grid + checkmark
- * - Coming Soon: Locked icon (for topical_quiz)
  */
 export function DailyStackCard({
   puzzleId,
@@ -124,33 +122,25 @@ export function DailyStackCard({
   testID,
 }: DailyStackCardProps) {
   const config = getGameModeConfig(gameMode);
-  const isComingSoon = gameMode === 'topical_quiz';
 
   return (
     <GlassCard style={styles.card} testID={testID}>
       <Pressable
         style={styles.content}
-        onPress={isComingSoon ? undefined : onPress}
-        disabled={isComingSoon}
+        onPress={onPress}
       >
         {/* Left: Icon + Title */}
         <View style={styles.left}>
           <View style={styles.iconContainer}>{config.icon}</View>
           <View style={styles.textContainer}>
             <Text style={styles.title}>{config.title}</Text>
-            <Text style={styles.subtitle}>
-              {isComingSoon ? 'Coming Soon' : config.subtitle}
-            </Text>
+            <Text style={styles.subtitle}>{config.subtitle}</Text>
           </View>
         </View>
 
         {/* Right: Action or Result */}
         <View style={styles.right}>
-          {isComingSoon ? (
-            <View style={styles.comingSoonContainer}>
-              <Lock color={colors.textSecondary} size={24} />
-            </View>
-          ) : status === 'done' ? (
+          {status === 'done' ? (
             <View style={styles.doneContainer}>
               {scoreDisplay && (
                 <Text style={styles.scoreDisplay}>{scoreDisplay}</Text>
@@ -220,8 +210,5 @@ const styles = StyleSheet.create({
   scoreDisplay: {
     ...textStyles.bodySmall,
     color: colors.floodlightWhite,
-  },
-  comingSoonContainer: {
-    opacity: 0.5,
   },
 });

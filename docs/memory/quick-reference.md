@@ -285,6 +285,53 @@ checkDraw(cells)           // Returns true if draw
 generateTicTacToeEmojiGrid(cells);
 ```
 
+## Topical Quiz Game
+```typescript
+import {
+  TopicalQuizScreen,
+  useTopicalQuizGame,
+  calculateQuizScore,
+  generateQuizEmojiGrid,
+  shareQuizResult,
+} from '@/features/topical-quiz';
+
+// Puzzle content structure
+interface TopicalQuizContent {
+  questions: [QuizQuestion, QuizQuestion, QuizQuestion, QuizQuestion, QuizQuestion];
+}
+
+interface QuizQuestion {
+  id: string;
+  question: string;
+  imageUrl?: string;           // Optional image
+  options: [string, string, string, string];
+  correctIndex: number;        // 0-3
+}
+
+// Hook usage (internal to TopicalQuizScreen)
+const {
+  state,
+  currentQuestion,
+  getOptionState,
+  handleAnswer,
+  shareResult,
+} = useTopicalQuizGame(puzzle);
+
+// State values
+state.currentQuestionIndex   // 0-4 (current question)
+state.answers                // Array of { questionId, selectedIndex, isCorrect }
+state.gameStatus             // 'playing' | 'complete'
+state.score                  // TopicalQuizScore | null
+state.showingResult          // true during 1.5s feedback delay
+
+// Scoring: 2 points per correct answer
+calculateQuizScore(4)  // { points: 8, maxPoints: 10, correctCount: 4 }
+calculateQuizScore(5)  // { points: 10, maxPoints: 10, correctCount: 5 }
+
+// Emoji grid: ✅✅❌✅❌
+generateQuizEmojiGrid(answers)
+```
+
 ## Archive Screen
 ```typescript
 import {
@@ -320,6 +367,7 @@ formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"
 - Transfer Guess: `src/features/transfer-guess/`
 - Goalscorer Recall: `src/features/goalscorer-recall/`
 - Tic Tac Toe: `src/features/tic-tac-toe/`
+- Topical Quiz: `src/features/topical-quiz/`
 - Archive: `src/features/archive/`
 - Local DB: `src/lib/database.ts`
 
@@ -332,6 +380,7 @@ app/
   tic-tac-toe.tsx       # Tic Tac Toe game route
   transfer-guess.tsx    # Transfer Guess game route
   goalscorer-recall.tsx # Goalscorer Recall game route
+  topical-quiz.tsx      # Topical Quiz game route
   design-lab.tsx        # Component showcase
 src/
   components/           # ElevatedButton, GlassCard
@@ -350,6 +399,7 @@ src/
     tic-tac-toe/       # TicTacToeScreen, useTicTacToeGame
     transfer-guess/    # TransferGuessScreen, useTransferGuessGame
     goalscorer-recall/ # GoalscorerRecallScreen, useGoalscorerRecallGame
+    topical-quiz/      # TopicalQuizScreen, useTopicalQuizGame
     home/
     games/
     archive/
@@ -390,7 +440,7 @@ open tools/content-creator.html
 3. Fill form → Review JSON → Push to Supabase
 ```
 
-Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`
+Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `topical_quiz`
 
 ## Migrations
 ```

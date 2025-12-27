@@ -160,6 +160,7 @@
             <option value="guess_the_transfer">Transfer Guess</option>
             <option value="guess_the_goalscorers">Goalscorer Recall</option>
             <option value="tic_tac_toe">Tic Tac Toe</option>
+            <option value="topical_quiz">Topical Quiz</option>
           </select>
         </div>
         <div>
@@ -317,6 +318,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Topical Quiz Form -->
+        <div id="topical-quiz-form" class="form-section hidden">
+          <p class="text-sm text-slate-400 mb-4">Create 5 multiple-choice questions. Each question can optionally include an image URL.</p>
+          <div id="tq-questions" class="space-y-6"></div>
+        </div>
       </section>
 
       <!-- Preview Section -->
@@ -347,6 +354,7 @@
     let supabaseClient = null;
     let careerSteps = [];
     let goals = [];
+    let quizQuestions = [];
 
     // ============ Initialization ============
     document.addEventListener('DOMContentLoaded', () => {
@@ -356,6 +364,7 @@
       addCareerStep();
       addCareerStep(); // Minimum 3 steps
       addGoal(); // Start with one goal
+      initQuizQuestions(); // Initialize 5 quiz questions
       updatePreview();
       updateTicTacToeLabels();
     });
@@ -419,7 +428,8 @@
         'career_path': 'Career Path',
         'guess_the_transfer': 'Transfer Guess',
         'guess_the_goalscorers': 'Goalscorer Recall',
-        'tic_tac_toe': 'Tic Tac Toe'
+        'tic_tac_toe': 'Tic Tac Toe',
+        'topical_quiz': 'Topical Quiz'
       };
 
       document.getElementById('form-title').textContent = titles[mode];
@@ -432,6 +442,8 @@
         document.getElementById('goalscorer-recall-form').classList.remove('hidden');
       } else if (mode === 'tic_tac_toe') {
         document.getElementById('tic-tac-toe-form').classList.remove('hidden');
+      } else if (mode === 'topical_quiz') {
+        document.getElementById('topical-quiz-form').classList.remove('hidden');
       }
 
       updatePreview();
@@ -585,6 +597,96 @@
       }
     }
 
+    // ============ Topical Quiz Form ============
+    function initQuizQuestions() {
+      quizQuestions = [];
+      for (let i = 0; i < 5; i++) {
+        quizQuestions.push({
+          id: `q${i + 1}`,
+          question: '',
+          imageUrl: '',
+          options: ['', '', '', ''],
+          correctIndex: 0
+        });
+      }
+      renderQuizQuestions();
+    }
+
+    function renderQuizQuestions() {
+      const container = document.getElementById('tq-questions');
+      container.innerHTML = quizQuestions.map((q, index) => `
+        <div class="bg-slate-900/50 p-4 rounded-lg" data-question="${index}">
+          <h4 class="text-sm font-bold text-cardYellow mb-3">Question ${index + 1}</h4>
+
+          <!-- Image URL (optional) -->
+          <div class="mb-3">
+            <label class="form-label text-xs">Image URL (optional)</label>
+            <input type="text" class="form-input text-sm" placeholder="https://storage.supabase.co/..."
+              value="${escapeHtml(q.imageUrl)}" oninput="updateQuizQuestion(${index}, 'imageUrl', this.value); updatePreview()">
+          </div>
+
+          <!-- Question Text -->
+          <div class="mb-3">
+            <label class="form-label text-xs">Question</label>
+            <textarea class="form-input h-16 text-sm" placeholder="Which team won the 2024 Champions League?"
+              oninput="updateQuizQuestion(${index}, 'question', this.value); updatePreview()">${escapeHtml(q.question)}</textarea>
+          </div>
+
+          <!-- Options Grid -->
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <label class="form-label text-xs flex items-center gap-1">
+                <input type="radio" name="correct-${index}" value="0" ${q.correctIndex === 0 ? 'checked' : ''}
+                  onchange="updateQuizQuestion(${index}, 'correctIndex', 0); updatePreview()">
+                Option A ${q.correctIndex === 0 ? '✓' : ''}
+              </label>
+              <input type="text" class="form-input text-sm" placeholder="Option A"
+                value="${escapeHtml(q.options[0])}" oninput="updateQuizOption(${index}, 0, this.value); updatePreview()">
+            </div>
+            <div>
+              <label class="form-label text-xs flex items-center gap-1">
+                <input type="radio" name="correct-${index}" value="1" ${q.correctIndex === 1 ? 'checked' : ''}
+                  onchange="updateQuizQuestion(${index}, 'correctIndex', 1); updatePreview()">
+                Option B ${q.correctIndex === 1 ? '✓' : ''}
+              </label>
+              <input type="text" class="form-input text-sm" placeholder="Option B"
+                value="${escapeHtml(q.options[1])}" oninput="updateQuizOption(${index}, 1, this.value); updatePreview()">
+            </div>
+            <div>
+              <label class="form-label text-xs flex items-center gap-1">
+                <input type="radio" name="correct-${index}" value="2" ${q.correctIndex === 2 ? 'checked' : ''}
+                  onchange="updateQuizQuestion(${index}, 'correctIndex', 2); updatePreview()">
+                Option C ${q.correctIndex === 2 ? '✓' : ''}
+              </label>
+              <input type="text" class="form-input text-sm" placeholder="Option C"
+                value="${escapeHtml(q.options[2])}" oninput="updateQuizOption(${index}, 2, this.value); updatePreview()">
+            </div>
+            <div>
+              <label class="form-label text-xs flex items-center gap-1">
+                <input type="radio" name="correct-${index}" value="3" ${q.correctIndex === 3 ? 'checked' : ''}
+                  onchange="updateQuizQuestion(${index}, 'correctIndex', 3); updatePreview()">
+                Option D ${q.correctIndex === 3 ? '✓' : ''}
+              </label>
+              <input type="text" class="form-input text-sm" placeholder="Option D"
+                value="${escapeHtml(q.options[3])}" oninput="updateQuizOption(${index}, 3, this.value); updatePreview()">
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateQuizQuestion(index, field, value) {
+      if (field === 'correctIndex') {
+        quizQuestions[index].correctIndex = parseInt(value, 10);
+      } else {
+        quizQuestions[index][field] = value;
+      }
+    }
+
+    function updateQuizOption(index, optionIndex, value) {
+      quizQuestions[index].options[optionIndex] = value;
+    }
+
     // ============ JSON Preview ============
     function generateContent() {
       const mode = document.getElementById('game-mode').value;
@@ -666,6 +768,24 @@
         };
       }
 
+      if (mode === 'topical_quiz') {
+        return {
+          questions: quizQuestions.map(q => {
+            const question = {
+              id: q.id,
+              question: q.question.trim(),
+              options: q.options.map(o => o.trim()),
+              correctIndex: q.correctIndex
+            };
+            // Only include imageUrl if it has a value
+            if (q.imageUrl && q.imageUrl.trim()) {
+              question.imageUrl = q.imageUrl.trim();
+            }
+            return question;
+          })
+        };
+      }
+
       return {};
     }
 
@@ -743,6 +863,19 @@
             errors.push(`Cell (Row ${row}, Col ${col}) needs at least one valid player`);
           }
         }
+      }
+
+      if (mode === 'topical_quiz') {
+        content.questions.forEach((q, i) => {
+          if (!q.question) errors.push(`Question ${i + 1}: Question text is required`);
+          if (!q.options[0]) errors.push(`Question ${i + 1}: Option A is required`);
+          if (!q.options[1]) errors.push(`Question ${i + 1}: Option B is required`);
+          if (!q.options[2]) errors.push(`Question ${i + 1}: Option C is required`);
+          if (!q.options[3]) errors.push(`Question ${i + 1}: Option D is required`);
+          if (q.correctIndex < 0 || q.correctIndex > 3) {
+            errors.push(`Question ${i + 1}: Valid correct answer must be selected`);
+          }
+        });
       }
 
       return errors;
@@ -857,6 +990,9 @@
       for (let i = 0; i < 9; i++) {
         document.getElementById(`ttt-cell-${i}`).value = '';
       }
+
+      // Reset Topical Quiz
+      initQuizQuestions();
 
       // Hide validation
       document.getElementById('validation-section').classList.add('hidden');

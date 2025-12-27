@@ -23,7 +23,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   guess_the_transfer: 'transfer-guess',
   guess_the_goalscorers: 'goalscorer-recall',
   tic_tac_toe: 'tic-tac-toe',
-  topical_quiz: '', // Coming soon - no route
+  topical_quiz: 'topical-quiz',
 };
 
 /**

@@ -6,7 +6,7 @@ Football IQ is a mobile trivia game for football fans featuring daily puzzles ac
 2. Tic Tac Toe - 3x3 grid of categories
 3. Guess the Transfer - Identify player from transfer info
 4. Guess the Goalscorers - Name scorers from match result
-5. Topical Quiz - 10 multiple-choice questions
+5. Topical Quiz - 5 multiple-choice questions on current events
 
 ## Tech Stack
 - **Mobile App**: React Native + Expo
@@ -736,6 +736,112 @@ src/features/tic-tac-toe/
 - Route: `/tic-tac-toe`
 - Accessible from Games tab card ('tic-tac-toe')
 
+## Topical Quiz Game Mode
+Initialized: 2025-12-27
+
+### Overview
+5-question multiple-choice quiz focused on current football events. Each question may optionally include an image. Auto-advances after answer with visual feedback.
+
+### Puzzle Content Structure
+```typescript
+interface QuizQuestion {
+  id: string;              // Unique question ID
+  question: string;        // Question text
+  imageUrl?: string;       // Optional image URL
+  options: [string, string, string, string];  // 4 options (A-D)
+  correctIndex: number;    // 0-3 correct answer index
+}
+
+interface TopicalQuizContent {
+  questions: [QuizQuestion, QuizQuestion, QuizQuestion, QuizQuestion, QuizQuestion];
+}
+```
+
+### Game State
+```
+currentQuestionIndex: 0 → 0-4
+answers: QuizAnswer[] → records of each answer
+gameStatus: 'playing' | 'complete'
+score: TopicalQuizScore | null
+attemptSaved: boolean
+showingResult: boolean → true during 1.5s feedback
+```
+
+### Key Mechanics
+| Mechanic | Behavior |
+|----------|----------|
+| Answer Selection | Tap option to select answer |
+| Feedback | Correct = green, Wrong = red + show correct in green |
+| Auto-advance | 1.5s delay after answer |
+| Image | Optional per question with loading skeleton |
+| Progress | 5 circles showing current position |
+
+### Scoring System
+```
+Formula: 2 points per correct answer
+Max: 10 points (5 correct)
+Min: 0 points (0 correct)
+```
+
+### Score Display (Emoji Grid)
+Format: `✅✅❌✅❌` (one per question)
+- `✅` = Correct answer
+- `❌` = Incorrect answer
+
+Example: `✅✅✅❌✅` → 4/5 correct = 8 points
+
+### Option Button States
+| State | Appearance |
+|-------|------------|
+| default | Glass background, pressable |
+| correct | pitchGreen (user picked correct) |
+| incorrect | redCard (user picked wrong) |
+| reveal | pitchGreen faded (show correct when user wrong) |
+| disabled | Gray (during feedback) |
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `TopicalQuizScreen` | Main screen with question flow |
+| `QuizProgressBar` | 5 animated circles showing progress |
+| `QuizQuestionCard` | GlassCard with optional image + question |
+| `QuizOptionButton` | Option with feedback colors |
+| `TopicalQuizResultModal` | Result modal with confetti + share |
+
+### Animations
+- **Progress bar**: Scale + color transitions on circles
+- **Option buttons**: Spring press, color transitions
+- **Question card**: Opacity fade between questions
+- **Result modal**: Confetti reused from career-path
+
+### Files
+```
+src/features/topical-quiz/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── TopicalQuizScreen.tsx
+  ├── components/
+  │   ├── QuizProgressBar.tsx
+  │   ├── QuizQuestionCard.tsx
+  │   ├── QuizOptionButton.tsx
+  │   └── TopicalQuizResultModal.tsx
+  ├── hooks/
+  │   └── useTopicalQuizGame.ts   # Reducer + auto-advance timer
+  ├── utils/
+  │   ├── quizScoring.ts          # Score calculation
+  │   ├── quizScoreDisplay.ts     # Emoji grid generation
+  │   └── quizShare.ts            # Share functionality
+  ├── types/
+  │   └── topicalQuiz.types.ts
+  └── __tests__/
+      └── quizScoring.test.ts     # Scoring tests
+```
+
+### Navigation
+- Route: `/topical-quiz`
+- Accessible from Games tab card ('topical-quiz')
+- Dynamic route: `/topical-quiz/[puzzleId]`
+
 ## Daily Loop System
 Initialized: 2025-12-25
 
@@ -755,7 +861,6 @@ Card States:
 | Play | Green "Play" button | No attempt exists |
 | Resume | Yellow "Resume" button | Attempt exists, not completed |
 | Done | Score emoji grid + checkmark | Attempt completed |
-| Coming Soon | Lock icon (Quiz mode) | Game not implemented |
 
 ### Dynamic Routing
 Routes support both game mode (today's puzzle) and specific puzzle ID:
@@ -771,7 +876,10 @@ app/
 ├── goalscorer-recall/
 │   ├── index.tsx
 │   └── [puzzleId].tsx
-└── tic-tac-toe/
+├── tic-tac-toe/
+│   ├── index.tsx
+│   └── [puzzleId].tsx
+└── topical-quiz/
     ├── index.tsx
     └── [puzzleId].tsx
 ```
@@ -962,7 +1070,7 @@ A standalone HTML/JS utility for Product Owners to manually create and push puzz
 
 #### Features
 - **Supabase Configuration**: URL + Service Role Key stored in localStorage
-- **4 Game Mode Forms**: Career Path, Transfer Guess, Goalscorer Recall, Tic Tac Toe
+- **5 Game Mode Forms**: Career Path, Transfer Guess, Goalscorer Recall, Tic Tac Toe, Topical Quiz
 - **Live JSON Preview**: Updates as user types
 - **Pre-flight Validation**: Blocks incomplete puzzles
 - **Push to Supabase**: Upserts directly with `status: 'live'`
@@ -990,3 +1098,4 @@ A standalone HTML/JS utility for Product Owners to manually create and push puzz
 | Transfer Guess | answer, from_club, to_club, year, fee, hints[3] |
 | Goalscorer Recall | home_team, away_team, scores, competition, match_date, goals[] |
 | Tic Tac Toe | rows[3], columns[3], valid_answers{0-8: string[]} |
+| Topical Quiz | questions[5] (id, question, imageUrl?, options[4], correctIndex) |
