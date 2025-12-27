@@ -82,6 +82,20 @@ jest.mock('react-native-reanimated', () => {
     createAnimatedComponent: (component: any) => component,
   };
 
+  // Create chainable layout animation mock
+  const createLayoutAnimationMock = () => {
+    const chainable: any = {
+      springify: () => chainable,
+      damping: () => chainable,
+      stiffness: () => chainable,
+      duration: () => chainable,
+      delay: () => chainable,
+      withInitialValues: () => chainable,
+      withCallback: () => chainable,
+    };
+    return chainable;
+  };
+
   return {
     __esModule: true,
     default: Animated,
@@ -97,6 +111,15 @@ jest.mock('react-native-reanimated', () => {
     withSequence: jest.fn((...vals) => vals[0]),
     withRepeat: jest.fn((val) => val),
     createAnimatedComponent: (component: any) => component,
+    // Layout animations
+    SlideInDown: createLayoutAnimationMock(),
+    SlideInUp: createLayoutAnimationMock(),
+    SlideOutDown: createLayoutAnimationMock(),
+    SlideOutUp: createLayoutAnimationMock(),
+    FadeIn: createLayoutAnimationMock(),
+    FadeOut: createLayoutAnimationMock(),
+    ZoomIn: createLayoutAnimationMock(),
+    ZoomOut: createLayoutAnimationMock(),
     Easing: {
       linear: jest.fn(() => jest.fn()),
       ease: jest.fn(() => jest.fn()),

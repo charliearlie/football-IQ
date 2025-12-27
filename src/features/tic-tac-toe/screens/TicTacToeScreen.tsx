@@ -19,11 +19,23 @@ import { TicTacToeActionZone } from '../components/TicTacToeActionZone';
 import { TicTacToeResultModal } from '../components/TicTacToeResultModal';
 
 /**
+ * Props for TicTacToeScreen.
+ */
+interface TicTacToeScreenProps {
+  /**
+   * Optional puzzle ID to load a specific puzzle.
+   * If not provided, loads today's tic_tac_toe puzzle.
+   */
+  puzzleId?: string;
+}
+
+/**
  * TicTacToeScreen - Main game screen
  */
-export function TicTacToeScreen() {
+export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
   const insets = useSafeAreaInsets();
-  const { puzzle, isLoading } = usePuzzle('tic_tac_toe');
+  // Use puzzleId if provided, otherwise fall back to game mode lookup
+  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'tic_tac_toe');
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared'>('idle');
 
   const {

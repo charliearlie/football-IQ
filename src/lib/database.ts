@@ -241,6 +241,50 @@ export async function getUnsyncedAttempts(): Promise<ParsedLocalAttempt[]> {
 }
 
 /**
+ * Get the most recent attempt for a specific puzzle.
+ * Used to determine card status (play/resume/done) on Home Screen.
+ */
+export async function getAttemptByPuzzleId(
+  puzzleId: string
+): Promise<ParsedLocalAttempt | null> {
+  const database = getDatabase();
+  const row = await database.getFirstAsync<LocalAttempt>(
+    'SELECT * FROM attempts WHERE puzzle_id = $puzzleId ORDER BY started_at DESC LIMIT 1',
+    { $puzzleId: puzzleId }
+  );
+  return row ? parseAttempt(row) : null;
+}
+
+/**
+ * Attempt with puzzle date for streak calculation.
+ */
+export interface AttemptWithPuzzleDate extends ParsedLocalAttempt {
+  puzzle_date: string;
+}
+
+/**
+ * Get all completed attempts with their associated puzzle dates.
+ * Used for streak calculation - joins attempts with puzzles to get dates.
+ * Only returns completed attempts, ordered by puzzle_date descending.
+ */
+export async function getAllCompletedAttemptsWithDates(): Promise<
+  AttemptWithPuzzleDate[]
+> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<LocalAttempt & { puzzle_date: string }>(
+    `SELECT a.*, p.puzzle_date
+     FROM attempts a
+     JOIN puzzles p ON a.puzzle_id = p.id
+     WHERE a.completed = 1
+     ORDER BY p.puzzle_date DESC`
+  );
+  return rows.map((row) => ({
+    ...parseAttempt(row),
+    puzzle_date: row.puzzle_date,
+  }));
+}
+
+/**
  * Mark an attempt as synced to Supabase.
  */
 export async function markAttemptSynced(id: string): Promise<void> {

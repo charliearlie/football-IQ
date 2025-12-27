@@ -733,3 +733,121 @@ src/features/tic-tac-toe/
 ### Navigation
 - Route: `/tic-tac-toe`
 - Accessible from Games tab card ('tic-tac-toe')
+
+## Daily Loop System
+Initialized: 2025-12-25
+
+### Overview
+The Daily Loop connects the database to the UI, providing a centralized Home Screen dashboard that shows today's puzzles with dynamic states (Play/Resume/Done), streak tracking, and navigation to game screens via dynamic routes.
+
+### Home Screen Dashboard
+**Location:** `app/(tabs)/index.tsx`
+
+Components:
+- **StreakHeader**: Displays current streak (fire icon + count) and daily progress (X/5)
+- **DailyStackCard**: Individual game card with state-dependent UI
+
+Card States:
+| State | UI | Trigger |
+|-------|----|---------|
+| Play | Green "Play" button | No attempt exists |
+| Resume | Yellow "Resume" button | Attempt exists, not completed |
+| Done | Score emoji grid + checkmark | Attempt completed |
+| Coming Soon | Lock icon (Quiz mode) | Game not implemented |
+
+### Dynamic Routing
+Routes support both game mode (today's puzzle) and specific puzzle ID:
+
+```
+app/
+├── career-path/
+│   ├── index.tsx          # Today's puzzle (fallback)
+│   └── [puzzleId].tsx     # Specific puzzle by ID
+├── transfer-guess/
+│   ├── index.tsx
+│   └── [puzzleId].tsx
+├── goalscorer-recall/
+│   ├── index.tsx
+│   └── [puzzleId].tsx
+└── tic-tac-toe/
+    ├── index.tsx
+    └── [puzzleId].tsx
+```
+
+### Streak Calculation
+**Location:** `src/features/home/hooks/useUserStats.ts`
+
+Algorithm:
+1. Query all completed attempts from SQLite with puzzle_date
+2. Get unique dates, sort descending (most recent first)
+3. Check if most recent is today or yesterday (streak active)
+4. Count consecutive days backward until gap found
+5. Track longest streak during iteration
+
+Global streak increments when user completes at least 1 puzzle per day.
+
+### Key Hooks
+| Hook | Purpose |
+|------|---------|
+| `useUserStats()` | Streak calculation, games played stats |
+| `useDailyPuzzles()` | Today's 5 puzzle cards with status |
+| `usePuzzle(gameModeOrPuzzleId)` | Get puzzle by game mode OR puzzle ID |
+
+### State Machine
+```
+App Launch
+    ↓
+Load cached puzzles from SQLite
+    ↓
+Sync puzzles from Supabase (if authenticated)
+    ↓
+Home Screen renders:
+  - StreakHeader (from useUserStats)
+  - DailyStackCard × 5 (from useDailyPuzzles)
+    ↓
+User taps card → Navigate to /{game}/{puzzleId}
+    ↓
+Game screen loads puzzle via usePuzzle(puzzleId)
+    ↓
+User completes game → saveAttempt() to SQLite
+    ↓
+Return to Home → Card shows "Done" + emoji grid
+    ↓
+Streak increments (if first completion of day)
+```
+
+### Midnight Refresh
+AppState listener in Home Screen and useUserStats:
+- When app comes to foreground ("active")
+- Check if date changed since last refresh
+- If yes, refresh stats and puzzle cards
+
+### Files
+```
+src/features/home/
+  ├── index.ts                           # Exports
+  ├── hooks/
+  │   ├── useUserStats.ts                # Streak calculation
+  │   └── useDailyPuzzles.ts             # Today's puzzles with status
+  ├── components/
+  │   ├── StreakHeader.tsx               # Streak + progress display
+  │   └── DailyStackCard.tsx             # Game card component
+  └── __tests__/
+      └── Integration.test.tsx           # Home screen tests
+
+src/features/stats/
+  └── __tests__/
+      └── Streak.test.ts                 # Streak calculation tests
+
+src/lib/database.ts (additions)
+  ├── getAttemptByPuzzleId()             # For card status
+  └── getAllCompletedAttemptsWithDates() # For streak calculation
+```
+
+### Seed Data
+**Location:** `scripts/seed_data.sql`
+
+Development seed includes:
+- 35 puzzles: 5 modes × 7 days (CURRENT_DATE -3 to +3)
+- 10 match_data rows for Goalscorer Recall
+- All puzzles set to `status: 'live'` for RLS access

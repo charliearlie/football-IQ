@@ -9,22 +9,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Platform,
-} from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withDelay,
-} from 'react-native-reanimated';
-import { Trophy, XCircle, Share2, Check } from 'lucide-react-native';
-import { GlassCard } from '@/components/GlassCard';
+import { Modal, View, Text, StyleSheet, Platform } from 'react-native';
+import Animated, { SlideInDown } from 'react-native-reanimated';
+import { Trophy, XCircle } from 'lucide-react-native';
+import { ElevatedButton } from '@/components/ElevatedButton';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
@@ -33,13 +21,6 @@ import { TransferGuessScore, formatTransferScore } from '../utils/transferScorin
 import { generateTransferEmojiGrid } from '../utils/transferScoreDisplay';
 import { Confetti } from '@/features/career-path/components/Confetti';
 import { ShareResult } from '../utils/transferShare';
-
-/** Spring configuration for entrance animation */
-const ENTRANCE_SPRING = {
-  damping: 15,
-  stiffness: 120,
-  mass: 0.8,
-};
 
 interface TransferResultModalProps {
   /** Whether the modal is visible */
@@ -52,6 +33,8 @@ interface TransferResultModalProps {
   correctAnswer: string;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
+  /** Callback to close/dismiss the modal */
+  onClose: () => void;
   /** Test ID for testing */
   testID?: string;
 }
@@ -65,39 +48,19 @@ export function TransferResultModal({
   score,
   correctAnswer,
   onShare,
+  onClose,
   testID,
 }: TransferResultModalProps) {
   const { triggerNotification, triggerSelection } = useHaptics();
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared'>('idle');
 
-  // Entrance animation values
-  const scale = useSharedValue(0.8);
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
-
-  // Reset share status when modal opens
+  // Reset share status and trigger haptics when modal opens
   useEffect(() => {
     if (visible) {
       setShareStatus('idle');
-      // Trigger entrance animation
-      scale.value = withSpring(1, ENTRANCE_SPRING);
-      opacity.value = withDelay(100, withSpring(1, ENTRANCE_SPRING));
-      translateY.value = withSpring(0, ENTRANCE_SPRING);
-
-      // Haptic feedback
       triggerNotification(won ? 'success' : 'error');
-    } else {
-      // Reset for next open
-      scale.value = 0.8;
-      opacity.value = 0;
-      translateY.value = 20;
     }
-  }, [visible, won, scale, opacity, translateY, triggerNotification]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
+  }, [visible, won, triggerNotification]);
 
   const handleShare = async () => {
     triggerSelection();
@@ -142,80 +105,86 @@ export function TransferResultModal({
       statusBarTranslucent
       testID={testID}
     >
-      {/* Confetti for win */}
-      {won && <Confetti active={visible} testID="confetti" />}
-
       <View style={styles.overlay}>
-        <Animated.View style={[styles.content, animatedStyle]}>
-          <GlassCard
-            style={{
-              ...styles.card,
-              borderColor: won ? colors.pitchGreen : colors.redCard,
-            }}
+        {/* Confetti for win */}
+        {won && <Confetti active={visible} testID="confetti" />}
+
+        <Animated.View
+          entering={SlideInDown.springify().damping(15).stiffness(100)}
+          style={[
+            styles.modal,
+            { borderColor: won ? colors.pitchGreen : colors.redCard },
+          ]}
+        >
+          {/* Icon */}
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: won ? colors.pitchGreen : colors.redCard },
+            ]}
           >
-            {/* Icon */}
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: won ? colors.pitchGreen : colors.redCard },
-              ]}
-            >
-              {won ? (
-                <Trophy size={32} color={colors.stadiumNavy} strokeWidth={2} />
-              ) : (
-                <XCircle size={32} color={colors.floodlightWhite} strokeWidth={2} />
-              )}
-            </View>
-
-            {/* Title */}
-            <Text style={styles.title}>{won ? 'CORRECT!' : 'GAME OVER'}</Text>
-
-            {/* Score or Answer */}
             {won ? (
-              <View style={styles.scoreContainer}>
-                <Text style={styles.scoreLabel}>Score</Text>
-                <Text style={styles.scoreValue}>
-                  {formatTransferScore(score)}
-                </Text>
-              </View>
+              <Trophy size={32} color={colors.stadiumNavy} strokeWidth={2} />
             ) : (
-              <View style={styles.answerContainer}>
-                <Text style={styles.answerLabel}>The answer was:</Text>
-                <Text style={styles.answerValue}>{correctAnswer}</Text>
-              </View>
+              <XCircle size={32} color={colors.floodlightWhite} strokeWidth={2} />
             )}
+          </View>
 
-            {/* Emoji Grid */}
-            <View style={styles.gridContainer}>
-              <Text style={styles.emojiGrid}>{emojiGrid}</Text>
+          {/* Title */}
+          <Text style={[styles.title, { color: won ? colors.pitchGreen : colors.redCard }]}>
+            {won ? 'CORRECT!' : 'GAME OVER'}
+          </Text>
+
+          {/* Score or Answer */}
+          {won ? (
+            <View style={styles.scoreContainer}>
+              <Text style={styles.scoreLabel}>Score</Text>
+              <Text style={styles.scoreValue}>{formatTransferScore(score)}</Text>
             </View>
+          ) : (
+            <View style={styles.answerContainer}>
+              <Text style={styles.answerLabel}>The answer was:</Text>
+              <Text style={styles.answerValue}>{correctAnswer}</Text>
+            </View>
+          )}
 
-            {/* Message */}
-            <Text style={styles.message}>{getMessage()}</Text>
+          {/* Emoji Grid */}
+          <View style={styles.gridContainer}>
+            <Text style={styles.emojiGrid}>{emojiGrid}</Text>
+          </View>
 
-            {/* Share Button */}
-            <Pressable
-              style={[
-                styles.shareButton,
-                shareStatus === 'shared' && styles.shareButtonSuccess,
-              ]}
+          {/* Message */}
+          <Text style={styles.message}>{getMessage()}</Text>
+
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <ElevatedButton
+              title={
+                shareStatus === 'shared'
+                  ? Platform.OS === 'web'
+                    ? 'Copied!'
+                    : 'Shared!'
+                  : 'Share Result'
+              }
               onPress={handleShare}
-            >
-              {shareStatus === 'shared' ? (
-                <>
-                  <Check size={20} color={colors.pitchGreen} strokeWidth={2} />
-                  <Text style={[styles.shareButtonText, styles.shareButtonTextSuccess]}>
-                    {Platform.OS === 'web' ? 'Copied!' : 'Shared!'}
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Share2 size={20} color={colors.floodlightWhite} strokeWidth={2} />
-                  <Text style={styles.shareButtonText}>Share Result</Text>
-                </>
-              )}
-            </Pressable>
-          </GlassCard>
+              size="medium"
+              topColor={
+                shareStatus === 'shared' ? colors.glassBackground : colors.pitchGreen
+              }
+              shadowColor={
+                shareStatus === 'shared' ? colors.glassBorder : colors.grassShadow
+              }
+              testID="share-button"
+            />
+            <ElevatedButton
+              title="Done"
+              onPress={onClose}
+              size="medium"
+              topColor={colors.glassBackground}
+              shadowColor={colors.glassBorder}
+              testID="done-button"
+            />
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -225,19 +194,19 @@ export function TransferResultModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: spacing.lg,
   },
-  content: {
+  modal: {
+    backgroundColor: colors.stadiumNavy,
+    borderRadius: borderRadius['2xl'],
+    borderWidth: 2,
+    padding: spacing.xl,
+    alignItems: 'center',
     width: '100%',
     maxWidth: 340,
-  },
-  card: {
-    alignItems: 'center',
-    padding: spacing.xl,
-    borderWidth: 2,
   },
   iconContainer: {
     width: 64,
@@ -245,35 +214,36 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   title: {
     fontFamily: fonts.headline,
-    fontSize: 32,
-    color: colors.floodlightWhite,
-    marginBottom: spacing.lg,
+    fontSize: 48,
+    letterSpacing: 2,
     textAlign: 'center',
+    marginBottom: spacing.xs,
   },
   scoreContainer: {
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
   scoreLabel: {
-    ...textStyles.bodySmall,
+    ...textStyles.caption,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   scoreValue: {
     fontFamily: fonts.headline,
-    fontSize: 48,
-    color: colors.pitchGreen,
+    fontSize: 36,
+    color: colors.floodlightWhite,
+    letterSpacing: 2,
   },
   answerContainer: {
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
   answerLabel: {
-    ...textStyles.bodySmall,
+    ...textStyles.caption,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
@@ -284,14 +254,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   gridContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    backgroundColor: colors.glassBackground,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   emojiGrid: {
     fontSize: 20,
+    lineHeight: 28,
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -301,28 +271,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
-  shareButton: {
-    flexDirection: 'row',
+  buttonContainer: {
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    minWidth: 160,
-  },
-  shareButtonSuccess: {
-    borderColor: colors.pitchGreen,
-    backgroundColor: 'rgba(88, 204, 2, 0.1)',
-  },
-  shareButtonText: {
-    ...textStyles.button,
-    color: colors.floodlightWhite,
-  },
-  shareButtonTextSuccess: {
-    color: colors.pitchGreen,
   },
 });

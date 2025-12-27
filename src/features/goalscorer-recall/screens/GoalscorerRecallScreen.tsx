@@ -20,9 +20,21 @@ import { GoalFlash } from '../components/GoalFlash';
 import { RecallResultModal } from '../components/RecallResultModal';
 import type { GoalscorerRecallContent } from '../types/goalscorerRecall.types';
 
-export function GoalscorerRecallScreen() {
+/**
+ * Props for GoalscorerRecallScreen.
+ */
+interface GoalscorerRecallScreenProps {
+  /**
+   * Optional puzzle ID to load a specific puzzle.
+   * If not provided, loads today's guess_the_goalscorers puzzle.
+   */
+  puzzleId?: string;
+}
+
+export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps) {
   const insets = useSafeAreaInsets();
-  const { puzzle, isLoading } = usePuzzle('guess_the_goalscorers');
+  // Use puzzleId if provided, otherwise fall back to game mode lookup
+  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'guess_the_goalscorers');
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
 
   const {

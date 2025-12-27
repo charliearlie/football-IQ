@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { usePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useTransferGuessGame } from '../hooks/useTransferGuessGame';
@@ -9,14 +10,27 @@ import { TransferActionZone } from '../components/TransferActionZone';
 import { TransferResultModal } from '../components/TransferResultModal';
 
 /**
+ * Props for TransferGuessScreen.
+ */
+interface TransferGuessScreenProps {
+  /**
+   * Optional puzzle ID to load a specific puzzle.
+   * If not provided, loads today's guess_the_transfer puzzle.
+   */
+  puzzleId?: string;
+}
+
+/**
  * TransferGuessScreen - The main Guess the Transfer game screen.
  *
  * Displays transfer details (clubs, year, fee) and allows players
  * to guess the footballer. Players can reveal hints for point penalties.
  */
-export function TransferGuessScreen() {
+export function TransferGuessScreen({ puzzleId }: TransferGuessScreenProps) {
   const insets = useSafeAreaInsets();
-  const { puzzle, isLoading } = usePuzzle('guess_the_transfer');
+  const router = useRouter();
+  // Use puzzleId if provided, otherwise fall back to game mode lookup
+  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'guess_the_transfer');
   const {
     state,
     transferContent,
@@ -97,6 +111,7 @@ export function TransferGuessScreen() {
           score={state.score}
           correctAnswer={answer}
           onShare={shareResult}
+          onClose={() => router.back()}
           testID="transfer-result-modal"
         />
       )}

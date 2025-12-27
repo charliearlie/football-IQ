@@ -10,35 +10,66 @@ function getTodayDate(): string {
 }
 
 /**
- * Hook to get the puzzle for today's date and specified game mode.
+ * List of valid game modes for type checking.
+ */
+const GAME_MODES: GameMode[] = [
+  'career_path',
+  'tic_tac_toe',
+  'guess_the_transfer',
+  'guess_the_goalscorers',
+  'topical_quiz',
+];
+
+/**
+ * Check if a string is a valid game mode.
+ */
+function isGameMode(value: string): value is GameMode {
+  return GAME_MODES.includes(value as GameMode);
+}
+
+/**
+ * Hook to get a puzzle by game mode (today's puzzle) or by puzzle ID.
  *
- * @param gameMode - The game mode to get the puzzle for
+ * Supports two usage patterns:
+ * 1. `usePuzzle('career_path')` - Get today's puzzle for a game mode
+ * 2. `usePuzzle('uuid-here')` - Get a specific puzzle by ID (for archive/history)
+ *
+ * @param gameModeOrPuzzleId - Either a GameMode or a puzzle UUID
  * @returns Object containing puzzle, loading state, and refetch function
  *
  * @example
  * ```tsx
- * function CareerPathGame() {
- *   const { puzzle, isLoading, refetch } = usePuzzle('career_path');
+ * // Get today's Career Path puzzle
+ * function TodaysGame() {
+ *   const { puzzle, isLoading } = usePuzzle('career_path');
+ *   // ...
+ * }
  *
- *   if (isLoading) return <Text>Downloading Puzzles...</Text>;
- *   if (!puzzle) return <Text>No puzzle available</Text>;
- *
- *   return <PuzzleScreen puzzle={puzzle} />;
+ * // Get a specific puzzle by ID (from archive or route param)
+ * function ArchiveGame({ puzzleId }: { puzzleId: string }) {
+ *   const { puzzle, isLoading } = usePuzzle(puzzleId);
+ *   // ...
  * }
  * ```
  */
-export function usePuzzle(gameMode: GameMode): UsePuzzleResult {
+export function usePuzzle(gameModeOrPuzzleId: GameMode | string): UsePuzzleResult {
   const { puzzles, syncStatus, syncPuzzles } = usePuzzleContext();
 
   const today = useMemo(() => getTodayDate(), []);
 
   const puzzle = useMemo(() => {
-    return (
-      puzzles.find(
-        (p) => p.puzzle_date === today && p.game_mode === gameMode
-      ) ?? null
-    );
-  }, [puzzles, today, gameMode]);
+    if (isGameMode(gameModeOrPuzzleId)) {
+      // Game mode lookup: find today's puzzle for this mode
+      return (
+        puzzles.find(
+          (p) => p.puzzle_date === today && p.game_mode === gameModeOrPuzzleId
+        ) ?? null
+      );
+    } else {
+      // Puzzle ID lookup: find puzzle by ID directly
+      return puzzles.find((p) => p.id === gameModeOrPuzzleId) ?? null;
+    }
+  }, [puzzles, today, gameModeOrPuzzleId]);
 
   return {
     puzzle,

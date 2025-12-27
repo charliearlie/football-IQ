@@ -1,75 +1,180 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, textStyles, spacing } from '@/theme';
-import { ElevatedButton, GlassCard } from '@/components';
+import { StreakHeader, DailyStackCard, useUserStats, useDailyPuzzles } from '@/features/home';
+import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 /**
- * Home Screen
+ * Route map for each game mode.
+ */
+const ROUTE_MAP: Record<GameMode, string> = {
+  career_path: 'career-path',
+  guess_the_transfer: 'transfer-guess',
+  guess_the_goalscorers: 'goalscorer-recall',
+  tic_tac_toe: 'tic-tac-toe',
+  topical_quiz: '', // Coming soon - no route
+};
+
+/**
+ * Home Screen - Daily Challenge Dashboard
  *
- * Main landing screen showing today's puzzles and quick actions.
+ * Main landing screen showing:
+ * - Streak header with current streak and daily progress
+ * - Daily stack of 5 game mode cards with Play/Resume/Done states
+ *
+ * Automatically refreshes when app comes to foreground (handles midnight transition).
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
+  const { cards, completedCount, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
+
+  const isLoading = statsLoading || puzzlesLoading;
+
+  // Handle pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refreshStats(), refreshPuzzles()]);
+  }, [refreshStats, refreshPuzzles]);
+
+  // Refresh on app state change (handles midnight transition)
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        handleRefresh();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [handleRefresh]);
+
+  // Navigate to game screen with puzzle ID
+  const handleCardPress = useCallback(
+    (puzzleId: string, gameMode: GameMode) => {
+      const route = ROUTE_MAP[gameMode];
+      if (route) {
+        // Navigate to dynamic route with puzzle ID
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.push(`/${route}/${puzzleId}` as any);
+      }
+    },
+    [router]
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={[textStyles.h1, styles.title]}>Football IQ</Text>
-      <Text style={[textStyles.body, styles.subtitle]}>
-        Test your football knowledge daily
-      </Text>
-
-      <GlassCard style={styles.card}>
-        <Text style={[textStyles.subtitle, styles.cardTitle]}>
-          Today's Challenge
-        </Text>
-        <Text style={[textStyles.bodySmall, styles.cardText]}>
-          5 game modes await. How well do you know the beautiful game?
-        </Text>
-      </GlassCard>
-
-      <View style={styles.actions}>
-        <ElevatedButton
-          title="Play Now"
-          onPress={() => {}}
-          size="large"
-        />
-
-        <ElevatedButton
-          title="Design Lab"
-          onPress={() => router.push('/design-lab')}
-          topColor={colors.cardYellow}
-          shadowColor="#D4A500"
-          size="medium"
-        />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={textStyles.h1}>Football IQ</Text>
       </View>
-    </View>
+
+      {/* Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            tintColor={colors.pitchGreen}
+            colors={[colors.pitchGreen]}
+          />
+        }
+      >
+        {/* Streak Header */}
+        <StreakHeader
+          currentStreak={stats.currentStreak}
+          completedCount={completedCount}
+          totalCount={5}
+        />
+
+        {/* Daily Stack */}
+        <View style={styles.dailyStack}>
+          <Text style={styles.sectionTitle}>Today's Challenges</Text>
+
+          {isLoading && cards.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.pitchGreen} />
+              <Text style={styles.loadingText}>Loading puzzles...</Text>
+            </View>
+          ) : cards.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No puzzles available today. Pull to refresh.
+              </Text>
+            </View>
+          ) : (
+            cards.map((card) => (
+              <DailyStackCard
+                key={card.puzzleId}
+                puzzleId={card.puzzleId}
+                gameMode={card.gameMode}
+                status={card.status}
+                scoreDisplay={card.scoreDisplay}
+                difficulty={card.difficulty}
+                onPress={() => handleCardPress(card.puzzleId, card.gameMode)}
+                testID={`daily-card-${card.gameMode}`}
+              />
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.xl,
     backgroundColor: colors.stadiumNavy,
   },
-  title: {
-    marginTop: spacing['2xl'],
+  header: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
-  subtitle: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.xl,
+  scrollView: {
+    flex: 1,
   },
-  card: {
-    marginBottom: spacing.xl,
+  scrollContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing['2xl'],
   },
-  cardTitle: {
-    marginBottom: spacing.sm,
+  sectionTitle: {
+    ...textStyles.h2,
+    marginBottom: spacing.md,
   },
-  cardText: {
-    opacity: 0.8,
+  dailyStack: {
+    marginTop: spacing.lg,
   },
-  actions: {
-    gap: spacing.lg,
-    alignItems: 'flex-start',
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing['2xl'],
+    gap: spacing.md,
+  },
+  loadingText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing['2xl'],
+  },
+  emptyText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

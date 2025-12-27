@@ -1,5 +1,6 @@
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { usePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useCareerPathGame } from '../hooks/useCareerPathGame';
@@ -9,15 +10,28 @@ import { GameResultModal } from '../components/GameResultModal';
 import { CareerStep } from '../types/careerPath.types';
 
 /**
+ * Props for CareerPathScreen.
+ */
+interface CareerPathScreenProps {
+  /**
+   * Optional puzzle ID to load a specific puzzle.
+   * If not provided, loads today's career_path puzzle.
+   */
+  puzzleId?: string;
+}
+
+/**
  * CareerPathScreen - The main Career Path game screen.
  *
  * Displays a player's career as a series of sequential clues.
  * Players guess the footballer, with each wrong guess revealing
  * the next career step as a penalty.
  */
-export function CareerPathScreen() {
+export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
   const insets = useSafeAreaInsets();
-  const { puzzle, isLoading } = usePuzzle('career_path');
+  const router = useRouter();
+  // Use puzzleId if provided, otherwise fall back to game mode lookup
+  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'career_path');
   const {
     state,
     careerSteps,
@@ -109,6 +123,7 @@ export function CareerPathScreen() {
           correctAnswer={answer}
           totalSteps={totalSteps}
           onShare={shareResult}
+          onClose={() => router.back()}
           testID="game-result-modal"
         />
       )}
