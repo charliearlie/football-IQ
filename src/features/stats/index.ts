@@ -27,3 +27,8 @@ export { ProficiencyBar } from './components/ProficiencyBar';
 export { ProficiencySection } from './components/ProficiencySection';
 export { TrophyRoom } from './components/TrophyRoom';
 export { StatsGrid } from './components/StatsGrid';
+export { IQCardOverlay } from './components/IQCardOverlay';
+
+// Share utilities
+export type { IQCardData, ShareIQResult } from './utils/shareIQ';
+export { captureIQCard, shareIQCard, captureAndShareIQCard } from './utils/shareIQ';

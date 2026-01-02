@@ -405,6 +405,101 @@ calculateGlobalIQ(proficiencies)  // Returns weighted average 0-100
 calculateBadges(proficiencies, currentStreak, totalPuzzles)  // Badge[]
 ```
 
+## Leaderboard
+```typescript
+import {
+  useLeaderboard,
+  useStickyMe,
+  getDailyLeaderboard,
+  getGlobalIQLeaderboard,
+  getUserRank,
+  LeaderboardToggle,
+  LeaderboardEntry,
+  LeaderboardList,
+  StickyMeBar,
+  LeaderboardEmptyState,
+  normalizeModeScore,
+  calculateDailyScore,
+  shouldShowStickyBar,
+} from '@/features/leaderboard';
+
+// Main hook usage
+const {
+  entries,
+  userRank,
+  isLoading,
+  isRefreshing,
+  error,
+  refresh,
+} = useLeaderboard('daily'); // or 'global'
+
+// Leaderboard entry structure
+interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  score: number;              // daily: 0-500, global: 0-100
+  gamesPlayed?: number;       // daily: games today, global: total games
+  lastCompletedAt?: string;   // For tie-breaking
+}
+
+// User rank structure
+interface UserRank {
+  rank: number;
+  score: number;
+  totalUsers: number;
+}
+
+// Sticky bar visibility hook
+const { viewableItemsConfig, onViewableItemsChanged, shouldShowStickyBar } = useStickyMe(entries, userId);
+
+// Service functions (direct RPC calls)
+const dailyEntries = await getDailyLeaderboard({ date: '2026-01-02', limit: 100 });
+const globalEntries = await getGlobalIQLeaderboard({ limit: 100 });
+const myRank = await getUserRank(userId, 'daily');
+
+// Utility functions
+normalizeModeScore('career_path', 8, { maxPoints: 10 });  // 80
+normalizeModeScore('tic_tac_toe', 10, { result: 'win' }); // 100
+calculateDailyScore(attempts);  // Sum of normalized scores (0-500)
+shouldShowStickyBar(config);    // true if user not visible in list
+```
+
+## IQ Card Sharing
+```typescript
+import {
+  IQCardOverlay,
+  IQCardData,
+  captureIQCard,
+  shareIQCard,
+  captureAndShareIQCard,
+} from '@/features/stats';
+
+// IQ Card data structure
+interface IQCardData {
+  globalIQ: number;           // 0-100
+  currentStreak: number;
+  rank: number | null;        // User's global rank
+  totalUsers: number | null;
+  topBadgeName: string | null;
+  displayName: string;
+}
+
+// Component usage (in Stats screen)
+<IQCardOverlay
+  visible={showIQCard}
+  onClose={() => setShowIQCard(false)}
+  data={iqCardData}
+/>
+
+// Direct capture/share (used internally by overlay)
+const imageUri = await captureIQCard(viewShotRef);
+await shareIQCard(imageUri, iqCardData);
+// Or combined:
+await captureAndShareIQCard(viewShotRef, iqCardData);
+```
+
 ## Archive Screen
 ```typescript
 import {
@@ -443,6 +538,7 @@ formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"
 - Topical Quiz: `src/features/topical-quiz/`
 - Archive: `src/features/archive/`
 - My IQ (Stats): `src/features/stats/`
+- Leaderboard: `src/features/leaderboard/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
@@ -455,6 +551,7 @@ app/
   transfer-guess.tsx    # Transfer Guess game route
   goalscorer-recall.tsx # Goalscorer Recall game route
   topical-quiz.tsx      # Topical Quiz game route
+  leaderboard/          # Leaderboard screen with Daily/Global toggle
   design-lab.tsx        # Component showcase
 src/
   components/           # ElevatedButton, GlassCard
@@ -477,7 +574,8 @@ src/
     home/
     games/
     archive/
-    stats/
+    stats/             # usePerformanceStats, IQCardOverlay
+    leaderboard/       # useLeaderboard, LeaderboardList, StickyMeBar
 ```
 
 ## Design Tokens
@@ -523,4 +621,5 @@ Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorer
 003_create_triggers
 004_security_fixes
 005_create_puzzle_catalog_rpc
+006_create_leaderboard_rpcs
 ```

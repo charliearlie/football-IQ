@@ -1060,6 +1060,109 @@ src/features/puzzles/context/PuzzleContext.tsx
 ### Migrations Applied
 5. `005_create_puzzle_catalog_rpc` - RPC function for catalog sync
 
+## Leaderboard Feature
+Initialized: 2026-01-02
+
+### Overview
+Real-time leaderboard system ranking users by daily cumulative score (0-500) and global IQ (0-100). Includes a shareable "IQ Card" for social sharing.
+
+### Leaderboard Types
+| Type | Score Range | Ranking |
+|------|-------------|---------|
+| Daily | 0-500 | Sum of normalized daily scores |
+| Global IQ | 0-100 | Weighted average across all games |
+
+### Daily Score Calculation
+Each game mode contributes 0-100 points, summed for 0-500 total:
+- Career Path: (points / maxPoints) × 100
+- Transfer Guess: (points / 10) × 100
+- Goalscorer Recall: percentage (already 0-100)
+- Tic Tac Toe: Win=100, Draw=50, Loss=0
+- Topical Quiz: (points / 10) × 100
+
+### Tie-Breaking
+Uses DENSE_RANK with earliest completion time as tiebreaker:
+- Same score → earlier completion wins
+- Ranks: [300, 300, 200] → [1, 1, 2] (not [1, 1, 3])
+
+### Supabase RPCs
+| RPC | Purpose |
+|-----|---------|
+| `get_daily_leaderboard(for_date, limit_count)` | Top users by daily score |
+| `get_global_iq_leaderboard(limit_count)` | Top users by global IQ |
+| `get_user_rank(target_user_id, type, for_date)` | User's rank + total users |
+
+All RPCs use `SECURITY DEFINER` to bypass RLS for aggregation.
+
+### Screen Layout
+```
+Leaderboard Screen
+├── Header: "Leaderboard" + close button
+├── LeaderboardToggle: Daily / All-Time chips
+├── LeaderboardList (FlatList)
+│   └── LeaderboardEntry × 100
+└── StickyMeBar (when user scrolled out of view)
+```
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `LeaderboardToggle` | Daily/All-Time filter chips |
+| `LeaderboardEntry` | Rank, avatar, name, score row |
+| `LeaderboardList` | FlatList with pull-to-refresh |
+| `StickyMeBar` | Fixed bottom bar with user's rank |
+| `LeaderboardEmptyState` | Loading/empty/error states |
+
+### IQ Card Sharing
+Shareable image card containing:
+- Global IQ score with tier badge
+- Current streak
+- Top badge (first earned)
+- Global rank
+
+Uses `react-native-view-shot` for image capture and native Share API.
+
+### Key Hooks
+| Hook | Purpose |
+|------|---------|
+| `useLeaderboard(type)` | Fetch entries + polling (30s) |
+| `useStickyMe(entries, currentUserId)` | Track user visibility in list |
+
+### Files
+```
+src/features/leaderboard/
+├── index.ts                    # Feature exports
+├── types/leaderboard.types.ts
+├── services/leaderboardService.ts
+├── hooks/
+│   ├── useLeaderboard.ts
+│   └── useStickyMe.ts
+├── utils/rankingUtils.ts       # Normalization, ranking logic
+├── components/
+│   ├── LeaderboardToggle.tsx
+│   ├── LeaderboardEntry.tsx
+│   ├── LeaderboardList.tsx
+│   ├── StickyMeBar.tsx
+│   └── LeaderboardEmptyState.tsx
+└── __tests__/
+    ├── Ranking.test.ts         # 29 tests
+    └── LeaderboardUI.test.tsx  # 25 tests
+
+src/features/stats/
+├── components/IQCardOverlay.tsx
+└── utils/shareIQ.ts
+
+app/leaderboard/index.tsx
+```
+
+### Navigation Integration
+- Trophy icon in Stats tab header → `/leaderboard`
+- Trophy icon in Home screen header → `/leaderboard?type=daily`
+- "Share My IQ" button in Stats screen → Opens IQCardOverlay modal
+
+### Migrations Applied
+6. `006_create_leaderboard_rpcs` - 3 RPCs + performance indexes
+
 ## Admin Tools
 Initialized: 2025-12-27
 

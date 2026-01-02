@@ -249,7 +249,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_daily_leaderboard: {
+        Args: {
+          for_date: string
+          limit_count?: number
+        }
+        Returns: {
+          rank: number
+          user_id: string
+          display_name: string
+          avatar_url: string | null
+          daily_score: number
+          games_played: number
+          earliest_completion: string
+        }[]
+      }
+      get_global_iq_leaderboard: {
+        Args: {
+          limit_count?: number
+        }
+        Returns: {
+          rank: number
+          user_id: string
+          display_name: string
+          avatar_url: string | null
+          global_iq: number
+          total_games: number
+        }[]
+      }
+      get_user_rank: {
+        Args: {
+          target_user_id: string
+          leaderboard_type: string
+          for_date?: string
+        }
+        Returns: {
+          rank: number
+          score: number
+          total_users: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

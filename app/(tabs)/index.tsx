@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   AppState,
   AppStateStatus,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Trophy } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
 import { StreakHeader, DailyStackCard, useUserStats, useDailyPuzzles } from '@/features/home';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -72,11 +74,25 @@ export default function HomeScreen() {
     [router]
   );
 
+  // Navigate to daily leaderboard
+  const handleLeaderboardPress = useCallback(() => {
+    router.push('/leaderboard?type=daily');
+  }, [router]);
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Football IQ</Text>
+        <Pressable
+          onPress={handleLeaderboardPress}
+          style={styles.leaderboardButton}
+          hitSlop={12}
+          accessibilityLabel="View Leaderboard"
+          accessibilityRole="button"
+        >
+          <Trophy size={22} color={colors.cardYellow} />
+        </Pressable>
       </View>
 
       {/* Content */}
@@ -141,9 +157,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stadiumNavy,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+  },
+  leaderboardButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.glassBackground,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   scrollView: {
     flex: 1,
