@@ -1063,6 +1063,100 @@ src/features/puzzles/context/PuzzleContext.tsx
 ## Admin Tools
 Initialized: 2025-12-27
 
+## My IQ Profile Screen
+Initialized: 2026-01-02
+
+### Overview
+Comprehensive profile screen that aggregates all puzzle attempt data to calculate a "Football IQ" score and display proficiency across game modes. Replaced the placeholder Stats tab.
+
+### Global IQ Calculation
+Weighted average of proficiency across 5 game modes:
+
+| Game Mode | Weight | Normalization |
+|-----------|--------|---------------|
+| Career Path | 25% | (points / maxPoints) × 100 |
+| Transfer Guess | 25% | (points / 10) × 100 |
+| Goalscorer Recall | 20% | percentage (already 0-100) |
+| Tic Tac Toe | 15% | Win=100, Draw=50, Loss=0 |
+| Topical Quiz | 15% | (points / 10) × 100 |
+
+If a mode hasn't been played, its weight is redistributed to played modes.
+
+### Screen Layout
+```
+My IQ Screen
+├── ProfileHeader (display name + member since)
+├── IQScoreDisplay (large IQ number with tier label)
+├── ProficiencySection (5 progress bars)
+├── TrophyRoom (horizontal badge scroll)
+└── StatsGrid (2×2 stat cards)
+```
+
+### IQ Tier Labels
+| Score | Tier |
+|-------|------|
+| 90+ | Elite |
+| 70-89 | Expert |
+| 50-69 | Intermediate |
+| 30-49 | Apprentice |
+| 0-29 | Rookie |
+
+### Badge System
+| Badge ID | Name | Criteria |
+|----------|------|----------|
+| streak_7 | 7-Day Streak | currentStreak >= 7 |
+| perfect_career | Detective | Perfect Career Path score |
+| perfect_transfer | Scout | Perfect Transfer Guess (10 pts) |
+| perfect_goalscorer | Historian | 100% on Goalscorer Recall |
+| perfect_tictactoe | Tactician | Win Tic Tac Toe |
+| perfect_quiz | Pundit | Perfect Topical Quiz (10 pts) |
+| games_10 | Getting Started | 10+ puzzles solved |
+| games_50 | Dedicated Fan | 50+ puzzles solved |
+
+### Key Hooks
+| Hook | Purpose |
+|------|---------|
+| `usePerformanceStats()` | Aggregates attempt data, calculates IQ + proficiencies + badges |
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `ProfileHeader` | User name + member since date |
+| `IQScoreDisplay` | Large IQ number with tier badge |
+| `ProficiencyBar` | Animated skill progress bar |
+| `ProficiencySection` | 5 bars grouped in GlassCard |
+| `TrophyRoom` | Horizontal scrolling badges |
+| `StatsGrid` | 2×2 grid of stat cards |
+
+### Files
+```
+src/features/stats/
+  ├── index.ts                    # Feature exports
+  ├── types/
+  │   └── stats.types.ts          # PerformanceStats, Badge, etc.
+  ├── utils/
+  │   └── iqCalculation.ts        # normalizeScore, calculateGlobalIQ, etc.
+  ├── hooks/
+  │   └── usePerformanceStats.ts  # Main aggregation hook
+  ├── components/
+  │   ├── ProfileHeader.tsx
+  │   ├── IQScoreDisplay.tsx
+  │   ├── ProficiencyBar.tsx
+  │   ├── ProficiencySection.tsx
+  │   ├── TrophyRoom.tsx
+  │   └── StatsGrid.tsx
+  └── __tests__/
+      └── IQCalculation.test.ts   # 44 tests for IQ math
+
+src/lib/database.ts (additions)
+  └── getAllCompletedAttemptsWithGameMode()  # Query for stats aggregation
+
+app/(tabs)/_layout.tsx
+  └── Tab renamed from "Stats" to "My IQ" with Brain icon
+```
+
+## Admin Tools
+
 ### Content Creator
 **Location:** `tools/content-creator.html`
 

@@ -1,87 +1,124 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, textStyles, spacing } from '@/theme';
 import { GlassCard } from '@/components';
-import { BarChart3, Flame, Trophy } from 'lucide-react-native';
+import {
+  usePerformanceStats,
+  ProfileHeader,
+  IQScoreDisplay,
+  ProficiencySection,
+  TrophyRoom,
+  StatsGrid,
+} from '@/features/stats';
 
 /**
- * Stats Screen
+ * My IQ Screen
  *
- * User statistics, streaks, and achievements.
+ * Comprehensive profile screen showing Football IQ score,
+ * proficiency across game modes, badges, and statistics.
  */
-export default function StatsScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={[textStyles.h1, styles.title]}>Your Stats</Text>
+export default function MyIQScreen() {
+  const insets = useSafeAreaInsets();
+  const { stats, isLoading, refresh } = usePerformanceStats();
 
-      <View style={styles.statsGrid}>
-        <GlassCard style={styles.statCard}>
-          <Flame color={colors.redCard} size={32} strokeWidth={2} />
-          <Text style={[textStyles.h2, styles.statValue]}>0</Text>
-          <Text style={[textStyles.caption, styles.statLabel]}>
-            Current Streak
-          </Text>
-        </GlassCard>
-
-        <GlassCard style={styles.statCard}>
-          <Trophy color={colors.cardYellow} size={32} strokeWidth={2} />
-          <Text style={[textStyles.h2, styles.statValue]}>0</Text>
-          <Text style={[textStyles.caption, styles.statLabel]}>
-            Best Streak
-          </Text>
-        </GlassCard>
-
-        <GlassCard style={styles.statCard}>
-          <BarChart3 color={colors.pitchGreen} size={32} strokeWidth={2} />
-          <Text style={[textStyles.h2, styles.statValue]}>0</Text>
-          <Text style={[textStyles.caption, styles.statLabel]}>
-            Games Played
-          </Text>
-        </GlassCard>
-      </View>
-
-      <GlassCard style={styles.infoCard}>
-        <Text style={[textStyles.body, styles.infoText]}>
-          Play daily puzzles to build your streak and track your progress!
+  // Loading state
+  if (isLoading && !stats) {
+    return (
+      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={colors.pitchGreen} />
+        <Text style={[textStyles.body, styles.loadingText]}>
+          Calculating your Football IQ...
         </Text>
-      </GlassCard>
-    </View>
+      </View>
+    );
+  }
+
+  // Empty state (no games played yet)
+  if (!stats || stats.totalPuzzlesSolved === 0) {
+    return (
+      <ScrollView
+        style={[styles.container, { paddingTop: insets.top }]}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refresh}
+            tintColor={colors.pitchGreen}
+          />
+        }
+      >
+        <ProfileHeader />
+        <GlassCard style={styles.emptyState}>
+          <Text style={[textStyles.h2, styles.emptyTitle]}>
+            Ready to Test Your Football IQ?
+          </Text>
+          <Text style={[textStyles.body, styles.emptyText]}>
+            Play daily puzzles to build your profile. Your stats will appear here
+            as you complete games.
+          </Text>
+        </GlassCard>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <ScrollView
+      style={[styles.container, { paddingTop: insets.top }]}
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={refresh}
+          tintColor={colors.pitchGreen}
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <ProfileHeader />
+
+      <IQScoreDisplay score={stats.globalIQ} />
+
+      <ProficiencySection proficiencies={stats.proficiencies} />
+
+      <TrophyRoom badges={stats.badges} />
+
+      <StatsGrid
+        puzzlesSolved={stats.totalPuzzlesSolved}
+        perfectScores={stats.totalPerfectScores}
+        totalPoints={stats.totalPoints}
+        currentStreak={stats.currentStreak}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.xl,
     backgroundColor: colors.stadiumNavy,
   },
-  title: {
-    marginBottom: spacing.xl,
+  scrollContent: {
+    padding: spacing.xl,
+    paddingBottom: spacing['3xl'],
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: 100,
+  centered: {
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
   },
-  statValue: {
-    marginTop: spacing.sm,
-    color: colors.floodlightWhite,
+  loadingText: {
+    marginTop: spacing.lg,
+    opacity: 0.7,
   },
-  statLabel: {
-    marginTop: spacing.xs,
+  emptyState: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  emptyTitle: {
     textAlign: 'center',
+    marginBottom: spacing.md,
   },
-  infoCard: {
-    marginTop: spacing.md,
-  },
-  infoText: {
+  emptyText: {
     textAlign: 'center',
-    opacity: 0.8,
+    opacity: 0.7,
   },
 });

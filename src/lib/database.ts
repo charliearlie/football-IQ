@@ -304,6 +304,39 @@ export async function getAllCompletedAttemptsWithDates(): Promise<
 }
 
 /**
+ * Attempt with puzzle date and game mode for performance stats.
+ */
+export interface AttemptWithGameMode extends ParsedLocalAttempt {
+  puzzle_date: string;
+  game_mode: string;
+}
+
+/**
+ * Get all completed attempts with game mode and puzzle date.
+ * Used for My IQ profile stats calculation.
+ * Only returns completed attempts, ordered by puzzle_date descending.
+ */
+export async function getAllCompletedAttemptsWithGameMode(): Promise<
+  AttemptWithGameMode[]
+> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<
+    LocalAttempt & { puzzle_date: string; game_mode: string }
+  >(
+    `SELECT a.*, p.puzzle_date, p.game_mode
+     FROM attempts a
+     JOIN puzzles p ON a.puzzle_id = p.id
+     WHERE a.completed = 1
+     ORDER BY p.puzzle_date DESC`
+  );
+  return rows.map((row) => ({
+    ...parseAttempt(row),
+    puzzle_date: row.puzzle_date,
+    game_mode: row.game_mode,
+  }));
+}
+
+/**
  * Mark an attempt as synced to Supabase.
  */
 export async function markAttemptSynced(id: string): Promise<void> {

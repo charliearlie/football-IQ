@@ -332,6 +332,79 @@ calculateQuizScore(5)  // { points: 10, maxPoints: 10, correctCount: 5 }
 generateQuizEmojiGrid(answers)
 ```
 
+## My IQ Profile Screen
+```typescript
+import {
+  usePerformanceStats,
+  ProfileHeader,
+  IQScoreDisplay,
+  ProficiencySection,
+  TrophyRoom,
+  StatsGrid,
+  calculateGlobalIQ,
+  normalizeScore,
+  isPerfectScore,
+  calculateBadges,
+} from '@/features/stats';
+
+// Hook usage (in stats.tsx screen)
+const { stats, isLoading, error, refresh } = usePerformanceStats();
+
+// Stats object structure
+interface PerformanceStats {
+  globalIQ: number;                    // 0-100 weighted average
+  proficiencies: GameProficiency[];    // 5 items (one per mode)
+  totalPuzzlesSolved: number;
+  totalPerfectScores: number;
+  totalPoints: number;
+  currentStreak: number;
+  longestStreak: number;
+  badges: Badge[];                     // 8 badges with earnedAt
+}
+
+// Proficiency per game mode
+interface GameProficiency {
+  gameMode: GameMode;          // 'career_path', etc.
+  displayName: string;         // 'Deduction', 'Market Knowledge', etc.
+  percentage: number;          // 0-100 normalized
+  gamesPlayed: number;
+  perfectScores: number;
+}
+
+// Badge structure
+interface Badge {
+  id: string;          // 'streak_7', 'perfect_career', etc.
+  name: string;        // '7-Day Streak', 'Detective', etc.
+  description: string;
+  icon: string;        // Lucide icon name
+  earnedAt: string | null;  // ISO date or null if not earned
+}
+
+// IQ Weights (sum to 1.0)
+const IQ_WEIGHTS = {
+  career_path: 0.25,
+  guess_the_transfer: 0.25,
+  guess_the_goalscorers: 0.20,
+  tic_tac_toe: 0.15,
+  topical_quiz: 0.15,
+};
+
+// Normalize a single attempt's score to 0-100
+normalizeScore('career_path', { points: 8, maxPoints: 10 })  // 80
+normalizeScore('tic_tac_toe', { result: 'win' })             // 100
+normalizeScore('guess_the_goalscorers', { percentage: 75 })  // 75
+
+// Check if attempt was perfect
+isPerfectScore('career_path', { points: 10, maxPoints: 10 }) // true
+isPerfectScore('tic_tac_toe', { result: 'draw' })            // false
+
+// Calculate global IQ from proficiencies
+calculateGlobalIQ(proficiencies)  // Returns weighted average 0-100
+
+// Calculate badges based on proficiencies, streak, and total puzzles
+calculateBadges(proficiencies, currentStreak, totalPuzzles)  // Badge[]
+```
+
 ## Archive Screen
 ```typescript
 import {
@@ -369,6 +442,7 @@ formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"
 - Tic Tac Toe: `src/features/tic-tac-toe/`
 - Topical Quiz: `src/features/topical-quiz/`
 - Archive: `src/features/archive/`
+- My IQ (Stats): `src/features/stats/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
