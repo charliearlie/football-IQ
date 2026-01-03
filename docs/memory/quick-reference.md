@@ -504,6 +504,7 @@ await captureAndShareIQCard(viewShotRef, iqCardData);
 ```typescript
 import {
   useArchivePuzzles,
+  useGatedNavigation,
   ArchiveList,
   GameModeFilter,
   PremiumUpsellModal,
@@ -522,6 +523,67 @@ isPuzzleLocked('2024-12-15', true)  // false (premium sees all)
 
 // Date formatting
 formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"
+```
+
+## Premium Gating (Navigation + Route Protection)
+```typescript
+// Layer 1: UI Hook (Archive screen)
+import { useGatedNavigation } from '@/features/archive';
+
+const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
+
+const { navigateToPuzzle, isPremium } = useGatedNavigation({
+  onShowPaywall: (puzzle) => setLockedPuzzle(puzzle),
+});
+
+// Use single handler for all cards
+<ArchiveList onPuzzlePress={navigateToPuzzle} />
+
+// Show modal when locked puzzle tapped
+<PremiumUpsellModal
+  visible={!!lockedPuzzle}
+  onClose={() => setLockedPuzzle(null)}
+  puzzleDate={lockedPuzzle?.puzzleDate}
+/>
+```
+
+```typescript
+// Layer 2: Route HOC (puzzle routes)
+import { PremiumGate } from '@/features/auth';
+
+export default function CareerPathRoute() {
+  const { puzzleId } = useLocalSearchParams<{ puzzleId: string }>();
+
+  return (
+    <PremiumGate puzzleId={puzzleId}>
+      <CareerPathScreen puzzleId={puzzleId} />
+    </PremiumGate>
+  );
+}
+
+// PremiumGate handles:
+// - Loading states (auth + puzzle)
+// - RLS blocked puzzles (shows modal mode='blocked')
+// - Deep-link protection (shows modal mode='locked')
+// - Successful access (renders children)
+```
+
+```typescript
+// Lock check utility
+import { isPuzzleLocked, isWithinFreeWindow } from '@/features/archive';
+
+isPuzzleLocked('2024-12-15', false)  // true (>7 days, non-premium)
+isPuzzleLocked('2024-12-15', true)   // false (premium sees all)
+isWithinFreeWindow('2024-12-30')     // true if within 7 days
+
+// PremiumUpsellModal modes
+type ModalMode = 'upsell' | 'locked' | 'blocked';
+// upsell: general upgrade prompt
+// locked: specific puzzle locked (shows date)
+// blocked: RLS denied access (deep-link)
+
+// Modal states
+type ModalState = 'idle' | 'selecting' | 'purchasing' | 'success' | 'error';
 ```
 
 ## Key Files
@@ -622,4 +684,5 @@ Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorer
 004_security_fixes
 005_create_puzzle_catalog_rpc
 006_create_leaderboard_rpcs
+007_premium_puzzle_access
 ```

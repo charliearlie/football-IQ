@@ -1,28 +1,16 @@
 import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   useArchivePuzzles,
+  useGatedNavigation,
   ArchiveList,
   GameModeFilter,
   PremiumUpsellModal,
   ArchivePuzzle,
   GameModeFilterType,
 } from '@/features/archive';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
-
-/**
- * Route map for each game mode.
- */
-const ROUTE_MAP: Record<GameMode, string> = {
-  career_path: 'career-path',
-  guess_the_transfer: 'transfer-guess',
-  guess_the_goalscorers: 'goalscorer-recall',
-  tic_tac_toe: 'tic-tac-toe',
-  topical_quiz: '', // Coming soon - no route
-};
 
 /**
  * Archive Screen
@@ -35,7 +23,6 @@ const ROUTE_MAP: Record<GameMode, string> = {
  * - Infinite scroll pagination
  */
 export default function ArchiveScreen() {
-  const router = useRouter();
   const [filter, setFilter] = useState<GameModeFilterType>('all');
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
 
@@ -49,26 +36,12 @@ export default function ArchiveScreen() {
   } = useArchivePuzzles(filter);
 
   /**
-   * Handle press on an unlocked puzzle - navigate to game screen.
+   * Use gated navigation hook for premium access control.
+   * This centralizes the navigation/paywall logic.
    */
-  const handlePuzzlePress = useCallback(
-    (puzzle: ArchivePuzzle) => {
-      const route = ROUTE_MAP[puzzle.gameMode];
-      if (route) {
-        // Navigate to dynamic route with puzzle ID
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.push(`/${route}/${puzzle.id}` as any);
-      }
-    },
-    [router]
-  );
-
-  /**
-   * Handle press on a locked puzzle - show premium upsell modal.
-   */
-  const handleLockedPress = useCallback((puzzle: ArchivePuzzle) => {
-    setLockedPuzzle(puzzle);
-  }, []);
+  const { navigateToPuzzle } = useGatedNavigation({
+    onShowPaywall: (puzzle) => setLockedPuzzle(puzzle),
+  });
 
   /**
    * Close the premium upsell modal.
@@ -87,8 +60,8 @@ export default function ArchiveScreen() {
       {/* Archive List with Filter */}
       <ArchiveList
         sections={sections}
-        onPuzzlePress={handlePuzzlePress}
-        onLockedPress={handleLockedPress}
+        onPuzzlePress={navigateToPuzzle}
+        onLockedPress={navigateToPuzzle}
         onEndReached={loadMore}
         onRefresh={refresh}
         refreshing={isRefreshing}

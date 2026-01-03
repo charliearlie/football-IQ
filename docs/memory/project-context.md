@@ -1163,6 +1163,135 @@ app/leaderboard/index.tsx
 ### Migrations Applied
 6. `006_create_leaderboard_rpcs` - 3 RPCs + performance indexes
 
+## Premium Gating System
+Initialized: 2026-01-02
+
+### Overview
+Two-layer defense system to enforce 7-day free window for puzzle access. Prevents both UI navigation and deep-link bypass of premium content.
+
+### Gating Layers
+
+| Layer | Type | Location | Purpose |
+|-------|------|----------|---------|
+| 1 - UI | Hook | `useGatedNavigation` | Intercepts Archive card clicks |
+| 2 - Defense | HOC | `PremiumGate` | Wraps all `[puzzleId].tsx` routes |
+
+### Navigation Decision Tree
+```
+User taps puzzle card
+    ↓
+isPuzzleLocked(date, isPremium)?
+    ├─ Yes → Show PremiumUpsellModal (no navigation)
+    └─ No → Navigate to /{game}/{puzzleId}
+                    ↓
+            PremiumGate HOC checks:
+                    ↓
+            RLS returned puzzle?
+            ├─ No → Show modal (mode='blocked')
+            └─ Yes → isPuzzleLocked?
+                    ├─ Yes → Show modal (mode='locked')
+                    └─ No → Render game screen
+```
+
+### Lock Logic
+```typescript
+function isPuzzleLocked(puzzleDate: string, isPremium: boolean): boolean {
+  if (isPremium) return false;  // Premium sees all
+  const date = new Date(puzzleDate);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return date < sevenDaysAgo;  // >7 days old = locked for free
+}
+```
+
+### PremiumUpsellModal State Machine
+```
+                ┌──────────────────────────────────────┐
+                │                                      │
+                ▼                                      │
+            ┌──────┐                                   │
+            │ idle │ ← (onClose)                       │
+            └──┬───┘                                   │
+               │ (select plan)                         │
+               ▼                                       │
+         ┌───────────┐                                 │
+         │ selecting │                                 │
+         └─────┬─────┘                                 │
+               │ (confirm purchase)                    │
+               ▼                                       │
+        ┌────────────┐       error                     │
+        │ purchasing │ ─────────────────┐              │
+        └──────┬─────┘                  ▼              │
+               │                   ┌─────────┐         │
+               │ success           │  error  │─────────┘
+               ▼                   └─────────┘   (retry)
+         ┌─────────┐
+         │ success │ → (auto-close 3s OR tap)
+         └─────────┘
+```
+
+### Subscription Plans (Mock)
+| Plan | Price | ID |
+|------|-------|-----|
+| Weekly | $1.99 | `weekly` |
+| Monthly | $4.99 | `monthly` (recommended) |
+| Yearly | $29.99 | `yearly` |
+
+Mock purchase updates `profiles.is_premium = true` in Supabase.
+
+### Success Celebration
+- Confetti animation (reused from career-path)
+- Haptic feedback (`Success` type)
+- "Welcome to Premium!" message
+- Auto-dismiss after 3 seconds
+
+### RLS Policy
+```sql
+CREATE POLICY "Premium puzzle access" ON daily_puzzles
+FOR SELECT USING (
+  status = 'live' AND (
+    -- Premium users: full archive access
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.is_premium = true
+    )
+    OR
+    -- Free users: last 7 days only
+    puzzle_date >= CURRENT_DATE - INTERVAL '7 days'
+  )
+);
+```
+
+### Files
+```
+src/features/archive/
+  ├── hooks/
+  │   └── useGatedNavigation.ts    # Layer 1: UI hook
+  ├── components/
+  │   └── PremiumUpsellModal.tsx   # Redesigned with state machine
+  └── utils/
+      └── dateGrouping.ts          # isPuzzleLocked, isWithinFreeWindow
+
+src/features/auth/
+  └── components/
+      └── PremiumGate.tsx          # Layer 2: Route HOC
+
+app/
+  ├── career-path/[puzzleId].tsx   # Wrapped with PremiumGate
+  ├── transfer-guess/[puzzleId].tsx
+  ├── goalscorer-recall/[puzzleId].tsx
+  ├── tic-tac-toe/[puzzleId].tsx
+  └── topical-quiz/[puzzleId].tsx
+```
+
+### Tests
+- `src/features/auth/__tests__/PremiumGating.test.ts` - RLS simulation (11 tests)
+- `src/features/archive/__tests__/PaywallFlow.test.tsx` - Modal flow (12 tests)
+
+### Migrations Applied
+7. `007_premium_puzzle_access` - RLS policy for premium gating
+
 ## Admin Tools
 Initialized: 2025-12-27
 

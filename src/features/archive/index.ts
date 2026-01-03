@@ -13,6 +13,7 @@ export type {
 
 // Hooks
 export { useArchivePuzzles } from './hooks/useArchivePuzzles';
+export { useGatedNavigation } from './hooks/useGatedNavigation';
 
 // Components
 export { ArchiveList } from './components/ArchiveList';

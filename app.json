@@ -15,26 +15,21 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.footballiq.app"
+      "bundleIdentifier": "com.charliearlie.footballiq.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0F172A"
       },
-      "package": "com.footballiq.app"
+      "package": "com.charliearlie.footballiq.app"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-secure-store",
-      "expo-sqlite"
-    ],
+    "plugins": ["expo-router", "expo-font", "expo-secure-store", "expo-sqlite"],
     "experiments": {
       "typedRoutes": true
     }
