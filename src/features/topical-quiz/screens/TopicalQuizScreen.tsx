@@ -15,6 +15,7 @@ import { QuizProgressBar } from '../components/QuizProgressBar';
 import { QuizQuestionCard } from '../components/QuizQuestionCard';
 import { QuizOptionButton } from '../components/QuizOptionButton';
 import { TopicalQuizResultModal } from '../components/TopicalQuizResultModal';
+import { AdBanner } from '@/features/ads';
 import { OptionButtonState } from '../types/topicalQuiz.types';
 
 /**
@@ -151,6 +152,9 @@ export function TopicalQuizScreen({ puzzleId }: TopicalQuizScreenProps) {
           testID="quiz-result-modal"
         />
       )}
+
+      {/* Banner Ad (non-premium only) */}
+      <AdBanner testID="topical-quiz-ad-banner" />
     </View>
   );
 }

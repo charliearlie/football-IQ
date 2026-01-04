@@ -159,11 +159,11 @@ describe('DailyStackCard', () => {
     });
   });
 
-  describe('Coming Soon state (topical_quiz)', () => {
-    it('shows Coming Soon for topical_quiz', () => {
+  describe('Topical Quiz state', () => {
+    it('shows correct title for topical_quiz', () => {
       const { getByText } = render(
         <DailyStackCard
-          puzzleId="coming-soon-quiz"
+          puzzleId="puzzle-quiz"
           gameMode="topical_quiz"
           status="play"
           onPress={mockOnPress}
@@ -171,20 +171,21 @@ describe('DailyStackCard', () => {
       );
 
       expect(getByText('Quiz')).toBeTruthy();
-      expect(getByText('Coming Soon')).toBeTruthy();
+      expect(getByText('5 questions')).toBeTruthy();
     });
 
-    it('does not show Play button for topical_quiz', () => {
-      const { queryByText } = render(
+    it('shows Play button for topical_quiz', () => {
+      const { getAllByText } = render(
         <DailyStackCard
-          puzzleId="coming-soon-quiz"
+          puzzleId="puzzle-quiz"
           gameMode="topical_quiz"
           status="play"
           onPress={mockOnPress}
         />
       );
 
-      expect(queryByText('Play')).toBeNull();
+      // ElevatedButton may render text in multiple places for the 3D effect
+      expect(getAllByText('Play').length).toBeGreaterThan(0);
     });
   });
 });

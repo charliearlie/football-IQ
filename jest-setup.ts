@@ -1,5 +1,17 @@
 import '@testing-library/jest-native/extend-expect';
 
+// Mock @react-native-async-storage/async-storage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  setItem: jest.fn(() => Promise.resolve()),
+  getItem: jest.fn(() => Promise.resolve(null)),
+  removeItem: jest.fn(() => Promise.resolve()),
+  clear: jest.fn(() => Promise.resolve()),
+  getAllKeys: jest.fn(() => Promise.resolve([])),
+  multiGet: jest.fn(() => Promise.resolve([])),
+  multiSet: jest.fn(() => Promise.resolve()),
+  multiRemove: jest.fn(() => Promise.resolve()),
+}));
+
 // Mock Supabase client
 const mockSupabaseAuth = {
   getSession: jest.fn(),
@@ -145,6 +157,84 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('expo-sqlite', () => ({
   openDatabaseAsync: jest.fn(),
 }));
+
+// Mock react-native-purchases (RevenueCat)
+const mockPurchases = {
+  configure: jest.fn(),
+  logIn: jest.fn(),
+  logOut: jest.fn(),
+  getOfferings: jest.fn(),
+  purchasePackage: jest.fn(),
+  restorePurchases: jest.fn(),
+  addCustomerInfoUpdateListener: jest.fn(() => jest.fn()),
+  getCustomerInfo: jest.fn(),
+};
+
+jest.mock('react-native-purchases', () => ({
+  __esModule: true,
+  default: mockPurchases,
+  PURCHASES_ERROR_CODE: {
+    PURCHASE_CANCELLED_ERROR: 'PURCHASE_CANCELLED',
+    NETWORK_ERROR: 'NETWORK_ERROR',
+    PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR: 'PRODUCT_NOT_AVAILABLE',
+    CONFIGURATION_ERROR: 'CONFIGURATION_ERROR',
+  },
+}));
+
+export { mockPurchases };
+
+// Mock react-native-google-mobile-ads
+const mockMobileAds = jest.fn(() => ({
+  initialize: jest.fn().mockResolvedValue(undefined),
+  setRequestConfiguration: jest.fn().mockResolvedValue(undefined),
+}));
+
+const mockBannerAd = {
+  __esModule: true,
+  BannerAd: jest.fn(() => null),
+  BannerAdSize: {
+    BANNER: 'BANNER',
+    FULL_BANNER: 'FULL_BANNER',
+    LARGE_BANNER: 'LARGE_BANNER',
+    LEADERBOARD: 'LEADERBOARD',
+    MEDIUM_RECTANGLE: 'MEDIUM_RECTANGLE',
+    ANCHORED_ADAPTIVE_BANNER: 'ANCHORED_ADAPTIVE_BANNER',
+  },
+  TestIds: {
+    BANNER: 'ca-app-pub-3940256099942544/6300978111',
+    REWARDED: 'ca-app-pub-3940256099942544/5224354917',
+  },
+};
+
+const mockRewardedAd = {
+  createForAdRequest: jest.fn(() => ({
+    load: jest.fn(),
+    show: jest.fn(),
+    addAdEventListener: jest.fn(() => jest.fn()),
+  })),
+};
+
+jest.mock('react-native-google-mobile-ads', () => ({
+  __esModule: true,
+  default: mockMobileAds,
+  MobileAds: mockMobileAds,
+  BannerAd: mockBannerAd.BannerAd,
+  BannerAdSize: mockBannerAd.BannerAdSize,
+  TestIds: mockBannerAd.TestIds,
+  RewardedAd: mockRewardedAd,
+  AdEventType: {
+    LOADED: 'loaded',
+    ERROR: 'error',
+    OPENED: 'opened',
+    CLOSED: 'closed',
+  },
+  RewardedAdEventType: {
+    LOADED: 'rewarded_loaded',
+    EARNED_REWARD: 'rewarded_earned_reward',
+  },
+}));
+
+export { mockMobileAds, mockBannerAd, mockRewardedAd };
 
 // Suppress specific console warnings in tests
 const originalWarn = console.warn;

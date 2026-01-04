@@ -96,12 +96,13 @@ Offline-first data persistence that:
 ### Library
 - **expo-sqlite**: Native SQLite for React Native/Expo
 
-### Schema (Version 1)
+### Schema (Version 3)
 | Table | Purpose |
 |-------|---------|
 | `puzzles` | Cached puzzle data from Supabase |
 | `attempts` | User puzzle attempts (synced flag tracks cloud sync) |
 | `sync_queue` | Queue of changes pending sync to Supabase |
+| `unlocked_puzzles` | Ad-unlocked puzzles (permanent) |
 
 ### Tables
 ```sql
@@ -134,6 +135,11 @@ sync_queue (
   payload TEXT,       -- JSON stringified
   created_at TEXT
 )
+
+unlocked_puzzles (    -- Added in migration v3
+  puzzle_id TEXT PRIMARY KEY,
+  unlocked_at TEXT    -- ISO timestamp (permanent unlock)
+)
 ```
 
 ### Key Functions
@@ -144,6 +150,8 @@ sync_queue (
 | `saveAttempt()` / `getAttempt()` | Attempt CRUD |
 | `getUnsyncedAttempts()` | Get attempts pending sync |
 | `addToSyncQueue()` | Queue change for sync |
+| `saveAdUnlock()` / `isAdUnlocked()` | Ad unlock CRUD (permanent) |
+| `getValidAdUnlocks()` | Get all ad unlocks |
 
 ### Initialization
 Database initializes in `app/_layout.tsx` via `useEffect`, blocking splash screen until ready. Graceful degradation if init fails (app continues with network-only mode).
@@ -1425,3 +1433,235 @@ A standalone HTML/JS utility for Product Owners to manually create and push puzz
 | Goalscorer Recall | home_team, away_team, scores, competition, match_date, goals[] |
 | Tic Tac Toe | rows[3], columns[3], valid_answers{0-8: string[]} |
 | Topical Quiz | questions[5] (id, question, imageUrl?, options[4], correctIndex) |
+
+## RevenueCat Integration
+Initialized: 2026-01-03
+
+### Overview
+In-app purchases powered by RevenueCat SDK. RevenueCat is the source of truth for premium status, synced to Supabase `profiles.is_premium` for RLS enforcement.
+
+### Configuration
+| Key | Value |
+|-----|-------|
+| Offering ID | `ofrng32f02b6286` |
+| Entitlement ID | `premium_access` |
+| Production API Key | `appl_QWyaHOEVWcyFzTWkykxesWlqhDo` |
+| Sandbox API Key | `test_otNRIIDWLJwJlzISdCbUzGtwwlD` |
+
+### Environment-Aware Key Selection
+```typescript
+// src/config/revenueCat.ts
+export function getRevenueCatApiKey(): string {
+  return __DEV__ ? REVENUECAT_API_KEYS.sandbox : REVENUECAT_API_KEYS.production;
+}
+```
+- Development builds (`__DEV__=true`): Use sandbox key for App Store sandbox testing
+- Production builds (`__DEV__=false`): Use production key for real purchases
+
+### SDK Initialization
+**Location:** `app/_layout.tsx`
+
+RevenueCat SDK initializes in parallel with font loading and database init:
+1. Check if web platform (skip if web)
+2. Get API key via `getRevenueCatApiKey()`
+3. Call `Purchases.configure({ apiKey })`
+4. Set `rcReady` state
+5. Splash screen hides when fonts + db + rc all ready
+
+### Subscription Sync Flow
+**Location:** `src/features/auth/context/SubscriptionSyncContext.tsx`
+
+Auth-scoped lifecycle:
+1. User authenticates → `SubscriptionSyncProvider` calls `Purchases.logIn(userId)`
+2. Initial sync: Check current entitlement, update Supabase
+3. Start listener: `Purchases.addCustomerInfoUpdateListener()`
+4. On entitlement change → Update `profiles.is_premium` in Supabase
+5. User signs out → Stop listener, call `Purchases.logOut()`
+
+### Purchase Flow (PremiumUpsellModal)
+**State Machine:**
+```
+idle → loading → selecting → purchasing → success
+                     ↓              ↓
+                  error ←──────────┘
+```
+
+**Key Operations:**
+- `Purchases.getOfferings()` - Fetch packages from offering
+- `Purchases.purchasePackage(pkg)` - Native payment sheet
+- `Purchases.restorePurchases()` - Restore previous purchases
+- Localized pricing via `product.priceString`
+
+### Key Files
+```
+src/config/
+  └── revenueCat.ts               # API keys + constants
+
+src/features/auth/
+  ├── services/
+  │   └── SubscriptionSync.ts     # Core sync logic
+  ├── context/
+  │   └── SubscriptionSyncContext.tsx  # Auth-scoped provider
+  ├── index.ts                    # Feature exports
+  └── __tests__/
+      └── RevenueCatSync.test.ts  # 15 tests
+
+src/features/archive/components/
+  └── PremiumUpsellModal.tsx      # Purchase UI
+
+app/_layout.tsx                   # SDK initialization
+```
+
+### Testing
+- `src/config/__tests__/revenueCat.test.ts` - 5 tests (key selection)
+- `src/features/auth/__tests__/RevenueCatSync.test.ts` - 15 tests (sync logic)
+
+## Ad Monetization (Google AdMob)
+Initialized: 2026-01-03
+
+### Overview
+Hybrid monetization system with Google AdMob providing:
+1. **Banner ads**: Bottom of game screens for non-premium users
+2. **Rewarded ads**: Watch-to-unlock for archived puzzles (permanent access)
+3. **Premium upsell**: Home screen banner encouraging subscription
+
+### AdMob Configuration
+| Platform | App ID |
+|----------|--------|
+| iOS | `ca-app-pub-9426782115883407~8797195643` |
+| Android | `ca-app-pub-9426782115883407~1712062487` |
+
+### Ad Unit IDs
+| Type | iOS (Test) | Android (Test) |
+|------|------------|----------------|
+| Banner | `ca-app-pub-3940256099942544/2934735716` | `ca-app-pub-3940256099942544/6300978111` |
+| Rewarded | `ca-app-pub-3940256099942544/1712485313` | `ca-app-pub-3940256099942544/5224354917` |
+
+Production ad unit IDs to be created in AdMob console.
+
+### Architecture
+```
+AdProvider (wraps app inside AuthProvider)
+  └─ useAds() - Ad state + actions
+       ├─ shouldShowAds: boolean
+       ├─ isRewardedAdReady: boolean
+       ├─ loadRewardedAd()
+       ├─ showRewardedAd() → Promise<boolean>
+       ├─ adUnlocks: UnlockedPuzzle[]
+       ├─ isAdUnlockedPuzzle(puzzleId)
+       └─ grantAdUnlock(puzzleId)  # Permanent unlock
+```
+
+### Ad-to-Unlock Flow
+```
+User taps locked archive puzzle
+    ↓
+UnlockChoiceModal shows:
+  ├─ "Go Premium" → Opens PremiumUpsellModal
+  └─ "Watch Ad to Unlock" →
+        ↓
+    State: loading_ad → showing_ad
+        ↓
+    Rewarded ad displayed
+        ↓
+    User completes ad?
+    ├─ Yes → grantAdUnlock() → permanent SQLite unlock → puzzle accessible forever
+    └─ No → Return to idle (can retry)
+```
+
+### Extended Lock Logic
+```typescript
+// src/features/archive/utils/dateGrouping.ts
+function isPuzzleLocked(
+  puzzleDate: string,
+  isPremium: boolean,
+  puzzleId?: string,
+  adUnlocks?: UnlockedPuzzle[]
+): boolean {
+  if (isPremium) return false;              // Premium sees all
+  if (isWithinFreeWindow(puzzleDate)) return false;  // Last 7 days
+  if (puzzleId && hasAdUnlock(puzzleId, adUnlocks)) return false;  // Permanent ad unlock
+  return true;
+}
+```
+
+### UnlockChoiceModal State Machine
+```
+           ┌───────────────────────────────────────┐
+           │                                       │
+           ▼                                       │
+       ┌──────┐                                    │
+       │ idle │ ← (ad closed without reward)       │
+       └──┬───┘                                    │
+          │                                        │
+    ┌─────┴─────┐                                  │
+    │           │                                  │
+    ▼           ▼                                  │
+┌────────┐  ┌─────────────┐                        │
+│premium │  │ loading_ad  │                        │
+│ _flow  │  └──────┬──────┘                        │
+│        │         │                               │
+│ (opens │         ▼                               │
+│ modal) │  ┌─────────────┐                        │
+│        │  │ showing_ad  │                        │
+└────────┘  └──────┬──────┘                        │
+                   │                               │
+           ┌──────┴──────┐                         │
+           ▼             ▼                         │
+    ┌────────────┐  ┌────────────┐                 │
+    │ ad_success │  │  ad_error  │─────────────────┘
+    └──────┬─────┘  └────────────┘       (retry)
+           │
+           ▼
+    Auto-close (2s)
+```
+
+### Components
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `AdBanner` | Game screens | Anchored adaptive banner |
+| `UnlockChoiceModal` | Archive | Two-option unlock modal |
+| `PremiumUpsellBanner` | Home screen | Subscription CTA |
+
+### AdBanner Placement
+Added to all game screens (returns null for premium users):
+- `CareerPathScreen`
+- `TransferGuessScreen`
+- `GoalscorerRecallScreen`
+- `TicTacToeScreen`
+- `TopicalQuizScreen`
+
+### Key Files
+```
+src/features/ads/
+  ├── index.ts                    # Feature exports
+  ├── types/
+  │   └── ads.types.ts            # AdContextValue, UnlockChoiceState, etc.
+  ├── config/
+  │   └── adUnits.ts              # Ad unit IDs (test/production)
+  ├── context/
+  │   └── AdContext.tsx           # AdProvider + useAds hook
+  ├── services/
+  │   └── adUnlockService.ts      # SQLite operations wrapper
+  ├── components/
+  │   ├── AdBanner.tsx            # Banner ad component
+  │   ├── UnlockChoiceModal.tsx   # Two-option unlock modal
+  │   └── PremiumUpsellBanner.tsx # Home screen upsell
+  └── __tests__/
+      ├── AdVisibility.test.ts    # 5 tests
+      └── AdUnlock.test.ts        # 5 tests
+
+app.json                          # AdMob config plugin
+app/_layout.tsx                   # AdProvider in component tree
+jest-setup.ts                     # AdMob mock
+
+src/lib/database.ts (migration v3)
+  ├── unlocked_puzzles table (permanent unlocks)
+  ├── saveAdUnlock()       # Save permanent unlock
+  ├── isAdUnlocked()       # Check if puzzle unlocked
+  └── getValidAdUnlocks()  # Get all unlocks
+```
+
+### Testing
+- `src/features/ads/__tests__/AdVisibility.test.ts` - 5 tests (banner visibility)
+- `src/features/ads/__tests__/AdUnlock.test.ts` - 5 tests (unlock database operations)

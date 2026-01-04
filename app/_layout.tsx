@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { initDatabase } from '@/lib/database';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Purchases from 'react-native-purchases';
 import { colors } from '@/theme';
 import {
   AuthProvider,
   useAuth,
   AuthLoadingScreen,
   FirstRunModal,
+  SubscriptionSyncProvider,
 } from '@/features/auth';
 import { PuzzleProvider } from '@/features/puzzles';
+import { AdProvider } from '@/features/ads';
+import { getRevenueCatApiKey } from '@/config/revenueCat';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -37,15 +41,17 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   return (
     <PuzzleProvider>
-      {children}
-      <FirstRunModal
-        visible={needsDisplayName ?? false}
-        onSubmit={async (displayName) => {
-          const { error } = await updateDisplayName(displayName);
-          if (error) throw error;
-        }}
-        testID="first-run-modal"
-      />
+      <AdProvider>
+        {children}
+        <FirstRunModal
+          visible={needsDisplayName ?? false}
+          onSubmit={async (displayName) => {
+            const { error } = await updateDisplayName(displayName);
+            if (error) throw error;
+          }}
+          testID="first-run-modal"
+        />
+      </AdProvider>
     </PuzzleProvider>
   );
 }
@@ -57,6 +63,7 @@ export default function RootLayout() {
     'Inter-Bold': require('../assets/fonts/Inter-Bold.ttf'),
   });
   const [dbReady, setDbReady] = useState(false);
+  const [rcReady, setRcReady] = useState(false);
 
   // Initialize local SQLite database
   useEffect(() => {
@@ -69,48 +76,73 @@ export default function RootLayout() {
       });
   }, []);
 
-  // Hide splash screen when both fonts and database are ready
+  // Initialize RevenueCat SDK
   useEffect(() => {
-    if ((fontsLoaded || fontError) && dbReady) {
+    const initRevenueCat = async () => {
+      // Skip on web platform
+      if (Platform.OS === 'web') {
+        setRcReady(true);
+        return;
+      }
+
+      try {
+        const apiKey = getRevenueCatApiKey();
+        await Purchases.configure({ apiKey });
+        console.log('[RevenueCat] SDK initialized successfully');
+        setRcReady(true);
+      } catch (error) {
+        console.error('[RevenueCat] SDK initialization failed:', error);
+        // Continue in degraded mode - purchases won't work but app functions
+        setRcReady(true);
+      }
+    };
+    initRevenueCat();
+  }, []);
+
+  // Hide splash screen when fonts, database, and RevenueCat are ready
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && dbReady && rcReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, dbReady]);
+  }, [fontsLoaded, fontError, dbReady, rcReady]);
 
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
-  if (!dbReady) {
+  if (!dbReady || !rcReady) {
     return null;
   }
 
   return (
     <AuthProvider>
-      <GestureHandlerRootView style={styles.container}>
-        <AuthGate>
-          <View style={styles.container}>
-            <Stack
-              screenOptions={{
-                headerStyle: { backgroundColor: colors.stadiumNavy },
-                headerTintColor: colors.floodlightWhite,
-                headerTitleStyle: { fontFamily: 'BebasNeue-Regular' },
-                contentStyle: { backgroundColor: colors.stadiumNavy },
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="design-lab"
-                options={{
-                  title: 'Design Lab',
-                  presentation: 'modal',
+      <SubscriptionSyncProvider>
+        <GestureHandlerRootView style={styles.container}>
+          <AuthGate>
+            <View style={styles.container}>
+              <Stack
+                screenOptions={{
+                  headerStyle: { backgroundColor: colors.stadiumNavy },
+                  headerTintColor: colors.floodlightWhite,
+                  headerTitleStyle: { fontFamily: 'BebasNeue-Regular' },
+                  contentStyle: { backgroundColor: colors.stadiumNavy },
                 }}
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="light" />
-          </View>
-        </AuthGate>
-      </GestureHandlerRootView>
+              >
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="design-lab"
+                  options={{
+                    title: 'Design Lab',
+                    presentation: 'modal',
+                  }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="light" />
+            </View>
+          </AuthGate>
+        </GestureHandlerRootView>
+      </SubscriptionSyncProvider>
     </AuthProvider>
   );
 }

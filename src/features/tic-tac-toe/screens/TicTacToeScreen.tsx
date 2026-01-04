@@ -17,6 +17,7 @@ import { useTicTacToeGame } from '../hooks/useTicTacToeGame';
 import { TicTacToeGrid } from '../components/TicTacToeGrid';
 import { TicTacToeActionZone } from '../components/TicTacToeActionZone';
 import { TicTacToeResultModal } from '../components/TicTacToeResultModal';
+import { AdBanner } from '@/features/ads';
 
 /**
  * Props for TicTacToeScreen.
@@ -182,6 +183,9 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
           shareStatus={shareStatus}
         />
       )}
+
+      {/* Banner Ad (non-premium only) */}
+      <AdBanner testID="tic-tac-toe-ad-banner" />
     </View>
   );
 }

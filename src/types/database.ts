@@ -76,3 +76,13 @@ export interface LocalCatalogEntry {
   difficulty: string | null;
   synced_at: string | null;
 }
+
+/**
+ * Ad-unlocked puzzle entry.
+ * Tracks puzzles permanently unlocked by watching rewarded ads.
+ * Once unlocked, always unlocked (one ad = one puzzle forever).
+ */
+export interface UnlockedPuzzle {
+  puzzle_id: string;
+  unlocked_at: string; // ISO timestamp
+}

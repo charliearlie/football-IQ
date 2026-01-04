@@ -2,11 +2,11 @@
  * PremiumUpsellModal Component
  *
  * High-conversion modal for premium upgrade with:
- * - State machine: idle → selecting → purchasing → success
- * - Subscription plans: Weekly, Monthly, Yearly (mocked)
- * - Benefits list with icons
- * - Mock purchase flow that toggles is_premium in Supabase
- * - Success celebration with confetti and haptics
+ * - State machine: idle → loading → selecting → purchasing → success
+ * - Dynamic offerings from RevenueCat
+ * - Real purchase flow via Purchases.purchasePackage()
+ * - Restore purchases support
+ * - Localized pricing via priceString
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -21,13 +21,15 @@ import {
 import Animated, {
   SlideInDown,
   FadeIn,
-  FadeOut,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
+import Purchases, {
+  PurchasesPackage,
+  PURCHASES_ERROR_CODE,
+} from 'react-native-purchases';
 import {
-  Lock,
   Crown,
   Archive,
   Sparkles,
@@ -35,56 +37,21 @@ import {
   Heart,
   X,
   Check,
+  RotateCcw,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
+import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 
 /**
  * Modal state machine states.
  */
-type ModalState = 'idle' | 'selecting' | 'purchasing' | 'success' | 'error';
-
-/**
- * Subscription plan options.
- */
-interface PlanOption {
-  id: 'weekly' | 'monthly' | 'yearly';
-  label: string;
-  price: string;
-  period: string;
-  savings?: string;
-  recommended?: boolean;
-}
-
-const PLANS: PlanOption[] = [
-  {
-    id: 'weekly',
-    label: 'Weekly',
-    price: '$1.99',
-    period: '/week',
-  },
-  {
-    id: 'monthly',
-    label: 'Monthly',
-    price: '$4.99',
-    period: '/month',
-    savings: 'Save 37%',
-    recommended: true,
-  },
-  {
-    id: 'yearly',
-    label: 'Yearly',
-    price: '$29.99',
-    period: '/year',
-    savings: 'Save 71%',
-  },
-];
+type ModalState = 'idle' | 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 
 /**
  * Benefits list with icons.
@@ -130,8 +97,9 @@ interface PremiumUpsellModalProps {
  *
  * State Machine:
  * - idle: Shows benefits and "See Plans" button
+ * - loading: Fetching offerings from RevenueCat
  * - selecting: Shows subscription plan options
- * - purchasing: Shows loading state during mock purchase
+ * - purchasing: Shows loading state during purchase
  * - success: Shows celebration with confetti
  * - error: Shows error message with retry option
  */
@@ -143,14 +111,18 @@ export function PremiumUpsellModal({
   testID,
 }: PremiumUpsellModalProps) {
   const [state, setState] = useState<ModalState>('idle');
-  const [selectedPlan, setSelectedPlan] = useState<PlanOption | null>(null);
-  const { user, profile } = useAuth();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Reset state when modal closes
   useEffect(() => {
     if (!visible) {
       setState('idle');
-      setSelectedPlan(null);
+      setPackages([]);
+      setSelectedPackage(null);
+      setErrorMessage(null);
     }
   }, [visible]);
 
@@ -165,47 +137,67 @@ export function PremiumUpsellModal({
   }, [state, onClose]);
 
   /**
-   * Handle transition to plan selection.
+   * Fetch offerings from RevenueCat.
    */
-  const handleSeePlans = useCallback(() => {
-    setState('selecting');
+  const fetchOfferings = useCallback(async () => {
+    setState('loading');
+    try {
+      const offerings = await Purchases.getOfferings();
+      const offering = offerings.all[PREMIUM_OFFERING_ID];
+
+      if (offering?.availablePackages.length) {
+        setPackages(offering.availablePackages);
+        setState('selecting');
+      } else {
+        console.warn('[PremiumUpsellModal] No packages in offering');
+        setErrorMessage('No subscription plans available');
+        setState('error');
+      }
+    } catch (error) {
+      console.error('[PremiumUpsellModal] Failed to fetch offerings:', error);
+      setErrorMessage('Failed to load subscription plans');
+      setState('error');
+    }
   }, []);
 
   /**
-   * Handle plan selection and mock purchase.
+   * Handle transition to plan selection.
    */
-  const handleSelectPlan = useCallback(
-    async (plan: PlanOption) => {
+  const handleSeePlans = useCallback(() => {
+    fetchOfferings();
+  }, [fetchOfferings]);
+
+  /**
+   * Handle package purchase.
+   */
+  const handlePurchase = useCallback(
+    async (pkg: PurchasesPackage) => {
       if (!user) return;
 
-      setSelectedPlan(plan);
+      setSelectedPackage(pkg);
       setState('purchasing');
 
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       try {
-        // Update profile in Supabase
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            is_premium: true,
-            premium_purchased_at: new Date().toISOString(),
-          })
-          .eq('id', user.id);
+        const { customerInfo } = await Purchases.purchasePackage(pkg);
 
-        if (error) {
-          console.error('[PremiumUpsellModal] Purchase error:', error);
+        // Check if purchase granted the entitlement
+        if (customerInfo.entitlements.active['premium_access']) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setState('success');
+        } else {
+          // Purchase completed but entitlement not active (rare edge case)
+          setErrorMessage('Purchase completed but subscription not activated');
           setState('error');
+        }
+      } catch (error: any) {
+        // Handle user cancellation gracefully
+        if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+          setState('selecting');
           return;
         }
 
-        // Trigger success haptic
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        setState('success');
-      } catch (err) {
-        console.error('[PremiumUpsellModal] Purchase exception:', err);
+        console.error('[PremiumUpsellModal] Purchase error:', error);
+        setErrorMessage(error.message || 'Purchase failed. Please try again.');
         setState('error');
       }
     },
@@ -213,11 +205,34 @@ export function PremiumUpsellModal({
   );
 
   /**
+   * Handle restore purchases.
+   */
+  const handleRestore = useCallback(async () => {
+    setState('purchasing');
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+
+      if (customerInfo.entitlements.active['premium_access']) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setState('success');
+      } else {
+        setErrorMessage('No previous purchases found');
+        setState('error');
+      }
+    } catch (error: any) {
+      console.error('[PremiumUpsellModal] Restore error:', error);
+      setErrorMessage(error.message || 'Restore failed. Please try again.');
+      setState('error');
+    }
+  }, []);
+
+  /**
    * Handle retry after error.
    */
   const handleRetry = useCallback(() => {
-    setState('selecting');
-  }, []);
+    setErrorMessage(null);
+    fetchOfferings();
+  }, [fetchOfferings]);
 
   /**
    * Get title based on mode and state.
@@ -294,22 +309,30 @@ export function PremiumUpsellModal({
             />
           )}
 
+          {state === 'loading' && <LoadingContent />}
+
           {state === 'selecting' && (
             <SelectingContent
-              plans={PLANS}
-              onSelectPlan={handleSelectPlan}
+              packages={packages}
+              onSelectPackage={handlePurchase}
+              onRestore={handleRestore}
               testID={testID}
             />
           )}
 
           {state === 'purchasing' && (
-            <PurchasingContent plan={selectedPlan} testID={testID} />
+            <PurchasingContent package={selectedPackage} testID={testID} />
           )}
 
           {state === 'success' && <SuccessContent testID={testID} />}
 
           {state === 'error' && (
-            <ErrorContent onRetry={handleRetry} onClose={onClose} testID={testID} />
+            <ErrorContent
+              message={errorMessage}
+              onRetry={handleRetry}
+              onClose={onClose}
+              testID={testID}
+            />
           )}
         </Animated.View>
       </View>
@@ -381,15 +404,29 @@ function IdleContent({
 }
 
 /**
- * Selecting state content - shows plan options.
+ * Loading state content.
+ */
+function LoadingContent() {
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={colors.cardYellow} />
+      <Text style={styles.loadingText}>Loading plans...</Text>
+    </View>
+  );
+}
+
+/**
+ * Selecting state content - shows RevenueCat packages.
  */
 function SelectingContent({
-  plans,
-  onSelectPlan,
+  packages,
+  onSelectPackage,
+  onRestore,
   testID,
 }: {
-  plans: PlanOption[];
-  onSelectPlan: (plan: PlanOption) => void;
+  packages: PurchasesPackage[];
+  onSelectPackage: (pkg: PurchasesPackage) => void;
+  onRestore: () => void;
   testID?: string;
 }) {
   return (
@@ -399,35 +436,47 @@ function SelectingContent({
     >
       <Text style={styles.plansTitle}>Choose Your Plan</Text>
 
-      {plans.map((plan) => (
-        <PlanCard
-          key={plan.id}
-          plan={plan}
-          onSelect={() => onSelectPlan(plan)}
-          testID={`${testID}-plan-${plan.id}`}
+      {packages.map((pkg) => (
+        <PackageCard
+          key={pkg.identifier}
+          package={pkg}
+          onSelect={() => onSelectPackage(pkg)}
+          testID={`${testID}-plan-${pkg.identifier}`}
         />
       ))}
 
+      {/* Restore Purchases Button */}
+      <Pressable
+        style={styles.restoreButton}
+        onPress={onRestore}
+        testID={`${testID}-restore-button`}
+      >
+        <RotateCcw size={14} color={colors.textSecondary} />
+        <Text style={styles.restoreText}>Restore Purchases</Text>
+      </Pressable>
+
       <Text style={styles.planNote}>
-        Cancel anytime. Restore purchases in Settings.
+        Cancel anytime in your App Store settings.
       </Text>
     </Animated.View>
   );
 }
 
 /**
- * Individual plan card.
+ * Individual package card using RevenueCat price data.
  */
-function PlanCard({
-  plan,
+function PackageCard({
+  package: pkg,
   onSelect,
   testID,
 }: {
-  plan: PlanOption;
+  package: PurchasesPackage;
   onSelect: () => void;
   testID?: string;
 }) {
   const scale = useSharedValue(1);
+  const product = pkg.product;
+  const isRecommended = pkg.packageType === 'MONTHLY';
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -441,6 +490,24 @@ function PlanCard({
     scale.value = withSpring(1);
   };
 
+  /**
+   * Get period label from package type.
+   */
+  const getPeriodLabel = (): string => {
+    switch (pkg.packageType) {
+      case 'WEEKLY':
+        return '/week';
+      case 'MONTHLY':
+        return '/month';
+      case 'ANNUAL':
+        return '/year';
+      case 'LIFETIME':
+        return ' forever';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Pressable
       onPress={onSelect}
@@ -451,26 +518,28 @@ function PlanCard({
       <Animated.View
         style={[
           styles.planCard,
-          plan.recommended && styles.planCardRecommended,
+          isRecommended && styles.planCardRecommended,
           animatedStyle,
         ]}
       >
-        {plan.recommended && (
+        {isRecommended && (
           <View style={styles.recommendedBadge}>
             <Text style={styles.recommendedText}>BEST VALUE</Text>
           </View>
         )}
 
         <View style={styles.planInfo}>
-          <Text style={styles.planLabel}>{plan.label}</Text>
-          {plan.savings && (
-            <Text style={styles.planSavings}>{plan.savings}</Text>
+          <Text style={styles.planLabel}>{product.title}</Text>
+          {product.description && (
+            <Text style={styles.planSavings} numberOfLines={1}>
+              {product.description}
+            </Text>
           )}
         </View>
 
         <View style={styles.planPricing}>
-          <Text style={styles.planPrice}>{plan.price}</Text>
-          <Text style={styles.planPeriod}>{plan.period}</Text>
+          <Text style={styles.planPrice}>{product.priceString}</Text>
+          <Text style={styles.planPeriod}>{getPeriodLabel()}</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -481,10 +550,10 @@ function PlanCard({
  * Purchasing state content - shows loading.
  */
 function PurchasingContent({
-  plan,
+  package: pkg,
   testID,
 }: {
-  plan: PlanOption | null;
+  package: PurchasesPackage | null;
   testID?: string;
 }) {
   return (
@@ -494,7 +563,9 @@ function PurchasingContent({
     >
       <ActivityIndicator size="large" color={colors.cardYellow} />
       <Text style={styles.purchasingText}>
-        Processing your {plan?.label.toLowerCase()} subscription...
+        {pkg
+          ? `Processing your ${pkg.product.title.toLowerCase()} subscription...`
+          : 'Restoring your purchases...'}
       </Text>
     </Animated.View>
   );
@@ -523,10 +594,12 @@ function SuccessContent({ testID }: { testID?: string }) {
  * Error state content.
  */
 function ErrorContent({
+  message,
   onRetry,
   onClose,
   testID,
 }: {
+  message: string | null;
   onRetry: () => void;
   onClose: () => void;
   testID?: string;
@@ -537,7 +610,7 @@ function ErrorContent({
       style={styles.errorContainer}
     >
       <Text style={styles.errorText}>
-        Something went wrong. Please try again.
+        {message || 'Something went wrong. Please try again.'}
       </Text>
       <View style={styles.buttonContainer}>
         <ElevatedButton
@@ -656,6 +729,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  // Loading
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    gap: spacing.md,
+  },
+  loadingText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+  },
   // Plans
   plansContainer: {
     width: '100%',
@@ -721,6 +804,18 @@ const styles = StyleSheet.create({
   planPeriod: {
     ...textStyles.caption,
     color: colors.textSecondary,
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  restoreText: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textDecorationLine: 'underline',
   },
   planNote: {
     ...textStyles.caption,

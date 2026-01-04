@@ -16,6 +16,7 @@ import { Trophy } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
 import { StreakHeader, DailyStackCard, useUserStats, useDailyPuzzles } from '@/features/home';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { PremiumUpsellBanner } from '@/features/ads';
 
 /**
  * Route map for each game mode.
@@ -115,6 +116,9 @@ export default function HomeScreen() {
           completedCount={completedCount}
           totalCount={5}
         />
+
+        {/* Premium Upsell Banner (non-premium only) */}
+        <PremiumUpsellBanner testID="home-premium-upsell" />
 
         {/* Daily Stack */}
         <View style={styles.dailyStack}>

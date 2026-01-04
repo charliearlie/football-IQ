@@ -8,6 +8,7 @@ import { CareerStepCard } from '../components/CareerStepCard';
 import { ActionZone } from '../components/ActionZone';
 import { GameResultModal } from '../components/GameResultModal';
 import { CareerStep } from '../types/careerPath.types';
+import { AdBanner } from '@/features/ads';
 
 /**
  * Props for CareerPathScreen.
@@ -139,6 +140,9 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
         isGameOver={isGameOver}
         testID="action-zone"
       />
+
+      {/* Banner Ad (non-premium only) */}
+      <AdBanner testID="career-path-ad-banner" />
     </View>
   );
 }

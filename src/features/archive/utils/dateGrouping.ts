@@ -2,9 +2,11 @@
  * Date Grouping Utilities
  *
  * Functions for grouping archive puzzles by month/year for SectionList display.
+ * Also includes lock logic for premium/ad-unlock gating.
  */
 
 import { ArchivePuzzle, ArchiveSection } from '../types/archive.types';
+import { UnlockedPuzzle } from '@/types/database';
 
 /**
  * Month names for display formatting.
@@ -114,13 +116,56 @@ export function isWithinFreeWindow(puzzleDate: string): boolean {
 }
 
 /**
- * Determine if a puzzle should be locked based on user's premium status.
+ * Check if a puzzle has a valid (non-expired) ad unlock.
+ *
+ * @param puzzleId - The puzzle ID to check
+ * @param adUnlocks - Array of valid ad unlocks to check against
+ * @returns true if the puzzle has a valid ad unlock
+ */
+export function hasValidAdUnlock(
+  puzzleId: string,
+  adUnlocks: UnlockedPuzzle[]
+): boolean {
+  if (!puzzleId || !adUnlocks.length) return false;
+
+  const now = new Date().toISOString();
+  return adUnlocks.some(
+    (unlock) => unlock.puzzle_id === puzzleId && unlock.expires_at > now
+  );
+}
+
+/**
+ * Determine if a puzzle should be locked based on user's premium status and ad unlocks.
+ *
+ * Access hierarchy:
+ * 1. Premium users: always unlocked
+ * 2. Within free window (7 days): unlocked
+ * 3. Has valid ad unlock: unlocked
+ * 4. Otherwise: locked
  *
  * @param puzzleDate - Puzzle date in YYYY-MM-DD format
  * @param isPremium - Whether the user has premium access
+ * @param puzzleId - Optional puzzle ID for ad unlock checking
+ * @param adUnlocks - Optional array of valid ad unlocks
  * @returns true if the puzzle should show as locked
  */
-export function isPuzzleLocked(puzzleDate: string, isPremium: boolean): boolean {
+export function isPuzzleLocked(
+  puzzleDate: string,
+  isPremium: boolean,
+  puzzleId?: string,
+  adUnlocks?: UnlockedPuzzle[]
+): boolean {
+  // Premium users: never locked
   if (isPremium) return false;
-  return !isWithinFreeWindow(puzzleDate);
+
+  // Within free window: not locked
+  if (isWithinFreeWindow(puzzleDate)) return false;
+
+  // Has valid ad unlock: not locked
+  if (puzzleId && adUnlocks && hasValidAdUnlock(puzzleId, adUnlocks)) {
+    return false;
+  }
+
+  // Otherwise: locked
+  return true;
 }

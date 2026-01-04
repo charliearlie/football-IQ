@@ -44,9 +44,10 @@ const { profile, isPremium, needsDisplayName } = useProfile(userId);
 
 ## Local SQLite Database
 ```
-puzzles      - Cached puzzles (offline play)
-attempts     - User attempts (synced flag)
-sync_queue   - Pending sync to Supabase
+puzzles           - Cached puzzles (offline play)
+attempts          - User attempts (synced flag)
+sync_queue        - Pending sync to Supabase
+unlocked_puzzles  - Ad-unlocked puzzles (permanent)
 ```
 
 ```typescript
@@ -582,8 +583,8 @@ type ModalMode = 'upsell' | 'locked' | 'blocked';
 // locked: specific puzzle locked (shows date)
 // blocked: RLS denied access (deep-link)
 
-// Modal states
-type ModalState = 'idle' | 'selecting' | 'purchasing' | 'success' | 'error';
+// Modal states (RevenueCat-powered)
+type ModalState = 'idle' | 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 ```
 
 ## Key Files
@@ -601,6 +602,7 @@ type ModalState = 'idle' | 'selecting' | 'purchasing' | 'success' | 'error';
 - Archive: `src/features/archive/`
 - My IQ (Stats): `src/features/stats/`
 - Leaderboard: `src/features/leaderboard/`
+- Ads: `src/features/ads/`
 - Local DB: `src/lib/database.ts`
 
 ## Expo App Structure
@@ -638,6 +640,7 @@ src/
     archive/
     stats/             # usePerformanceStats, IQCardOverlay
     leaderboard/       # useLeaderboard, LeaderboardList, StickyMeBar
+    ads/               # AdProvider, AdBanner, UnlockChoiceModal
 ```
 
 ## Design Tokens
@@ -675,6 +678,122 @@ open tools/content-creator.html
 ```
 
 Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `topical_quiz`
+
+## RevenueCat Integration
+```typescript
+import { getRevenueCatApiKey, PREMIUM_OFFERING_ID, PREMIUM_ENTITLEMENT_ID } from '@/config/revenueCat';
+import { SubscriptionSyncProvider, useSubscriptionSync } from '@/features/auth';
+
+// Configuration
+PREMIUM_OFFERING_ID = 'ofrng32f02b6286'
+PREMIUM_ENTITLEMENT_ID = 'premium_access'
+
+// Environment-aware key selection
+getRevenueCatApiKey()  // Returns sandbox key in __DEV__, production otherwise
+
+// API Keys (DO NOT COMMIT TO PUBLIC REPOS)
+// Production: appl_QWyaHOEVWcyFzTWkykxesWlqhDo
+// Sandbox:    test_otNRIIDWLJwJlzISdCbUzGtwwlD
+
+// SDK Initialization (in app/_layout.tsx)
+Purchases.configure({ apiKey: getRevenueCatApiKey() });
+
+// Sync Provider (wraps inside AuthProvider)
+<AuthProvider>
+  <SubscriptionSyncProvider>
+    {/* App content */}
+  </SubscriptionSyncProvider>
+</AuthProvider>
+
+// Force manual sync
+const { forceSync } = useSubscriptionSync();
+await forceSync();
+
+// Purchase flow (in PremiumUpsellModal)
+const offerings = await Purchases.getOfferings();
+const pkg = offerings.all[PREMIUM_OFFERING_ID].availablePackages[0];
+const { customerInfo } = await Purchases.purchasePackage(pkg);
+
+// Restore purchases
+const customerInfo = await Purchases.restorePurchases();
+
+// Check entitlement
+if (customerInfo.entitlements.active['premium_access']) {
+  // User has premium
+}
+```
+
+## Ad Monetization (Google AdMob)
+```typescript
+import {
+  AdProvider,
+  useAds,
+  useAdsOptional,
+  AdBanner,
+  UnlockChoiceModal,
+  PremiumUpsellBanner,
+  getAdUnitId,
+  isAdsSupportedPlatform,
+  grantPuzzleUnlock,
+  checkPuzzleUnlock,
+} from '@/features/ads';
+
+// Context usage
+const {
+  shouldShowAds,       // true if non-premium user on mobile
+  isRewardedAdReady,   // true if rewarded ad is loaded
+  loadRewardedAd,      // Load a rewarded ad
+  showRewardedAd,      // Show rewarded ad, returns true if completed
+  adUnlocks,           // List of ad-unlocked puzzles (permanent)
+  isAdUnlockedPuzzle,  // Check if puzzle is ad-unlocked
+  grantAdUnlock,       // Grant permanent unlock after ad watch
+} = useAds();
+
+// AdBanner (game screens) - auto-hides for premium
+<AdBanner testID="game-ad-banner" />
+
+// PremiumUpsellBanner (Home screen) - auto-hides for premium
+<PremiumUpsellBanner testID="home-upsell" />
+
+// UnlockChoiceModal (Archive) - two unlock options
+<UnlockChoiceModal
+  visible={showModal}
+  onClose={() => setShowModal(false)}
+  puzzleId="puzzle-123"
+  puzzleDate="2024-12-15"
+  onUnlockSuccess={() => navigateToPuzzle(puzzle)}
+/>
+
+// Extended lock check with ad unlocks (permanent)
+import { isPuzzleLocked } from '@/features/archive';
+
+isPuzzleLocked('2024-12-15', false)                  // true (no premium, no ad unlock)
+isPuzzleLocked('2024-12-15', false, 'p-123', [])     // true (no unlock in array)
+isPuzzleLocked('2024-12-15', false, 'p-123', [{ puzzle_id: 'p-123', ... }])  // false (unlocked forever)
+
+// Ad Unit IDs (test IDs in __DEV__, production otherwise)
+getAdUnitId('banner')    // Returns iOS/Android banner ad unit ID
+getAdUnitId('rewarded')  // Returns iOS/Android rewarded ad unit ID
+
+// AdMob App IDs (app.json config plugin)
+// iOS: ca-app-pub-9426782115883407~8797195643
+// Android: ca-app-pub-9426782115883407~1712062487
+```
+
+### Local SQLite: unlocked_puzzles Table
+```
+unlocked_puzzles  - Ad-unlocked puzzles (permanent)
+  puzzle_id TEXT PRIMARY KEY
+  unlocked_at TEXT (ISO timestamp)
+```
+
+```typescript
+import { saveAdUnlock, isAdUnlocked, getValidAdUnlocks } from '@/lib/database';
+
+await saveAdUnlock('puzzle-123');           // Grant permanent unlock
+const valid = await isAdUnlocked('puzzle-123');  // Check if unlocked
+const unlocks = await getValidAdUnlocks();  // All unlocked puzzles
+```
 
 ## Migrations
 ```

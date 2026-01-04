@@ -18,6 +18,7 @@ import { RecallActionZone } from '../components/RecallActionZone';
 import { StartOverlay } from '../components/StartOverlay';
 import { GoalFlash } from '../components/GoalFlash';
 import { RecallResultModal } from '../components/RecallResultModal';
+import { AdBanner } from '@/features/ads';
 import type { GoalscorerRecallContent } from '../types/goalscorerRecall.types';
 
 /**
@@ -172,6 +173,9 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
         puzzleDate={puzzle.puzzle_date}
         onContinue={resetGame}
       />
+
+      {/* Banner Ad (non-premium only) */}
+      <AdBanner testID="goalscorer-recall-ad-banner" />
     </View>
   );
 }

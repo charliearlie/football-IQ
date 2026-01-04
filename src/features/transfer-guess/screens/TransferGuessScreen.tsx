@@ -8,6 +8,7 @@ import { TransferCard } from '../components/TransferCard';
 import { HintsSection } from '../components/HintsSection';
 import { TransferActionZone } from '../components/TransferActionZone';
 import { TransferResultModal } from '../components/TransferResultModal';
+import { AdBanner } from '@/features/ads';
 
 /**
  * Props for TransferGuessScreen.
@@ -130,6 +131,9 @@ export function TransferGuessScreen({ puzzleId }: TransferGuessScreenProps) {
         incorrectGuesses={state.guesses.length}
         testID="action-zone"
       />
+
+      {/* Banner Ad (non-premium only) */}
+      <AdBanner testID="transfer-guess-ad-banner" />
     </View>
   );
 }

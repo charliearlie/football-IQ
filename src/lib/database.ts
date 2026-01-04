@@ -7,10 +7,11 @@ import {
   ParsedLocalPuzzle,
   ParsedLocalAttempt,
   LocalCatalogEntry,
+  UnlockedPuzzle,
 } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -123,8 +124,21 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     `);
   }
 
+  // Migration v3: Add unlocked_puzzles table for ad-to-unlock feature
+  // Unlocks are permanent (one ad = one puzzle forever)
+  if (currentVersion < 3) {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS unlocked_puzzles (
+        puzzle_id TEXT PRIMARY KEY NOT NULL,
+        unlocked_at TEXT NOT NULL
+      );
+
+      PRAGMA user_version = 3;
+    `);
+  }
+
   // Future migrations would go here:
-  // if (currentVersion < 3) { ... }
+  // if (currentVersion < 4) { ... }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -501,6 +515,92 @@ export async function getCatalogEntryCount(
 export async function clearCatalog(): Promise<void> {
   const database = getDatabase();
   await database.runAsync('DELETE FROM puzzle_catalog');
+}
+
+// ============ AD UNLOCK OPERATIONS ============
+
+/**
+ * Save an ad unlock for a puzzle.
+ * Grants permanent access to the puzzle after watching a rewarded ad.
+ * Uses INSERT OR REPLACE to handle re-unlocking (idempotent).
+ *
+ * @param puzzleId - The ID of the puzzle to unlock
+ */
+export async function saveAdUnlock(puzzleId: string): Promise<void> {
+  const database = getDatabase();
+  const now = new Date();
+
+  await database.runAsync(
+    `INSERT OR REPLACE INTO unlocked_puzzles (puzzle_id, unlocked_at)
+     VALUES ($puzzle_id, $unlocked_at)`,
+    {
+      $puzzle_id: puzzleId,
+      $unlocked_at: now.toISOString(),
+    }
+  );
+}
+
+/**
+ * Check if a puzzle has been unlocked via ad.
+ * Unlocks are permanent - once unlocked, always unlocked.
+ *
+ * @param puzzleId - The ID of the puzzle to check
+ * @returns true if the puzzle has been unlocked
+ */
+export async function isAdUnlocked(puzzleId: string): Promise<boolean> {
+  const database = getDatabase();
+
+  const row = await database.getFirstAsync<UnlockedPuzzle>(
+    `SELECT * FROM unlocked_puzzles WHERE puzzle_id = $puzzle_id`,
+    { $puzzle_id: puzzleId }
+  );
+  return row !== null;
+}
+
+/**
+ * Get all ad unlocks.
+ * Unlocks are permanent so all entries are valid.
+ * Used for reactive state management in AdContext.
+ *
+ * @returns Array of all unlocked puzzles
+ */
+export async function getValidAdUnlocks(): Promise<UnlockedPuzzle[]> {
+  const database = getDatabase();
+
+  return database.getAllAsync<UnlockedPuzzle>(
+    `SELECT * FROM unlocked_puzzles ORDER BY unlocked_at DESC`
+  );
+}
+
+/**
+ * @deprecated No-op function. Unlocks are now permanent and never expire.
+ * Kept for backward compatibility with existing code that may call this.
+ */
+export async function clearExpiredUnlocks(): Promise<void> {
+  // No-op: Unlocks are permanent and never expire
+}
+
+/**
+ * Remove a specific ad unlock.
+ * Useful for testing or manual cleanup.
+ *
+ * @param puzzleId - The ID of the puzzle to remove unlock for
+ */
+export async function removeAdUnlock(puzzleId: string): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync(
+    `DELETE FROM unlocked_puzzles WHERE puzzle_id = $puzzle_id`,
+    { $puzzle_id: puzzleId }
+  );
+}
+
+/**
+ * Clear all ad unlocks.
+ * Primarily used for testing cleanup.
+ */
+export async function clearAllAdUnlocks(): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync('DELETE FROM unlocked_puzzles');
 }
 
 // ============ UTILITY FUNCTIONS ============
