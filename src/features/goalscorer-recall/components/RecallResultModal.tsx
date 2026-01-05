@@ -8,7 +8,7 @@
  * - Continue button
  */
 
-import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
@@ -44,7 +44,23 @@ export function RecallResultModal({
 }: RecallResultModalProps) {
   const [copied, setCopied] = useState(false);
 
-  if (!score) return null;
+  // Don't render if not visible
+  if (!visible) return null;
+
+  // Show loading state if visible but score not yet available
+  // This prevents the "few pixels tall" modal issue
+  if (!score) {
+    return (
+      <Modal visible={visible} transparent animationType="none">
+        <View style={styles.overlay}>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={colors.pitchGreen} />
+            <Text style={styles.loadingText}>Calculating score...</Text>
+          </GlassCard>
+        </View>
+      </Modal>
+    );
+  }
 
   const handleShare = async () => {
     const shareText = generateGoalscorerShareText(score, goals, matchInfo, puzzleDate);
@@ -118,12 +134,14 @@ export function RecallResultModal({
                 title={copied ? 'Copied!' : 'Share Result'}
                 onPress={handleShare}
                 variant="secondary"
+                fullWidth
                 style={styles.shareButton}
               />
               <ElevatedButton
                 title="Continue"
                 onPress={onContinue}
                 variant="primary"
+                fullWidth
               />
             </View>
           </GlassCard>
@@ -224,5 +242,20 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  loadingCard: {
+    padding: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 280,
+  },
+  loadingText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: colors.floodlightWhite,
+    opacity: 0.7,
+    marginTop: spacing.md,
+    textAlign: 'center',
   },
 });

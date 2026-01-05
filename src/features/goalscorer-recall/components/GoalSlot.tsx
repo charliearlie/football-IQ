@@ -80,7 +80,9 @@ export function GoalSlot({ goal, isJustFound = false }: GoalSlotProps) {
                 styles.scorerName,
                 isOwnGoal && styles.ownGoalText,
               ]}
-              numberOfLines={1}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               {scorer}
               {isOwnGoal && <Text style={styles.ownGoalLabel}> (OG)</Text>}

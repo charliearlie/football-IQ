@@ -105,6 +105,20 @@ export interface GoalscorerRecallState {
   attemptSaved: boolean;
   /** Game start timestamp (ISO string) */
   startedAt: string | null;
+  /** Attempt ID for progressive saves (persists across saves) */
+  attemptId: string | null;
+  /** Initial timer value when restored from saved progress */
+  restoredTimeRemaining: number | null;
+}
+
+/**
+ * Payload for restoring progress from a saved attempt.
+ */
+export interface RestoreProgressPayload {
+  attemptId: string;
+  foundScorers: Set<string>;
+  timeRemaining: number;
+  startedAt: string;
 }
 
 /**
@@ -123,7 +137,9 @@ export type GoalscorerRecallAction =
   | { type: 'ALL_FOUND'; payload: GoalscorerRecallScore }
   | { type: 'GIVE_UP'; payload: GoalscorerRecallScore }
   | { type: 'ATTEMPT_SAVED' }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload }
+  | { type: 'SET_ATTEMPT_ID'; payload: string };
 
 /** Timer duration in seconds */
 export const TIMER_DURATION = 60;

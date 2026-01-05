@@ -115,6 +115,8 @@ state.lastGuessIncorrect // Triggers shake animation
 // Validation (fuzzy matching)
 validateGuess('Messi', 'Lionel Messi')    // { isMatch: true, score: 0.95 }
 validateGuess('Ozil', 'Özil')             // { isMatch: true, score: 1.0 }
+validateGuess('Son', 'Son Heung-min')     // { isMatch: true, score: 0.92 } (surname)
+validateGuess('Saka', 'Bukayo Saka')      // { isMatch: true, score: 0.92 } (surname)
 
 // Scoring: Score = Total Steps - (Revealed - 1)
 calculateScore(10, 3, true)  // { points: 8, maxPoints: 10, won: true }
@@ -208,6 +210,8 @@ state.gameStatus         // 'idle' | 'playing' | 'won' | 'lost'
 state.foundScorers       // Set<string> of found scorer names
 state.lastGuessCorrect   // Triggers "GOAL!" flash
 state.lastGuessIncorrect // Triggers shake animation
+state.attemptId          // UUID for progressive saves
+state.restoredTimeRemaining // Timer value restored from save
 
 // Timer hook (reusable)
 const timer = useCountdownTimer({
@@ -218,6 +222,7 @@ const timer = useCountdownTimer({
 timer.start();
 timer.stop();
 timer.reset();
+timer.setTo(35);  // Set to specific value (for resume)
 
 // Scoring: percentage + time bonus if all found
 calculateGoalscorerScore(3, 5, 30, true)
@@ -727,6 +732,7 @@ src/
 ## Core Components
 ```
 <ElevatedButton title="Play" onPress={fn} />
+<ElevatedButton title="Continue" onPress={fn} fullWidth />  // Stretch to container
 <GlassCard>{children}</GlassCard>
 ```
 
@@ -758,8 +764,8 @@ Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorer
 import { getRevenueCatApiKey, PREMIUM_OFFERING_ID, PREMIUM_ENTITLEMENT_ID } from '@/config/revenueCat';
 import { SubscriptionSyncProvider, useSubscriptionSync } from '@/features/auth';
 
-// Configuration
-PREMIUM_OFFERING_ID = 'ofrng32f02b6286'
+// Configuration (use offering identifier, NOT internal ID)
+PREMIUM_OFFERING_ID = 'default_offering'
 PREMIUM_ENTITLEMENT_ID = 'premium_access'
 
 // Environment-aware key selection

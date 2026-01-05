@@ -22,6 +22,8 @@ export interface ElevatedButtonProps {
   size?: 'small' | 'medium' | 'large';
   /** Disable the button */
   disabled?: boolean;
+  /** Stretch button to fill parent width (for modal buttons) */
+  fullWidth?: boolean;
   /** Additional container styles */
   style?: ViewStyle;
   /** Test ID for testing */
@@ -69,6 +71,7 @@ export function ElevatedButton({
   shadowColor = colors.grassShadow,
   size = 'medium',
   disabled = false,
+  fullWidth = false,
   style,
   testID,
 }: ElevatedButtonProps) {
@@ -108,6 +111,7 @@ export function ElevatedButton({
       style={[
         styles.container,
         { paddingBottom: offset },
+        fullWidth && styles.fullWidth,
         disabled && styles.disabled,
         style,
       ]}
@@ -165,6 +169,9 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     alignSelf: 'flex-start',
+  },
+  fullWidth: {
+    alignSelf: 'stretch',
   },
   layer: {
     borderRadius: borderRadius.xl,

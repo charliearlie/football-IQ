@@ -6,6 +6,7 @@
  */
 
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import type { RefObject } from 'react';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
 import { GoalSlot } from './GoalSlot';
 import type { GoalWithState } from '../types/goalscorerRecall.types';
@@ -16,6 +17,8 @@ interface ScoreboardProps {
   homeGoals: GoalWithState[];
   awayGoals: GoalWithState[];
   lastFoundGoalId?: string;
+  /** Optional ref for parent to control scroll position */
+  scrollRef?: RefObject<ScrollView>;
 }
 
 export function Scoreboard({
@@ -24,6 +27,7 @@ export function Scoreboard({
   homeGoals,
   awayGoals,
   lastFoundGoalId,
+  scrollRef,
 }: ScoreboardProps) {
   return (
     <View style={styles.container}>
@@ -43,9 +47,11 @@ export function Scoreboard({
 
       {/* Goals Columns */}
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
       >
         <View style={styles.columnsContainer}>
           {/* Home Goals */}

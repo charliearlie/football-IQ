@@ -267,6 +267,7 @@ src/
 
 ### Core Components
 - **ElevatedButton**: Neubrutalist 3D button with haptic feedback
+  - `fullWidth` prop: Stretches button to fill container width
 - **GlassCard**: Frosted glass container (expo-blur)
 
 ### Typography
@@ -313,6 +314,9 @@ Uses `string-similarity` library with Dice coefficient for intelligent name matc
 - **Accent normalization**: "Ozil" matches "Özil", "Sorloth" matches "Sørloth"
 - **Partial names**: "Messi" matches "Lionel Messi" (surname matching)
 - **Typo tolerance**: "Rogrers" matches "Rogers" (threshold: 0.85)
+- **Short surname matching**: "Son" matches "Son Heung-min", "Saka" matches "Bukayo Saka"
+  - Extracts first/last name parts for direct comparison
+  - Lower containment threshold (0.25) for short inputs
 
 ### Scoring System
 Dynamic scoring based on career steps revealed:
@@ -520,6 +524,7 @@ src/features/transfer-guess/
 
 ## Goalscorer Recall Game Mode
 Initialized: 2025-12-24
+Updated: 2026-01-05 (Name matching, keyboard handling, UI polish)
 
 ### Overview
 Timed challenge where players must name all goalscorers from a classic football match within 60 seconds. Tests football memory with multi-goal handling and fuzzy name matching.
@@ -598,6 +603,18 @@ Reuses Career Path's fuzzy matching from `validation.ts`:
 - **GoalFlash**: Scale + fade "GOAL!" text
 - **RecallActionZone**: Shake on incorrect guess
 
+### UX Improvements (2026-01-05)
+- **KeyboardAvoidingView**: Input field never obscured by keyboard
+- **Auto-scroll**: Scoreboard scrolls to end when goal found
+- **Text truncation fix**: Long names wrap to 2 lines with font scaling
+- **Result modal**: Loading state when score calculation pending
+- **fullWidth buttons**: Modal buttons stretch to container width
+- **Progressive save**: Game state saved on each correct guess, restored on return
+  - Saves with `completed: 0` during gameplay
+  - Restores `foundScorers`, `timeRemaining`, `attemptId` from metadata
+  - Home screen shows "Resume" button for in-progress games
+  - Uses `setTo()` on timer hook for restored time
+
 ### Hooks
 | Hook | Purpose |
 |------|---------|
@@ -609,16 +626,16 @@ Reuses Career Path's fuzzy matching from `validation.ts`:
 src/features/goalscorer-recall/
   ├── index.ts                    # Public exports
   ├── screens/
-  │   └── GoalscorerRecallScreen.tsx
+  │   └── GoalscorerRecallScreen.tsx  # KeyboardAvoidingView, auto-scroll
   ├── components/
   │   ├── MatchHeader.tsx
-  │   ├── Scoreboard.tsx
-  │   ├── GoalSlot.tsx
+  │   ├── Scoreboard.tsx          # ScrollView ref for auto-scroll
+  │   ├── GoalSlot.tsx            # 2-line text with font scaling
   │   ├── TimerDisplay.tsx
   │   ├── RecallActionZone.tsx
   │   ├── StartOverlay.tsx
   │   ├── GoalFlash.tsx
-  │   └── RecallResultModal.tsx
+  │   └── RecallResultModal.tsx   # Defensive rendering, fullWidth buttons
   ├── hooks/
   │   ├── useGoalscorerRecallGame.ts
   │   └── useCountdownTimer.ts
@@ -631,7 +648,9 @@ src/features/goalscorer-recall/
   └── __tests__/
       ├── timer.test.ts           # Countdown timer tests
       ├── recallLogic.test.ts     # Multi-goal, fuzzy matching tests
-      └── scoring.test.ts         # Percentage + time bonus tests
+      ├── scoring.test.ts         # Percentage + time bonus tests
+      ├── RecallResultModal.test.tsx  # Modal rendering tests (9 tests)
+      └── ProgressiveSave.test.ts # Save/restore progress tests (7 tests)
 ```
 
 ### Navigation
@@ -1531,7 +1550,7 @@ In-app purchases powered by RevenueCat SDK. RevenueCat is the source of truth fo
 ### Configuration
 | Key | Value |
 |-----|-------|
-| Offering ID | `ofrng32f02b6286` |
+| Offering Identifier | `default_offering` |
 | Entitlement ID | `premium_access` |
 | Production API Key | `appl_QWyaHOEVWcyFzTWkykxesWlqhDo` |
 | Sandbox API Key | `test_otNRIIDWLJwJlzISdCbUzGtwwlD` |

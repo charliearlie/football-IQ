@@ -17,7 +17,29 @@ export const MATCH_THRESHOLD = 0.85;
 const MIN_PARTIAL_LENGTH = 3;
 
 /** Minimum ratio of guess length to answer length for partial matching */
-const MIN_CONTAINMENT_RATIO = 0.4;
+const MIN_CONTAINMENT_RATIO = 0.25;
+
+/**
+ * Extract first and last name parts from a full name.
+ *
+ * Handles various naming conventions:
+ * - Western: "Bukayo Saka" → ["bukayo", "saka"]
+ * - East Asian: "Son Heung-min" → ["son", "min"]
+ * - Multi-part: "Kevin De Bruyne" → ["kevin", "bruyne"]
+ *
+ * @param name - Full name to extract parts from
+ * @returns Array of first and last name parts (normalized)
+ */
+function extractNameParts(name: string): string[] {
+  const normalized = normalizeString(name);
+  const parts = normalized.split(/[\s-]+/).filter((p) => p.length > 0);
+
+  if (parts.length === 0) return [];
+  if (parts.length === 1) return parts;
+
+  // Return first and last parts
+  return [parts[0], parts[parts.length - 1]];
+}
 
 /**
  * Map of special characters that don't decompose with NFD.
@@ -115,13 +137,24 @@ export function validateGuess(
   ) {
     const containmentRatio = normalizedGuess.length / normalizedAnswer.length;
     if (containmentRatio >= MIN_CONTAINMENT_RATIO) {
-      // Scale score: 0.9 for 40% match, up to ~0.99 for nearly full match
+      // Scale score: 0.9 for 25% match, up to ~0.99 for nearly full match
       const score = 0.9 + containmentRatio * 0.1;
       return { isMatch: true, score };
     }
   }
 
-  // 3. Fuzzy matching with Dice coefficient
+  // 3. Check if guess matches first or last name part
+  // Handles short surnames like "Son" for "Son Heung-min"
+  // or "Saka" for "Bukayo Saka"
+  if (normalizedGuess.length >= MIN_PARTIAL_LENGTH) {
+    const answerParts = extractNameParts(answer);
+    if (answerParts.includes(normalizedGuess)) {
+      // Score 0.92 for matching a name part exactly
+      return { isMatch: true, score: 0.92 };
+    }
+  }
+
+  // 4. Fuzzy matching with Dice coefficient
   const similarity = stringSimilarity.compareTwoStrings(
     normalizedGuess,
     normalizedAnswer

@@ -16,6 +16,7 @@ import {
   GoalWithState,
   Goal,
   TIMER_DURATION,
+  RestoreProgressPayload,
 } from '../types/goalscorerRecall.types';
 import { useCountdownTimer } from './useCountdownTimer';
 import { calculateGoalscorerScore } from '../utils/scoring';
@@ -24,7 +25,7 @@ import {
   validateGuess,
   normalizeString,
 } from '@/features/career-path/utils/validation';
-import { saveAttempt } from '@/lib/database';
+import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { useHaptics } from '@/hooks/useHaptics';
 import type { ParsedLocalPuzzle, LocalAttempt } from '@/types/database';
 
@@ -43,6 +44,8 @@ function createInitialState(): GoalscorerRecallState {
     score: null,
     attemptSaved: false,
     startedAt: null,
+    attemptId: null,
+    restoredTimeRemaining: null,
   };
 }
 
@@ -150,6 +153,35 @@ function reducer(
     case 'RESET':
       return createInitialState();
 
+    case 'RESTORE_PROGRESS': {
+      const { attemptId, foundScorers, timeRemaining, startedAt } =
+        action.payload;
+
+      // Update goals with found status based on restored foundScorers
+      const updatedGoals = state.goals.map((goal) => ({
+        ...goal,
+        found:
+          foundScorers.has(normalizeString(goal.scorer)) ||
+          (goal.isOwnGoal ?? false),
+      }));
+
+      return {
+        ...state,
+        attemptId,
+        foundScorers,
+        goals: updatedGoals,
+        gameStatus: 'playing',
+        startedAt,
+        restoredTimeRemaining: timeRemaining,
+      };
+    }
+
+    case 'SET_ATTEMPT_ID':
+      return {
+        ...state,
+        attemptId: action.payload,
+      };
+
     default:
       return state;
   }
@@ -233,6 +265,40 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
     }
   }, [puzzleContent]);
 
+  // Check for existing in-progress attempt on mount (restore progress)
+  useEffect(() => {
+    async function checkForResume() {
+      if (!puzzle) return;
+
+      try {
+        const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
+
+        // Only restore in-progress attempts (completed=0)
+        if (existingAttempt && !existingAttempt.completed) {
+          const meta = existingAttempt.metadata as {
+            foundScorers?: string[];
+            timeRemaining?: number;
+            startedAt?: string;
+          };
+
+          dispatch({
+            type: 'RESTORE_PROGRESS',
+            payload: {
+              attemptId: existingAttempt.id,
+              foundScorers: new Set(meta.foundScorers ?? []),
+              timeRemaining: meta.timeRemaining ?? TIMER_DURATION,
+              startedAt: meta.startedAt ?? existingAttempt.started_at ?? new Date().toISOString(),
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check for resume:', error);
+      }
+    }
+
+    checkForResume();
+  }, [puzzle?.id]);
+
   // Timer callbacks - use refs to always get current values
   const handleTimeUp = useCallback(() => {
     const score = calculateGoalscorerScore(
@@ -249,9 +315,9 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
     dispatch({ type: 'TICK' });
   }, []);
 
-  // Timer hook
+  // Timer hook - use restored time if available
   const timer = useCountdownTimer({
-    initialSeconds: TIMER_DURATION,
+    initialSeconds: state.restoredTimeRemaining ?? TIMER_DURATION,
     onTick: handleTick,
     onFinish: handleTimeUp,
   });
@@ -261,6 +327,58 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
     timeRemaining: timer.timeRemaining,
     stop: timer.stop,
   };
+
+  // Set timer and auto-start when restored from saved progress
+  useEffect(() => {
+    if (state.restoredTimeRemaining !== null && state.gameStatus === 'playing') {
+      timer.setTo(state.restoredTimeRemaining);
+      timer.start();
+    }
+  }, [state.restoredTimeRemaining, state.gameStatus, timer]);
+
+  // Generate attemptId on game start if not already set
+  useEffect(() => {
+    if (state.gameStatus === 'playing' && !state.attemptId) {
+      dispatch({ type: 'SET_ATTEMPT_ID', payload: Crypto.randomUUID() });
+    }
+  }, [state.gameStatus, state.attemptId]);
+
+  // Save progress when foundScorers changes (progressive save)
+  useEffect(() => {
+    if (
+      state.gameStatus === 'playing' &&
+      state.foundScorers.size > 0 &&
+      puzzle &&
+      state.attemptId &&
+      state.startedAt
+    ) {
+      const saveProgress = async () => {
+        const attempt: LocalAttempt = {
+          id: state.attemptId!,
+          puzzle_id: puzzle.id,
+          completed: 0, // In-progress
+          score: null,
+          score_display: null,
+          metadata: JSON.stringify({
+            foundScorers: Array.from(state.foundScorers),
+            timeRemaining: timer.timeRemaining,
+            startedAt: state.startedAt,
+          }),
+          started_at: state.startedAt,
+          completed_at: null,
+          synced: 0,
+        };
+
+        try {
+          await saveAttempt(attempt);
+        } catch (error) {
+          console.error('Failed to save progress:', error);
+        }
+      };
+
+      saveProgress();
+    }
+  }, [state.foundScorers.size, state.gameStatus, puzzle, state.attemptId, state.startedAt, timer.timeRemaining]);
 
   // Start game
   const startGame = useCallback(() => {
@@ -377,7 +495,7 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
     dispatch({ type: 'SET_CURRENT_GUESS', payload: text });
   }, []);
 
-  // Save attempt when game ends
+  // Save attempt when game ends (use existing attemptId if available)
   useEffect(() => {
     if (
       state.gameStatus !== 'idle' &&
@@ -390,7 +508,7 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
         const now = new Date().toISOString();
 
         const attempt: LocalAttempt = {
-          id: Crypto.randomUUID(),
+          id: state.attemptId ?? Crypto.randomUUID(),
           puzzle_id: puzzle.id,
           completed: 1,
           score: state.score!.percentage,

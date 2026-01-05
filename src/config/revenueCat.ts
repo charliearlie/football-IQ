@@ -16,9 +16,10 @@ export const REVENUECAT_API_KEYS = {
 } as const;
 
 /**
- * The offering ID configured in RevenueCat dashboard.
+ * The offering identifier configured in RevenueCat dashboard.
+ * Note: This is the human-readable identifier, NOT the internal ID (ofrng...).
  */
-export const PREMIUM_OFFERING_ID = 'ofrng32f02b6286';
+export const PREMIUM_OFFERING_ID = 'default_offering';
 
 /**
  * The entitlement identifier that grants premium access.

@@ -87,6 +87,50 @@ describe('validateGuess', () => {
     });
   });
 
+  describe('short surname matches (first/last name only)', () => {
+    it('matches "Saka" to "Bukayo Saka" (short surname at end)', () => {
+      const result = validateGuess('Saka', 'Bukayo Saka');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('matches "Son" to "Son Heung-min" (short surname at start)', () => {
+      const result = validateGuess('Son', 'Son Heung-min');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('matches "Romero" to "Christian Romero"', () => {
+      const result = validateGuess('Romero', 'Christian Romero');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('matches "De Bruyne" to "Kevin De Bruyne"', () => {
+      const result = validateGuess('De Bruyne', 'Kevin De Bruyne');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('matches "Eze" to "Eberechi Eze" (very short surname)', () => {
+      const result = validateGuess('Eze', 'Eberechi Eze');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('matches "Kim" to "Kim Min-jae" (Korean naming)', () => {
+      const result = validateGuess('Kim', 'Kim Min-jae');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('matches first name "Bukayo" to "Bukayo Saka"', () => {
+      const result = validateGuess('Bukayo', 'Bukayo Saka');
+      expect(result.isMatch).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0.9);
+    });
+  });
+
   describe('fuzzy matches (typos)', () => {
     it('matches minor typo: "Rogrers" to "Rogers"', () => {
       const result = validateGuess('Morgan Rogrers', 'Morgan Rogers');

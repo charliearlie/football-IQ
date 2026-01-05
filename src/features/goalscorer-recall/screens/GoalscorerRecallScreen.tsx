@@ -5,9 +5,17 @@
  * within 60 seconds.
  */
 
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useGoalscorerRecallGame } from '../hooks/useGoalscorerRecallGame';
@@ -37,6 +45,7 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'guess_the_goalscorers');
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
+  const scrollRef = useRef<ScrollView>(null);
 
   const {
     state,
@@ -60,6 +69,17 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
       setLastFoundGoalId(justFound.id);
     }
   };
+
+  // Auto-scroll when a correct guess is made
+  useEffect(() => {
+    if (state.lastGuessCorrect) {
+      // Small delay to allow the UI to update first
+      const timer = setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [state.lastGuessCorrect]);
 
   // Loading state
   if (isLoading) {
@@ -100,7 +120,11 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Goalscorer Recall</Text>
@@ -138,6 +162,7 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
           homeGoals={homeGoals}
           awayGoals={awayGoals}
           lastFoundGoalId={lastFoundGoalId}
+          scrollRef={scrollRef}
         />
       </View>
 
@@ -176,7 +201,7 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="goalscorer-recall-ad-banner" />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

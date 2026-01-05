@@ -143,13 +143,15 @@ export function PremiumUpsellModal({
     setState('loading');
     try {
       const offerings = await Purchases.getOfferings();
-      const offering = offerings.all[PREMIUM_OFFERING_ID];
+
+      // Try specific offering first, then fall back to current/default offering
+      const offering = offerings.all[PREMIUM_OFFERING_ID] || offerings.current;
 
       if (offering?.availablePackages.length) {
         setPackages(offering.availablePackages);
         setState('selecting');
       } else {
-        console.warn('[PremiumUpsellModal] No packages in offering');
+        console.warn('[PremiumUpsellModal] No packages in offering. Available offerings:', Object.keys(offerings.all));
         setErrorMessage('No subscription plans available');
         setState('error');
       }
@@ -180,13 +182,20 @@ export function PremiumUpsellModal({
       try {
         const { customerInfo } = await Purchases.purchasePackage(pkg);
 
+        // Debug: Log all entitlements
+        console.log('[PremiumUpsellModal] Purchase completed. Active entitlements:',
+          Object.keys(customerInfo.entitlements.active)
+        );
+
         // Check if purchase granted the entitlement
         if (customerInfo.entitlements.active['premium_access']) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setState('success');
         } else {
-          // Purchase completed but entitlement not active (rare edge case)
-          setErrorMessage('Purchase completed but subscription not activated');
+          // Purchase completed but entitlement not active
+          // This happens with Test Store purchases (simulator only)
+          console.warn('[PremiumUpsellModal] No premium_access entitlement found. This is expected for Test Store purchases on simulator.');
+          setErrorMessage('Purchase completed but subscription not activated. Use a physical device with sandbox account for real testing.');
           setState('error');
         }
       } catch (error: any) {
@@ -388,6 +397,7 @@ function IdleContent({
           size="medium"
           topColor={colors.cardYellow}
           shadowColor="#D4A500"
+          fullWidth
           testID={`${testID}-see-plans-button`}
         />
         <ElevatedButton
@@ -396,6 +406,7 @@ function IdleContent({
           size="medium"
           topColor={colors.glassBackground}
           shadowColor={colors.glassBorder}
+          fullWidth
           testID={`${testID}-close-button`}
         />
       </View>
@@ -619,6 +630,7 @@ function ErrorContent({
           size="medium"
           topColor={colors.cardYellow}
           shadowColor="#D4A500"
+          fullWidth
           testID={`${testID}-retry-button`}
         />
         <ElevatedButton
@@ -627,6 +639,7 @@ function ErrorContent({
           size="medium"
           topColor={colors.glassBackground}
           shadowColor={colors.glassBorder}
+          fullWidth
           testID={`${testID}-cancel-button`}
         />
       </View>

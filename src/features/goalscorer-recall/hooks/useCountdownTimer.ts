@@ -30,6 +30,8 @@ interface CountdownTimerResult {
   stop: () => void;
   /** Reset to initial value and stop */
   reset: () => void;
+  /** Set timer to a specific value (for resume functionality) */
+  setTo: (seconds: number) => void;
 }
 
 /**
@@ -112,6 +114,11 @@ export function useCountdownTimer({
     setTimeRemaining(initialSeconds);
   }, [stop, initialSeconds]);
 
+  const setTo = useCallback((seconds: number) => {
+    stop();
+    setTimeRemaining(seconds);
+  }, [stop]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -127,5 +134,6 @@ export function useCountdownTimer({
     start,
     stop,
     reset,
+    setTo,
   };
 }
