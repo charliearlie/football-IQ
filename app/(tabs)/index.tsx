@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  ActivityIndicator,
   AppState,
   AppStateStatus,
   Pressable,
@@ -17,6 +16,7 @@ import { colors, textStyles, spacing } from '@/theme';
 import { StreakHeader, DailyStackCard, useUserStats, useDailyPuzzles } from '@/features/home';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { PremiumUpsellBanner } from '@/features/ads';
+import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
 
 /**
  * Route map for each game mode.
@@ -125,9 +125,10 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Today's Challenges</Text>
 
           {isLoading && cards.length === 0 ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.pitchGreen} />
-              <Text style={styles.loadingText}>Loading puzzles...</Text>
+            <View testID="home-skeleton-container">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <DailyStackCardSkeleton key={`skeleton-${i}`} testID={`daily-skeleton-${i}`} />
+              ))}
             </View>
           ) : cards.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -191,15 +192,6 @@ const styles = StyleSheet.create({
   },
   dailyStack: {
     marginTop: spacing.lg,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing['2xl'],
-    gap: spacing.md,
-  },
-  loadingText: {
-    ...textStyles.body,
-    color: colors.textSecondary,
   },
   emptyContainer: {
     alignItems: 'center',

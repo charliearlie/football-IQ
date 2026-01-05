@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { usePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useTopicalQuizGame } from '../hooks/useTopicalQuizGame';
+import { useQuizPrefetch } from '../context/QuizPrefetchContext';
 import { QuizProgressBar } from '../components/QuizProgressBar';
 import { QuizQuestionCard } from '../components/QuizQuestionCard';
 import { QuizOptionButton } from '../components/QuizOptionButton';
@@ -40,6 +41,8 @@ export function TopicalQuizScreen({ puzzleId }: TopicalQuizScreenProps) {
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'topical_quiz');
+  // Images are prefetched in background - they'll load instantly from cache
+  const { isPrefetched } = useQuizPrefetch();
   const {
     state,
     currentQuestion,
@@ -75,14 +78,23 @@ export function TopicalQuizScreen({ puzzleId }: TopicalQuizScreenProps) {
     }) as OptionButtonState[];
   }, [currentQuestion, state.answers, state.currentQuestionIndex]);
 
-  // Loading state
-  if (isLoading) {
+  // Loading state - only show if puzzle is loading AND images aren't prefetched
+  if (isLoading && !isPrefetched) {
     return (
       <View style={[styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.pitchGreen} />
         <Text style={[textStyles.body, styles.loadingText]}>
           Loading quiz...
         </Text>
+      </View>
+    );
+  }
+
+  // Brief loading state if puzzle is loading but images are ready
+  if (isLoading) {
+    return (
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={colors.pitchGreen} />
       </View>
     );
   }

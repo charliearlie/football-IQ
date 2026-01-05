@@ -1300,6 +1300,94 @@ app/
 ### Migrations Applied
 7. `007_premium_puzzle_access` - RLS policy for premium gating
 
+## Skeleton Loaders
+Initialized: 2026-01-04
+
+### Overview
+High-fidelity loading placeholders using moti/skeleton with shimmer animations. Eliminates layout shifts by matching exact dimensions of loaded content.
+
+### Dependencies
+- `moti` - Reanimated-based animation library
+- `@motify/skeleton` - Skeleton shimmer component
+
+### Skeleton Colors
+```typescript
+const SKELETON_COLORS = {
+  dark: [
+    'rgba(255, 255, 255, 0.05)',  // Base
+    'rgba(255, 255, 255, 0.12)',  // Highlight
+    'rgba(255, 255, 255, 0.05)',  // Base
+  ],
+};
+```
+
+### Components
+| Component | Location | Dimensions |
+|-----------|----------|------------|
+| `SkeletonBox` | Base | Configurable width/height/radius |
+| `SkeletonGroup` | Wrapper | Conditionally renders children |
+| `DailyStackCardSkeleton` | Home | 48x48 icon, 120x18 title, 80x12 subtitle |
+| `MonthHeaderSkeleton` | Archive | 140x24 rectangle |
+| `ArchiveCardSkeleton` | Archive | 44x44 icon, 80x12 date, 100x16 title |
+| `ProfileHeaderSkeleton` | Stats | 56x56 avatar circle |
+| `IQScoreDisplaySkeleton` | Stats | 96px score circle |
+| `ProficiencyBarSkeleton` | Stats | 8px height progress bar |
+| `FullStatsSkeleton` | Stats | All stats components combined |
+
+### Integration
+- Home screen: 5x `DailyStackCardSkeleton` when loading
+- Archive screen: 2 month sections + 3 cards each via `ArchiveSkeletonList`
+- Stats screen: `FullStatsSkeleton` during initial load
+
+### Files
+```
+src/components/ui/Skeletons/
+├── SkeletonBase.tsx           # Base SkeletonBox + SkeletonGroup
+├── DailyStackCardSkeleton.tsx # Home screen card skeleton
+├── ArchiveSkeletons.tsx       # Archive list skeletons
+├── StatsSkeletons.tsx         # Stats screen skeletons
+├── index.ts                   # Barrel exports
+└── __tests__/
+    └── SkeletonVisibility.test.tsx  # 12 tests
+```
+
+## Image Prefetching
+Initialized: 2026-01-04
+
+### Overview
+Background image prefetching for Topical Quiz using expo-image's `Image.prefetch()`. Images are cached before user navigates to quiz, ensuring instant display.
+
+### Architecture
+```
+QuizPrefetchProvider (inside AuthGate, after PuzzleProvider)
+  └─ useQuizPrefetch()
+       ├─ status: 'idle' | 'prefetching' | 'ready' | 'error'
+       ├─ isPrefetched: boolean
+       ├─ lastResult: PrefetchResult | null
+       └─ triggerPrefetch(): Promise<void>
+```
+
+### Prefetch Flow
+1. Provider mounts inside AuthGate
+2. Watches for puzzles to load via `usePuzzleContext()`
+3. When puzzles available, extracts imageUrls from today's topical_quiz
+4. Prefetches all images in parallel via `Promise.allSettled()`
+5. Tracks success/failure counts in `PrefetchResult`
+6. AppState listener re-triggers on foreground if needed
+
+### Files
+```
+src/features/topical-quiz/
+├── utils/imagePrefetch.ts        # extractImageUrls, prefetchQuizImages
+├── context/QuizPrefetchContext.tsx  # Provider + useQuizPrefetch hook
+└── __tests__/
+    └── ImagePrefetch.test.ts     # 6 tests
+```
+
+### Integration
+- `QuizPrefetchProvider` added to `app/_layout.tsx`
+- `TopicalQuizScreen` uses `useQuizPrefetch()` for loading state optimization
+
 ## Admin Tools
 Initialized: 2025-12-27
 

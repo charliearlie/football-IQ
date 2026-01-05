@@ -587,6 +587,80 @@ type ModalMode = 'upsell' | 'locked' | 'blocked';
 type ModalState = 'idle' | 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 ```
 
+## Skeleton Loaders
+```typescript
+import {
+  SkeletonBox,
+  SkeletonGroup,
+  SKELETON_COLORS,
+  DailyStackCardSkeleton,
+  MonthHeaderSkeleton,
+  ArchiveCardSkeleton,
+  ArchiveSkeletonList,
+  ProfileHeaderSkeleton,
+  IQScoreDisplaySkeleton,
+  ProficiencyBarSkeleton,
+  ProficiencySectionSkeleton,
+  StatsGridSkeleton,
+  FullStatsSkeleton,
+} from '@/components/ui/Skeletons';
+
+// Base skeleton box
+<SkeletonBox width={100} height={20} radius={4} />
+<SkeletonBox width={48} height={48} circle />
+
+// Conditional skeleton group
+<SkeletonGroup show={isLoading}>
+  <DailyStackCardSkeleton />
+</SkeletonGroup>
+
+// Home screen loading
+{isLoading && (
+  <View>
+    {[0, 1, 2, 3, 4].map((i) => (
+      <DailyStackCardSkeleton key={i} />
+    ))}
+  </View>
+)}
+
+// Archive loading
+{isLoading && <ArchiveSkeletonList />}
+
+// Stats loading
+{isLoading && <FullStatsSkeleton />}
+```
+
+## Quiz Image Prefetch
+```typescript
+import {
+  QuizPrefetchProvider,
+  useQuizPrefetch,
+  extractImageUrls,
+  prefetchQuizImages,
+} from '@/features/topical-quiz';
+
+// Provider (in app/_layout.tsx, inside AuthGate)
+<PuzzleProvider>
+  <QuizPrefetchProvider>
+    {/* App content */}
+  </QuizPrefetchProvider>
+</PuzzleProvider>
+
+// Hook usage (in TopicalQuizScreen)
+const { status, isPrefetched, triggerPrefetch } = useQuizPrefetch();
+
+// Status values: 'idle' | 'prefetching' | 'ready' | 'error'
+// isPrefetched: true when status === 'ready'
+
+// Manual prefetch trigger (usually not needed)
+await triggerPrefetch();
+
+// Low-level utilities (for custom usage)
+const urls = extractImageUrls(quizContent);  // string[]
+const result = await prefetchQuizImages(urls);
+// result: { total, succeeded, failed }
+```
+
 ## Key Files
 - PRD: `docs/app-prd.md`
 - Design System: `docs/design-system.md`

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Trophy, Share2 } from 'lucide-react-native';
@@ -17,6 +17,7 @@ import {
 import { IQCardData } from '@/features/stats/utils/shareIQ';
 import { useAuth } from '@/features/auth';
 import { getUserRank } from '@/features/leaderboard';
+import { FullStatsSkeleton } from '@/components/ui/Skeletons';
 
 /**
  * My IQ Screen
@@ -91,15 +92,19 @@ export default function MyIQScreen() {
     displayName: profile?.display_name ?? 'Football Fan',
   } : null;
 
-  // Loading state
+  // Loading state with skeleton
   if (isLoading && !stats) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={[textStyles.body, styles.loadingText]}>
-          Calculating your Football IQ...
-        </Text>
-      </View>
+      <ScrollView
+        style={[styles.container, { paddingTop: insets.top }]}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My IQ</Text>
+        </View>
+        <FullStatsSkeleton testID="stats-skeleton" />
+      </ScrollView>
     );
   }
 
@@ -224,14 +229,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1,
     borderColor: colors.glassBorder,
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: spacing.lg,
-    opacity: 0.7,
   },
   emptyState: {
     padding: spacing.xl,

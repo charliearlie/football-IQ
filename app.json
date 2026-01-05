@@ -4,22 +4,23 @@
     "slug": "football-iq",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/footballiq-icon.png",
     "scheme": "footballiq",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0F172A"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.charliearlie.footballiq.app"
+      "bundleIdentifier": "com.charliearlie.footballiq.app",
+      "icon": "./assets/images/footballiq-icon.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/footballiq-icon.png",
         "backgroundColor": "#0F172A"
       },
       "package": "com.charliearlie.footballiq.app"

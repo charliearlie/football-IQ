@@ -20,6 +20,7 @@ import { ArchivePuzzle, ArchiveSection } from '../types/archive.types';
 import { ArchivePuzzleCard } from './ArchivePuzzleCard';
 import { LockedArchiveCard } from './LockedArchiveCard';
 import { MonthHeader } from './MonthHeader';
+import { ArchiveSkeletonList } from '@/components/ui/Skeletons';
 
 interface ArchiveListProps {
   /** Grouped sections of puzzles */
@@ -153,16 +154,18 @@ export function ArchiveList({
     []
   );
 
-  // Show loading state
+  // Show loading state with skeletons
   if (isLoading && sections.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         {ListHeaderComponent}
-        <ActivityIndicator
-          color={colors.pitchGreen}
-          size="large"
-          style={styles.loadingIndicator}
-        />
+        <View style={styles.skeletonContainer}>
+          <ArchiveSkeletonList
+            sections={2}
+            cardsPerSection={3}
+            testID={`${testID}-skeleton`}
+          />
+        </View>
       </View>
     );
   }
@@ -202,8 +205,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
   },
-  loadingIndicator: {
-    marginTop: spacing['2xl'],
+  skeletonContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
   emptyContainer: {
     flex: 1,

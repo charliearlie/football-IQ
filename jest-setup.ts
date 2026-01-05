@@ -236,6 +236,30 @@ jest.mock('react-native-google-mobile-ads', () => ({
 
 export { mockMobileAds, mockBannerAd, mockRewardedAd };
 
+// Mock moti and moti/skeleton
+jest.mock('moti', () => {
+  const { View } = require('react-native');
+  return {
+    MotiView: View,
+    MotiText: View,
+    MotiImage: View,
+    AnimatePresence: ({ children }: any) => children,
+  };
+});
+
+jest.mock('moti/skeleton', () => {
+  const { View } = require('react-native');
+  return {
+    Skeleton: ({ children, ...props }: any) => {
+      const React = require('react');
+      return React.createElement(View, {
+        testID: 'skeleton-placeholder',
+        style: { width: props.width, height: props.height },
+      });
+    },
+  };
+});
+
 // Suppress specific console warnings in tests
 const originalWarn = console.warn;
 console.warn = (...args: unknown[]) => {

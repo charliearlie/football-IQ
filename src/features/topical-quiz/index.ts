@@ -16,7 +16,12 @@ export { TopicalQuizResultModal } from './components/TopicalQuizResultModal';
 // Hooks
 export { useTopicalQuizGame } from './hooks/useTopicalQuizGame';
 
+// Context
+export { QuizPrefetchProvider, useQuizPrefetch } from './context/QuizPrefetchContext';
+
 // Utils
+export { extractImageUrls, prefetchQuizImages } from './utils/imagePrefetch';
+export type { PrefetchResult } from './utils/imagePrefetch';
 export {
   calculateQuizScore,
   formatQuizScore,

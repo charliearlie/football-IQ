@@ -1,16 +1,23 @@
 import { Tabs } from 'expo-router';
 import { Home, Gamepad2, Archive, Brain } from 'lucide-react-native';
 import { colors } from '@/theme';
+import { useHaptics } from '@/hooks/useHaptics';
 
 /**
  * Tab Navigator Layout
  *
  * Bottom tab navigation with 4 tabs: Home, Games, Archive, My IQ.
  * Uses lucide-react-native icons with 2px stroke for bold look.
+ * Includes haptic feedback on tab press.
  */
 export default function TabLayout() {
+  const { triggerSelection } = useHaptics();
+
   return (
     <Tabs
+      screenListeners={{
+        tabPress: () => triggerSelection(),
+      }}
       screenOptions={{
         tabBarActiveTintColor: colors.pitchGreen,
         tabBarInactiveTintColor: colors.floodlightWhite,

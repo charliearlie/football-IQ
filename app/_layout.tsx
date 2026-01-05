@@ -17,6 +17,7 @@ import {
 } from '@/features/auth';
 import { PuzzleProvider } from '@/features/puzzles';
 import { AdProvider } from '@/features/ads';
+import { QuizPrefetchProvider } from '@/features/topical-quiz';
 import { getRevenueCatApiKey } from '@/config/revenueCat';
 
 // Prevent splash screen from auto-hiding
@@ -41,17 +42,19 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   return (
     <PuzzleProvider>
-      <AdProvider>
-        {children}
-        <FirstRunModal
-          visible={needsDisplayName ?? false}
-          onSubmit={async (displayName) => {
-            const { error } = await updateDisplayName(displayName);
-            if (error) throw error;
-          }}
-          testID="first-run-modal"
-        />
-      </AdProvider>
+      <QuizPrefetchProvider>
+        <AdProvider>
+          {children}
+          <FirstRunModal
+            visible={needsDisplayName ?? false}
+            onSubmit={async (displayName) => {
+              const { error } = await updateDisplayName(displayName);
+              if (error) throw error;
+            }}
+            testID="first-run-modal"
+          />
+        </AdProvider>
+      </QuizPrefetchProvider>
     </PuzzleProvider>
   );
 }
