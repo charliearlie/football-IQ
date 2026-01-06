@@ -40,9 +40,8 @@ export function GlassCard({
 
   return (
     <View style={[styles.container, style]} testID={testID}>
-      <BlurView intensity={intensity} style={styles.blur} tint="dark">
-        <View style={styles.content}>{children}</View>
-      </BlurView>
+      <BlurView intensity={intensity} style={styles.blur} tint="dark" />
+      <View style={styles.content}>{children}</View>
     </View>
   );
 }
@@ -55,7 +54,7 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
   },
   blur: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
   },
   content: {
     backgroundColor: colors.glassBackground,

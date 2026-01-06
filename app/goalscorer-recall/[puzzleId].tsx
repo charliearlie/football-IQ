@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { GoalscorerRecallScreen } from '@/features/goalscorer-recall';
 
@@ -14,8 +14,11 @@ export default function GoalscorerRecallRoute() {
   const { puzzleId } = useLocalSearchParams<{ puzzleId: string }>();
 
   return (
-    <PremiumGate puzzleId={puzzleId}>
-      <GoalscorerRecallScreen puzzleId={puzzleId} />
-    </PremiumGate>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <PremiumGate puzzleId={puzzleId}>
+        <GoalscorerRecallScreen puzzleId={puzzleId} />
+      </PremiumGate>
+    </>
   );
 }

@@ -81,6 +81,19 @@ export interface TicTacToeState {
 
   // For shake animation on incorrect guess
   lastGuessIncorrect: boolean;
+
+  // Unique ID for the attempt (for resume support)
+  attemptId: string | null;
+}
+
+/**
+ * Payload for restoring in-progress game state.
+ */
+export interface RestoreProgressPayload {
+  cells: CellArray;
+  currentTurn: 'player' | 'ai';
+  attemptId: string;
+  startedAt: string;
 }
 
 /**
@@ -109,7 +122,9 @@ export type TicTacToeAction =
   | { type: 'GAME_LOST'; payload: { winningLine: [CellIndex, CellIndex, CellIndex]; score: TicTacToeScore } }
   | { type: 'GAME_DRAW'; payload: TicTacToeScore }
   | { type: 'ATTEMPT_SAVED' }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SET_ATTEMPT_ID'; payload: string }
+  | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload };
 
 /**
  * All possible winning combinations (indices)

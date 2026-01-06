@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { GoalscorerRecallScreen } from '@/features/goalscorer-recall';
 
 /**
@@ -5,5 +6,10 @@ import { GoalscorerRecallScreen } from '@/features/goalscorer-recall';
  * Fallback when no puzzleId is provided.
  */
 export default function GoalscorerRecallIndexRoute() {
-  return <GoalscorerRecallScreen />;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <GoalscorerRecallScreen />
+    </>
+  );
 }

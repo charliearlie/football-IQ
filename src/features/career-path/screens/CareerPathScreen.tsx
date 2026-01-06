@@ -1,4 +1,12 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { usePuzzle } from '@/features/puzzles';
@@ -90,7 +98,11 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Career Path</Text>
@@ -112,6 +124,7 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
         windowSize={5}
+        keyboardDismissMode="on-drag"
         testID="career-steps-list"
       />
 
@@ -143,7 +156,7 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="career-path-ad-banner" />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

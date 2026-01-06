@@ -1,14 +1,16 @@
 import { useReducer, useEffect, useMemo, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
-import { saveAttempt } from '@/lib/database';
+import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { LocalAttempt } from '@/types/database';
 import {
   TopicalQuizState,
   TopicalQuizAction,
   TopicalQuizContent,
   QuizAnswer,
+  RestoreProgressPayload,
   TOTAL_QUESTIONS,
   AUTO_ADVANCE_DELAY_MS,
 } from '../types/topicalQuiz.types';
@@ -29,6 +31,7 @@ function createInitialState(): TopicalQuizState {
     startedAt: new Date().toISOString(),
     showingFeedback: false,
     lastAnsweredIndex: null,
+    attemptId: null,
   };
 }
 
@@ -91,6 +94,21 @@ function quizReducer(
     case 'RESET':
       return createInitialState();
 
+    case 'SET_ATTEMPT_ID':
+      return {
+        ...state,
+        attemptId: action.payload,
+      };
+
+    case 'RESTORE_PROGRESS':
+      return {
+        ...state,
+        currentQuestionIndex: action.payload.currentQuestionIndex,
+        answers: action.payload.answers,
+        attemptId: action.payload.attemptId,
+        startedAt: action.payload.startedAt,
+      };
+
     default:
       return state;
   }
@@ -120,6 +138,10 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(quizReducer, createInitialState());
   const { triggerNotification, triggerSelection } = useHaptics();
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Ref to track current state for AppState callback
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Parse puzzle content
   const quizContent = useMemo<TopicalQuizContent | null>(() => {
@@ -235,6 +257,82 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
     };
   }, []);
 
+  // Generate attemptId on mount if not resuming
+  useEffect(() => {
+    if (!state.attemptId && state.gameStatus === 'playing') {
+      dispatch({ type: 'SET_ATTEMPT_ID', payload: Crypto.randomUUID() });
+    }
+  }, [state.attemptId, state.gameStatus]);
+
+  // Check for existing in-progress attempt on mount
+  useEffect(() => {
+    async function checkForResume() {
+      if (!puzzle) return;
+
+      try {
+        const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
+        if (existingAttempt && !existingAttempt.completed && existingAttempt.metadata) {
+          const savedState = JSON.parse(existingAttempt.metadata) as {
+            currentQuestionIndex: number;
+            answers: QuizAnswer[];
+          };
+          dispatch({
+            type: 'RESTORE_PROGRESS',
+            payload: {
+              currentQuestionIndex: savedState.currentQuestionIndex,
+              answers: savedState.answers,
+              attemptId: existingAttempt.id,
+              startedAt: existingAttempt.started_at,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check for resume:', error);
+      }
+    }
+
+    checkForResume();
+  }, [puzzle?.id]);
+
+  // Save progress when app goes to background
+  useEffect(() => {
+    const saveProgressToSQLite = async () => {
+      const currentState = stateRef.current;
+      if (!puzzle || currentState.gameStatus !== 'playing' || !currentState.attemptId) {
+        return;
+      }
+
+      try {
+        const attempt: LocalAttempt = {
+          id: currentState.attemptId,
+          puzzle_id: puzzle.id,
+          completed: 0, // In-progress marker
+          score: null,
+          score_display: null,
+          metadata: JSON.stringify({
+            currentQuestionIndex: currentState.currentQuestionIndex,
+            answers: currentState.answers,
+          }),
+          started_at: currentState.startedAt,
+          completed_at: null,
+          synced: 0,
+        };
+        await saveAttempt(attempt);
+      } catch (error) {
+        console.error('Failed to save progress:', error);
+      }
+    };
+
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background') {
+        saveProgressToSQLite();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [puzzle]);
+
   // Persist attempt to local database when game ends
   useEffect(() => {
     if (
@@ -245,7 +343,7 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
     ) {
       const saveGameAttempt = async () => {
         try {
-          const attemptId = Crypto.randomUUID();
+          const attemptId = state.attemptId || Crypto.randomUUID();
           const now = new Date().toISOString();
 
           const attempt: LocalAttempt = {
@@ -279,6 +377,7 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
     state.attemptSaved,
     state.answers,
     state.startedAt,
+    state.attemptId,
     puzzle,
   ]);
 

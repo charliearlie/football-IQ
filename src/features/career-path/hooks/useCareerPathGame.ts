@@ -1,9 +1,9 @@
 import { useReducer, useEffect, useRef, useMemo, useCallback } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
-import { saveAttempt } from '@/lib/database';
+import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { LocalAttempt } from '@/types/database';
 import {
   CareerPathState,
@@ -11,6 +11,7 @@ import {
   CareerPathContent,
   CareerStep,
   GameScore,
+  RestoreProgressPayload,
 } from '../types/careerPath.types';
 import { validateGuess } from '../utils/validation';
 import { calculateScore } from '../utils/scoring';
@@ -30,6 +31,7 @@ function createInitialState(): CareerPathState {
     score: null,
     attemptSaved: false,
     startedAt: new Date().toISOString(),
+    attemptId: null,
   };
 }
 
@@ -94,6 +96,22 @@ function careerPathReducer(
     case 'RESET':
       return createInitialState();
 
+    case 'SET_ATTEMPT_ID':
+      return {
+        ...state,
+        attemptId: action.payload,
+      };
+
+    case 'RESTORE_PROGRESS':
+      return {
+        ...state,
+        revealedCount: action.payload.revealedCount,
+        guesses: action.payload.guesses,
+        attemptId: action.payload.attemptId,
+        startedAt: action.payload.startedAt,
+        gameStatus: 'playing',
+      };
+
     default:
       return state;
   }
@@ -126,6 +144,12 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
   const flatListRef = useRef<FlatList>(null);
   const { triggerNotification, triggerSelection } = useHaptics();
 
+  // Ref to track current state for AppState callback
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   // Parse puzzle content
   const puzzleContent = useMemo<CareerPathContent | null>(() => {
     if (!puzzle?.content) return null;
@@ -144,6 +168,91 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
 
   // Check if all steps are revealed (triggers lost state)
   const allRevealed = state.revealedCount >= totalSteps;
+
+  // Generate attemptId when game starts (if not already set)
+  useEffect(() => {
+    if (state.gameStatus === 'playing' && !state.attemptId && puzzle) {
+      dispatch({ type: 'SET_ATTEMPT_ID', payload: Crypto.randomUUID() });
+    }
+  }, [state.gameStatus, state.attemptId, puzzle]);
+
+  // Check for existing in-progress attempt on mount (restore progress)
+  useEffect(() => {
+    async function checkForResume() {
+      if (!puzzle) return;
+
+      try {
+        const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
+
+        // Only restore in-progress attempts (completed=0)
+        if (existingAttempt && !existingAttempt.completed) {
+          const meta = existingAttempt.metadata as {
+            revealedCount?: number;
+            guesses?: string[];
+            startedAt?: string;
+          };
+
+          if (meta.revealedCount && meta.revealedCount > 1) {
+            dispatch({
+              type: 'RESTORE_PROGRESS',
+              payload: {
+                attemptId: existingAttempt.id,
+                revealedCount: meta.revealedCount,
+                guesses: meta.guesses ?? [],
+                startedAt: meta.startedAt ?? existingAttempt.started_at ?? new Date().toISOString(),
+              },
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check for resume:', error);
+      }
+    }
+
+    checkForResume();
+  }, [puzzle?.id]);
+
+  // Save progress when app goes to background
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        const currentState = stateRef.current;
+
+        // Only save if game is in progress and has meaningful state
+        if (
+          currentState.gameStatus === 'playing' &&
+          currentState.revealedCount > 1 &&
+          puzzle &&
+          currentState.attemptId
+        ) {
+          try {
+            const attempt: LocalAttempt = {
+              id: currentState.attemptId,
+              puzzle_id: puzzle.id,
+              completed: 0, // In-progress
+              score: null,
+              score_display: null,
+              metadata: JSON.stringify({
+                revealedCount: currentState.revealedCount,
+                guesses: currentState.guesses,
+                startedAt: currentState.startedAt,
+              }),
+              started_at: currentState.startedAt,
+              completed_at: null,
+              synced: 0,
+            };
+
+            await saveAttempt(attempt);
+          } catch (error) {
+            console.error('Failed to save progress on background:', error);
+          }
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [puzzle]);
 
   // Reveal the next step manually
   const revealNext = useCallback(() => {
@@ -256,7 +365,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     ) {
       const saveGameAttempt = async () => {
         try {
-          const attemptId = Crypto.randomUUID();
+          const attemptId = state.attemptId ?? Crypto.randomUUID();
           const now = new Date().toISOString();
 
           const attempt: LocalAttempt = {

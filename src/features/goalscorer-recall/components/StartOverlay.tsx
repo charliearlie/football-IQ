@@ -62,15 +62,18 @@ export function StartOverlay({ totalScorers, onStart }: StartOverlayProps) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(13, 27, 42, 0.95)',
+    backgroundColor: colors.stadiumNavy,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
+    zIndex: 100,
+    elevation: 100,
   },
   content: {
     alignItems: 'center',
-    padding: spacing.xl,
-    maxWidth: 300,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
+    width: '100%',
+    maxWidth: 320,
   },
   icon: {
     fontSize: 64,
@@ -105,6 +108,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   startButton: {
-    minWidth: 200,
+    width: '100%',
+    marginTop: spacing.md,
   },
 });

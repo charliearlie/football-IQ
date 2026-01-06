@@ -55,6 +55,31 @@ interface GameModeConfig {
 }
 
 /**
+ * Extract only the emoji grid from the full score_display string.
+ * The score_display may contain headers, dates, and score labels for sharing,
+ * but on the home screen we only want the compact emoji representation.
+ */
+function extractEmojiGrid(scoreDisplay: string): string {
+  const lines = scoreDisplay.trim().split('\n');
+
+  // Find the last line that contains emoji characters (the emoji grid)
+  // Emoji ranges: game pieces, symbols, etc.
+  const emojiPattern =
+    /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u2B1B\u2B1C\u2705\u274C\u2B55]/u;
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    // Skip empty lines and lines that look like headers/labels
+    if (line && emojiPattern.test(line) && !line.includes(':') && !line.includes('Football IQ')) {
+      return line;
+    }
+  }
+
+  // Fallback: return original (shouldn't happen with valid score_display)
+  return scoreDisplay;
+}
+
+/**
  * Get configuration for each game mode.
  */
 function getGameModeConfig(gameMode: GameMode): GameModeConfig {
@@ -143,10 +168,12 @@ export function DailyStackCard({
           {status === 'done' ? (
             <View style={styles.doneContainer}>
               {scoreDisplay && (
-                <Text style={styles.scoreDisplay}>{scoreDisplay}</Text>
+                <Text style={styles.scoreDisplay}>
+                  {extractEmojiGrid(scoreDisplay)}
+                </Text>
               )}
               <CheckCircle
-                color={colors.pitchGreen}
+                color={colors.white}
                 size={24}
                 fill={colors.pitchGreen}
                 testID={`${testID}-checkmark`}

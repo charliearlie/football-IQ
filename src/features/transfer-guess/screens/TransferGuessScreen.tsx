@@ -1,4 +1,12 @@
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { usePuzzle } from '@/features/puzzles';
@@ -72,7 +80,11 @@ export function TransferGuessScreen({ puzzleId }: TransferGuessScreenProps) {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Guess the Transfer</Text>
@@ -83,6 +95,7 @@ export function TransferGuessScreen({ puzzleId }: TransferGuessScreenProps) {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
       >
         {/* Transfer Card */}
         <TransferCard
@@ -134,7 +147,7 @@ export function TransferGuessScreen({ puzzleId }: TransferGuessScreenProps) {
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="transfer-guess-ad-banner" />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

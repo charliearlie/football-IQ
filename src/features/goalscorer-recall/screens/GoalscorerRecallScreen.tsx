@@ -15,6 +15,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { usePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
@@ -42,6 +43,7 @@ interface GoalscorerRecallScreenProps {
 
 export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'guess_the_goalscorers');
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
@@ -196,7 +198,7 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
         goals={state.goals}
         matchInfo={matchInfo}
         puzzleDate={puzzle.puzzle_date}
-        onContinue={resetGame}
+        onContinue={() => router.back()}
       />
 
       {/* Banner Ad (non-premium only) */}

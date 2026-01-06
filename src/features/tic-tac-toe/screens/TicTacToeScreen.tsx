@@ -6,7 +6,15 @@
  * requires naming a player who fits both row and column categories.
  */
 
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User, Bot } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
@@ -90,7 +98,11 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -98,6 +110,7 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
           { paddingBottom: insets.bottom + spacing.xl },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
       >
         {/* Turn Indicator */}
         <GlassCard style={styles.turnIndicator}>
@@ -186,7 +199,7 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="tic-tac-toe-ad-banner" />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

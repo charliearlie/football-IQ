@@ -1,8 +1,9 @@
 import { useReducer, useEffect, useMemo, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
-import { saveAttempt } from '@/lib/database';
+import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { LocalAttempt } from '@/types/database';
 import {
   TicTacToeState,
@@ -11,6 +12,7 @@ import {
   TicTacToeScore,
   CellIndex,
   CellArray,
+  RestoreProgressPayload,
 } from '../types/ticTacToe.types';
 import { validateCellGuess, getCellCategories } from '../utils/validation';
 import {
@@ -40,6 +42,7 @@ function createInitialState(): TicTacToeState {
     startedAt: new Date().toISOString(),
     attemptSaved: false,
     lastGuessIncorrect: false,
+    attemptId: null,
   };
 }
 
@@ -156,6 +159,21 @@ function ticTacToeReducer(
     case 'RESET':
       return createInitialState();
 
+    case 'SET_ATTEMPT_ID':
+      return {
+        ...state,
+        attemptId: action.payload,
+      };
+
+    case 'RESTORE_PROGRESS':
+      return {
+        ...state,
+        cells: action.payload.cells,
+        currentTurn: action.payload.currentTurn,
+        attemptId: action.payload.attemptId,
+        startedAt: action.payload.startedAt,
+      };
+
     default:
       return state;
   }
@@ -183,6 +201,10 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
 
   // Ref to track if AI move is in progress (prevents multiple triggers)
   const aiMoveInProgress = useRef(false);
+
+  // Ref to track current state for AppState callback
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Parse puzzle content
   const puzzleContent = useMemo<TicTacToeContent | null>(() => {
@@ -277,6 +299,82 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
       return () => clearTimeout(timer);
     }
   }, [state.lastGuessIncorrect]);
+
+  // Generate attemptId on mount if not resuming
+  useEffect(() => {
+    if (!state.attemptId && state.gameStatus === 'playing') {
+      dispatch({ type: 'SET_ATTEMPT_ID', payload: Crypto.randomUUID() });
+    }
+  }, [state.attemptId, state.gameStatus]);
+
+  // Check for existing in-progress attempt on mount
+  useEffect(() => {
+    async function checkForResume() {
+      if (!puzzle) return;
+
+      try {
+        const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
+        if (existingAttempt && !existingAttempt.completed && existingAttempt.metadata) {
+          const savedState = JSON.parse(existingAttempt.metadata) as {
+            cells: CellArray;
+            currentTurn: 'player' | 'ai';
+          };
+          dispatch({
+            type: 'RESTORE_PROGRESS',
+            payload: {
+              cells: savedState.cells,
+              currentTurn: savedState.currentTurn,
+              attemptId: existingAttempt.id,
+              startedAt: existingAttempt.started_at,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check for resume:', error);
+      }
+    }
+
+    checkForResume();
+  }, [puzzle?.id]);
+
+  // Save progress when app goes to background
+  useEffect(() => {
+    const saveProgressToSQLite = async () => {
+      const currentState = stateRef.current;
+      if (!puzzle || currentState.gameStatus !== 'playing' || !currentState.attemptId) {
+        return;
+      }
+
+      try {
+        const attempt: LocalAttempt = {
+          id: currentState.attemptId,
+          puzzle_id: puzzle.id,
+          completed: 0, // In-progress marker
+          score: null,
+          score_display: null,
+          metadata: JSON.stringify({
+            cells: currentState.cells,
+            currentTurn: currentState.currentTurn,
+          }),
+          started_at: currentState.startedAt,
+          completed_at: null,
+          synced: 0,
+        };
+        await saveAttempt(attempt);
+      } catch (error) {
+        console.error('Failed to save progress:', error);
+      }
+    };
+
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background') {
+        saveProgressToSQLite();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [puzzle]);
 
   // Check for win/draw after player move (before AI moves)
   useEffect(() => {
@@ -373,7 +471,7 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
 
     const saveGameAttempt = async () => {
       try {
-        const attemptId = Crypto.randomUUID();
+        const attemptId = state.attemptId || Crypto.randomUUID();
         const now = new Date().toISOString();
 
         const attempt: LocalAttempt = {
@@ -411,6 +509,7 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
     state.cells,
     state.winningLine,
     state.startedAt,
+    state.attemptId,
     puzzle,
   ]);
 

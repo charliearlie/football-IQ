@@ -62,6 +62,18 @@ export interface CareerPathState {
   attemptSaved: boolean;
   /** Timestamp when game started (ISO string) */
   startedAt: string;
+  /** Unique ID for the attempt (for resume support) */
+  attemptId: string | null;
+}
+
+/**
+ * Payload for restoring in-progress game state.
+ */
+export interface RestoreProgressPayload {
+  revealedCount: number;
+  guesses: string[];
+  attemptId: string;
+  startedAt: string;
 }
 
 /**
@@ -75,4 +87,6 @@ export type CareerPathAction =
   | { type: 'CLEAR_SHAKE' }
   | { type: 'GAME_LOST'; payload: GameScore }
   | { type: 'ATTEMPT_SAVED' }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SET_ATTEMPT_ID'; payload: string }
+  | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload };

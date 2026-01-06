@@ -8,6 +8,7 @@
  */
 
 import { useReducer, useCallback, useEffect, useMemo, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import {
   GoalscorerRecallState,
@@ -223,6 +224,10 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
   const { triggerNotification, triggerHeavy, triggerSelection } = useHaptics();
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Ref to track current state for AppState callback
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   // Parse puzzle content
   const puzzleContent = useMemo<GoalscorerRecallContent | null>(() => {
     if (!puzzle?.content) return null;
@@ -379,6 +384,46 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
       saveProgress();
     }
   }, [state.foundScorers.size, state.gameStatus, puzzle, state.attemptId, state.startedAt, timer.timeRemaining]);
+
+  // Save progress when app goes to background
+  useEffect(() => {
+    const saveProgressToSQLite = async () => {
+      const currentState = stateRef.current;
+      if (!puzzle || currentState.gameStatus !== 'playing' || !currentState.attemptId) {
+        return;
+      }
+
+      try {
+        const attempt: LocalAttempt = {
+          id: currentState.attemptId,
+          puzzle_id: puzzle.id,
+          completed: 0,
+          score: null,
+          score_display: null,
+          metadata: JSON.stringify({
+            foundScorers: Array.from(currentState.foundScorers),
+            timeRemaining: timerRef.current?.timeRemaining ?? 0,
+            startedAt: currentState.startedAt,
+          }),
+          started_at: currentState.startedAt,
+          completed_at: null,
+          synced: 0,
+        };
+        await saveAttempt(attempt);
+      } catch (error) {
+        console.error('Failed to save progress on background:', error);
+      }
+    };
+
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background') {
+        saveProgressToSQLite();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [puzzle]);
 
   // Start game
   const startGame = useCallback(() => {

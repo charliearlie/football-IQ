@@ -40,7 +40,7 @@ describe('RevenueCat Configuration', () => {
 
   describe('constants', () => {
     it('exports correct offering ID', () => {
-      expect(PREMIUM_OFFERING_ID).toBe('ofrng32f02b6286');
+      expect(PREMIUM_OFFERING_ID).toBe('default_offering');
     });
 
     it('exports correct entitlement ID', () => {

@@ -414,6 +414,10 @@ export async function clearSyncQueue(): Promise<void> {
 /**
  * Save multiple catalog entries to local storage.
  * Uses INSERT OR REPLACE to handle both insert and update.
+ *
+ * Note: Does not use a transaction to avoid "transaction within transaction"
+ * errors when called concurrently from multiple sources (PuzzleContext +
+ * Archive hooks). Each INSERT OR REPLACE is atomic and idempotent.
  */
 export async function saveCatalogEntries(
   entries: LocalCatalogEntry[]
@@ -423,22 +427,21 @@ export async function saveCatalogEntries(
   const database = getDatabase();
   const syncedAt = new Date().toISOString();
 
-  // Use a transaction for bulk insert
-  await database.withTransactionAsync(async () => {
-    for (const entry of entries) {
-      await database.runAsync(
-        `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at)
-         VALUES ($id, $game_mode, $puzzle_date, $difficulty, $synced_at)`,
-        {
-          $id: entry.id,
-          $game_mode: entry.game_mode,
-          $puzzle_date: entry.puzzle_date,
-          $difficulty: entry.difficulty,
-          $synced_at: syncedAt,
-        }
-      );
-    }
-  });
+  // Insert entries sequentially - each INSERT OR REPLACE is atomic
+  // and idempotent, so no transaction wrapper needed
+  for (const entry of entries) {
+    await database.runAsync(
+      `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at)
+       VALUES ($id, $game_mode, $puzzle_date, $difficulty, $synced_at)`,
+      {
+        $id: entry.id,
+        $game_mode: entry.game_mode,
+        $puzzle_date: entry.puzzle_date,
+        $difficulty: entry.difficulty,
+        $synced_at: syncedAt,
+      }
+    );
+  }
 }
 
 /**

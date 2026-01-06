@@ -88,6 +88,18 @@ export interface TopicalQuizState {
   showingFeedback: boolean;
   /** Index of last answered question (for feedback display) */
   lastAnsweredIndex: number | null;
+  /** Unique ID for the attempt (for resume support) */
+  attemptId: string | null;
+}
+
+/**
+ * Payload for restoring in-progress game state.
+ */
+export interface RestoreProgressPayload {
+  currentQuestionIndex: number;
+  answers: QuizAnswer[];
+  attemptId: string;
+  startedAt: string;
 }
 
 /**
@@ -101,7 +113,9 @@ export type TopicalQuizAction =
   | { type: 'NEXT_QUESTION' }
   | { type: 'GAME_COMPLETE'; payload: TopicalQuizScore }
   | { type: 'ATTEMPT_SAVED' }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SET_ATTEMPT_ID'; payload: string }
+  | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload };
 
 /**
  * Option button visual state

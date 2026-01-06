@@ -603,7 +603,7 @@ Reuses Career Path's fuzzy matching from `validation.ts`:
 - **GoalFlash**: Scale + fade "GOAL!" text
 - **RecallActionZone**: Shake on incorrect guess
 
-### UX Improvements (2026-01-05)
+### UX Improvements (2026-01-05, 2026-01-06)
 - **KeyboardAvoidingView**: Input field never obscured by keyboard
 - **Auto-scroll**: Scoreboard scrolls to end when goal found
 - **Text truncation fix**: Long names wrap to 2 lines with font scaling
@@ -614,6 +614,7 @@ Reuses Career Path's fuzzy matching from `validation.ts`:
   - Restores `foundScorers`, `timeRemaining`, `attemptId` from metadata
   - Home screen shows "Resume" button for in-progress games
   - Uses `setTo()` on timer hook for restored time
+- **GlassCard fix (2026-01-06)**: BlurView uses absolute positioning so content sizes properly in modals
 
 ### Hooks
 | Hook | Purpose |
@@ -1772,3 +1773,107 @@ src/lib/database.ts (migration v3)
 ### Testing
 - `src/features/ads/__tests__/AdVisibility.test.ts` - 5 tests (banner visibility)
 - `src/features/ads/__tests__/AdUnlock.test.ts` - 5 tests (unlock database operations)
+
+## UX Polish (2026-01-06)
+
+### State Persistence (All Game Modes)
+Initialized: 2026-01-06
+
+All 5 game modes now support progressive save:
+- Game state saved to SQLite when app backgrounds (AppState listener)
+- State restored on mount if incomplete attempt exists (`completed: 0`)
+- Uses `attemptId` to track in-progress games
+- Home screen shows "Resume" button for in-progress games
+
+**Pattern implemented:**
+```typescript
+// 1. Add stateRef to track current state for async callbacks
+const stateRef = useRef(state);
+stateRef.current = state;
+
+// 2. Generate attemptId on mount
+useEffect(() => {
+  if (!state.attemptId && state.gameStatus === 'playing') {
+    dispatch({ type: 'SET_ATTEMPT_ID', payload: Crypto.randomUUID() });
+  }
+}, [state.attemptId, state.gameStatus]);
+
+// 3. Check for resume on mount
+useEffect(() => {
+  async function checkForResume() {
+    const attempt = await getAttemptByPuzzleId(puzzle.id);
+    if (attempt && !attempt.completed && attempt.metadata) {
+      dispatch({ type: 'RESTORE_PROGRESS', payload: JSON.parse(attempt.metadata) });
+    }
+  }
+  if (puzzle) checkForResume();
+}, [puzzle?.id]);
+
+// 4. Save on background
+useEffect(() => {
+  const subscription = AppState.addEventListener('change', (nextAppState) => {
+    if (nextAppState === 'background') saveProgressToSQLite();
+  });
+  return () => subscription.remove();
+}, [puzzle]);
+```
+
+**Files modified:**
+| Game Mode | Types File | Hook File |
+|-----------|------------|-----------|
+| Career Path | `careerPath.types.ts` | `useCareerPathGame.ts` |
+| Transfer Guess | `transferGuess.types.ts` | `useTransferGuessGame.ts` |
+| Tic Tac Toe | `ticTacToe.types.ts` | `useTicTacToeGame.ts` |
+| Topical Quiz | `topicalQuiz.types.ts` | `useTopicalQuizGame.ts` |
+| Goalscorer Recall | Already had this | (template for others) |
+
+**Types added per game mode:**
+- `attemptId: string | null` in state interface
+- `RestoreProgressPayload` interface
+- `SET_ATTEMPT_ID` action
+- `RESTORE_PROGRESS` action
+
+### Keyboard Handling
+Initialized: 2026-01-06
+
+Added `KeyboardAvoidingView` wrapper to 3 game screens:
+- `CareerPathScreen.tsx`
+- `TransferGuessScreen.tsx`
+- `TicTacToeScreen.tsx`
+
+**Pattern:**
+```typescript
+<KeyboardAvoidingView
+  style={styles.container}
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+>
+  {/* screen content */}
+</KeyboardAvoidingView>
+```
+
+Also added `keyboardDismissMode="on-drag"` to ScrollViews for better UX.
+
+### Homepage Score Display
+Initialized: 2026-01-06
+
+Fixed cluttered appearance on completed game cards.
+
+**Problem:** Full share text displayed (multi-line) instead of compact emoji grid.
+
+**Solution:** Added `extractEmojiGrid()` helper to `DailyStackCard.tsx`:
+```typescript
+function extractEmojiGrid(scoreDisplay: string): string {
+  const lines = scoreDisplay.trim().split('\n');
+  const emojiPattern = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u2B1B\u2B1C\u2705\u274C\u2B55]/u;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (line && emojiPattern.test(line) && !line.includes(':') && !line.includes('Football IQ')) {
+      return line;
+    }
+  }
+  return scoreDisplay;
+}
+```
+
+**Result:** Cards now show only emoji grid (e.g., `🟩⬛⬛🟩🟩`) instead of full share text.
