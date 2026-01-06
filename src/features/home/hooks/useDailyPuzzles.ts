@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzleContext } from '@/features/puzzles';
 import { getAttemptByPuzzleId } from '@/lib/database';
 import { GameMode, ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
@@ -170,6 +171,14 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
       loadCards();
     }
   }, [puzzles, syncStatus, loadCards]);
+
+  // Reload cards when screen gains focus (e.g., after completing a game)
+  // This ensures attempt status is refreshed from SQLite when navigating back
+  useFocusEffect(
+    useCallback(() => {
+      loadCards();
+    }, [loadCards])
+  );
 
   // Count completed cards
   const completedCount = cards.filter((c) => c.status === 'done').length;

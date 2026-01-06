@@ -186,8 +186,8 @@ export function GameResultModal({
               title="Done"
               onPress={onClose}
               size="medium"
-              topColor={colors.glassBackground}
-              shadowColor={colors.glassBorder}
+              topColor={colors.floodlightWhite}
+              shadowColor={colors.textSecondary}
               testID="done-button"
             />
           </View>
