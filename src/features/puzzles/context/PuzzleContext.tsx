@@ -41,6 +41,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   // Get auth context for user info
   const { user, profile } = useAuth();
@@ -128,9 +129,13 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     });
   }, []);
 
-  // Load puzzles from SQLite on mount
+  // Load puzzles from SQLite on mount and mark as hydrated
   useEffect(() => {
-    refreshLocalPuzzles();
+    async function hydrate() {
+      await refreshLocalPuzzles();
+      setHasHydrated(true);
+    }
+    hydrate();
   }, [refreshLocalPuzzles]);
 
   // Auto-sync when user becomes available
@@ -146,6 +151,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
       syncStatus,
       lastSyncedAt,
       error,
+      hasHydrated,
       syncPuzzles,
       syncAttempts,
       refreshLocalPuzzles,
@@ -155,6 +161,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
       syncStatus,
       lastSyncedAt,
       error,
+      hasHydrated,
       syncPuzzles,
       syncAttempts,
       refreshLocalPuzzles,

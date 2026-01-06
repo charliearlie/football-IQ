@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -50,11 +50,23 @@ export default function HomeScreen() {
     await Promise.all([refreshStats(), refreshPuzzles()]);
   }, [refreshStats, refreshPuzzles]);
 
+  // Track last sync time to avoid rapid re-syncing when switching apps
+  const lastSyncRef = useRef<number>(0);
+  const SYNC_THROTTLE_MS = 60_000; // 1 minute minimum between syncs
+
   // Refresh on app state change (handles midnight transition)
+  // Throttled to prevent unnecessary syncs when quickly switching apps
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        handleRefresh();
+        const now = Date.now();
+        const timeSinceLastSync = now - lastSyncRef.current;
+
+        // Only refresh if sufficient time has passed since last sync
+        if (timeSinceLastSync >= SYNC_THROTTLE_MS) {
+          lastSyncRef.current = now;
+          handleRefresh();
+        }
       }
     };
 

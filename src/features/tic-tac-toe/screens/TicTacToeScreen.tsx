@@ -20,7 +20,7 @@ import { User, Bot } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import { colors, spacing, textStyles, borderRadius } from '@/theme';
 import { GlassCard } from '@/components/GlassCard';
-import { usePuzzle } from '@/features/puzzles/hooks/usePuzzle';
+import { useStablePuzzle } from '@/features/puzzles';
 import { useTicTacToeGame } from '../hooks/useTicTacToeGame';
 import { TicTacToeGrid } from '../components/TicTacToeGrid';
 import { TicTacToeActionZone } from '../components/TicTacToeActionZone';
@@ -44,7 +44,8 @@ interface TicTacToeScreenProps {
 export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
   const insets = useSafeAreaInsets();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
-  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'tic_tac_toe');
+  // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
+  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'tic_tac_toe');
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared'>('idle');
 
   const {

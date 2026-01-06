@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { usePuzzle } from '@/features/puzzles';
+import { useStablePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useCareerPathGame } from '../hooks/useCareerPathGame';
 import { CareerStepCard } from '../components/CareerStepCard';
@@ -40,7 +40,8 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
-  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'career_path');
+  // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
+  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'career_path');
   const {
     state,
     careerSteps,

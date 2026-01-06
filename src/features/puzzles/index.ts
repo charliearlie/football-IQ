@@ -10,6 +10,7 @@ export { PuzzleProvider, usePuzzleContext } from './context/PuzzleContext';
 
 // Hooks
 export { usePuzzle } from './hooks/usePuzzle';
+export { useStablePuzzle } from './hooks/useStablePuzzle';
 
 // Services (for direct use if needed)
 export { syncPuzzlesFromSupabase } from './services/puzzleSyncService';

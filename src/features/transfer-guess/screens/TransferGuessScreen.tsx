@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { usePuzzle } from '@/features/puzzles';
+import { useStablePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useTransferGuessGame } from '../hooks/useTransferGuessGame';
 import { TransferCard } from '../components/TransferCard';
@@ -39,7 +39,8 @@ export function TransferGuessScreen({ puzzleId }: TransferGuessScreenProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
-  const { puzzle, isLoading } = usePuzzle(puzzleId ?? 'guess_the_transfer');
+  // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
+  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_transfer');
   const {
     state,
     transferContent,

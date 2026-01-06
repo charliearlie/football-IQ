@@ -67,6 +67,8 @@ export interface PuzzleState {
   syncStatus: SyncStatus;
   lastSyncedAt: string | null;
   error: Error | null;
+  /** Whether local puzzles have been loaded from SQLite at least once */
+  hasHydrated: boolean;
 }
 
 /**

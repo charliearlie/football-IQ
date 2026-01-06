@@ -53,7 +53,7 @@ function isGameMode(value: string): value is GameMode {
  * ```
  */
 export function usePuzzle(gameModeOrPuzzleId: GameMode | string): UsePuzzleResult {
-  const { puzzles, syncStatus, syncPuzzles } = usePuzzleContext();
+  const { puzzles, hasHydrated, syncPuzzles } = usePuzzleContext();
 
   const today = useMemo(() => getTodayDate(), []);
 
@@ -71,9 +71,13 @@ export function usePuzzle(gameModeOrPuzzleId: GameMode | string): UsePuzzleResul
     }
   }, [puzzles, today, gameModeOrPuzzleId]);
 
+  // Only show loading when we haven't hydrated local data yet AND don't have the puzzle
+  // Once hydrated, background syncs don't trigger loading state
+  const isLoading = !hasHydrated && puzzle === null;
+
   return {
     puzzle,
-    isLoading: syncStatus === 'syncing',
+    isLoading,
     refetch: syncPuzzles,
   };
 }
