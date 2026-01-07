@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   useArchivePuzzles,
   useGatedNavigation,
   ArchiveList,
   GameModeFilter,
-  PremiumUpsellModal,
   ArchivePuzzle,
   GameModeFilterType,
 } from '@/features/archive';
@@ -24,6 +24,7 @@ import { useAds, UnlockChoiceModal } from '@/features/ads';
  * - Infinite scroll pagination
  */
 export default function ArchiveScreen() {
+  const router = useRouter();
   const [filter, setFilter] = useState<GameModeFilterType>('all');
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
 
@@ -42,9 +43,23 @@ export default function ArchiveScreen() {
   /**
    * Use gated navigation hook for premium access control.
    * This centralizes the navigation/paywall logic.
+   *
+   * For ad-eligible users: show UnlockChoiceModal (ad or premium)
+   * For others: navigate to native premium modal
    */
   const { navigateToPuzzle } = useGatedNavigation({
-    onShowPaywall: (puzzle) => setLockedPuzzle(puzzle),
+    onShowPaywall: (puzzle) => {
+      if (shouldShowAds) {
+        // Show choice modal for ad-eligible users
+        setLockedPuzzle(puzzle);
+      } else {
+        // Navigate to native premium modal for others
+        router.push({
+          pathname: '/premium-modal',
+          params: { puzzleDate: puzzle.puzzleDate, mode: 'blocked' },
+        });
+      }
+    },
   });
 
   /**
@@ -92,8 +107,8 @@ export default function ArchiveScreen() {
         testID="archive-list"
       />
 
-      {/* Unlock Modal - shows ad option for non-premium, premium-only for subscribers */}
-      {lockedPuzzle && shouldShowAds ? (
+      {/* Unlock Choice Modal - shows ad option for non-premium users */}
+      {lockedPuzzle && (
         <UnlockChoiceModal
           visible={!!lockedPuzzle}
           onClose={handleCloseModal}
@@ -101,13 +116,6 @@ export default function ArchiveScreen() {
           puzzleDate={lockedPuzzle.puzzleDate}
           onUnlockSuccess={handleUnlockSuccess}
           testID="unlock-choice-modal"
-        />
-      ) : (
-        <PremiumUpsellModal
-          visible={!!lockedPuzzle}
-          onClose={handleCloseModal}
-          puzzleDate={lockedPuzzle?.puzzleDate}
-          testID="premium-modal"
         />
       )}
     </SafeAreaView>

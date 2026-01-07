@@ -1,0 +1,576 @@
+/**
+ * Premium Modal Screen
+ *
+ * Full-screen native modal for premium upgrade.
+ * Uses Expo Router's native presentation for iOS/Android modal animations.
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import Purchases, {
+  PurchasesPackage,
+  PURCHASES_ERROR_CODE,
+} from 'react-native-purchases';
+import {
+  Crown,
+  Archive,
+  Sparkles,
+  TrendingUp,
+  X,
+  Check,
+  RotateCcw,
+} from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { ElevatedButton } from '@/components/ElevatedButton';
+import { Confetti } from '@/features/career-path/components/Confetti';
+import { useAuth } from '@/features/auth';
+import { colors } from '@/theme/colors';
+import { spacing, borderRadius } from '@/theme/spacing';
+import { fonts, textStyles } from '@/theme/typography';
+import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
+
+type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
+
+const BENEFITS = [
+  { icon: Archive, text: 'Full Archive', description: 'Access all past puzzles' },
+  { icon: Sparkles, text: 'Ad-Free', description: 'No interruptions' },
+  { icon: TrendingUp, text: 'Exclusive Stats', description: 'Track your progress' },
+];
+
+export default function PremiumModalScreen() {
+  const { puzzleDate, mode } = useLocalSearchParams<{
+    puzzleDate?: string;
+    mode?: string;
+  }>();
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [state, setState] = useState<ModalState>('loading');
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleClose = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  const fetchOfferings = useCallback(async () => {
+    setState('loading');
+    try {
+      const offerings = await Purchases.getOfferings();
+      const offering = offerings.all[PREMIUM_OFFERING_ID] || offerings.current;
+
+      if (offering?.availablePackages.length) {
+        setPackages(offering.availablePackages);
+        setState('selecting');
+      } else {
+        setErrorMessage('No subscription plans available');
+        setState('error');
+      }
+    } catch (error) {
+      console.error('[PremiumModal] Failed to fetch offerings:', error);
+      setErrorMessage('Failed to load subscription plans');
+      setState('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOfferings();
+  }, [fetchOfferings]);
+
+  useEffect(() => {
+    if (state === 'success') {
+      const timer = setTimeout(handleClose, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [state, handleClose]);
+
+  const handlePurchase = useCallback(
+    async (pkg: PurchasesPackage) => {
+      if (!user) return;
+
+      setSelectedPackage(pkg);
+      setState('purchasing');
+
+      try {
+        const { customerInfo } = await Purchases.purchasePackage(pkg);
+
+        if (customerInfo.entitlements.active['premium_access']) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setState('success');
+        } else {
+          setErrorMessage('Purchase completed but subscription not activated.');
+          setState('error');
+        }
+      } catch (error: any) {
+        if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+          setState('selecting');
+          return;
+        }
+        setErrorMessage(error.message || 'Purchase failed. Please try again.');
+        setState('error');
+      }
+    },
+    [user]
+  );
+
+  const handleRestore = useCallback(async () => {
+    setState('purchasing');
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+
+      if (customerInfo.entitlements.active['premium_access']) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setState('success');
+      } else {
+        setErrorMessage('No previous purchases found');
+        setState('error');
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Restore failed. Please try again.');
+      setState('error');
+    }
+  }, []);
+
+  const getTitle = () => {
+    if (state === 'success') return 'WELCOME TO PREMIUM!';
+    if (mode === 'blocked') return 'PREMIUM CONTENT';
+    return 'UNLOCK ARCHIVE';
+  };
+
+  const getSubtitle = () => {
+    if (state === 'success') return 'You now have full access to everything!';
+    if (mode === 'blocked') return 'This puzzle requires premium access';
+    return 'Get unlimited access to all past puzzles';
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Confetti active={state === 'success'} />
+
+      {/* Header with close button */}
+      <View style={styles.header}>
+        <Pressable style={styles.closeButton} onPress={handleClose} hitSlop={12}>
+          <X size={28} color={colors.textSecondary} />
+        </Pressable>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Icon */}
+        <View
+          style={[
+            styles.iconContainer,
+            state === 'success' && styles.iconContainerSuccess,
+          ]}
+        >
+          {state === 'success' ? (
+            <Check size={40} color={colors.stadiumNavy} strokeWidth={3} />
+          ) : (
+            <Crown size={40} color={colors.stadiumNavy} strokeWidth={2} />
+          )}
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>{getTitle()}</Text>
+        <Text style={styles.subtitle}>{getSubtitle()}</Text>
+
+        {/* Content based on state */}
+        {state === 'loading' && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.cardYellow} />
+            <Text style={styles.loadingText}>Loading plans...</Text>
+          </View>
+        )}
+
+        {state === 'selecting' && (
+          <Animated.View entering={FadeIn.duration(200)} style={styles.content}>
+            {/* Benefits */}
+            <View style={styles.benefitsContainer}>
+              {BENEFITS.map((benefit, index) => (
+                <View key={index} style={styles.benefitRow}>
+                  <View style={styles.benefitIcon}>
+                    <benefit.icon size={24} color={colors.cardYellow} />
+                  </View>
+                  <View style={styles.benefitText}>
+                    <Text style={styles.benefitTitle}>{benefit.text}</Text>
+                    <Text style={styles.benefitDescription}>{benefit.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            {/* Puzzle date info */}
+            {puzzleDate && (
+              <Text style={styles.puzzleInfo}>
+                You tried to access a puzzle from {puzzleDate}
+              </Text>
+            )}
+
+            {/* Plans */}
+            <Text style={styles.plansTitle}>Choose Your Plan</Text>
+
+            {packages.map((pkg) => (
+              <PackageCard
+                key={pkg.identifier}
+                package={pkg}
+                onSelect={() => handlePurchase(pkg)}
+              />
+            ))}
+
+            {/* Restore */}
+            <Pressable style={styles.restoreButton} onPress={handleRestore}>
+              <RotateCcw size={14} color={colors.textSecondary} />
+              <Text style={styles.restoreText}>Restore Purchases</Text>
+            </Pressable>
+
+            <Text style={styles.planNote}>
+              Cancel anytime in your App Store settings.
+            </Text>
+          </Animated.View>
+        )}
+
+        {state === 'purchasing' && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.cardYellow} />
+            <Text style={styles.loadingText}>
+              {selectedPackage
+                ? `Processing your subscription...`
+                : 'Restoring your purchases...'}
+            </Text>
+          </View>
+        )}
+
+        {state === 'success' && (
+          <View style={styles.successContainer}>
+            <Text style={styles.successText}>Your archive is now fully unlocked!</Text>
+            <Text style={styles.successSubtext}>Tap anywhere to continue</Text>
+          </View>
+        )}
+
+        {state === 'error' && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>
+              {errorMessage || 'Something went wrong. Please try again.'}
+            </Text>
+            <ElevatedButton
+              title="Try Again"
+              onPress={fetchOfferings}
+              size="medium"
+              topColor={colors.cardYellow}
+              shadowColor="#D4A500"
+              fullWidth
+            />
+            <ElevatedButton
+              title="Cancel"
+              onPress={handleClose}
+              size="medium"
+              topColor={colors.glassBackground}
+              shadowColor={colors.glassBorder}
+              fullWidth
+            />
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function PackageCard({
+  package: pkg,
+  onSelect,
+}: {
+  package: PurchasesPackage;
+  onSelect: () => void;
+}) {
+  const scale = useSharedValue(1);
+  const product = pkg.product;
+  const isRecommended = pkg.packageType === 'MONTHLY';
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
+
+  const getPeriodLabel = (): string => {
+    switch (pkg.packageType) {
+      case 'WEEKLY':
+        return '/week';
+      case 'MONTHLY':
+        return '/month';
+      case 'ANNUAL':
+        return '/year';
+      case 'LIFETIME':
+        return ' forever';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={onSelect}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View
+        style={[
+          styles.planCard,
+          isRecommended && styles.planCardRecommended,
+          animatedStyle,
+        ]}
+      >
+        {isRecommended && (
+          <View style={styles.recommendedBadge}>
+            <Text style={styles.recommendedText}>BEST VALUE</Text>
+          </View>
+        )}
+
+        <View style={styles.planInfo}>
+          <Text style={styles.planLabel}>{product.title}</Text>
+          {product.description && (
+            <Text style={styles.planDescription} numberOfLines={1}>
+              {product.description}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.planPricing}>
+          <Text style={styles.planPrice}>{product.priceString}</Text>
+          <Text style={styles.planPeriod}>{getPeriodLabel()}</Text>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.stadiumNavy,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  closeButton: {
+    padding: spacing.xs,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing['3xl'],
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.cardYellow,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  iconContainerSuccess: {
+    backgroundColor: colors.pitchGreen,
+  },
+  title: {
+    fontFamily: fonts.headline,
+    fontSize: 36,
+    letterSpacing: 2,
+    color: colors.cardYellow,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...textStyles.body,
+    color: colors.floodlightWhite,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  content: {
+    width: '100%',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing['2xl'],
+    gap: spacing.md,
+  },
+  loadingText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+  },
+  benefitsContainer: {
+    width: '100%',
+    marginBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  benefitIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(250, 204, 21, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  benefitText: {
+    flex: 1,
+  },
+  benefitTitle: {
+    ...textStyles.body,
+    color: colors.floodlightWhite,
+    fontWeight: '600',
+  },
+  benefitDescription: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+  },
+  puzzleInfo: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  plansTitle: {
+    ...textStyles.body,
+    color: colors.floodlightWhite,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  planCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.glassBackground,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    position: 'relative',
+  },
+  planCardRecommended: {
+    borderColor: colors.cardYellow,
+    backgroundColor: 'rgba(250, 204, 21, 0.1)',
+  },
+  recommendedBadge: {
+    position: 'absolute',
+    top: -10,
+    right: spacing.md,
+    backgroundColor: colors.cardYellow,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  recommendedText: {
+    fontFamily: fonts.headline,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: colors.stadiumNavy,
+  },
+  planInfo: {
+    flex: 1,
+  },
+  planLabel: {
+    ...textStyles.body,
+    color: colors.floodlightWhite,
+    fontWeight: '600',
+  },
+  planDescription: {
+    ...textStyles.caption,
+    color: colors.pitchGreen,
+  },
+  planPricing: {
+    alignItems: 'flex-end',
+  },
+  planPrice: {
+    fontFamily: fonts.headline,
+    fontSize: 28,
+    color: colors.cardYellow,
+  },
+  planPeriod: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.xs,
+  },
+  restoreText: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textDecorationLine: 'underline',
+  },
+  planNote: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  successContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    gap: spacing.sm,
+  },
+  successText: {
+    ...textStyles.body,
+    color: colors.pitchGreen,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  successSubtext: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    width: '100%',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
+  },
+  errorText: {
+    ...textStyles.body,
+    color: colors.redCard,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+});

@@ -17,6 +17,7 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import Animated, {
   SlideInDown,
@@ -285,33 +286,40 @@ export function PremiumUpsellModal({
           {/* Subtitle */}
           <Text style={styles.subtitle}>{getSubtitle()}</Text>
 
-          {/* Content based on state */}
-          {state === 'loading' && <LoadingContent />}
+          {/* Scrollable content area */}
+          <ScrollView
+            style={styles.scrollContent}
+            contentContainerStyle={styles.scrollContentContainer}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {state === 'loading' && <LoadingContent />}
 
-          {state === 'selecting' && (
-            <SelectingContent
-              packages={packages}
-              onSelectPackage={handlePurchase}
-              onRestore={handleRestore}
-              puzzleDate={puzzleDate}
-              testID={testID}
-            />
-          )}
+            {state === 'selecting' && (
+              <SelectingContent
+                packages={packages}
+                onSelectPackage={handlePurchase}
+                onRestore={handleRestore}
+                puzzleDate={puzzleDate}
+                testID={testID}
+              />
+            )}
 
-          {state === 'purchasing' && (
-            <PurchasingContent package={selectedPackage} testID={testID} />
-          )}
+            {state === 'purchasing' && (
+              <PurchasingContent package={selectedPackage} testID={testID} />
+            )}
 
-          {state === 'success' && <SuccessContent testID={testID} />}
+            {state === 'success' && <SuccessContent testID={testID} />}
 
-          {state === 'error' && (
-            <ErrorContent
-              message={errorMessage}
-              onRetry={handleRetry}
-              onClose={onClose}
-              testID={testID}
-            />
-          )}
+            {state === 'error' && (
+              <ErrorContent
+                message={errorMessage}
+                onRetry={handleRetry}
+                onClose={onClose}
+                testID={testID}
+              />
+            )}
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>
@@ -587,7 +595,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     maxWidth: 360,
+    maxHeight: '85%',
     position: 'relative',
+  },
+  scrollContent: {
+    width: '100%',
+    flexShrink: 1,
+  },
+  scrollContentContainer: {
+    alignItems: 'center',
   },
   closeButton: {
     position: 'absolute',

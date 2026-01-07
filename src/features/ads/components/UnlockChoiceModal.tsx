@@ -36,9 +36,9 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
-import { PremiumUpsellModal } from '@/features/archive/components/PremiumUpsellModal';
 import { useAds } from '../context/AdContext';
 import { formatPuzzleDate } from '@/features/archive/utils/dateGrouping';
 import { UnlockChoiceModalProps, UnlockChoiceState } from '../types/ads.types';
@@ -57,8 +57,8 @@ export function UnlockChoiceModal({
   onUnlockSuccess,
   testID,
 }: UnlockChoiceModalProps) {
+  const router = useRouter();
   const [state, setState] = useState<UnlockChoiceState>('idle');
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { loadRewardedAd, showRewardedAd, grantAdUnlock, isRewardedAdReady } = useAds();
@@ -67,7 +67,6 @@ export function UnlockChoiceModal({
   useEffect(() => {
     if (!visible) {
       setState('idle');
-      setShowPremiumModal(false);
       setErrorMessage(null);
     }
   }, [visible]);
@@ -85,11 +84,15 @@ export function UnlockChoiceModal({
 
   /**
    * Handle "Go Premium" button press.
+   * Closes this modal and navigates to the native premium modal.
    */
   const handleGoPremium = useCallback(() => {
-    setState('premium_flow');
-    setShowPremiumModal(true);
-  }, []);
+    onClose();
+    router.push({
+      pathname: '/premium-modal',
+      params: { puzzleDate, mode: 'blocked' },
+    });
+  }, [onClose, router, puzzleDate]);
 
   /**
    * Handle "Watch Ad" button press.
@@ -131,36 +134,6 @@ export function UnlockChoiceModal({
     setErrorMessage(null);
     handleWatchAd();
   }, [handleWatchAd]);
-
-  /**
-   * Handle premium modal close.
-   */
-  const handlePremiumModalClose = useCallback(() => {
-    setShowPremiumModal(false);
-    setState('idle');
-  }, []);
-
-  /**
-   * Handle premium purchase success (propagates up).
-   */
-  const handlePremiumSuccess = useCallback(() => {
-    setShowPremiumModal(false);
-    onUnlockSuccess();
-    onClose();
-  }, [onUnlockSuccess, onClose]);
-
-  // Render premium modal if in premium flow
-  if (showPremiumModal) {
-    return (
-      <PremiumUpsellModal
-        visible={showPremiumModal}
-        onClose={handlePremiumModalClose}
-        puzzleDate={puzzleDate}
-        mode="locked"
-        testID={`${testID}-premium-modal`}
-      />
-    );
-  }
 
   return (
     <Modal

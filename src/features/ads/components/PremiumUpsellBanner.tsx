@@ -6,13 +6,13 @@
  * Returns null for premium users.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Crown, ChevronRight } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { GlassCard } from '@/components/GlassCard';
 import { useAuth } from '@/features/auth';
-import { PremiumUpsellModal } from '@/features/archive/components/PremiumUpsellModal';
 import { PremiumUpsellBannerProps } from '../types/ads.types';
 import { colors, spacing, borderRadius, fonts, textStyles } from '@/theme';
 
@@ -30,19 +30,25 @@ import { colors, spacing, borderRadius, fonts, textStyles } from '@/theme';
  * ```
  */
 export function PremiumUpsellBanner({ testID }: Omit<PremiumUpsellBannerProps, 'onPress'>) {
-  const { isPremium } = useAuth();
-  const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
+  const { profile } = useAuth();
 
   // Don't show for premium users
-  if (isPremium) {
+  if (profile?.is_premium) {
     return null;
   }
 
+  const handlePress = () => {
+    router.push({
+      pathname: '/premium-modal',
+      params: { mode: 'upsell' },
+    });
+  };
+
   return (
-    <>
-      <Animated.View entering={FadeIn.duration(300)}>
-        <Pressable
-          onPress={() => setShowModal(true)}
+    <Animated.View entering={FadeIn.duration(300)}>
+      <Pressable
+        onPress={handlePress}
           style={({ pressed }) => [
             styles.container,
             pressed && styles.pressed,
@@ -74,15 +80,6 @@ export function PremiumUpsellBanner({ testID }: Omit<PremiumUpsellBannerProps, '
           </GlassCard>
         </Pressable>
       </Animated.View>
-
-      {/* Premium Modal */}
-      <PremiumUpsellModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        mode="locked"
-        testID={`${testID}-modal`}
-      />
-    </>
   );
 }
 

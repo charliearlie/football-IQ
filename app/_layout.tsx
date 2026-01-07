@@ -133,6 +133,14 @@ export default function RootLayout() {
               >
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
+                  name="premium-modal"
+                  options={{
+                    presentation: 'formSheet',
+                    headerShown: false,
+                    gestureEnabled: true,
+                  }}
+                />
+                <Stack.Screen
                   name="design-lab"
                   options={{
                     title: 'Design Lab',

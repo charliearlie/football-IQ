@@ -8,16 +8,15 @@
  * 1. If puzzle exists (RLS may have blocked it)
  * 2. If user has access based on premium status and puzzle date
  *
- * If unauthorized, shows the PremiumUpsellModal instead of the game screen.
+ * If unauthorized, navigates to the premium modal and goes back when closed.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { usePuzzle } from '@/features/puzzles/hooks/usePuzzle';
 import { isPuzzleLocked } from '@/features/archive/utils/dateGrouping';
-import { PremiumUpsellModal } from '@/features/archive/components/PremiumUpsellModal';
 import { colors } from '@/theme/colors';
 
 /**
@@ -75,36 +74,29 @@ export function PremiumGate({
   const isPremium = profile?.is_premium ?? false;
   const isLoading = isAuthLoading || isPuzzleLoading;
 
-  // Handle loading state
-  if (isLoading) {
-    return <>{fallback ?? <DefaultLoadingScreen />}</>;
-  }
-
-  // Handle missing puzzle (RLS may have blocked it, or invalid ID)
-  if (!puzzle) {
-    return (
-      <PremiumUpsellModal
-        visible={true}
-        onClose={() => router.back()}
-        mode="blocked"
-        testID="premium-gate-blocked"
-      />
-    );
-  }
-
   // Check premium access using client-side logic
-  const isLocked = isPuzzleLocked(puzzle.puzzle_date, isPremium);
+  const isLocked = !isLoading && puzzle && isPuzzleLocked(puzzle.puzzle_date, isPremium);
+  const isMissing = !isLoading && !puzzle;
 
-  if (isLocked) {
-    return (
-      <PremiumUpsellModal
-        visible={true}
-        onClose={() => router.back()}
-        puzzleDate={puzzle.puzzle_date}
-        mode="locked"
-        testID="premium-gate-locked"
-      />
-    );
+  // Navigate to premium modal when blocked (missing or locked puzzle)
+  useEffect(() => {
+    if (isMissing) {
+      // Replace current route with premium modal, then go back when closed
+      router.replace({
+        pathname: '/premium-modal',
+        params: { mode: 'blocked' },
+      });
+    } else if (isLocked && puzzle) {
+      router.replace({
+        pathname: '/premium-modal',
+        params: { puzzleDate: puzzle.puzzle_date, mode: 'blocked' },
+      });
+    }
+  }, [isMissing, isLocked, puzzle, router]);
+
+  // Handle loading state or blocked state (show loading while redirecting)
+  if (isLoading || isMissing || isLocked) {
+    return <>{fallback ?? <DefaultLoadingScreen />}</>;
   }
 
   // User is authorized - render protected content
