@@ -31,6 +31,19 @@ export interface ArchivePuzzle {
 }
 
 /**
+ * Day group - represents a single day within a month.
+ * Used for sub-grouping puzzles by day within month sections.
+ */
+export interface DayGroup {
+  /** Day key in YYYY-MM-DD format */
+  dayKey: string;
+  /** Display title (e.g., "Tuesday, Dec 24") */
+  dayTitle: string;
+  /** Puzzles on this day */
+  puzzles: ArchivePuzzle[];
+}
+
+/**
  * Section for SectionList grouping - represents a month of puzzles.
  */
 export interface ArchiveSection {
@@ -40,6 +53,8 @@ export interface ArchiveSection {
   monthKey: string;
   /** Puzzles in this month */
   data: ArchivePuzzle[];
+  /** Days within this month (for day sub-headers) */
+  days?: DayGroup[];
 }
 
 /**

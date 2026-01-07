@@ -42,8 +42,9 @@ jest.mock('lucide-react-native', () => ({
   Archive: 'Archive',
   Sparkles: 'Sparkles',
   TrendingUp: 'TrendingUp',
-  Heart: 'Heart',
   X: 'X',
+  Check: 'Check',
+  RotateCcw: 'RotateCcw',
 }));
 
 // Mock react-native-reanimated
@@ -92,6 +93,34 @@ jest.mock('@/lib/supabase', () => ({
         eq: jest.fn().mockResolvedValue({ error: null }),
       }),
     }),
+  },
+}));
+
+// Mock react-native-purchases
+jest.mock('react-native-purchases', () => ({
+  __esModule: true,
+  default: {
+    getOfferings: jest.fn().mockResolvedValue({
+      all: {},
+      current: {
+        availablePackages: [
+          {
+            identifier: 'monthly',
+            packageType: 'MONTHLY',
+            product: {
+              title: 'Football IQ Monthly',
+              description: 'Monthly subscription',
+              priceString: '£4.99',
+            },
+          },
+        ],
+      },
+    }),
+    purchasePackage: jest.fn(),
+    restorePurchases: jest.fn(),
+  },
+  PURCHASES_ERROR_CODE: {
+    PURCHASE_CANCELLED_ERROR: 'PURCHASE_CANCELLED',
   },
 }));
 
@@ -275,9 +304,9 @@ describe('Paywall Flow', () => {
       expect(getByText('UNLOCK ARCHIVE')).toBeTruthy();
     });
 
-    it('calls onClose when Maybe Later is pressed', () => {
+    it('calls onClose when X button is pressed', () => {
       const onCloseMock = jest.fn();
-      const { getByText } = render(
+      const { getByTestId } = render(
         <PremiumUpsellModal
           visible={true}
           onClose={onCloseMock}
@@ -285,24 +314,11 @@ describe('Paywall Flow', () => {
         />
       );
 
-      fireEvent.press(getByText('Maybe Later'));
+      fireEvent.press(getByTestId('premium-modal-close'));
       expect(onCloseMock).toHaveBeenCalled();
     });
 
-    it('displays puzzle date when provided', () => {
-      const { getByText } = render(
-        <PremiumUpsellModal
-          visible={true}
-          onClose={jest.fn()}
-          puzzleDate="2024-12-15"
-          testID="premium-modal"
-        />
-      );
-
-      expect(getByText(/2024-12-15/)).toBeTruthy();
-    });
-
-    it('displays benefits list', () => {
+    it('shows loading state initially', () => {
       const { getByText } = render(
         <PremiumUpsellModal
           visible={true}
@@ -311,8 +327,8 @@ describe('Paywall Flow', () => {
         />
       );
 
-      // Check for benefits (based on current placeholder)
-      expect(getByText(/1000\+ puzzles/)).toBeTruthy();
+      // Modal should show loading state immediately when opened
+      expect(getByText('Loading plans...')).toBeTruthy();
     });
   });
 

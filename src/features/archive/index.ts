@@ -4,6 +4,7 @@
 export type {
   ArchivePuzzle,
   ArchiveSection,
+  DayGroup,
   GameModeFilter as GameModeFilterType,
   FilterOption,
   UseArchivePuzzlesResult,
@@ -21,6 +22,7 @@ export { ArchivePuzzleCard } from './components/ArchivePuzzleCard';
 export { LockedArchiveCard } from './components/LockedArchiveCard';
 export { GameModeFilter } from './components/GameModeFilter';
 export { MonthHeader } from './components/MonthHeader';
+export { DayHeader } from './components/DayHeader';
 export { PremiumUpsellModal } from './components/PremiumUpsellModal';
 
 // Services

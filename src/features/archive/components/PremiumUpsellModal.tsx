@@ -34,7 +34,6 @@ import {
   Archive,
   Sparkles,
   TrendingUp,
-  Heart,
   X,
   Check,
   RotateCcw,
@@ -51,32 +50,15 @@ import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 /**
  * Modal state machine states.
  */
-type ModalState = 'idle' | 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
+type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 
 /**
- * Benefits list with icons.
+ * Condensed benefits for display alongside pricing.
  */
-const BENEFITS = [
-  {
-    icon: Archive,
-    text: 'Full Archive Access',
-    subtext: '1000+ puzzles unlocked',
-  },
-  {
-    icon: Sparkles,
-    text: 'Ad-Free Experience',
-    subtext: 'Distraction-free gameplay',
-  },
-  {
-    icon: TrendingUp,
-    text: 'Exclusive Stats',
-    subtext: 'Deep performance insights',
-  },
-  {
-    icon: Heart,
-    text: 'Support the Creator',
-    subtext: 'Keep Football IQ growing',
-  },
+const CONDENSED_BENEFITS = [
+  { icon: Archive, text: 'Full Archive' },
+  { icon: Sparkles, text: 'Ad-Free' },
+  { icon: TrendingUp, text: 'Exclusive Stats' },
 ];
 
 interface PremiumUpsellModalProps {
@@ -110,31 +92,11 @@ export function PremiumUpsellModal({
   mode = 'upsell',
   testID,
 }: PremiumUpsellModalProps) {
-  const [state, setState] = useState<ModalState>('idle');
+  const [state, setState] = useState<ModalState>('loading');
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { user } = useAuth();
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!visible) {
-      setState('idle');
-      setPackages([]);
-      setSelectedPackage(null);
-      setErrorMessage(null);
-    }
-  }, [visible]);
-
-  // Auto-close after success
-  useEffect(() => {
-    if (state === 'success') {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [state, onClose]);
 
   /**
    * Fetch offerings from RevenueCat.
@@ -162,12 +124,28 @@ export function PremiumUpsellModal({
     }
   }, []);
 
-  /**
-   * Handle transition to plan selection.
-   */
-  const handleSeePlans = useCallback(() => {
-    fetchOfferings();
-  }, [fetchOfferings]);
+  // Auto-fetch offerings when modal opens, reset when it closes
+  useEffect(() => {
+    if (visible) {
+      // Immediately fetch offerings when modal becomes visible
+      fetchOfferings();
+    } else {
+      setState('loading');
+      setPackages([]);
+      setSelectedPackage(null);
+      setErrorMessage(null);
+    }
+  }, [visible, fetchOfferings]);
+
+  // Auto-close after success
+  useEffect(() => {
+    if (state === 'success') {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [state, onClose]);
 
   /**
    * Handle package purchase.
@@ -308,16 +286,6 @@ export function PremiumUpsellModal({
           <Text style={styles.subtitle}>{getSubtitle()}</Text>
 
           {/* Content based on state */}
-          {state === 'idle' && (
-            <IdleContent
-              benefits={BENEFITS}
-              puzzleDate={puzzleDate}
-              onSeePlans={handleSeePlans}
-              onClose={onClose}
-              testID={testID}
-            />
-          )}
-
           {state === 'loading' && <LoadingContent />}
 
           {state === 'selecting' && (
@@ -325,6 +293,7 @@ export function PremiumUpsellModal({
               packages={packages}
               onSelectPackage={handlePurchase}
               onRestore={handleRestore}
+              puzzleDate={puzzleDate}
               testID={testID}
             />
           )}
@@ -350,71 +319,6 @@ export function PremiumUpsellModal({
 }
 
 /**
- * Idle state content - shows benefits.
- */
-function IdleContent({
-  benefits,
-  puzzleDate,
-  onSeePlans,
-  onClose,
-  testID,
-}: {
-  benefits: typeof BENEFITS;
-  puzzleDate?: string | null;
-  onSeePlans: () => void;
-  onClose: () => void;
-  testID?: string;
-}) {
-  return (
-    <>
-      {/* Benefits List */}
-      <View style={styles.benefitsContainer}>
-        {benefits.map((benefit, index) => (
-          <View key={index} style={styles.benefitRow}>
-            <View style={styles.benefitIcon}>
-              <benefit.icon size={20} color={colors.cardYellow} />
-            </View>
-            <View style={styles.benefitTextContainer}>
-              <Text style={styles.benefitText}>{benefit.text}</Text>
-              <Text style={styles.benefitSubtext}>{benefit.subtext}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      {/* Puzzle Date Info */}
-      {puzzleDate && (
-        <Text style={styles.puzzleInfo}>
-          You tried to access a puzzle from {puzzleDate}
-        </Text>
-      )}
-
-      {/* Action Button */}
-      <View style={styles.buttonContainer}>
-        <ElevatedButton
-          title="See Plans"
-          onPress={onSeePlans}
-          size="medium"
-          topColor={colors.cardYellow}
-          shadowColor="#D4A500"
-          fullWidth
-          testID={`${testID}-see-plans-button`}
-        />
-        <ElevatedButton
-          title="Maybe Later"
-          onPress={onClose}
-          size="medium"
-          topColor={colors.glassBackground}
-          shadowColor={colors.glassBorder}
-          fullWidth
-          testID={`${testID}-close-button`}
-        />
-      </View>
-    </>
-  );
-}
-
-/**
  * Loading state content.
  */
 function LoadingContent() {
@@ -427,17 +331,19 @@ function LoadingContent() {
 }
 
 /**
- * Selecting state content - shows RevenueCat packages.
+ * Selecting state content - shows condensed benefits and RevenueCat packages.
  */
 function SelectingContent({
   packages,
   onSelectPackage,
   onRestore,
+  puzzleDate,
   testID,
 }: {
   packages: PurchasesPackage[];
   onSelectPackage: (pkg: PurchasesPackage) => void;
   onRestore: () => void;
+  puzzleDate?: string | null;
   testID?: string;
 }) {
   return (
@@ -445,6 +351,23 @@ function SelectingContent({
       entering={FadeIn.duration(200)}
       style={styles.plansContainer}
     >
+      {/* Condensed Benefits Row */}
+      <View style={styles.condensedBenefits}>
+        {CONDENSED_BENEFITS.map((benefit, index) => (
+          <View key={index} style={styles.condensedBenefitItem}>
+            <benefit.icon size={14} color={colors.cardYellow} />
+            <Text style={styles.condensedBenefitText}>{benefit.text}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Puzzle Date Info */}
+      {puzzleDate && (
+        <Text style={styles.puzzleInfo}>
+          You tried to access a puzzle from {puzzleDate}
+        </Text>
+      )}
+
       <Text style={styles.plansTitle}>Choose Your Plan</Text>
 
       {packages.map((pkg) => (
@@ -696,40 +619,29 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
-  benefitsContainer: {
-    width: '100%',
-    backgroundColor: colors.glassBackground,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    gap: spacing.md,
+  // Condensed benefits
+  condensedBenefits: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  benefitRow: {
+  condensedBenefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.xs,
+    backgroundColor: 'rgba(250, 204, 21, 0.1)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
   },
-  benefitIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(250, 204, 21, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  benefitTextContainer: {
-    flex: 1,
-  },
-  benefitText: {
-    ...textStyles.body,
-    color: colors.floodlightWhite,
-    fontWeight: '600',
-  },
-  benefitSubtext: {
+  condensedBenefitText: {
     ...textStyles.caption,
-    color: colors.textSecondary,
+    color: colors.floodlightWhite,
+    fontWeight: '500',
   },
   puzzleInfo: {
     ...textStyles.caption,

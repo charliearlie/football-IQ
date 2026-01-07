@@ -3,9 +3,9 @@
  *
  * Tests for premium gating UI in the Archive screen.
  * Verifies that:
- * - Puzzles >7 days old show Lock icon for non-premium users
- * - Puzzles >7 days old show Play button for premium users
- * - Puzzles ≤7 days old always show Play/Resume/Done (no lock)
+ * - Puzzles outside 7-day window show Lock icon for non-premium users
+ * - Puzzles outside 7-day window show Play button for premium users
+ * - Puzzles within 7-day window (today + 6 previous days) always show Play/Resume/Done (no lock)
  * - Tapping locked card triggers onLockedPress callback
  */
 
@@ -105,9 +105,14 @@ describe('Archive Gating', () => {
       expect(isPuzzleLocked(oldDate, false)).toBe(true);
     });
 
-    it('returns false for puzzles exactly 7 days old for non-premium users', () => {
+    it('returns false for puzzles exactly 6 days old for non-premium users (boundary)', () => {
+      const sixDaysAgo = getDateDaysAgo(6);
+      expect(isPuzzleLocked(sixDaysAgo, false)).toBe(false);
+    });
+
+    it('returns true for puzzles exactly 7 days old for non-premium users (outside window)', () => {
       const sevenDaysAgo = getDateDaysAgo(7);
-      expect(isPuzzleLocked(sevenDaysAgo, false)).toBe(false);
+      expect(isPuzzleLocked(sevenDaysAgo, false)).toBe(true);
     });
   });
 
@@ -117,14 +122,14 @@ describe('Archive Gating', () => {
       expect(isWithinFreeWindow(today)).toBe(true);
     });
 
-    it('returns true for 7 days ago', () => {
-      const sevenDaysAgo = getDateDaysAgo(7);
-      expect(isWithinFreeWindow(sevenDaysAgo)).toBe(true);
+    it('returns true for 6 days ago (boundary)', () => {
+      const sixDaysAgo = getDateDaysAgo(6);
+      expect(isWithinFreeWindow(sixDaysAgo)).toBe(true);
     });
 
-    it('returns false for 8 days ago', () => {
-      const eightDaysAgo = getDateDaysAgo(8);
-      expect(isWithinFreeWindow(eightDaysAgo)).toBe(false);
+    it('returns false for 7 days ago (outside window)', () => {
+      const sevenDaysAgo = getDateDaysAgo(7);
+      expect(isWithinFreeWindow(sevenDaysAgo)).toBe(false);
     });
   });
 

@@ -52,18 +52,18 @@ describe('Premium Gating - RLS Simulation', () => {
       expect(simulatedRLSResult).toBeNull();
     });
 
-    it('allows access to puzzle exactly 7 days old (boundary)', () => {
-      const sevenDaysAgo = getDateDaysAgo(7);
+    it('allows access to puzzle exactly 6 days old (boundary)', () => {
+      const sixDaysAgo = getDateDaysAgo(6);
 
-      expect(isPuzzleLocked(sevenDaysAgo, isPremium)).toBe(false);
-      expect(isWithinFreeWindow(sevenDaysAgo)).toBe(true);
+      expect(isPuzzleLocked(sixDaysAgo, isPremium)).toBe(false);
+      expect(isWithinFreeWindow(sixDaysAgo)).toBe(true);
     });
 
-    it('blocks access to puzzle 8 days old (boundary)', () => {
-      const eightDaysAgo = getDateDaysAgo(8);
+    it('blocks access to puzzle 7 days old (outside window)', () => {
+      const sevenDaysAgo = getDateDaysAgo(7);
 
-      expect(isPuzzleLocked(eightDaysAgo, isPremium)).toBe(true);
-      expect(isWithinFreeWindow(eightDaysAgo)).toBe(false);
+      expect(isPuzzleLocked(sevenDaysAgo, isPremium)).toBe(true);
+      expect(isWithinFreeWindow(sevenDaysAgo)).toBe(false);
     });
   });
 

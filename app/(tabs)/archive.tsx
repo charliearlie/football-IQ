@@ -11,6 +11,7 @@ import {
   ArchivePuzzle,
   GameModeFilterType,
 } from '@/features/archive';
+import { useAds, UnlockChoiceModal } from '@/features/ads';
 
 /**
  * Archive Screen
@@ -25,6 +26,9 @@ import {
 export default function ArchiveScreen() {
   const [filter, setFilter] = useState<GameModeFilterType>('all');
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
+
+  // Check if user should see ads (non-premium users)
+  const { shouldShowAds } = useAds();
 
   const {
     sections,
@@ -44,10 +48,19 @@ export default function ArchiveScreen() {
   });
 
   /**
-   * Close the premium upsell modal.
+   * Close the unlock modal.
    */
   const handleCloseModal = useCallback(() => {
     setLockedPuzzle(null);
+  }, []);
+
+  /**
+   * Handle successful ad unlock - refresh list and close modal.
+   */
+  const handleUnlockSuccess = useCallback(() => {
+    setLockedPuzzle(null);
+    // The useArchivePuzzles hook will automatically recheck lock status
+    // when adUnlocks changes, so we don't need to manually refresh
   }, []);
 
   return (
@@ -79,13 +92,24 @@ export default function ArchiveScreen() {
         testID="archive-list"
       />
 
-      {/* Premium Upsell Modal */}
-      <PremiumUpsellModal
-        visible={!!lockedPuzzle}
-        onClose={handleCloseModal}
-        puzzleDate={lockedPuzzle?.puzzleDate}
-        testID="premium-modal"
-      />
+      {/* Unlock Modal - shows ad option for non-premium, premium-only for subscribers */}
+      {lockedPuzzle && shouldShowAds ? (
+        <UnlockChoiceModal
+          visible={!!lockedPuzzle}
+          onClose={handleCloseModal}
+          puzzleId={lockedPuzzle.id}
+          puzzleDate={lockedPuzzle.puzzleDate}
+          onUnlockSuccess={handleUnlockSuccess}
+          testID="unlock-choice-modal"
+        />
+      ) : (
+        <PremiumUpsellModal
+          visible={!!lockedPuzzle}
+          onClose={handleCloseModal}
+          puzzleDate={lockedPuzzle?.puzzleDate}
+          testID="premium-modal"
+        />
+      )}
     </SafeAreaView>
   );
 }

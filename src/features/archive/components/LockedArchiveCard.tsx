@@ -2,12 +2,11 @@
  * LockedArchiveCard Component
  *
  * Card for displaying a locked archive puzzle (premium content).
- * Shows blurred content with lock icon overlay.
+ * Shows content slightly dimmed with lock icon button.
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
   Lock,
   Briefcase,
@@ -31,23 +30,22 @@ interface LockedArchiveCardProps {
 }
 
 /**
- * Get icon component for a game mode (dimmed for locked state).
+ * Get icon component for a game mode (same colors as unlocked cards).
  */
 function getGameModeIcon(gameMode: GameMode, size: number = 28) {
-  const color = colors.textSecondary;
   switch (gameMode) {
     case 'career_path':
-      return <Briefcase color={color} size={size} />;
+      return <Briefcase color={colors.cardYellow} size={size} />;
     case 'guess_the_transfer':
-      return <ArrowRightLeft color={color} size={size} />;
+      return <ArrowRightLeft color={colors.pitchGreen} size={size} />;
     case 'guess_the_goalscorers':
-      return <Target color={color} size={size} />;
+      return <Target color={colors.redCard} size={size} />;
     case 'tic_tac_toe':
-      return <Grid3X3 color={color} size={size} />;
+      return <Grid3X3 color={colors.floodlightWhite} size={size} />;
     case 'topical_quiz':
-      return <HelpCircle color={color} size={size} />;
+      return <HelpCircle color={colors.textSecondary} size={size} />;
     default:
-      return <HelpCircle color={color} size={size} />;
+      return <HelpCircle color={colors.textSecondary} size={size} />;
   }
 }
 
@@ -74,7 +72,7 @@ function getGameModeTitle(gameMode: GameMode): string {
 /**
  * Card component for a locked archive puzzle.
  *
- * Shows dimmed content with blur overlay and lock icon.
+ * Shows slightly dimmed content with lock button.
  * Pressing the card triggers the premium upsell modal.
  */
 export function LockedArchiveCard({
@@ -87,68 +85,36 @@ export function LockedArchiveCard({
   const title = getGameModeTitle(puzzle.gameMode);
 
   return (
-    <View style={styles.container} testID={testID}>
-      <Pressable onPress={onPress}>
-        <GlassCard style={styles.card}>
-          <View style={styles.content}>
-            {/* Left: Icon + Text */}
-            <View style={styles.left}>
-              <View style={styles.iconContainer}>{icon}</View>
-              <View style={styles.textContainer}>
-                <Text style={styles.date}>{formattedDate}</Text>
-                <Text style={styles.title}>{title}</Text>
-              </View>
-            </View>
-
-            {/* Right: Lock indicator */}
-            <View style={styles.right}>
-              <View style={styles.lockBadge}>
-                <Lock
-                  color={colors.textSecondary}
-                  size={16}
-                  testID={`${testID}-lock`}
-                />
-              </View>
-            </View>
+    <GlassCard style={styles.card} testID={testID}>
+      <Pressable style={styles.content} onPress={onPress}>
+        {/* Left: Icon + Text */}
+        <View style={styles.left}>
+          <View style={styles.iconContainer}>{icon}</View>
+          <View style={styles.textContainer}>
+            <Text style={styles.date}>{formattedDate}</Text>
+            <Text style={styles.title}>{title}</Text>
           </View>
-        </GlassCard>
+        </View>
 
-        {/* Blur overlay */}
-        {Platform.OS !== 'web' ? (
-          <BlurView
-            style={StyleSheet.absoluteFill}
-            intensity={15}
-            tint="dark"
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, styles.webOverlay]} />
-        )}
-
-        {/* Lock icon overlay */}
-        <View style={styles.lockOverlay}>
-          <View style={styles.lockCircle}>
+        {/* Right: Lock button */}
+        <View style={styles.right}>
+          <View style={styles.lockButton} testID={`${testID}-lock-overlay`}>
             <Lock
-              size={20}
-              color={colors.textSecondary}
-              strokeWidth={2}
-              testID={`${testID}-lock-overlay`}
+              color={colors.floodlightWhite}
+              size={18}
+              testID={`${testID}-lock`}
             />
           </View>
         </View>
       </Pressable>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    marginBottom: spacing.sm,
-  },
   card: {
-    opacity: 0.6,
+    marginBottom: spacing.sm,
+    opacity: 0.7,
   },
   content: {
     flexDirection: 'row',
@@ -173,40 +139,22 @@ const styles = StyleSheet.create({
   },
   date: {
     ...textStyles.caption,
-    color: colors.textSecondary,
+    color: colors.cardYellow,
     marginBottom: 2,
   },
   title: {
     ...textStyles.body,
-    color: colors.textSecondary,
+    color: colors.floodlightWhite,
   },
   right: {
     marginLeft: spacing.md,
   },
-  lockBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.glassBackground,
+  lockButton: {
+    width: 56,
+    height: 36,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.textSecondary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  webOverlay: {
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
-  },
-  lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lockCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
   },
 });

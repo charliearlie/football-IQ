@@ -5,7 +5,7 @@
  * Also includes lock logic for premium/ad-unlock gating.
  */
 
-import { ArchivePuzzle, ArchiveSection } from '../types/archive.types';
+import { ArchivePuzzle, ArchiveSection, DayGroup } from '../types/archive.types';
 import { UnlockedPuzzle } from '@/types/database';
 
 /**
@@ -44,7 +44,41 @@ function formatMonthTitle(monthKey: string): string {
 }
 
 /**
+ * Group puzzles within a month by day.
+ *
+ * @param puzzles - Array of puzzles within a single month
+ * @returns Array of day groups sorted by date DESC
+ */
+function groupPuzzlesByDay(puzzles: ArchivePuzzle[]): DayGroup[] {
+  const dayMap = new Map<string, ArchivePuzzle[]>();
+
+  for (const puzzle of puzzles) {
+    const existing = dayMap.get(puzzle.puzzleDate);
+    if (existing) {
+      existing.push(puzzle);
+    } else {
+      dayMap.set(puzzle.puzzleDate, [puzzle]);
+    }
+  }
+
+  const days: DayGroup[] = [];
+  for (const [dayKey, dayPuzzles] of dayMap) {
+    days.push({
+      dayKey,
+      dayTitle: formatPuzzleDate(dayKey),
+      puzzles: dayPuzzles,
+    });
+  }
+
+  // Sort by day descending (newest first)
+  days.sort((a, b) => b.dayKey.localeCompare(a.dayKey));
+
+  return days;
+}
+
+/**
  * Group puzzles by month/year for SectionList display.
+ * Also includes day sub-grouping within each month.
  *
  * @param puzzles - Array of archive puzzles (already sorted by date DESC)
  * @returns Array of sections with puzzles grouped by month
@@ -65,7 +99,7 @@ export function groupByMonth(puzzles: ArchivePuzzle[]): ArchiveSection[] {
     }
   }
 
-  // Convert to sections array, maintaining sort order
+  // Convert to sections array with day sub-groups
   const sections: ArchiveSection[] = [];
 
   for (const [monthKey, data] of groups) {
@@ -73,6 +107,7 @@ export function groupByMonth(puzzles: ArchivePuzzle[]): ArchiveSection[] {
       title: formatMonthTitle(monthKey),
       monthKey,
       data,
+      days: groupPuzzlesByDay(data),
     });
   }
 
@@ -105,22 +140,27 @@ export function formatPuzzleDate(dateString: string): string {
  * @returns true if the puzzle is within the 7-day window
  */
 export function isWithinFreeWindow(puzzleDate: string): boolean {
-  const date = new Date(puzzleDate);
+  // Add time component to avoid timezone parsing issues
+  // (YYYY-MM-DD without time is parsed as UTC, which can shift the day in local timezone)
+  const date = new Date(puzzleDate + 'T12:00:00');
+  date.setHours(0, 0, 0, 0);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // 7-day window = today + 6 previous days (7 total)
+  const windowStart = new Date(today);
+  windowStart.setDate(windowStart.getDate() - 6);
 
-  return date >= sevenDaysAgo;
+  return date >= windowStart;
 }
 
 /**
- * Check if a puzzle has a valid (non-expired) ad unlock.
+ * Check if a puzzle has been unlocked via ad (permanent unlock).
  *
  * @param puzzleId - The puzzle ID to check
- * @param adUnlocks - Array of valid ad unlocks to check against
- * @returns true if the puzzle has a valid ad unlock
+ * @param adUnlocks - Array of ad unlocks to check against
+ * @returns true if the puzzle has been ad-unlocked
  */
 export function hasValidAdUnlock(
   puzzleId: string,
@@ -128,10 +168,8 @@ export function hasValidAdUnlock(
 ): boolean {
   if (!puzzleId || !adUnlocks.length) return false;
 
-  const now = new Date().toISOString();
-  return adUnlocks.some(
-    (unlock) => unlock.puzzle_id === puzzleId && unlock.expires_at > now
-  );
+  // Ad unlocks are permanent - just check if puzzle is in the list
+  return adUnlocks.some((unlock) => unlock.puzzle_id === puzzleId);
 }
 
 /**

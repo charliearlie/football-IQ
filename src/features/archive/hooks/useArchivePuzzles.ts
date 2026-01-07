@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/features/auth';
+import { useAds } from '@/features/ads';
 import {
   getCatalogEntriesPaginated,
   getCatalogEntryCount,
@@ -37,6 +38,7 @@ export function useArchivePuzzles(
   filter: GameModeFilter
 ): UseArchivePuzzlesResult {
   const { profile } = useAuth();
+  const { adUnlocks } = useAds();
   const isPremium = profile?.is_premium ?? false;
 
   const [puzzles, setPuzzles] = useState<ArchivePuzzle[]>([]);
@@ -56,7 +58,10 @@ export function useArchivePuzzles(
     async (entry: LocalCatalogEntry): Promise<ArchivePuzzle> => {
       // Check if we have full puzzle data (unlocked)
       const fullPuzzle = await getPuzzle(entry.id);
-      const isLocked = fullPuzzle ? false : isPuzzleLocked(entry.puzzle_date, isPremium);
+      // Check lock status including ad unlocks
+      const isLocked = fullPuzzle
+        ? false
+        : isPuzzleLocked(entry.puzzle_date, isPremium, entry.id, adUnlocks);
 
       // Get attempt status if not locked
       let status: 'play' | 'resume' | 'done' = 'play';
@@ -87,7 +92,7 @@ export function useArchivePuzzles(
         score,
       };
     },
-    [isPremium]
+    [isPremium, adUnlocks]
   );
 
   /**
@@ -113,13 +118,17 @@ export function useArchivePuzzles(
       // Transform entries to ArchivePuzzles
       const transformed = await Promise.all(entries.map(transformEntry));
 
+      // Filter out future dates - only show puzzles up to today
+      const today = new Date().toISOString().split('T')[0];
+      const filtered = transformed.filter((p) => p.puzzleDate <= today);
+
       // Update state
       if (reset) {
-        setPuzzles(transformed);
-        setSections(groupByMonth(transformed));
+        setPuzzles(filtered);
+        setSections(groupByMonth(filtered));
       } else {
         setPuzzles((prev) => {
-          const updated = [...prev, ...transformed];
+          const updated = [...prev, ...filtered];
           setSections(groupByMonth(updated));
           return updated;
         });
@@ -187,7 +196,7 @@ export function useArchivePuzzles(
     initialLoad();
   }, [initialLoad]);
 
-  // Re-transform when premium status changes
+  // Re-transform when premium status or ad unlocks change
   useEffect(() => {
     if (!isLoading && puzzles.length > 0) {
       // Re-check lock status for all puzzles
@@ -197,7 +206,7 @@ export function useArchivePuzzles(
             const fullPuzzle = await getPuzzle(p.id);
             const isLocked = fullPuzzle
               ? false
-              : isPuzzleLocked(p.puzzleDate, isPremium);
+              : isPuzzleLocked(p.puzzleDate, isPremium, p.id, adUnlocks);
             return { ...p, isLocked };
           })
         );
@@ -206,7 +215,8 @@ export function useArchivePuzzles(
       };
       recheck();
     }
-  }, [isPremium]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPremium, adUnlocks]);
 
   return {
     sections,

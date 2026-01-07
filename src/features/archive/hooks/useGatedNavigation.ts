@@ -9,6 +9,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/features/auth';
+import { useAds } from '@/features/ads';
 import { isPuzzleLocked } from '../utils/dateGrouping';
 import { ArchivePuzzle, GameMode } from '../types/archive.types';
 
@@ -55,6 +56,7 @@ interface UseGatedNavigationResult {
  * Checks if the user has access to a puzzle based on:
  * - Premium status
  * - Puzzle date (7-day free window)
+ * - Ad unlocks (individual puzzle unlocks via rewarded ads)
  *
  * @param options - Configuration options
  * @returns Navigation function and premium status
@@ -74,15 +76,22 @@ export function useGatedNavigation(
 ): UseGatedNavigationResult {
   const router = useRouter();
   const { profile } = useAuth();
+  const { adUnlocks } = useAds();
   const isPremium = profile?.is_premium ?? false;
 
   const navigateToPuzzle = useCallback(
     (puzzle: ArchivePuzzle) => {
       // Check if user has access to this puzzle
-      const isLocked = isPuzzleLocked(puzzle.puzzleDate, isPremium);
+      // Includes premium status, 7-day window, and ad unlocks
+      const isLocked = isPuzzleLocked(
+        puzzle.puzzleDate,
+        isPremium,
+        puzzle.id,
+        adUnlocks
+      );
 
       if (isLocked) {
-        // User doesn't have access - show paywall
+        // User doesn't have access - show paywall/unlock modal
         options.onShowPaywall(puzzle);
         return;
       }
@@ -95,7 +104,7 @@ export function useGatedNavigation(
         router.push(`/${route}/${puzzle.id}` as any);
       }
     },
-    [isPremium, router, options]
+    [isPremium, adUnlocks, router, options]
   );
 
   return {

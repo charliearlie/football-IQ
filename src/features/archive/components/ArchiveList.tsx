@@ -20,7 +20,9 @@ import { ArchivePuzzle, ArchiveSection } from '../types/archive.types';
 import { ArchivePuzzleCard } from './ArchivePuzzleCard';
 import { LockedArchiveCard } from './LockedArchiveCard';
 import { MonthHeader } from './MonthHeader';
+import { DayHeader } from './DayHeader';
 import { ArchiveSkeletonList } from '@/components/ui/Skeletons';
+import { formatPuzzleDate } from '../utils/dateGrouping';
 
 interface ArchiveListProps {
   /** Grouped sections of puzzles */
@@ -113,27 +115,50 @@ export function ArchiveList({
   );
 
   /**
-   * Render individual puzzle card.
+   * Render individual puzzle card with day header when needed.
    */
   const renderPuzzleItem = useCallback(
-    ({ item, index }: { item: ArchivePuzzle; index: number }) => {
-      if (item.isLocked) {
-        return (
-          <LockedArchiveCard
-            puzzle={item}
-            onPress={() => onLockedPress(item)}
-            testID={`${testID}-locked-${item.id}`}
-          />
-        );
-      }
+    ({
+      item,
+      index,
+      section,
+    }: {
+      item: ArchivePuzzle;
+      index: number;
+      section: ArchiveSection;
+    }) => {
+      // Check if this is the first puzzle of a new day
+      const prevItem = index > 0 ? section.data[index - 1] : null;
+      const isFirstOfDay = !prevItem || prevItem.puzzleDate !== item.puzzleDate;
 
-      return (
+      const card = item.isLocked ? (
+        <LockedArchiveCard
+          puzzle={item}
+          onPress={() => onLockedPress(item)}
+          testID={`${testID}-locked-${item.id}`}
+        />
+      ) : (
         <ArchivePuzzleCard
           puzzle={item}
           onPress={() => onPuzzlePress(item)}
           testID={`${testID}-puzzle-${item.id}`}
         />
       );
+
+      // Render day header before first puzzle of each day
+      if (isFirstOfDay) {
+        return (
+          <View>
+            <DayHeader
+              title={formatPuzzleDate(item.puzzleDate)}
+              testID={`${testID}-day-${item.puzzleDate}`}
+            />
+            {card}
+          </View>
+        );
+      }
+
+      return card;
     },
     [onPuzzlePress, onLockedPress, testID]
   );
