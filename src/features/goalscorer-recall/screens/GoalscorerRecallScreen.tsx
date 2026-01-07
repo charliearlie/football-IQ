@@ -13,10 +13,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Easing,
+} from 'react-native-reanimated';
 import { useStablePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import { useGoalscorerRecallGame } from '../hooks/useGoalscorerRecallGame';
@@ -41,6 +49,9 @@ interface GoalscorerRecallScreenProps {
   puzzleId?: string;
 }
 
+/** Approximate height of the MatchHeader GlassCard */
+const MATCH_HEADER_HEIGHT = 90;
+
 export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -49,6 +60,42 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_goalscorers');
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
   const scrollRef = useRef<ScrollView>(null);
+
+  // Keyboard visibility for collapsible header animation
+  const keyboardVisible = useSharedValue(0);
+
+  // Listen for keyboard show/hide events
+  useEffect(() => {
+    // Use 'Will' events on iOS for smoother animation, 'Did' on Android
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      keyboardVisible.value = withTiming(1, {
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+      });
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardVisible.value = withTiming(0, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      });
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardVisible]);
+
+  // Animated style for collapsible match header
+  const matchHeaderAnimatedStyle = useAnimatedStyle(() => ({
+    height: interpolate(keyboardVisible.value, [0, 1], [MATCH_HEADER_HEIGHT, 0]),
+    opacity: interpolate(keyboardVisible.value, [0, 0.3], [1, 0]),
+    overflow: 'hidden' as const,
+    marginBottom: interpolate(keyboardVisible.value, [0, 1], [spacing.sm, 0]),
+  }));
 
   const {
     state,
@@ -139,8 +186,8 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
         </Text>
       </View>
 
-      {/* Match Header */}
-      <View style={styles.matchHeaderContainer}>
+      {/* Match Header - Collapses when keyboard is visible */}
+      <Animated.View style={[styles.matchHeaderContainer, matchHeaderAnimatedStyle]}>
         <MatchHeader
           homeTeam={content.home_team}
           awayTeam={content.away_team}
@@ -149,7 +196,7 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
           competition={content.competition}
           matchDate={content.match_date}
         />
-      </View>
+      </Animated.View>
 
       {/* Timer */}
       <TimerDisplay
@@ -245,7 +292,7 @@ const styles = StyleSheet.create({
   },
   matchHeaderContainer: {
     paddingHorizontal: layout.screenPadding,
-    marginBottom: spacing.sm,
+    // marginBottom is animated based on keyboard visibility
   },
   scoreboardContainer: {
     flex: 1,

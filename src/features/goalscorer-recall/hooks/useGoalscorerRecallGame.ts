@@ -8,7 +8,7 @@
  */
 
 import { useReducer, useCallback, useEffect, useMemo, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Keyboard } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import {
   GoalscorerRecallState,
@@ -463,6 +463,9 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
           type: 'CORRECT_GUESS',
           payload: { scorer, goalsFound: goalsScored },
         });
+
+        // Dismiss keyboard so user can see their progress on the board
+        Keyboard.dismiss();
 
         // Check if this completes the game (found all scorers)
         const newFoundCount = state.foundScorers.size + 1;
