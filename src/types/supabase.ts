@@ -289,6 +289,15 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_puzzle_catalog: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          game_mode: string
+          puzzle_date: string
+          difficulty: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

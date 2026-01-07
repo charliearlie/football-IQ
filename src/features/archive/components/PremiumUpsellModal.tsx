@@ -44,6 +44,21 @@ import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
 import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
+
+/**
+ * Type guard for RevenueCat PurchasesError.
+ * RevenueCat errors have a `code` property with PURCHASES_ERROR_CODE value.
+ */
+function isPurchasesError(
+  error: unknown
+): error is { code: string; message?: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as Record<string, unknown>).code === 'string'
+  );
+}
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
 import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
@@ -177,15 +192,21 @@ export function PremiumUpsellModal({
           setErrorMessage('Purchase completed but subscription not activated. Use a physical device with sandbox account for real testing.');
           setState('error');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Handle user cancellation gracefully
-        if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+        if (
+          isPurchasesError(error) &&
+          error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
+        ) {
           setState('selecting');
           return;
         }
 
         console.error('[PremiumUpsellModal] Purchase error:', error);
-        setErrorMessage(error.message || 'Purchase failed. Please try again.');
+        const message = isPurchasesError(error)
+          ? error.message
+          : 'Purchase failed. Please try again.';
+        setErrorMessage(message || 'Purchase failed. Please try again.');
         setState('error');
       }
     },
@@ -207,9 +228,12 @@ export function PremiumUpsellModal({
         setErrorMessage('No previous purchases found');
         setState('error');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[PremiumUpsellModal] Restore error:', error);
-      setErrorMessage(error.message || 'Restore failed. Please try again.');
+      const message = isPurchasesError(error)
+        ? error.message
+        : 'Restore failed. Please try again.';
+      setErrorMessage(message || 'Restore failed. Please try again.');
       setState('error');
     }
   }, []);

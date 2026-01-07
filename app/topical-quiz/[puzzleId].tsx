@@ -1,6 +1,7 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, Redirect } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { TopicalQuizScreen } from '@/features/topical-quiz';
+import { extractSingleParam } from '@/lib/routeParams';
 
 /**
  * Dynamic route for Topical Quiz game with specific puzzle ID.
@@ -11,7 +12,13 @@ import { TopicalQuizScreen } from '@/features/topical-quiz';
  * - Shows upsell modal if puzzle is locked for free users
  */
 export default function TopicalQuizRoute() {
-  const { puzzleId } = useLocalSearchParams<{ puzzleId: string }>();
+  const params = useLocalSearchParams<{ puzzleId: string }>();
+  const puzzleId = extractSingleParam(params.puzzleId);
+
+  // Guard against missing puzzleId (malformed deep links)
+  if (!puzzleId) {
+    return <Redirect href="/topical-quiz" />;
+  }
 
   return (
     <PremiumGate puzzleId={puzzleId}>

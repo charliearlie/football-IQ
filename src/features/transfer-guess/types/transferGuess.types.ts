@@ -6,6 +6,7 @@
  */
 
 import { TransferGuessScore } from '../utils/transferScoring';
+import { RestoreProgressPayload as BaseRestorePayload } from '@/hooks/useGamePersistence';
 
 // Re-export for convenience
 export type { TransferGuessScore } from '../utils/transferScoring';
@@ -60,16 +61,16 @@ export interface TransferGuessState {
 
 /**
  * Payload for restoring in-progress game state.
+ * Used for type-safe access in the reducer.
  */
-export interface RestoreProgressPayload {
+export interface TransferGuessRestorePayload extends BaseRestorePayload {
   hintsRevealed: number;
   guesses: string[];
-  attemptId: string;
-  startedAt: string;
 }
 
 /**
  * Actions for the transfer guess game reducer.
+ * Uses BaseRestorePayload for dispatch compatibility with useGamePersistence.
  */
 export type TransferGuessAction =
   | { type: 'REVEAL_HINT' }
@@ -82,7 +83,7 @@ export type TransferGuessAction =
   | { type: 'ATTEMPT_SAVED' }
   | { type: 'RESET' }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
-  | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload };
+  | { type: 'RESTORE_PROGRESS'; payload: BaseRestorePayload };
 
 /**
  * Hint category labels for display.

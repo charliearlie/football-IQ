@@ -7,7 +7,7 @@
  */
 
 import { useCallback } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { useAuth } from '@/features/auth';
 import { useAds } from '@/features/ads';
 import { isPuzzleLocked } from '../utils/dateGrouping';
@@ -100,8 +100,8 @@ export function useGatedNavigation(
       const route = ROUTE_MAP[puzzle.gameMode];
       if (route) {
         // Navigate to dynamic route with puzzle ID
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.push(`/${route}/${puzzle.id}` as any);
+        const href = `/${route}/${puzzle.id}` as Href;
+        router.push(href);
       }
     },
     [isPremium, adUnlocks, router, options]

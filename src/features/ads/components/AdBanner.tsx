@@ -8,21 +8,51 @@
  * the device width while maintaining proper aspect ratio.
  */
 
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Platform, Dimensions } from 'react-native';
+import React, { useState, ComponentType } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getAdUnitId, isAdsSupportedPlatform } from '../config/adUnits';
 import { useAdsOptional } from '../context/AdContext';
 import { AdBannerProps } from '../types/ads.types';
-import { colors, spacing } from '@/theme';
+import { colors } from '@/theme';
+
+/**
+ * Props for the BannerAd component from react-native-google-mobile-ads.
+ * Defined locally to avoid importing the module on unsupported platforms.
+ */
+interface BannerAdProps {
+  unitId: string;
+  size: string;
+  requestOptions?: {
+    requestNonPersonalizedAdsOnly?: boolean;
+  };
+  onAdLoaded?: () => void;
+  onAdFailedToLoad?: (error: Error) => void;
+}
+
+/**
+ * BannerAdSize constants from react-native-google-mobile-ads.
+ */
+interface BannerAdSizeType {
+  ANCHORED_ADAPTIVE_BANNER: string;
+  BANNER: string;
+  LARGE_BANNER: string;
+  MEDIUM_RECTANGLE: string;
+  FULL_BANNER: string;
+  LEADERBOARD: string;
+}
 
 // Conditionally import AdMob components only on native platforms
-let BannerAd: any = null;
-let BannerAdSize: any = null;
+let BannerAd: ComponentType<BannerAdProps> | null = null;
+let BannerAdSize: BannerAdSizeType | null = null;
 
 if (Platform.OS === 'ios' || Platform.OS === 'android') {
   try {
-    const mobileAds = require('react-native-google-mobile-ads');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mobileAds = require('react-native-google-mobile-ads') as {
+      BannerAd: ComponentType<BannerAdProps>;
+      BannerAdSize: BannerAdSizeType;
+    };
     BannerAd = mobileAds.BannerAd;
     BannerAdSize = mobileAds.BannerAdSize;
   } catch {

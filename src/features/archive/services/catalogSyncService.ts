@@ -34,20 +34,16 @@ export async function syncCatalogFromSupabase(): Promise<CatalogSyncResult> {
   try {
     // Call RPC function that bypasses RLS
     // The function returns array of {id, game_mode, puzzle_date, difficulty}
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)('get_puzzle_catalog');
+    const { data: entries, error } = await supabase.rpc('get_puzzle_catalog');
 
     if (error) {
       console.error('Catalog sync error:', error);
       return {
         success: false,
-        error: error as Error,
+        error: error,
         syncedCount: 0,
       };
     }
-
-    // Cast to expected type - RPC returns unknown type
-    const entries = data as SupabaseCatalogEntry[] | null;
 
     if (!entries || entries.length === 0) {
       return {

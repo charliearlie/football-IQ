@@ -1,6 +1,7 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, Redirect } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { CareerPathScreen } from '@/features/career-path';
+import { extractSingleParam } from '@/lib/routeParams';
 
 /**
  * Dynamic route for Career Path game with specific puzzle ID.
@@ -11,7 +12,13 @@ import { CareerPathScreen } from '@/features/career-path';
  * - Shows upsell modal if puzzle is locked for free users
  */
 export default function CareerPathRoute() {
-  const { puzzleId } = useLocalSearchParams<{ puzzleId: string }>();
+  const params = useLocalSearchParams<{ puzzleId: string }>();
+  const puzzleId = extractSingleParam(params.puzzleId);
+
+  // Guard against missing puzzleId (malformed deep links)
+  if (!puzzleId) {
+    return <Redirect href="/career-path" />;
+  }
 
   return (
     <PremiumGate puzzleId={puzzleId}>

@@ -1,6 +1,7 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, Redirect } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { TicTacToeScreen } from '@/features/tic-tac-toe';
+import { extractSingleParam } from '@/lib/routeParams';
 
 /**
  * Dynamic route for Tic Tac Toe game with specific puzzle ID.
@@ -11,7 +12,13 @@ import { TicTacToeScreen } from '@/features/tic-tac-toe';
  * - Shows upsell modal if puzzle is locked for free users
  */
 export default function TicTacToeRoute() {
-  const { puzzleId } = useLocalSearchParams<{ puzzleId: string }>();
+  const params = useLocalSearchParams<{ puzzleId: string }>();
+  const puzzleId = extractSingleParam(params.puzzleId);
+
+  // Guard against missing puzzleId (malformed deep links)
+  if (!puzzleId) {
+    return <Redirect href="/tic-tac-toe" />;
+  }
 
   return (
     <PremiumGate puzzleId={puzzleId}>

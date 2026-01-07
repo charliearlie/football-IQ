@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User, Bot } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { colors, spacing, textStyles, borderRadius } from '@/theme';
 import { GlassCard } from '@/components/GlassCard';
 import { useStablePuzzle } from '@/features/puzzles';
@@ -46,7 +46,6 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'tic_tac_toe');
-  const [shareStatus, setShareStatus] = useState<'idle' | 'shared'>('idle');
 
   const {
     state,
@@ -62,15 +61,7 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
     shareResult,
   } = useTicTacToeGame(puzzle);
 
-  const handleShare = useCallback(async () => {
-    const result = await shareResult();
-    if (result.success) {
-      setShareStatus('shared');
-    }
-  }, [shareResult]);
-
-  const handlePlayAgain = useCallback(() => {
-    setShareStatus('idle');
+  const handleClose = useCallback(() => {
     resetGame();
   }, [resetGame]);
 
@@ -192,9 +183,8 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
           visible={isGameOver}
           score={state.score}
           cells={state.cells}
-          onShare={handleShare}
-          onPlayAgain={handlePlayAgain}
-          shareStatus={shareStatus}
+          onShare={shareResult}
+          onClose={handleClose}
         />
       )}
 

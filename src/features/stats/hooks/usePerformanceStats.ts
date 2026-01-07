@@ -15,6 +15,7 @@ import {
 } from '@/lib/database';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { useUserStats } from '@/features/home/hooks/useUserStats';
+import { asMetadataObject, getMetadataNumber } from '@/types/gameMetadata';
 import {
   PerformanceStats,
   UsePerformanceStatsResult,
@@ -70,18 +71,20 @@ function calculateTotalPoints(attempts: AttemptWithGameMode[]): number {
   let total = 0;
 
   for (const attempt of attempts) {
-    const metadata = attempt.metadata as Record<string, unknown> | null;
+    const metadata = asMetadataObject(attempt.metadata);
     if (!metadata) continue;
 
     // Career Path and Transfer Guess use 'points'
     // Tic Tac Toe uses 'points'
     // Topical Quiz uses 'points'
     // Goalscorer Recall uses 'percentage' (treat as points for total)
-    if (typeof metadata.points === 'number') {
-      total += metadata.points;
-    } else if (typeof metadata.percentage === 'number') {
+    const points = getMetadataNumber(metadata, 'points');
+    if (points > 0) {
+      total += points;
+    } else {
       // For goalscorer recall, use percentage as points equivalent
-      total += metadata.percentage;
+      const percentage = getMetadataNumber(metadata, 'percentage');
+      total += percentage;
     }
   }
 

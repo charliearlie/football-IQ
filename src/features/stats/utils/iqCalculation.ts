@@ -8,6 +8,11 @@
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { ParsedLocalAttempt } from '@/types/database';
 import {
+  asMetadataObject,
+  getMetadataNumber,
+  isGameResult,
+} from '@/types/gameMetadata';
+import {
   GameProficiency,
   Badge,
   GAME_MODE_DISPLAY,
@@ -23,42 +28,41 @@ import {
  * @returns Normalized score (0-100)
  */
 export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
-  if (!metadata || typeof metadata !== 'object') {
-    return 0;
-  }
-
-  const data = metadata as Record<string, unknown>;
+  const data = asMetadataObject(metadata);
+  if (!data) return 0;
 
   switch (gameMode) {
     case 'career_path': {
-      const points = typeof data.points === 'number' ? data.points : 0;
-      const maxPoints = typeof data.maxPoints === 'number' ? data.maxPoints : 0;
+      const points = getMetadataNumber(data, 'points');
+      const maxPoints = getMetadataNumber(data, 'maxPoints');
       if (maxPoints === 0) return 0;
       return Math.round((points / maxPoints) * 100);
     }
 
     case 'guess_the_transfer': {
-      const points = typeof data.points === 'number' ? data.points : 0;
+      const points = getMetadataNumber(data, 'points');
       // Transfer always has maxPoints of 10
       return Math.round((points / 10) * 100);
     }
 
     case 'guess_the_goalscorers': {
       // Goalscorer recall stores percentage directly
-      const percentage = typeof data.percentage === 'number' ? data.percentage : 0;
+      const percentage = getMetadataNumber(data, 'percentage');
       return Math.round(percentage);
     }
 
     case 'tic_tac_toe': {
       // Tic Tac Toe: Win=100, Draw=50, Loss=0
-      const result = data.result as string | undefined;
-      if (result === 'win') return 100;
-      if (result === 'draw') return 50;
+      const result = data.result;
+      if (isGameResult(result)) {
+        if (result === 'win') return 100;
+        if (result === 'draw') return 50;
+      }
       return 0;
     }
 
     case 'topical_quiz': {
-      const points = typeof data.points === 'number' ? data.points : 0;
+      const points = getMetadataNumber(data, 'points');
       // Quiz always has maxPoints of 10
       return Math.round((points / 10) * 100);
     }
@@ -76,36 +80,32 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
  * @returns True if the score was perfect
  */
 export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
-  if (!metadata || typeof metadata !== 'object') {
-    return false;
-  }
-
-  const data = metadata as Record<string, unknown>;
+  const data = asMetadataObject(metadata);
+  if (!data) return false;
 
   switch (gameMode) {
     case 'career_path': {
-      const points = typeof data.points === 'number' ? data.points : 0;
-      const maxPoints = typeof data.maxPoints === 'number' ? data.maxPoints : 0;
+      const points = getMetadataNumber(data, 'points');
+      const maxPoints = getMetadataNumber(data, 'maxPoints');
       return points === maxPoints && maxPoints > 0;
     }
 
     case 'guess_the_transfer': {
-      const points = typeof data.points === 'number' ? data.points : 0;
+      const points = getMetadataNumber(data, 'points');
       return points === 10;
     }
 
     case 'guess_the_goalscorers': {
-      const percentage = typeof data.percentage === 'number' ? data.percentage : 0;
+      const percentage = getMetadataNumber(data, 'percentage');
       return percentage === 100;
     }
 
     case 'tic_tac_toe': {
-      const result = data.result as string | undefined;
-      return result === 'win';
+      return data.result === 'win';
     }
 
     case 'topical_quiz': {
-      const points = typeof data.points === 'number' ? data.points : 0;
+      const points = getMetadataNumber(data, 'points');
       return points === 10;
     }
 

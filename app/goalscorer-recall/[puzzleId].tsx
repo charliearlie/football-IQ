@@ -1,6 +1,7 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, Redirect } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { GoalscorerRecallScreen } from '@/features/goalscorer-recall';
+import { extractSingleParam } from '@/lib/routeParams';
 
 /**
  * Dynamic route for Goalscorer Recall game with specific puzzle ID.
@@ -11,7 +12,13 @@ import { GoalscorerRecallScreen } from '@/features/goalscorer-recall';
  * - Shows upsell modal if puzzle is locked for free users
  */
 export default function GoalscorerRecallRoute() {
-  const { puzzleId } = useLocalSearchParams<{ puzzleId: string }>();
+  const params = useLocalSearchParams<{ puzzleId: string }>();
+  const puzzleId = extractSingleParam(params.puzzleId);
+
+  // Guard against missing puzzleId (malformed deep links)
+  if (!puzzleId) {
+    return <Redirect href="/goalscorer-recall" />;
+  }
 
   return (
     <>

@@ -6,6 +6,7 @@
  */
 
 import { GameScore } from '../utils/scoring';
+import { RestoreProgressPayload as BaseRestorePayload } from '@/hooks/useGamePersistence';
 
 // Re-export GameScore for convenience
 export type { GameScore } from '../utils/scoring';
@@ -68,16 +69,16 @@ export interface CareerPathState {
 
 /**
  * Payload for restoring in-progress game state.
+ * Used for type-safe access in the reducer.
  */
-export interface RestoreProgressPayload {
+export interface CareerPathRestorePayload extends BaseRestorePayload {
   revealedCount: number;
   guesses: string[];
-  attemptId: string;
-  startedAt: string;
 }
 
 /**
  * Actions for the career path game reducer.
+ * Uses BaseRestorePayload for dispatch compatibility with useGamePersistence.
  */
 export type CareerPathAction =
   | { type: 'REVEAL_NEXT' }
@@ -89,4 +90,4 @@ export type CareerPathAction =
   | { type: 'ATTEMPT_SAVED' }
   | { type: 'RESET' }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
-  | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload };
+  | { type: 'RESTORE_PROGRESS'; payload: BaseRestorePayload };

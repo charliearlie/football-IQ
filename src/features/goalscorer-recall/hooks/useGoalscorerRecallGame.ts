@@ -22,10 +22,7 @@ import {
 import { useCountdownTimer } from './useCountdownTimer';
 import { calculateGoalscorerScore } from '../utils/scoring';
 import { generateGoalscorerShareText } from '../utils/share';
-import {
-  validateGuess,
-  normalizeString,
-} from '@/features/career-path/utils/validation';
+import { validateGuess, normalizeString } from '@/lib/validation';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { useHaptics } from '@/hooks/useHaptics';
 import type { ParsedLocalPuzzle, LocalAttempt } from '@/types/database';
