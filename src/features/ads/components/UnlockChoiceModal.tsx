@@ -14,7 +14,7 @@
  * - premium_flow: Delegated to PremiumUpsellModal
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Modal,
   View,
@@ -63,6 +63,16 @@ export function UnlockChoiceModal({
 
   const { loadRewardedAd, showRewardedAd, grantAdUnlock, isRewardedAdReady } = useAds();
 
+  // Track mounted state to prevent state updates after unmount
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Reset state when modal closes
   useEffect(() => {
     if (!visible) {
@@ -75,8 +85,10 @@ export function UnlockChoiceModal({
   useEffect(() => {
     if (state === 'ad_success') {
       const timer = setTimeout(() => {
-        onUnlockSuccess();
-        onClose();
+        if (isMountedRef.current) {
+          onUnlockSuccess();
+          onClose();
+        }
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -85,13 +97,19 @@ export function UnlockChoiceModal({
   /**
    * Handle "Go Premium" button press.
    * Closes this modal and navigates to the native premium modal.
+   * Uses delay to let RN Modal animate out before navigating.
    */
   const handleGoPremium = useCallback(() => {
     onClose();
-    router.push({
-      pathname: '/premium-modal',
-      params: { puzzleDate, mode: 'blocked' },
-    });
+    // Small delay to let the RN Modal animate out before navigating
+    setTimeout(() => {
+      if (isMountedRef.current) {
+        router.push({
+          pathname: '/premium-modal',
+          params: { puzzleDate, mode: 'blocked' },
+        });
+      }
+    }, 150);
   }, [onClose, router, puzzleDate]);
 
   /**
@@ -114,16 +132,27 @@ export function UnlockChoiceModal({
       if (rewarded) {
         // Grant the unlock
         await grantAdUnlock(puzzleId);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setState('ad_success');
+        try {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch {
+          // Haptics not available on all devices - ignore
+        }
+        if (isMountedRef.current) {
+          setState('ad_success');
+        }
       } else {
         // User closed ad without completing
-        setState('idle');
+        if (isMountedRef.current) {
+          setState('idle');
+        }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnlockChoiceModal] Ad error:', error);
-      setErrorMessage(error.message || 'Failed to load ad. Please try again.');
-      setState('ad_error');
+      if (isMountedRef.current) {
+        const message = error instanceof Error ? error.message : 'Failed to load ad. Please try again.';
+        setErrorMessage(message);
+        setState('ad_error');
+      }
     }
   }, [isRewardedAdReady, loadRewardedAd, showRewardedAd, grantAdUnlock, puzzleId]);
 

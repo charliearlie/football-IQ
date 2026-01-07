@@ -5,7 +5,7 @@
  * Uses Expo Router's native presentation for iOS/Android modal animations.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -38,11 +38,19 @@ import {
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
-import { useAuth } from '@/features/auth';
+import { useAuth, useSubscriptionSync } from '@/features/auth';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
-import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
+import { PREMIUM_OFFERING_ID, PREMIUM_ENTITLEMENT_ID } from '@/config/revenueCat';
+
+/** Type guard for RevenueCat errors */
+function isRevenueCatError(error: unknown): error is { code: string; message?: string } {
+  return typeof error === 'object' && error !== null && 'code' in error;
+}
+
+/** Timeout duration for API calls */
+const API_TIMEOUT_MS = 15000;
 
 type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 
@@ -59,20 +67,45 @@ export default function PremiumModalScreen() {
   }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { forceSync } = useSubscriptionSync();
+
+  // Track mounted state to prevent updates after unmount
+  const isMountedRef = useRef(true);
 
   const [state, setState] = useState<ModalState>('loading');
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Track mounted state for cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const handleClose = useCallback(() => {
-    router.back();
+    if (isMountedRef.current) {
+      router.back();
+    }
   }, [router]);
 
   const fetchOfferings = useCallback(async () => {
     setState('loading');
+    setErrorMessage(null);
+
     try {
-      const offerings = await Purchases.getOfferings();
+      // Add timeout to prevent infinite loading
+      const offerings = await Promise.race([
+        Purchases.getOfferings(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timed out')), API_TIMEOUT_MS)
+        ),
+      ]);
+
+      if (!isMountedRef.current) return;
+
       const offering = offerings.all[PREMIUM_OFFERING_ID] || offerings.current;
 
       if (offering?.availablePackages.length) {
@@ -83,8 +116,14 @@ export default function PremiumModalScreen() {
         setState('error');
       }
     } catch (error) {
+      if (!isMountedRef.current) return;
+
       console.error('[PremiumModal] Failed to fetch offerings:', error);
-      setErrorMessage('Failed to load subscription plans');
+      setErrorMessage(
+        error instanceof Error && error.message === 'Request timed out'
+          ? 'Connection timed out. Please check your internet.'
+          : 'Failed to load subscription plans'
+      );
       setState('error');
     }
   }, []);
@@ -95,7 +134,11 @@ export default function PremiumModalScreen() {
 
   useEffect(() => {
     if (state === 'success') {
-      const timer = setTimeout(handleClose, 2500);
+      const timer = setTimeout(() => {
+        if (isMountedRef.current) {
+          handleClose();
+        }
+      }, 2500);
       return () => clearTimeout(timer);
     }
   }, [state, handleClose]);
@@ -110,42 +153,82 @@ export default function PremiumModalScreen() {
       try {
         const { customerInfo } = await Purchases.purchasePackage(pkg);
 
-        if (customerInfo.entitlements.active['premium_access']) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          setState('success');
+        if (!isMountedRef.current) return;
+
+        if (customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]) {
+          // Force sync premium status to Supabase BEFORE showing success
+          await forceSync();
+
+          // Haptics may fail on some devices - don't let it break the flow
+          try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } catch {
+            // Haptics not available - ignore
+          }
+
+          if (isMountedRef.current) {
+            setState('success');
+          }
         } else {
           setErrorMessage('Purchase completed but subscription not activated.');
           setState('error');
         }
-      } catch (error: any) {
-        if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+      } catch (error: unknown) {
+        if (!isMountedRef.current) return;
+
+        // Type-safe error handling
+        if (
+          isRevenueCatError(error) &&
+          error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
+        ) {
           setState('selecting');
           return;
         }
-        setErrorMessage(error.message || 'Purchase failed. Please try again.');
+
+        const message =
+          error instanceof Error ? error.message : 'Purchase failed. Please try again.';
+        setErrorMessage(message);
         setState('error');
       }
     },
-    [user]
+    [user, forceSync]
   );
 
   const handleRestore = useCallback(async () => {
     setState('purchasing');
+
     try {
       const customerInfo = await Purchases.restorePurchases();
 
-      if (customerInfo.entitlements.active['premium_access']) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setState('success');
+      if (!isMountedRef.current) return;
+
+      if (customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]) {
+        // Force sync premium status to Supabase
+        await forceSync();
+
+        // Haptics may fail on some devices - don't let it break the flow
+        try {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch {
+          // Haptics not available - ignore
+        }
+
+        if (isMountedRef.current) {
+          setState('success');
+        }
       } else {
         setErrorMessage('No previous purchases found');
         setState('error');
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Restore failed. Please try again.');
+    } catch (error: unknown) {
+      if (!isMountedRef.current) return;
+
+      const message =
+        error instanceof Error ? error.message : 'Restore failed. Please try again.';
+      setErrorMessage(message);
       setState('error');
     }
-  }, []);
+  }, [forceSync]);
 
   const getTitle = () => {
     if (state === 'success') return 'WELCOME TO PREMIUM!';
@@ -159,14 +242,21 @@ export default function PremiumModalScreen() {
     return 'Get unlimited access to all past puzzles';
   };
 
+  const isPurchasing = state === 'purchasing';
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Confetti active={state === 'success'} />
 
-      {/* Header with close button */}
+      {/* Header with close button - disabled during purchase */}
       <View style={styles.header}>
-        <Pressable style={styles.closeButton} onPress={handleClose} hitSlop={12}>
-          <X size={28} color={colors.textSecondary} />
+        <Pressable
+          style={[styles.closeButton, isPurchasing && styles.closeButtonDisabled]}
+          onPress={handleClose}
+          hitSlop={12}
+          disabled={isPurchasing}
+        >
+          <X size={28} color={isPurchasing ? colors.glassBorder : colors.textSecondary} />
         </Pressable>
       </View>
 
@@ -382,6 +472,9 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: spacing.xs,
+  },
+  closeButtonDisabled: {
+    opacity: 0.3,
   },
   scrollView: {
     flex: 1,

@@ -11,7 +11,7 @@
  * If unauthorized, navigates to the premium modal and goes back when closed.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -71,6 +71,9 @@ export function PremiumGate({
   const { profile, isLoading: isAuthLoading } = useAuth();
   const { puzzle, isLoading: isPuzzleLoading } = usePuzzle(puzzleId);
 
+  // Guard against re-triggering navigation
+  const hasNavigatedRef = useRef(false);
+
   const isPremium = profile?.is_premium ?? false;
   const isLoading = isAuthLoading || isPuzzleLoading;
 
@@ -79,20 +82,32 @@ export function PremiumGate({
   const isMissing = !isLoading && !puzzle;
 
   // Navigate to premium modal when blocked (missing or locked puzzle)
+  // Uses push instead of replace to preserve navigation history
   useEffect(() => {
+    // Guard: only navigate once to prevent infinite loops
+    if (hasNavigatedRef.current) return;
+
     if (isMissing) {
-      // Replace current route with premium modal, then go back when closed
-      router.replace({
+      hasNavigatedRef.current = true;
+      router.push({
         pathname: '/premium-modal',
         params: { mode: 'blocked' },
       });
     } else if (isLocked && puzzle) {
-      router.replace({
+      hasNavigatedRef.current = true;
+      router.push({
         pathname: '/premium-modal',
         params: { puzzleDate: puzzle.puzzle_date, mode: 'blocked' },
       });
     }
   }, [isMissing, isLocked, puzzle, router]);
+
+  // Reset navigation guard when user becomes authorized (e.g., premium upgrade)
+  useEffect(() => {
+    if (!isLocked && !isMissing && !isLoading) {
+      hasNavigatedRef.current = false;
+    }
+  }, [isLocked, isMissing, isLoading]);
 
   // Handle loading state or blocked state (show loading while redirecting)
   if (isLoading || isMissing || isLocked) {
