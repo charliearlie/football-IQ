@@ -11,8 +11,15 @@ import { getUnsyncedAttempts, markAttemptSynced } from '@/lib/database';
 import { Json } from '@/types/supabase';
 import { ParsedLocalAttempt, SupabaseAttemptInsert, SyncResult } from '../types/puzzle.types';
 
+/** PostgreSQL unique violation error code */
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
 /**
  * Sync local unsynced attempts to Supabase.
+ *
+ * Continues syncing even if individual attempts fail, collecting errors
+ * and reporting partial success. Handles duplicate key violations gracefully
+ * (e.g., attempt already synced from another device).
  *
  * @param userId - The current user's ID (from auth context)
  * @returns SyncResult with success status and count of synced attempts
@@ -30,25 +37,43 @@ export async function syncAttemptsToSupabase(userId: string): Promise<SyncResult
     }
 
     let syncedCount = 0;
+    const errors: Error[] = [];
 
-    // Sync each attempt individually to handle partial failures
+    // Sync each attempt individually, continuing on failures
     for (const attempt of unsyncedAttempts) {
-      const supabaseAttempt = transformLocalAttemptToSupabase(attempt, userId);
+      try {
+        const supabaseAttempt = transformLocalAttemptToSupabase(attempt, userId);
 
-      const { error } = await supabase.from('puzzle_attempts').insert(supabaseAttempt);
+        const { error } = await supabase.from('puzzle_attempts').insert(supabaseAttempt);
 
-      if (error) {
-        // Return on first error - could be enhanced to continue and collect errors
-        return {
-          success: false,
-          error: error as Error,
-          syncedCount,
-        };
+        if (error) {
+          // Handle duplicate key gracefully (already synced from another device)
+          if (error.code === POSTGRES_UNIQUE_VIOLATION) {
+            // Already exists in Supabase - mark as synced locally
+            await markAttemptSynced(attempt.id);
+            syncedCount++;
+          } else {
+            // Other error - collect but continue
+            errors.push(error as Error);
+          }
+        } else {
+          // Success - mark as synced in local database
+          await markAttemptSynced(attempt.id);
+          syncedCount++;
+        }
+      } catch (err) {
+        // Network or other error for this attempt - collect but continue
+        errors.push(err instanceof Error ? err : new Error(String(err)));
       }
+    }
 
-      // Mark as synced in local database
-      await markAttemptSynced(attempt.id);
-      syncedCount++;
+    // Return success only if all attempts synced without errors
+    if (errors.length > 0) {
+      return {
+        success: false,
+        error: new Error(`${errors.length} attempt(s) failed to sync`),
+        syncedCount,
+      };
     }
 
     return {

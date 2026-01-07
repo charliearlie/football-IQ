@@ -321,7 +321,59 @@ describe('Sync Engine', () => {
         expect(supabase.from).not.toHaveBeenCalled();
       });
 
-      it('handles Supabase insert failure gracefully', async () => {
+      it('handles Supabase insert failure gracefully and continues', async () => {
+        // Arrange: Two attempts, first will fail, second should still sync
+        const mockAttempts: ParsedLocalAttempt[] = [
+          {
+            id: 'attempt-1',
+            puzzle_id: 'puzzle-1',
+            completed: true,
+            score: 100,
+            score_display: '100%',
+            metadata: null,
+            started_at: '2024-01-15T10:00:00Z',
+            completed_at: '2024-01-15T10:05:00Z',
+            synced: false,
+          },
+          {
+            id: 'attempt-2',
+            puzzle_id: 'puzzle-2',
+            completed: true,
+            score: 80,
+            score_display: '80%',
+            metadata: null,
+            started_at: '2024-01-15T11:00:00Z',
+            completed_at: '2024-01-15T11:05:00Z',
+            synced: false,
+          },
+        ];
+
+        (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
+
+        const mockError = new Error('Insert failed');
+        let callCount = 0;
+        (supabase.from as jest.Mock).mockReturnValue({
+          insert: jest.fn().mockImplementation(() => {
+            callCount++;
+            // First call fails, second succeeds
+            if (callCount === 1) {
+              return { data: null, error: mockError };
+            }
+            return { data: null, error: null };
+          }),
+        });
+
+        // Act
+        const result = await syncAttemptsToSupabase('user-123');
+
+        // Assert: Partial success - first failed, second synced
+        expect(result.success).toBe(false); // Overall failure due to errors
+        expect(result.syncedCount).toBe(1); // Second attempt was synced
+        expect(database.markAttemptSynced).toHaveBeenCalledTimes(1);
+        expect(database.markAttemptSynced).toHaveBeenCalledWith('attempt-2');
+      });
+
+      it('handles duplicate key error gracefully (already synced from another device)', async () => {
         // Arrange
         const mockAttempts: ParsedLocalAttempt[] = [
           {
@@ -339,21 +391,22 @@ describe('Sync Engine', () => {
 
         (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
 
-        const mockError = new Error('Insert failed');
+        // Simulate PostgreSQL unique violation (already exists)
+        const duplicateError = { code: '23505', message: 'duplicate key' };
         (supabase.from as jest.Mock).mockReturnValue({
           insert: jest.fn().mockReturnValue({
             data: null,
-            error: mockError,
+            error: duplicateError,
           }),
         });
 
         // Act
         const result = await syncAttemptsToSupabase('user-123');
 
-        // Assert
-        expect(result.success).toBe(false);
-        expect(result.error).toBe(mockError);
-        expect(database.markAttemptSynced).not.toHaveBeenCalled();
+        // Assert: Should mark as synced since it already exists in Supabase
+        expect(result.success).toBe(true);
+        expect(result.syncedCount).toBe(1);
+        expect(database.markAttemptSynced).toHaveBeenCalledWith('attempt-1');
       });
     });
 

@@ -180,4 +180,59 @@ describe('calculateStreak', () => {
       expect(result.longest).toBe(4);
     });
   });
+
+  describe('DST transitions', () => {
+    // These tests verify the fix for DST-related streak calculation bugs.
+    // Prior to the fix, Math.round(diffTime / DAY_MS) could produce incorrect
+    // results during DST transitions (23-hour or 25-hour gaps).
+
+    it('handles spring forward DST transition (23-hour day)', () => {
+      // In 2025, US DST spring forward is March 9
+      // Set system time to March 11
+      jest.setSystemTime(new Date('2025-03-11T12:00:00Z'));
+
+      const result = calculateStreak([
+        '2025-03-11', // Today
+        '2025-03-10', // Yesterday (after DST spring forward)
+        '2025-03-09', // DST transition day (only 23 hours long in local time)
+        '2025-03-08', // Before DST
+      ]);
+
+      // Should still be 4-day streak despite the 23-hour day
+      expect(result.current).toBe(4);
+      expect(result.longest).toBe(4);
+    });
+
+    it('handles fall back DST transition (25-hour day)', () => {
+      // In 2025, US DST fall back is November 2
+      // Set system time to November 4
+      jest.setSystemTime(new Date('2025-11-04T12:00:00Z'));
+
+      const result = calculateStreak([
+        '2025-11-04', // Today
+        '2025-11-03', // Yesterday (after DST fall back)
+        '2025-11-02', // DST transition day (25 hours long in local time)
+        '2025-11-01', // Before DST
+      ]);
+
+      // Should still be 4-day streak despite the 25-hour day
+      expect(result.current).toBe(4);
+      expect(result.longest).toBe(4);
+    });
+
+    it('correctly identifies broken streak across DST boundary', () => {
+      // Verify we still detect gaps correctly during DST
+      jest.setSystemTime(new Date('2025-03-11T12:00:00Z'));
+
+      const result = calculateStreak([
+        '2025-03-11', // Today
+        '2025-03-10', // Yesterday
+        // Gap on March 9 (DST day)
+        '2025-03-08', // 3 days ago
+      ]);
+
+      expect(result.current).toBe(2); // Only today + yesterday
+      expect(result.longest).toBe(2);
+    });
+  });
 });
