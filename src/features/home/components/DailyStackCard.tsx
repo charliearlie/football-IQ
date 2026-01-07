@@ -58,8 +58,16 @@ interface GameModeConfig {
  * Extract only the emoji grid from the full score_display string.
  * The score_display may contain headers, dates, and score labels for sharing,
  * but on the home screen we only want the compact emoji representation.
+ *
+ * @param scoreDisplay - The full score display string
+ * @returns The extracted emoji grid, or empty string if invalid/empty input
  */
-function extractEmojiGrid(scoreDisplay: string): string {
+function extractEmojiGrid(scoreDisplay: string | null | undefined): string {
+  // Guard against null/undefined/empty input
+  if (!scoreDisplay || scoreDisplay.trim().length === 0) {
+    return '';
+  }
+
   const lines = scoreDisplay.trim().split('\n');
 
   // Find the last line that contains emoji characters (the emoji grid)
@@ -75,8 +83,8 @@ function extractEmojiGrid(scoreDisplay: string): string {
     }
   }
 
-  // Fallback: return original (shouldn't happen with valid score_display)
-  return scoreDisplay;
+  // Return empty string if no emoji grid found (safer than returning malformed data)
+  return '';
 }
 
 /**

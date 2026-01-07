@@ -196,27 +196,34 @@ export function useArchivePuzzles(
     initialLoad();
   }, [initialLoad]);
 
-  // Re-transform when premium status or ad unlocks change
+  // Use a ref to access current puzzles without adding to dependencies
+  // This prevents infinite loops when setPuzzles updates the array
+  const puzzlesRef = useRef(puzzles);
+  puzzlesRef.current = puzzles;
+
+  // Re-check lock status when premium status or ad unlocks change
   useEffect(() => {
-    if (!isLoading && puzzles.length > 0) {
-      // Re-check lock status for all puzzles
-      const recheck = async () => {
-        const updated = await Promise.all(
-          puzzles.map(async (p) => {
-            const fullPuzzle = await getPuzzle(p.id);
-            const isLocked = fullPuzzle
-              ? false
-              : isPuzzleLocked(p.puzzleDate, isPremium, p.id, adUnlocks);
-            return { ...p, isLocked };
-          })
-        );
-        setPuzzles(updated);
-        setSections(groupByMonth(updated));
-      };
-      recheck();
+    const currentPuzzles = puzzlesRef.current;
+    if (isLoading || currentPuzzles.length === 0) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPremium, adUnlocks]);
+
+    // Re-check lock status for all puzzles
+    const recheck = async () => {
+      const updated = await Promise.all(
+        currentPuzzles.map(async (p) => {
+          const fullPuzzle = await getPuzzle(p.id);
+          const isLocked = fullPuzzle
+            ? false
+            : isPuzzleLocked(p.puzzleDate, isPremium, p.id, adUnlocks);
+          return { ...p, isLocked };
+        })
+      );
+      setPuzzles(updated);
+      setSections(groupByMonth(updated));
+    };
+    recheck();
+  }, [isPremium, adUnlocks, isLoading]); // puzzles accessed via ref to avoid dep cycle
 
   return {
     sections,

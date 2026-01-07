@@ -411,9 +411,15 @@ export async function clearSyncQueue(): Promise<void> {
 
 // ============ CATALOG OPERATIONS ============
 
+/** Maximum entries per batch to avoid SQLite parameter limits */
+const CATALOG_BATCH_SIZE = 50;
+
 /**
  * Save multiple catalog entries to local storage.
- * Uses INSERT OR REPLACE to handle both insert and update.
+ * Uses batched INSERT OR REPLACE for performance.
+ *
+ * Performance: Batching reduces 365 individual INSERT statements (one year of archive)
+ * to just 8 batch statements, significantly reducing SQLite roundtrip overhead.
  *
  * Note: Does not use a transaction to avoid "transaction within transaction"
  * errors when called concurrently from multiple sources (PuzzleContext +
@@ -427,19 +433,31 @@ export async function saveCatalogEntries(
   const database = getDatabase();
   const syncedAt = new Date().toISOString();
 
-  // Insert entries sequentially - each INSERT OR REPLACE is atomic
-  // and idempotent, so no transaction wrapper needed
-  for (const entry of entries) {
+  // Batch entries to reduce SQLite roundtrips while staying under parameter limits
+  for (let i = 0; i < entries.length; i += CATALOG_BATCH_SIZE) {
+    const batch = entries.slice(i, i + CATALOG_BATCH_SIZE);
+
+    // Build parameterized multi-row INSERT
+    const placeholders = batch.map((_, idx) => {
+      const base = idx * 5; // 5 params per entry
+      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+    }).join(', ');
+
+    // Flatten parameters into positional array
+    const params: Record<string, string | null> = {};
+    batch.forEach((entry, idx) => {
+      const base = idx * 5;
+      params[`$${base + 1}`] = entry.id;
+      params[`$${base + 2}`] = entry.game_mode;
+      params[`$${base + 3}`] = entry.puzzle_date;
+      params[`$${base + 4}`] = entry.difficulty;
+      params[`$${base + 5}`] = syncedAt;
+    });
+
     await database.runAsync(
       `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at)
-       VALUES ($id, $game_mode, $puzzle_date, $difficulty, $synced_at)`,
-      {
-        $id: entry.id,
-        $game_mode: entry.game_mode,
-        $puzzle_date: entry.puzzle_date,
-        $difficulty: entry.difficulty,
-        $synced_at: syncedAt,
-      }
+       VALUES ${placeholders}`,
+      params
     );
   }
 }
