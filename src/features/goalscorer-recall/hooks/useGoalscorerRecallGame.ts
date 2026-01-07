@@ -306,6 +306,12 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
 
   // Timer callbacks - use refs to always get current values
   const handleTimeUp = useCallback(() => {
+    // Guard against race condition: if ALL_FOUND was dispatched right before
+    // the timer fired, gameStatus will no longer be 'playing'
+    if (stateRef.current.gameStatus !== 'playing') {
+      return;
+    }
+
     const score = calculateGoalscorerScore(
       foundScorersCountRef.current,
       totalScorersRef.current,

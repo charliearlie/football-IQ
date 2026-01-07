@@ -5,6 +5,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/features/auth';
@@ -47,6 +48,9 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   const { user, profile } = useAuth();
   const userId = user?.id ?? null;
   const isPremium = profile?.is_premium ?? false;
+
+  // Track which user we've synced for to prevent re-syncing on callback recreation
+  const syncedForUserRef = useRef<string | null>(null);
 
   /**
    * Refresh puzzles from local SQLite database.
@@ -138,12 +142,20 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     hydrate();
   }, [refreshLocalPuzzles]);
 
-  // Auto-sync when user becomes available
+  // Auto-sync when user becomes available (or changes)
   useEffect(() => {
-    if (userId) {
+    if (userId && syncedForUserRef.current !== userId) {
+      syncedForUserRef.current = userId;
       syncPuzzles();
     }
-  }, [userId]); // Intentionally not including syncPuzzles to avoid re-syncing on every render
+  }, [userId, syncPuzzles]);
+
+  // Reset sync tracking when user logs out
+  useEffect(() => {
+    if (!userId) {
+      syncedForUserRef.current = null;
+    }
+  }, [userId]);
 
   const value = useMemo<PuzzleContextValue>(
     () => ({

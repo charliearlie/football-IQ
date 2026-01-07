@@ -422,6 +422,50 @@ describe('useGoalscorerRecallGame', () => {
       expect(result.current.state.score?.won).toBe(false);
       expect(result.current.state.score?.timeRemaining).toBe(40);
     });
+
+    it('handles race condition: ALL_FOUND takes precedence over TIME_UP', () => {
+      // This test verifies the fix for the race condition where the timer
+      // callback could fire after ALL_FOUND was dispatched, causing the
+      // wrong modal to briefly appear.
+      const puzzle = createMockPuzzle([
+        { scorer: 'Mo Salah', minute: 10, team: 'home' },
+      ]);
+
+      const { result } = renderHook(() => useGoalscorerRecallGame(puzzle));
+
+      act(() => {
+        result.current.startGame();
+      });
+
+      // Advance to just before time runs out (59 seconds)
+      act(() => {
+        jest.advanceTimersByTime(59000);
+      });
+
+      expect(result.current.timeRemaining).toBe(1);
+      expect(result.current.state.gameStatus).toBe('playing');
+
+      // Find the last scorer with only 1 second remaining
+      // This creates a potential race between ALL_FOUND and TIME_UP
+      act(() => {
+        result.current.setCurrentGuess('Salah');
+      });
+      act(() => {
+        result.current.submitGuess();
+      });
+
+      // Should be won, not lost
+      expect(result.current.state.gameStatus).toBe('won');
+      expect(result.current.state.score?.won).toBe(true);
+
+      // Even if timer fires after this, status should remain 'won'
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+
+      // Verify status hasn't changed to 'lost'
+      expect(result.current.state.gameStatus).toBe('won');
+    });
   });
 
   describe('score calculation', () => {

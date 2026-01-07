@@ -59,6 +59,9 @@ export function useLeaderboard(
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
 
+  // Ref to hold current fetchData for polling (avoids effect re-runs when callback changes)
+  const fetchDataRef = useRef<(isManualRefresh?: boolean) => Promise<void>>(() => Promise.resolve());
+
   /**
    * Fetch leaderboard data from service.
    */
@@ -98,6 +101,9 @@ export function useLeaderboard(
     [user?.id, type, date]
   );
 
+  // Keep ref in sync with latest fetchData
+  fetchDataRef.current = fetchData;
+
   /**
    * Manual refresh function for pull-to-refresh.
    */
@@ -111,32 +117,6 @@ export function useLeaderboard(
       }
     }
   }, [fetchData]);
-
-  /**
-   * Start polling interval.
-   */
-  const startPolling = useCallback(() => {
-    if (!enablePolling) return;
-
-    // Clear any existing interval
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-
-    pollingIntervalRef.current = setInterval(() => {
-      fetchData();
-    }, POLLING_INTERVAL);
-  }, [enablePolling, fetchData]);
-
-  /**
-   * Stop polling interval.
-   */
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  }, []);
 
   // Initial fetch
   useEffect(() => {
@@ -157,30 +137,53 @@ export function useLeaderboard(
     };
   }, [fetchData]);
 
-  // Polling management
+  // Polling management - uses refs to avoid effect dependencies on callbacks
   useEffect(() => {
-    if (!enablePolling) return;
+    if (!enablePolling) {
+      // Clean up any existing interval when polling is disabled
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
 
-    startPolling();
+    // Start polling using ref (avoids recreating interval when fetchData changes)
+    const startPollingInterval = () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      pollingIntervalRef.current = setInterval(() => {
+        fetchDataRef.current();
+      }, POLLING_INTERVAL);
+    };
+
+    startPollingInterval();
 
     // Handle app state changes (pause polling when backgrounded)
     const handleAppStateChange = (state: AppStateStatus) => {
       if (state === 'active') {
         // Refresh immediately when coming back
-        fetchData();
-        startPolling();
+        fetchDataRef.current();
+        startPollingInterval();
       } else {
-        stopPolling();
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
       }
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {
-      stopPolling();
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
       subscription.remove();
     };
-  }, [enablePolling, startPolling, stopPolling, fetchData]);
+  }, [enablePolling]); // Only depend on enablePolling - fetchData accessed via ref
 
   // Refetch when type or date changes
   useEffect(() => {
