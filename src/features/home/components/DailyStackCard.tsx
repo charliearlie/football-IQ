@@ -6,7 +6,7 @@ import {
   Target,
   Grid3X3,
   HelpCircle,
-  CheckCircle,
+  Check,
 } from 'lucide-react-native';
 import { GlassCard, ElevatedButton } from '@/components';
 import { colors, textStyles, spacing } from '@/theme';
@@ -15,10 +15,6 @@ import { CardStatus } from '../hooks/useDailyPuzzles';
 
 interface DailyStackCardProps {
   /**
-   * Unique puzzle ID for navigation.
-   */
-  puzzleId: string;
-  /**
    * Game mode type.
    */
   gameMode: GameMode;
@@ -26,14 +22,6 @@ interface DailyStackCardProps {
    * Current status of the puzzle attempt.
    */
   status: CardStatus;
-  /**
-   * Score display string (emoji grid) for completed puzzles.
-   */
-  scoreDisplay?: string;
-  /**
-   * Puzzle difficulty level.
-   */
-  difficulty?: string | null;
   /**
    * Callback when card/button is pressed.
    */
@@ -54,38 +42,6 @@ interface GameModeConfig {
   iconColor: string;
 }
 
-/**
- * Extract only the emoji grid from the full score_display string.
- * The score_display may contain headers, dates, and score labels for sharing,
- * but on the home screen we only want the compact emoji representation.
- *
- * @param scoreDisplay - The full score display string
- * @returns The extracted emoji grid, or empty string if invalid/empty input
- */
-function extractEmojiGrid(scoreDisplay: string | null | undefined): string {
-  // Guard against null/undefined/empty input
-  if (!scoreDisplay || scoreDisplay.trim().length === 0) {
-    return '';
-  }
-
-  const lines = scoreDisplay.trim().split('\n');
-
-  // Find the last line that contains emoji characters (the emoji grid)
-  // Emoji ranges: game pieces, symbols, etc.
-  const emojiPattern =
-    /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u2B1B\u2B1C\u2705\u274C\u2B55]/u;
-
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i].trim();
-    // Skip empty lines and lines that look like headers/labels
-    if (line && emojiPattern.test(line) && !line.includes(':') && !line.includes('Football IQ')) {
-      return line;
-    }
-  }
-
-  // Return empty string if no emoji grid found (safer than returning malformed data)
-  return '';
-}
 
 /**
  * Get configuration for each game mode.
@@ -143,14 +99,11 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
  * Shows different states:
  * - play: "Play" button (green)
  * - resume: "Resume" button (yellow)
- * - done: Score emoji grid + checkmark
+ * - done: "Result" button (yellow)
  */
 export function DailyStackCard({
-  puzzleId,
   gameMode,
   status,
-  scoreDisplay,
-  difficulty,
   onPress,
   testID,
 }: DailyStackCardProps) {
@@ -164,38 +117,30 @@ export function DailyStackCard({
       >
         {/* Left: Icon + Title */}
         <View style={styles.left}>
-          <View style={styles.iconContainer}>{config.icon}</View>
+          <View style={styles.iconContainer}>
+            {config.icon}
+            {/* Completion badge - small checkmark in corner */}
+            {status === 'done' && (
+              <View style={styles.completionBadge}>
+                <Check size={12} color={colors.stadiumNavy} strokeWidth={3} />
+              </View>
+            )}
+          </View>
           <View style={styles.textContainer}>
             <Text style={styles.title}>{config.title}</Text>
             <Text style={styles.subtitle}>{config.subtitle}</Text>
           </View>
         </View>
 
-        {/* Right: Action or Result */}
+        {/* Right: Action Button */}
         <View style={styles.right}>
-          {status === 'done' ? (
-            <View style={styles.doneContainer}>
-              {scoreDisplay && (
-                <Text style={styles.scoreDisplay}>
-                  {extractEmojiGrid(scoreDisplay)}
-                </Text>
-              )}
-              <CheckCircle
-                color={colors.white}
-                size={24}
-                fill={colors.pitchGreen}
-                testID={`${testID}-checkmark`}
-              />
-            </View>
-          ) : (
-            <ElevatedButton
-              title={status === 'resume' ? 'Resume' : 'Play'}
-              onPress={onPress}
-              size="small"
-              topColor={status === 'resume' ? colors.cardYellow : colors.pitchGreen}
-              shadowColor={status === 'resume' ? '#D4A500' : colors.grassShadow}
-            />
-          )}
+          <ElevatedButton
+            title={status === 'done' ? 'Result' : status === 'resume' ? 'Resume' : 'Play'}
+            onPress={onPress}
+            size="small"
+            topColor={status === 'done' ? colors.cardYellow : status === 'resume' ? colors.cardYellow : colors.pitchGreen}
+            shadowColor={status === 'done' ? '#D4A500' : status === 'resume' ? '#D4A500' : colors.grassShadow}
+          />
         </View>
       </Pressable>
     </GlassCard>
@@ -224,6 +169,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: spacing.md,
   },
+  completionBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.pitchGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.stadiumNavy,
+  },
   textContainer: {
     flex: 1,
   },
@@ -236,14 +194,5 @@ const styles = StyleSheet.create({
   },
   right: {
     marginLeft: spacing.md,
-  },
-  doneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  scoreDisplay: {
-    ...textStyles.bodySmall,
-    color: colors.floodlightWhite,
   },
 });

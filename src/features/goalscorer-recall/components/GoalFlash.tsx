@@ -15,7 +15,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
-import { colors } from '@/theme';
+import { colors, fonts } from '@/theme';
 
 interface GoalFlashProps {
   visible: boolean;
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   text: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     fontSize: 72,
     color: colors.pitchGreen,
     letterSpacing: 4,

@@ -7,7 +7,7 @@
 
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import type { RefObject } from 'react';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { GoalSlot } from './GoalSlot';
 import type { GoalWithState } from '../types/goalscorerRecall.types';
 
@@ -138,7 +138,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 14,
     color: colors.floodlightWhite,
     opacity: 0.4,

@@ -5,16 +5,27 @@ import { colors } from './colors';
  * Digital Pitch Design System - Typography
  *
  * Headlines: Bebas Neue - Strong, athletic, condensed
- * Body: Inter - Clean, modern, high legibility
+ * Body/UI: Montserrat - Clean, modern, high legibility (variable font)
  */
 
 export const fonts = {
   headline: 'BebasNeue-Regular',
-  subheading: 'Inter-Bold',
-  body: 'Inter-Regular',
+  body: 'Montserrat',
+  subheading: 'Montserrat',
 } as const;
 
 export type FontFamily = (typeof fonts)[keyof typeof fonts];
+
+/**
+ * Font weight constants for Montserrat variable font.
+ * Use these for consistent weight references.
+ */
+export const fontWeights = {
+  regular: '400',
+  medium: '500',
+  semiBold: '600',
+  bold: '700',
+} as const;
 
 /**
  * Pre-defined text styles for consistent typography across the app.
@@ -49,7 +60,8 @@ export const textStyles: Record<string, TextStyle> = {
 
   // Emphasized text, labels
   subtitle: {
-    fontFamily: fonts.subheading,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     fontSize: 18,
     lineHeight: 24,
     color: colors.floodlightWhite,
@@ -58,6 +70,7 @@ export const textStyles: Record<string, TextStyle> = {
   // Primary body text
   body: {
     fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 16,
     lineHeight: 24,
     color: colors.floodlightWhite,
@@ -66,6 +79,7 @@ export const textStyles: Record<string, TextStyle> = {
   // Secondary body text
   bodySmall: {
     fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 14,
     lineHeight: 20,
     color: colors.textSecondary,
@@ -74,6 +88,7 @@ export const textStyles: Record<string, TextStyle> = {
   // Captions, labels, hints
   caption: {
     fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 12,
     lineHeight: 16,
     color: colors.textSecondary,
@@ -81,8 +96,9 @@ export const textStyles: Record<string, TextStyle> = {
 
   // Button text
   button: {
-    fontFamily: fonts.subheading,
-    fontSize: 16,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
+    fontSize: 18,
     lineHeight: 20,
     color: colors.stadiumNavy,
     textTransform: 'uppercase',
@@ -91,7 +107,8 @@ export const textStyles: Record<string, TextStyle> = {
 
   // Large button text
   buttonLarge: {
-    fontFamily: fonts.subheading,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     fontSize: 18,
     lineHeight: 24,
     color: colors.stadiumNavy,

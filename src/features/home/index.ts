@@ -3,6 +3,7 @@
 // Components
 export { StreakHeader } from './components/StreakHeader';
 export { DailyStackCard } from './components/DailyStackCard';
+export { CompletedGameModal } from './components/CompletedGameModal';
 
 // Hooks
 export { useUserStats, calculateStreak } from './hooks/useUserStats';

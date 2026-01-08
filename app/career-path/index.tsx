@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { CareerPathScreen } from '@/features/career-path';
 
 /**
@@ -5,5 +6,10 @@ import { CareerPathScreen } from '@/features/career-path';
  * Fallback when no puzzleId is provided.
  */
 export default function CareerPathIndexRoute() {
-  return <CareerPathScreen />;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <CareerPathScreen />
+    </>
+  );
 }

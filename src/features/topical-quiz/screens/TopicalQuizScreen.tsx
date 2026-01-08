@@ -6,10 +6,10 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useStablePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
+import { GameContainer } from '@/components';
 import { useTopicalQuizGame } from '../hooks/useTopicalQuizGame';
 import { useQuizPrefetch } from '../context/QuizPrefetchContext';
 import { QuizProgressBar } from '../components/QuizProgressBar';
@@ -37,7 +37,6 @@ interface TopicalQuizScreenProps {
  * 2 points per correct answer, max 10 points.
  */
 export function TopicalQuizScreen({ puzzleId }: TopicalQuizScreenProps) {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
@@ -82,48 +81,58 @@ export function TopicalQuizScreen({ puzzleId }: TopicalQuizScreenProps) {
   // Loading state - only show if puzzle is loading AND images aren't prefetched
   if (isLoading && !isPrefetched) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={[textStyles.body, styles.loadingText]}>
-          Loading quiz...
-        </Text>
-      </View>
+      <GameContainer title="Quiz" keyboardAvoiding={false} testID="topical-quiz-screen">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+          <Text style={[textStyles.body, styles.loadingText]}>
+            Loading quiz...
+          </Text>
+        </View>
+      </GameContainer>
     );
   }
 
   // Brief loading state if puzzle is loading but images are ready
   if (isLoading) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={colors.pitchGreen} />
-      </View>
+      <GameContainer title="Quiz" keyboardAvoiding={false} testID="topical-quiz-screen">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
     );
   }
 
   // No puzzle available
   if (!puzzle || !currentQuestion) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <Text style={textStyles.h2}>No Quiz Today</Text>
-        <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
-          Check back later for today's Topical Quiz
-        </Text>
-      </View>
+      <GameContainer title="Quiz" keyboardAvoiding={false} testID="topical-quiz-screen">
+        <View style={styles.centered}>
+          <Text style={textStyles.h2}>No Quiz Today</Text>
+          <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
+            Check back later for today's Topical Quiz
+          </Text>
+        </View>
+      </GameContainer>
     );
   }
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header with Progress */}
-      <View style={styles.header}>
-        <Text style={textStyles.h1}>Quiz</Text>
-        <QuizProgressBar
-          currentIndex={state.currentQuestionIndex}
-          answers={state.answers}
-          testID="quiz-progress"
-        />
-      </View>
+  // Progress bar for header
+  const progressBar = (
+    <QuizProgressBar
+      currentIndex={state.currentQuestionIndex}
+      answers={state.answers}
+      testID="quiz-progress"
+    />
+  );
 
+  return (
+    <GameContainer
+      title="Quiz"
+      headerRight={progressBar}
+      keyboardAvoiding={false}
+      testID="topical-quiz-screen"
+    >
       {/* Scrollable Content */}
       <ScrollView
         style={styles.scrollView}
@@ -168,20 +177,15 @@ export function TopicalQuizScreen({ puzzleId }: TopicalQuizScreenProps) {
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="topical-quiz-ad-banner" />
-    </View>
+    </GameContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.stadiumNavy,
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.stadiumNavy,
     gap: spacing.md,
     padding: layout.screenPadding,
   },
@@ -191,11 +195,6 @@ const styles = StyleSheet.create({
   noPuzzleText: {
     textAlign: 'center',
     marginTop: spacing.sm,
-  },
-  header: {
-    paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
   },
   scrollView: {
     flex: 1,

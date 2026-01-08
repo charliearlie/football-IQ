@@ -9,7 +9,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { ElevatedButton } from '@/components';
 
 interface StartOverlayProps {
@@ -89,18 +89,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   instructionText: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 16,
     color: colors.floodlightWhite,
     textAlign: 'center',
     lineHeight: 24,
   },
   highlight: {
-    fontFamily: 'Inter-Bold',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     color: colors.cardYellow,
   },
   instructionSubtext: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 14,
     color: colors.floodlightWhite,
     opacity: 0.6,

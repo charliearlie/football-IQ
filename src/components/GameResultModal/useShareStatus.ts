@@ -92,7 +92,7 @@ export function useShareStatus(
       ? Platform.OS === 'web'
         ? 'Copied!'
         : 'Shared!'
-      : 'Share Result';
+      : 'Share';
 
   const buttonColors = {
     topColor: status === 'shared' ? colors.sharedTopColor : colors.activeTopColor,

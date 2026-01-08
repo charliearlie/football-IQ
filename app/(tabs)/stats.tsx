@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Trophy, Share2 } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
@@ -24,9 +24,11 @@ import { FullStatsSkeleton } from '@/components/ui/Skeletons';
  *
  * Comprehensive profile screen showing Football IQ score,
  * proficiency across game modes, badges, and statistics.
+ *
+ * Fix: Uses SafeAreaView with edges={['top']} instead of manual
+ * paddingTop to prevent double spacing issue.
  */
 export default function MyIQScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { stats, isLoading, refresh } = usePerformanceStats();
   const { profile, user } = useAuth();
@@ -95,51 +97,67 @@ export default function MyIQScreen() {
   // Loading state with skeleton
   if (isLoading && !stats) {
     return (
-      <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>My IQ</Text>
         </View>
-        <FullStatsSkeleton testID="stats-skeleton" />
-      </ScrollView>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <FullStatsSkeleton testID="stats-skeleton" />
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   // Empty state (no games played yet)
   if (!stats || stats.totalPuzzlesSolved === 0) {
     return (
-      <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={refresh}
-            tintColor={colors.pitchGreen}
-          />
-        }
-      >
-        <ProfileHeader />
-        <GlassCard style={styles.emptyState}>
-          <Text style={[textStyles.h2, styles.emptyTitle]}>
-            Ready to Test Your Football IQ?
-          </Text>
-          <Text style={[textStyles.body, styles.emptyText]}>
-            Play daily puzzles to build your profile. Your stats will appear here
-            as you complete games.
-          </Text>
-        </GlassCard>
-      </ScrollView>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refresh}
+              tintColor={colors.pitchGreen}
+            />
+          }
+        >
+          <ProfileHeader />
+          <GlassCard style={styles.emptyState}>
+            <Text style={[textStyles.h2, styles.emptyTitle]}>
+              Ready to Test Your Football IQ?
+            </Text>
+            <Text style={[textStyles.body, styles.emptyText]}>
+              Play daily puzzles to build your profile. Your stats will appear here
+              as you complete games.
+            </Text>
+          </GlassCard>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   return (
-    <>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header with Leaderboard Button */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My IQ</Text>
+        <Pressable
+          onPress={handleLeaderboardPress}
+          style={styles.leaderboardButton}
+          hitSlop={12}
+        >
+          <Trophy size={24} color={colors.cardYellow} />
+        </Pressable>
+      </View>
+
       <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
@@ -150,18 +168,6 @@ export default function MyIQScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header with Leaderboard Button */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My IQ</Text>
-          <Pressable
-            onPress={handleLeaderboardPress}
-            style={styles.leaderboardButton}
-            hitSlop={12}
-          >
-            <Trophy size={24} color={colors.cardYellow} />
-          </Pressable>
-        </View>
-
         <ProfileHeader />
 
         <IQScoreDisplay score={stats.globalIQ} />
@@ -197,7 +203,7 @@ export default function MyIQScreen() {
           data={iqCardData}
         />
       )}
-    </>
+    </SafeAreaView>
   );
 }
 
@@ -206,15 +212,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.stadiumNavy,
   },
-  scrollContent: {
-    padding: spacing.xl,
-    paddingBottom: spacing['3xl'],
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   headerTitle: {
     ...textStyles.h1,
@@ -229,6 +232,13 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing['3xl'],
   },
   emptyState: {
     padding: spacing.xl,

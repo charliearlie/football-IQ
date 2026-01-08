@@ -15,7 +15,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { ElevatedButton } from '@/components';
 
 interface RecallActionZoneProps {
@@ -126,7 +126,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 16,
     color: colors.floodlightWhite,
   },
@@ -150,7 +151,8 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   giveUpText: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 14,
     color: colors.floodlightWhite,
     opacity: 0.6,

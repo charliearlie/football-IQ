@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { useHaptics } from '@/hooks/useHaptics';
-import { colors, spacing, textStyles, borderRadius } from '@/theme';
+import { colors, spacing, textStyles, borderRadius, fonts, fontWeights } from '@/theme';
 
 export interface FirstRunModalProps {
   /** Whether the modal is visible */
@@ -165,7 +165,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     color: colors.floodlightWhite,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     marginBottom: spacing.md,
   },
   inputError: {
@@ -174,7 +175,8 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.redCard,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     marginBottom: spacing.md,
   },
   buttonContainer: {

@@ -1,4 +1,4 @@
-import { useLocalSearchParams, Redirect } from 'expo-router';
+import { useLocalSearchParams, Redirect, Stack } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { TransferGuessScreen } from '@/features/transfer-guess';
 import { extractSingleParam } from '@/lib/routeParams';
@@ -21,8 +21,11 @@ export default function TransferGuessRoute() {
   }
 
   return (
-    <PremiumGate puzzleId={puzzleId}>
-      <TransferGuessScreen puzzleId={puzzleId} />
-    </PremiumGate>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <PremiumGate puzzleId={puzzleId}>
+        <TransferGuessScreen puzzleId={puzzleId} />
+      </PremiumGate>
+    </>
   );
 }

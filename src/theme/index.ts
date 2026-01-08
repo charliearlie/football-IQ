@@ -6,5 +6,5 @@
  */
 
 export { colors, type ColorName } from './colors';
-export { fonts, textStyles, type FontFamily } from './typography';
+export { fonts, fontWeights, textStyles, type FontFamily } from './typography';
 export { spacing, borderRadius, shadowOffset, layout } from './spacing';

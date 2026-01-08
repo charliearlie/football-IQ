@@ -6,7 +6,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { Brain } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { GlassCard } from '@/components';
 
 interface IQScoreDisplayProps {
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   score: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     fontSize: 96,
     lineHeight: 100,
     letterSpacing: 2,
@@ -81,8 +81,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   tierText: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     color: colors.stadiumNavy,
-    fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },

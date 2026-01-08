@@ -15,7 +15,7 @@ import Animated, {
   FadeIn,
   Layout,
 } from 'react-native-reanimated';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import type { GoalWithState } from '../types/goalscorerRecall.types';
 
 interface GoalSlotProps {
@@ -128,7 +128,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.redCard,
   },
   minuteText: {
-    fontFamily: 'Inter-Bold',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     fontSize: 12,
     color: colors.stadiumNavy,
   },
@@ -137,7 +138,8 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   scorerName: {
-    fontFamily: 'Inter-Bold',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     fontSize: 16,
     color: colors.floodlightWhite,
   },
@@ -145,12 +147,14 @@ const styles = StyleSheet.create({
     color: colors.redCard,
   },
   ownGoalLabel: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 12,
     opacity: 0.8,
   },
   placeholder: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 16,
     color: colors.floodlightWhite,
     opacity: 0.4,

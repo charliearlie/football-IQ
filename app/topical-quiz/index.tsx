@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { TopicalQuizScreen } from '@/features/topical-quiz';
 
 /**
@@ -5,5 +6,10 @@ import { TopicalQuizScreen } from '@/features/topical-quiz';
  * Loads today's quiz puzzle.
  */
 export default function TopicalQuizIndexRoute() {
-  return <TopicalQuizScreen />;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <TopicalQuizScreen />
+    </>
+  );
 }

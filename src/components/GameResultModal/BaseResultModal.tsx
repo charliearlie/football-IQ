@@ -320,6 +320,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.sm,
   },

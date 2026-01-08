@@ -8,7 +8,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Image, ViewStyle } from 'react-native';
 import { User, Medal } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { GlassCard } from '@/components/GlassCard';
 import { LeaderboardEntry as EntryType } from '../types/leaderboard.types';
 
@@ -162,9 +162,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rankText: {
-    ...textStyles.body,
+    fontFamily: fonts.headline,
+    fontSize: 18,
     color: colors.textSecondary,
-    fontWeight: '600',
   },
   avatar: {
     width: 40,
@@ -186,9 +186,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    ...textStyles.body,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.medium,
+    fontSize: 16,
     color: colors.floodlightWhite,
-    fontWeight: '500',
   },
   nameCurrentUser: {
     color: colors.pitchGreen,

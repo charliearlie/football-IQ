@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { ElevatedButton, GlassCard } from '@/components';
-import { colors, textStyles, spacing } from '@/theme';
+import { colors, textStyles, spacing, fonts, fontWeights } from '@/theme';
 
 /**
  * Design Lab Screen
@@ -193,7 +193,8 @@ const styles = StyleSheet.create({
   },
   colorLabel: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
     color: colors.floodlightWhite,
     textAlign: 'center',
   },

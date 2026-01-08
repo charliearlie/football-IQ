@@ -1,4 +1,4 @@
-import { useLocalSearchParams, Redirect } from 'expo-router';
+import { useLocalSearchParams, Redirect, Stack } from 'expo-router';
 import { PremiumGate } from '@/features/auth';
 import { TicTacToeScreen } from '@/features/tic-tac-toe';
 import { extractSingleParam } from '@/lib/routeParams';
@@ -21,8 +21,11 @@ export default function TicTacToeRoute() {
   }
 
   return (
-    <PremiumGate puzzleId={puzzleId}>
-      <TicTacToeScreen puzzleId={puzzleId} />
-    </PremiumGate>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <PremiumGate puzzleId={puzzleId}>
+        <TicTacToeScreen puzzleId={puzzleId} />
+      </PremiumGate>
+    </>
   );
 }

@@ -1,10 +1,10 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   RefreshControl,
+  ScrollView,
   AppState,
   AppStateStatus,
   Pressable,
@@ -13,7 +13,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Trophy } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
-import { StreakHeader, DailyStackCard, useUserStats, useDailyPuzzles } from '@/features/home';
+import {
+  StreakHeader,
+  DailyStackCard,
+  useUserStats,
+  useDailyPuzzles,
+  DailyPuzzleCard,
+  CompletedGameModal,
+} from '@/features/home';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { PremiumUpsellBanner } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
@@ -45,6 +52,11 @@ export default function HomeScreen() {
 
   const isLoading = statsLoading || puzzlesLoading;
 
+  // State for completed game modal
+  const [completedModal, setCompletedModal] = useState<{
+    card: DailyPuzzleCard;
+  } | null>(null);
+
   // Handle pull-to-refresh
   const handleRefresh = useCallback(async () => {
     await Promise.all([refreshStats(), refreshPuzzles()]);
@@ -74,14 +86,20 @@ export default function HomeScreen() {
     return () => subscription.remove();
   }, [handleRefresh]);
 
-  // Navigate to game screen with puzzle ID
+  // Navigate to game screen or show completed modal
   const handleCardPress = useCallback(
-    (puzzleId: string, gameMode: GameMode) => {
-      const route = ROUTE_MAP[gameMode];
+    (card: DailyPuzzleCard) => {
+      // Show results modal for completed games
+      if (card.status === 'done' && card.attempt) {
+        setCompletedModal({ card });
+        return;
+      }
+
+      // Navigate to game for play/resume
+      const route = ROUTE_MAP[card.gameMode];
       if (route) {
-        // Navigate to dynamic route with puzzle ID
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.push(`/${route}/${puzzleId}` as any);
+        router.push(`/${route}/${card.puzzleId}` as any);
       }
     },
     [router]
@@ -94,7 +112,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+      {/* Fixed Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Football IQ</Text>
         <Pressable
@@ -108,7 +126,7 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* Content */}
+      {/* Scrollable Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -152,18 +170,26 @@ export default function HomeScreen() {
             cards.map((card) => (
               <DailyStackCard
                 key={card.puzzleId}
-                puzzleId={card.puzzleId}
                 gameMode={card.gameMode}
                 status={card.status}
-                scoreDisplay={card.scoreDisplay}
-                difficulty={card.difficulty}
-                onPress={() => handleCardPress(card.puzzleId, card.gameMode)}
+                onPress={() => handleCardPress(card)}
                 testID={`daily-card-${card.gameMode}`}
               />
             ))
           )}
         </View>
       </ScrollView>
+
+      {/* Completed Game Modal */}
+      {completedModal && (
+        <CompletedGameModal
+          visible={true}
+          gameMode={completedModal.card.gameMode}
+          attempt={completedModal.card.attempt!}
+          onClose={() => setCompletedModal(null)}
+          testID="completed-game-modal"
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -179,7 +205,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.md,
   },
   leaderboardButton: {
     width: 40,

@@ -10,12 +10,10 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Keyboard,
+  Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import Animated, {
@@ -27,6 +25,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useStablePuzzle } from '@/features/puzzles';
 import { colors, spacing, textStyles, layout } from '@/theme';
+import { GameContainer } from '@/components';
 import { useGoalscorerRecallGame } from '../hooks/useGoalscorerRecallGame';
 import { MatchHeader } from '../components/MatchHeader';
 import { Scoreboard } from '../components/Scoreboard';
@@ -50,10 +49,9 @@ interface GoalscorerRecallScreenProps {
 }
 
 /** Approximate height of the MatchHeader GlassCard */
-const MATCH_HEADER_HEIGHT = 90;
+const MATCH_HEADER_HEIGHT = 140;
 
 export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps) {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
@@ -61,10 +59,10 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
   const scrollRef = useRef<ScrollView>(null);
 
-  // Keyboard visibility for collapsible header animation
+  // Keyboard visibility for collapsible match header animation
   const keyboardVisible = useSharedValue(0);
 
-  // Listen for keyboard show/hide events
+  // Listen for keyboard show/hide events (for match header animation)
   useEffect(() => {
     // Use 'Will' events on iOS for smoother animation, 'Did' on Android
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -134,24 +132,38 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   // Loading state
   if (isLoading) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={[textStyles.body, styles.loadingText]}>
-          Loading puzzle...
-        </Text>
-      </View>
+      <GameContainer
+        title="Goalscorer Recall"
+        collapsible
+        keyboardAvoiding={false}
+        testID="goalscorer-recall-screen"
+      >
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+          <Text style={[textStyles.body, styles.loadingText]}>
+            Loading puzzle...
+          </Text>
+        </View>
+      </GameContainer>
     );
   }
 
   // No puzzle available
   if (!puzzle) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <Text style={textStyles.h2}>No Puzzle Today</Text>
-        <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
-          Check back later for today's Goalscorer Recall challenge
-        </Text>
-      </View>
+      <GameContainer
+        title="Goalscorer Recall"
+        collapsible
+        keyboardAvoiding={false}
+        testID="goalscorer-recall-screen"
+      >
+        <View style={styles.centered}>
+          <Text style={textStyles.h2}>No Puzzle Today</Text>
+          <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
+            Check back later for today's Goalscorer Recall challenge
+          </Text>
+        </View>
+      </GameContainer>
     );
   }
 
@@ -170,22 +182,12 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    <GameContainer
+      title="Goalscorer Recall"
+      collapsible
+      keyboardAvoiding={false}
+      testID="goalscorer-recall-screen"
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={textStyles.h1}>Goalscorer Recall</Text>
-        <Text style={[textStyles.body, styles.progress]}>
-          <Text style={styles.progressHighlight}>{foundScorersCount}</Text>
-          {' / '}
-          <Text style={styles.progressHighlight}>{totalScorers}</Text>
-          {' scorers'}
-        </Text>
-      </View>
-
       {/* Match Header - Collapses when keyboard is visible */}
       <Animated.View style={[styles.matchHeaderContainer, matchHeaderAnimatedStyle]}>
         <MatchHeader
@@ -203,6 +205,14 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
         timeRemaining={timeRemaining}
         isRunning={isPlaying}
       />
+
+      {/* Progress indicator */}
+      <Text style={styles.progressText}>
+        <Text style={styles.progressHighlight}>{foundScorersCount}</Text>
+        {' / '}
+        <Text style={styles.progressHighlight}>{totalScorers}</Text>
+        {' scorers found'}
+      </Text>
 
       {/* Scoreboard */}
       <View style={styles.scoreboardContainer}>
@@ -251,20 +261,15 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="goalscorer-recall-ad-banner" />
-    </KeyboardAvoidingView>
+    </GameContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.stadiumNavy,
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.stadiumNavy,
     gap: spacing.md,
     padding: layout.screenPadding,
   },
@@ -275,16 +280,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
   },
-  header: {
-    paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  progress: {
+  progressText: {
+    ...textStyles.body,
     color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
   },
   progressHighlight: {
     color: colors.pitchGreen,

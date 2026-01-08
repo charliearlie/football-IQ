@@ -170,8 +170,16 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
 
   const totalSteps = careerSteps.length;
 
-  // Check if all steps are revealed (triggers lost state)
-  const allRevealed = state.revealedCount >= totalSteps;
+  // Derived state for game progression
+  // allCluesRevealed: true when all n steps have been shown to the player
+  const allCluesRevealed = state.revealedCount >= totalSteps;
+  // isLastChance: true when all clues are revealed but player can still make a final guess
+  const isLastChance = allCluesRevealed && state.gameStatus === 'playing';
+  // canStillGuess: true while game is in playing state (player hasn't won/lost yet)
+  const canStillGuess = state.gameStatus === 'playing';
+
+  // Backwards compatibility alias
+  const allRevealed = allCluesRevealed;
 
   // Game persistence (attemptId, progress restore, background save, completion save)
   useGamePersistence<CareerPathState, CareerPathMeta>({
@@ -239,13 +247,16 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
       dispatch({ type: 'CORRECT_GUESS', payload: gameScore });
       triggerNotification('success');
     } else {
-      // Check if this incorrect guess will reveal the last step
-      if (state.revealedCount >= totalSteps) {
-        // Already at max reveals, just record the guess
-        dispatch({ type: 'INCORRECT_GUESS', payload: guess });
+      // Check if all clues are already revealed (this is the player's last chance)
+      const wasLastChance = state.revealedCount >= totalSteps;
+
+      if (wasLastChance) {
+        // Player guessed wrong with all clues revealed - game over
+        const gameScore = calculateScore(totalSteps, state.revealedCount, false);
+        dispatch({ type: 'GAME_LOST', payload: gameScore });
         triggerNotification('error');
       } else {
-        // Penalty reveal
+        // Penalty reveal - show next clue and let player try again
         dispatch({ type: 'INCORRECT_GUESS', payload: guess });
         triggerNotification('error');
       }
@@ -302,21 +313,10 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     }
   }, [state.lastGuessIncorrect]);
 
-  // Check for game lost condition
-  useEffect(() => {
-    if (
-      allRevealed &&
-      state.gameStatus === 'playing' &&
-      state.revealedCount >= totalSteps
-    ) {
-      // Give a brief moment before showing lost state
-      const timer = setTimeout(() => {
-        const gameScore = calculateScore(totalSteps, state.revealedCount, false);
-        dispatch({ type: 'GAME_LOST', payload: gameScore });
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [allRevealed, state.gameStatus, state.revealedCount, totalSteps]);
+  // NOTE: Game loss is now handled in submitGuess when player makes incorrect guess
+  // while all clues are revealed (isLastChance). This fixes the off-by-one bug where
+  // the game previously ended immediately when all clues were revealed, without
+  // giving the player a chance to make a final guess.
 
   return {
     // State
@@ -328,6 +328,9 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     answer,
     totalSteps,
     allRevealed,
+    allCluesRevealed,
+    isLastChance,
+    canStillGuess,
 
     // Actions
     revealNext,

@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { TicTacToeScreen } from '@/features/tic-tac-toe';
 
 /**
@@ -5,5 +6,10 @@ import { TicTacToeScreen } from '@/features/tic-tac-toe';
  * Fallback when no puzzleId is provided.
  */
 export default function TicTacToeIndexRoute() {
-  return <TicTacToeScreen />;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <TicTacToeScreen />
+    </>
+  );
 }

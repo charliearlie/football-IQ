@@ -12,14 +12,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { User, Bot } from 'lucide-react-native';
 import { useCallback } from 'react';
-import { colors, spacing, textStyles, borderRadius } from '@/theme';
-import { GlassCard } from '@/components/GlassCard';
+import { colors, spacing, textStyles, borderRadius, fonts } from '@/theme';
+import { GameContainer, GlassCard } from '@/components';
 import { useStablePuzzle } from '@/features/puzzles';
 import { useTicTacToeGame } from '../hooks/useTicTacToeGame';
 import { TicTacToeGrid } from '../components/TicTacToeGrid';
@@ -42,7 +40,7 @@ interface TicTacToeScreenProps {
  * TicTacToeScreen - Main game screen
  */
 export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
-  const insets = useSafeAreaInsets();
+  const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'tic_tac_toe');
@@ -61,6 +59,17 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
     shareResult,
   } = useTicTacToeGame(puzzle);
 
+  /**
+   * Handle back button - resets game and navigates back
+   */
+  const handleBack = useCallback(() => {
+    resetGame();
+    router.back();
+  }, [resetGame, router]);
+
+  /**
+   * Handle modal close - resets game for replay
+   */
   const handleClose = useCallback(() => {
     resetGame();
   }, [resetGame]);
@@ -68,39 +77,48 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
   // Loading state
   if (isLoading) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={[textStyles.body, styles.loadingText]}>
-          Loading puzzle...
-        </Text>
-      </View>
+      <GameContainer
+        title="Tic Tac Toe"
+        onBack={handleBack}
+        testID="tic-tac-toe-screen"
+      >
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+          <Text style={[textStyles.body, styles.loadingText]}>
+            Loading puzzle...
+          </Text>
+        </View>
+      </GameContainer>
     );
   }
 
   // No puzzle available
   if (!puzzle || !puzzleContent) {
     return (
-      <View style={[styles.centered, { paddingTop: insets.top }]}>
-        <Text style={textStyles.h2}>NO PUZZLE TODAY</Text>
-        <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
-          Check back later for today's Tic Tac Toe challenge
-        </Text>
-      </View>
+      <GameContainer
+        title="Tic Tac Toe"
+        onBack={handleBack}
+        testID="tic-tac-toe-screen"
+      >
+        <View style={styles.centered}>
+          <Text style={textStyles.h2}>NO PUZZLE TODAY</Text>
+          <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
+            Check back later for today's Tic Tac Toe challenge
+          </Text>
+        </View>
+      </GameContainer>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    <GameContainer
+      title="Tic Tac Toe"
+      onBack={handleBack}
+      testID="tic-tac-toe-screen"
     >
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl },
-        ]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
       >
@@ -190,20 +208,15 @@ export function TicTacToeScreen({ puzzleId }: TicTacToeScreenProps) {
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="tic-tac-toe-ad-banner" />
-    </KeyboardAvoidingView>
+    </GameContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.stadiumNavy,
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.stadiumNavy,
     gap: spacing.md,
     padding: spacing.xl,
   },
@@ -219,6 +232,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   turnIndicator: {
     alignSelf: 'center',
@@ -232,7 +246,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   turnText: {
-    fontFamily: 'BebasNeue_400Regular',
+    fontFamily: fonts.headline,
     fontSize: 18,
     letterSpacing: 1,
   },

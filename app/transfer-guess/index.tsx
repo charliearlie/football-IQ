@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { TransferGuessScreen } from '@/features/transfer-guess';
 
 /**
@@ -5,5 +6,10 @@ import { TransferGuessScreen } from '@/features/transfer-guess';
  * Fallback when no puzzleId is provided.
  */
 export default function TransferGuessIndexRoute() {
-  return <TransferGuessScreen />;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <TransferGuessScreen />
+    </>
+  );
 }

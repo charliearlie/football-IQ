@@ -31,9 +31,20 @@ jest.mock('@/theme', () => ({
   },
   textStyles: {
     h2: { fontSize: 24, fontFamily: 'BebasNeue-Regular' },
-    body: { fontSize: 16, fontFamily: 'Inter-Regular' },
-    bodySmall: { fontSize: 14, fontFamily: 'Inter-Regular' },
-    caption: { fontSize: 12, fontFamily: 'Inter-Regular' },
+    body: { fontSize: 16, fontFamily: 'Montserrat', fontWeight: '400' },
+    bodySmall: { fontSize: 14, fontFamily: 'Montserrat', fontWeight: '400' },
+    caption: { fontSize: 12, fontFamily: 'Montserrat', fontWeight: '400' },
+  },
+  fonts: {
+    headline: 'BebasNeue-Regular',
+    body: 'Montserrat',
+    subheading: 'Montserrat',
+  },
+  fontWeights: {
+    regular: '400',
+    medium: '500',
+    semiBold: '600',
+    bold: '700',
   },
   spacing: {
     xs: 4,

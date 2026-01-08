@@ -9,7 +9,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { GlassCard } from '@/components';
-import { colors, textStyles, spacing } from '@/theme';
+import { colors, textStyles, spacing, fonts } from '@/theme';
 
 interface MatchHeaderProps {
   homeTeam: string;
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   score: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     fontSize: 36,
     color: colors.cardYellow,
     letterSpacing: 2,

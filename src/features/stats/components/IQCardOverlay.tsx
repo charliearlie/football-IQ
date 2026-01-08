@@ -19,7 +19,7 @@ import {
 import ViewShot from 'react-native-view-shot';
 import { X, Brain, Flame, Trophy, Award } from 'lucide-react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing, borderRadius, fonts } from '@/theme';
 import { ElevatedButton } from '@/components';
 import { captureAndShareIQCard, IQCardData } from '../utils/shareIQ';
 
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   },
   iqScore: {
     fontSize: 80,
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     marginTop: spacing.sm,
     lineHeight: 88,
   },

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Flame } from 'lucide-react-native';
-import { colors, textStyles, spacing } from '@/theme';
+import { colors, textStyles, spacing, fonts } from '@/theme';
 
 interface StreakHeaderProps {
   /**
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   streakCount: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     fontSize: 36,
     lineHeight: 40,
     color: colors.floodlightWhite,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
   },
   progressCount: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     fontSize: 24,
     lineHeight: 28,
     color: colors.pitchGreen,

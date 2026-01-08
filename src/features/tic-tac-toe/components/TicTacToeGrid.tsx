@@ -13,7 +13,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing, borderRadius, fonts } from '@/theme';
 import { GridCell } from './GridCell';
 import type {
   CellIndex,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   headerText: {
-    fontFamily: 'BebasNeue_400Regular',
+    fontFamily: fonts.headline,
     fontSize: 16,
     color: colors.floodlightWhite,
     textAlign: 'center',

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { GlassCard } from '@/components';
-import { colors, textStyles, spacing } from '@/theme';
+import { colors, textStyles, spacing, fonts } from '@/theme';
 
 interface QuizQuestionCardProps {
   /** The question text */
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   questionText: {
-    fontFamily: 'BebasNeue',
+    fontFamily: fonts.headline,
     fontSize: 24,
     color: colors.floodlightWhite,
     lineHeight: 28,

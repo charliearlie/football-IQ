@@ -14,7 +14,7 @@ import Animated, {
   interpolateColor,
   Easing,
 } from 'react-native-reanimated';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, fonts, fontWeights } from '@/theme';
 import { TIMER_WARNING_THRESHOLD } from '../types/goalscorerRecall.types';
 
 interface TimerDisplayProps {
@@ -80,13 +80,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timerText: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: fonts.headline,
     fontSize: 48,
     color: colors.floodlightWhite,
     letterSpacing: 1,
   },
   secondsLabel: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
     fontSize: 10,
     color: colors.floodlightWhite,
     opacity: 0.8,

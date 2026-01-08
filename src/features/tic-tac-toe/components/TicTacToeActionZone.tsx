@@ -14,7 +14,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
-import { colors, spacing, borderRadius, textStyles } from '@/theme';
+import { colors, spacing, borderRadius, textStyles, fonts } from '@/theme';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { useEffect } from 'react';
 
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
   },
   categoryText: {
-    fontFamily: 'BebasNeue_400Regular',
+    fontFamily: fonts.headline,
     fontSize: 18,
     color: colors.stadiumNavy,
     letterSpacing: 1,

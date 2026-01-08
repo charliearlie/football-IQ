@@ -7,7 +7,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases from 'react-native-purchases';
-import { colors } from '@/theme';
+import { colors, fonts } from '@/theme';
 import {
   AuthProvider,
   useAuth,
@@ -62,8 +62,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     'BebasNeue-Regular': require('../assets/fonts/BebasNeue-Regular.ttf'),
-    'Inter-Regular': require('../assets/fonts/Inter-Regular.ttf'),
-    'Inter-Bold': require('../assets/fonts/Inter-Bold.ttf'),
+    Montserrat: require('../assets/fonts/Montserrat-VariableFont_wght.ttf'),
   });
   const [dbReady, setDbReady] = useState(false);
   const [rcReady, setRcReady] = useState(false);
@@ -127,7 +126,7 @@ export default function RootLayout() {
                 screenOptions={{
                   headerStyle: { backgroundColor: colors.stadiumNavy },
                   headerTintColor: colors.floodlightWhite,
-                  headerTitleStyle: { fontFamily: 'BebasNeue-Regular' },
+                  headerTitleStyle: { fontFamily: fonts.headline },
                   contentStyle: { backgroundColor: colors.stadiumNavy },
                 }}
               >

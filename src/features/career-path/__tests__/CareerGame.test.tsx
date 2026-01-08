@@ -49,6 +49,11 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
+// Mock useGamePersistence to avoid database calls in tests
+jest.mock('@/hooks/useGamePersistence', () => ({
+  useGamePersistence: jest.fn(),
+}));
+
 describe('useCareerPathGame Hook', () => {
   it('initializes with 1 step revealed', () => {
     const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
@@ -149,6 +154,92 @@ describe('useCareerPathGame Hook', () => {
     });
 
     expect(result.current.state.currentGuess).toBe('');
+  });
+
+  it('should allow final guess when all clues are revealed (last chance scenario)', () => {
+    // This test exposes an off-by-one bug where the game ends prematurely
+    // when all n steps are revealed, instead of allowing one final guess attempt.
+    //
+    // Expected behavior: When all 5 steps are revealed, the game should remain
+    // in 'playing' status to allow the player one final guess before losing.
+    //
+    // Actual behavior (bug): The game immediately triggers 'lost' when
+    // revealedCount >= totalSteps, without giving the player a chance to guess.
+    jest.useFakeTimers();
+
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    // Reveal all 5 steps (starting from 1, need 4 more reveals)
+    act(() => {
+      result.current.revealNext(); // 2
+      result.current.revealNext(); // 3
+      result.current.revealNext(); // 4
+      result.current.revealNext(); // 5 - all revealed
+    });
+
+    expect(result.current.state.revealedCount).toBe(5);
+    expect(result.current.totalSteps).toBe(5);
+    expect(result.current.allRevealed).toBe(true);
+
+    // Advance timers to trigger any pending effects (like the 300ms lost timeout)
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
+    // The game should still be 'playing' to allow the final guess
+    expect(result.current.state.gameStatus).toBe('playing');
+
+    // The player should still be able to submit a correct guess and win
+    act(() => {
+      result.current.setCurrentGuess('Morgan Rogers');
+    });
+
+    act(() => {
+      result.current.submitGuess();
+    });
+
+    // A correct guess at this point should result in a win
+    expect(result.current.state.gameStatus).toBe('won');
+
+    jest.useRealTimers();
+  });
+
+  it('should trigger loss only after incorrect guess when all clues revealed', () => {
+    // The game should only end in 'lost' when the player makes an incorrect
+    // guess while all clues are already revealed (isLastChance state).
+    jest.useFakeTimers();
+
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    // Reveal all 5 steps
+    act(() => {
+      result.current.revealNext(); // 2
+      result.current.revealNext(); // 3
+      result.current.revealNext(); // 4
+      result.current.revealNext(); // 5 - all revealed
+    });
+
+    // Advance timers
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
+    // Game should still be playing
+    expect(result.current.state.gameStatus).toBe('playing');
+
+    // Make an incorrect guess while all clues are revealed
+    act(() => {
+      result.current.setCurrentGuess('Wrong Player');
+    });
+
+    act(() => {
+      result.current.submitGuess();
+    });
+
+    // NOW the game should be lost
+    expect(result.current.state.gameStatus).toBe('lost');
+
+    jest.useRealTimers();
   });
 });
 
