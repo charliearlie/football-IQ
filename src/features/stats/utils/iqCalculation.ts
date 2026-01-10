@@ -23,36 +23,61 @@ import {
 /**
  * Normalize a score from any game mode to 0-100 scale.
  *
+ * Uses the actual metadata fields saved by each game hook:
+ * - career_path: won, totalSteps, revealedCount
+ * - guess_the_transfer: won, hintsRevealed, guesses (array)
+ * - guess_the_goalscorers: scorersFound, totalScorers
+ * - tic_tac_toe: result ('win'|'draw'|'loss')
+ * - topical_quiz: correctCount (0-5)
+ *
  * @param gameMode - The game mode identifier
  * @param metadata - Parsed metadata from the attempt
  * @returns Normalized score (0-100)
  */
 export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
   const data = asMetadataObject(metadata);
-  if (!data) return 0;
+  if (!data) {
+    if (__DEV__) {
+      console.log('[IQ] normalizeScore: invalid metadata', { gameMode, metadata });
+    }
+    return 0;
+  }
 
   switch (gameMode) {
     case 'career_path': {
-      const points = getMetadataNumber(data, 'points');
-      const maxPoints = getMetadataNumber(data, 'maxPoints');
-      if (maxPoints === 0) return 0;
-      return Math.round((points / maxPoints) * 100);
+      // Games save: won, totalSteps, revealedCount
+      // Score = totalSteps - (revealedCount - 1) if won, else 0
+      const won = data.won === true;
+      if (!won) return 0;
+      const totalSteps = getMetadataNumber(data, 'totalSteps');
+      const revealedCount = getMetadataNumber(data, 'revealedCount');
+      if (totalSteps === 0) return 0;
+      const points = totalSteps - (revealedCount - 1);
+      return Math.round((points / totalSteps) * 100);
     }
 
     case 'guess_the_transfer': {
-      const points = getMetadataNumber(data, 'points');
-      // Transfer always has maxPoints of 10
+      // Games save: won, hintsRevealed, guesses (array of incorrect guesses)
+      // Score = 10 - (hints × 2) - (wrong guesses × 1), min 1 if won
+      const won = data.won === true;
+      if (!won) return 0;
+      const hintsRevealed = getMetadataNumber(data, 'hintsRevealed');
+      const wrongGuesses = Array.isArray(data.guesses) ? data.guesses.length : 0;
+      const points = Math.max(1, 10 - (hintsRevealed * 2) - wrongGuesses);
       return Math.round((points / 10) * 100);
     }
 
     case 'guess_the_goalscorers': {
-      // Goalscorer recall stores percentage directly
-      const percentage = getMetadataNumber(data, 'percentage');
-      return Math.round(percentage);
+      // Games save: scorersFound, totalScorers
+      const scorersFound = getMetadataNumber(data, 'scorersFound');
+      const totalScorers = getMetadataNumber(data, 'totalScorers');
+      if (totalScorers === 0) return 0;
+      return Math.round((scorersFound / totalScorers) * 100);
     }
 
     case 'tic_tac_toe': {
-      // Tic Tac Toe: Win=100, Draw=50, Loss=0
+      // Games save: result ('win'|'draw'|'loss')
+      // Win=100, Draw=50, Loss=0
       const result = data.result;
       if (isGameResult(result)) {
         if (result === 'win') return 100;
@@ -62,9 +87,10 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
     }
 
     case 'topical_quiz': {
-      const points = getMetadataNumber(data, 'points');
-      // Quiz always has maxPoints of 10
-      return Math.round((points / 10) * 100);
+      // Games save: correctCount (0-5)
+      // 5 correct = 100%, each correct = 20%
+      const correctCount = getMetadataNumber(data, 'correctCount');
+      return Math.round((correctCount / 5) * 100);
     }
 
     default:
@@ -74,6 +100,13 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
 
 /**
  * Check if an attempt achieved a perfect score.
+ *
+ * Uses the actual metadata fields saved by each game hook:
+ * - career_path: won=true AND revealedCount=1 (guessed on first clue)
+ * - guess_the_transfer: won=true AND hintsRevealed=0 AND no wrong guesses
+ * - guess_the_goalscorers: scorersFound === totalScorers
+ * - tic_tac_toe: result === 'win'
+ * - topical_quiz: correctCount === 5
  *
  * @param gameMode - The game mode identifier
  * @param metadata - Parsed metadata from the attempt
@@ -85,28 +118,36 @@ export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
 
   switch (gameMode) {
     case 'career_path': {
-      const points = getMetadataNumber(data, 'points');
-      const maxPoints = getMetadataNumber(data, 'maxPoints');
-      return points === maxPoints && maxPoints > 0;
+      // Perfect = won on first clue (revealedCount = 1)
+      const won = data.won === true;
+      const revealedCount = getMetadataNumber(data, 'revealedCount');
+      return won && revealedCount === 1;
     }
 
     case 'guess_the_transfer': {
-      const points = getMetadataNumber(data, 'points');
-      return points === 10;
+      // Perfect = won with no hints and no wrong guesses
+      const won = data.won === true;
+      const hintsRevealed = getMetadataNumber(data, 'hintsRevealed');
+      const wrongGuesses = Array.isArray(data.guesses) ? data.guesses.length : 0;
+      return won && hintsRevealed === 0 && wrongGuesses === 0;
     }
 
     case 'guess_the_goalscorers': {
-      const percentage = getMetadataNumber(data, 'percentage');
-      return percentage === 100;
+      // Perfect = found all scorers
+      const scorersFound = getMetadataNumber(data, 'scorersFound');
+      const totalScorers = getMetadataNumber(data, 'totalScorers');
+      return totalScorers > 0 && scorersFound === totalScorers;
     }
 
     case 'tic_tac_toe': {
+      // Perfect = win
       return data.result === 'win';
     }
 
     case 'topical_quiz': {
-      const points = getMetadataNumber(data, 'points');
-      return points === 10;
+      // Perfect = all 5 questions correct
+      const correctCount = getMetadataNumber(data, 'correctCount');
+      return correctCount === 5;
     }
 
     default:
@@ -151,6 +192,15 @@ export function calculateProficiency(
   }
 
   const averagePercentage = Math.round(totalScore / attempts.length);
+
+  if (__DEV__) {
+    console.log('[IQ] calculateProficiency:', {
+      gameMode,
+      gamesPlayed: attempts.length,
+      averagePercentage,
+      perfectCount,
+    });
+  }
 
   return {
     gameMode,

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Trophy, Share2 } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
 import { GlassCard } from '@/components';
@@ -50,6 +51,14 @@ export default function MyIQScreen() {
 
     fetchRank();
   }, [user?.id, stats?.globalIQ]);
+
+  // Refresh stats when screen gains focus (e.g., after completing a game)
+  // This ensures IQ and proficiency bars update when navigating back from games
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   /**
    * Navigate to the leaderboard screen.

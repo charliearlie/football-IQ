@@ -86,8 +86,21 @@ export interface BadgeDefinition {
 
 /**
  * All available badges in the Trophy Room.
+ * Ordered by logical unlock progression: milestone badges first, then perfect score badges.
  */
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
+  {
+    id: 'games_10',
+    name: 'Getting Started',
+    description: 'Completed 10 puzzles',
+    icon: 'Award',
+  },
+  {
+    id: 'games_50',
+    name: 'Dedicated Fan',
+    description: 'Completed 50 puzzles',
+    icon: 'Trophy',
+  },
   {
     id: 'streak_7',
     name: '7-Day Streak',
@@ -123,18 +136,6 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     name: 'Pundit',
     description: 'Perfect score on Topical Quiz',
     icon: 'MessageCircle',
-  },
-  {
-    id: 'games_10',
-    name: 'Getting Started',
-    description: 'Completed 10 puzzles',
-    icon: 'Award',
-  },
-  {
-    id: 'games_50',
-    name: 'Dedicated Fan',
-    description: 'Completed 50 puzzles',
-    icon: 'Trophy',
   },
 ];
 

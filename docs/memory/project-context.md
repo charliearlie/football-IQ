@@ -1877,3 +1877,55 @@ function extractEmojiGrid(scoreDisplay: string): string {
 ```
 
 **Result:** Cards now show only emoji grid (e.g., `🟩⬛⬛🟩🟩`) instead of full share text.
+
+### My IQ Tab Refresh + IQ Calculation Fix
+Initialized: 2026-01-09
+
+**Problem 1 (Tab Navigation):** Global IQ and proficiency bars didn't update when navigating to the My IQ tab after completing a game.
+
+**Root Cause 1:** `usePerformanceStats` used `AppState.addEventListener('change')` which only fires on app foreground, not on tab navigation.
+
+**Solution 1:** Added `useFocusEffect` from `@react-navigation/native` to trigger refresh when the tab gains focus.
+
+**Problem 2 (IQ Always 0):** Global IQ showed 0% despite games being played. Proficiency bars were all empty.
+
+**Root Cause 2 (CRITICAL):** Metadata field mismatch between what game hooks save and what `normalizeScore()` expected:
+
+| Game Mode | What Games Save | What normalizeScore Expected |
+|-----------|-----------------|------------------------------|
+| career_path | `won`, `totalSteps`, `revealedCount` | `points`, `maxPoints` |
+| guess_the_transfer | `won`, `hintsRevealed`, `guesses` | `points` |
+| guess_the_goalscorers | `scorersFound`, `totalScorers` | `percentage` |
+| tic_tac_toe | `result` | `result` ✅ |
+| topical_quiz | `correctCount` | `points` |
+
+**Solution 2:** Updated `normalizeScore()` and `isPerfectScore()` in `iqCalculation.ts` to use the actual metadata fields saved by game hooks:
+
+```typescript
+// career_path: Score = totalSteps - (revealedCount - 1) if won
+case 'career_path': {
+  const won = data.won === true;
+  if (!won) return 0;
+  const totalSteps = getMetadataNumber(data, 'totalSteps');
+  const revealedCount = getMetadataNumber(data, 'revealedCount');
+  const points = totalSteps - (revealedCount - 1);
+  return Math.round((points / totalSteps) * 100);
+}
+
+// topical_quiz: correctCount out of 5
+case 'topical_quiz': {
+  const correctCount = getMetadataNumber(data, 'correctCount');
+  return Math.round((correctCount / 5) * 100);
+}
+```
+
+**Retroactive Fix:** Because IQ is calculated from stored attempts (not cached), existing users' scores automatically corrected after the fix.
+
+**Files modified:**
+- `app/(tabs)/stats.tsx` - Added useFocusEffect import and hook
+- `src/features/stats/utils/iqCalculation.ts` - Fixed normalizeScore() and isPerfectScore() to use actual saved metadata fields
+- `src/features/stats/types/stats.types.ts` - Reordered BADGE_DEFINITIONS (Getting Started first)
+- `src/features/stats/components/TrophyRoom.tsx` - Added modal view for all badges
+
+**Tests updated:**
+- `src/features/stats/__tests__/DataPipeline.test.ts` - Updated to use actual metadata fields

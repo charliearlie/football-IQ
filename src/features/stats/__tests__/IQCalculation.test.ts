@@ -4,6 +4,13 @@
  * Tests for the Global Football IQ score calculation system.
  * Uses weighted averaging across 5 game modes.
  *
+ * IMPORTANT: Tests use the ACTUAL metadata fields saved by game hooks:
+ * - career_path: won, totalSteps, revealedCount
+ * - guess_the_transfer: won, hintsRevealed, guesses (array)
+ * - guess_the_goalscorers: scorersFound, totalScorers
+ * - tic_tac_toe: result ('win'|'draw'|'loss')
+ * - topical_quiz: correctCount (0-5)
+ *
  * Weights:
  * - Career Path: 25%
  * - Transfer Guess: 25%
@@ -24,145 +31,149 @@ import { GameProficiency } from '../types/stats.types';
 
 describe('normalizeScore', () => {
   describe('career_path', () => {
-    it('normalizes perfect score (10/10) to 100', () => {
-      const metadata = { points: 10, maxPoints: 10, stepsRevealed: 1, won: true };
+    it('normalizes perfect score (won on first clue) to 100', () => {
+      const metadata = { won: true, totalSteps: 10, revealedCount: 1 };
       expect(normalizeScore('career_path', metadata)).toBe(100);
     });
 
-    it('normalizes partial score (8/10) to 80', () => {
-      const metadata = { points: 8, maxPoints: 10, stepsRevealed: 3, won: true };
+    it('normalizes partial score to 80', () => {
+      const metadata = { won: true, totalSteps: 10, revealedCount: 3 };
+      // Score = 10 - (3 - 1) = 8 points out of 10 = 80%
       expect(normalizeScore('career_path', metadata)).toBe(80);
     });
 
     it('normalizes 5/10 to 50', () => {
-      const metadata = { points: 5, maxPoints: 10, stepsRevealed: 6, won: true };
+      const metadata = { won: true, totalSteps: 10, revealedCount: 6 };
+      // Score = 10 - (6 - 1) = 5 points out of 10 = 50%
       expect(normalizeScore('career_path', metadata)).toBe(50);
     });
 
-    it('normalizes loss (0 points) to 0', () => {
-      const metadata = { points: 0, maxPoints: 10, stepsRevealed: 10, won: false };
+    it('normalizes loss to 0', () => {
+      const metadata = { won: false, totalSteps: 10, revealedCount: 10 };
       expect(normalizeScore('career_path', metadata)).toBe(0);
     });
 
-    it('handles variable maxPoints (8-step career)', () => {
-      const metadata = { points: 6, maxPoints: 8, stepsRevealed: 3, won: true };
-      expect(normalizeScore('career_path', metadata)).toBe(75); // 6/8 = 0.75
+    it('handles variable totalSteps (8-step career)', () => {
+      const metadata = { won: true, totalSteps: 8, revealedCount: 3 };
+      // Score = 8 - (3 - 1) = 6 points out of 8 = 75%
+      expect(normalizeScore('career_path', metadata)).toBe(75);
     });
 
     it('returns 0 for invalid metadata', () => {
       expect(normalizeScore('career_path', null)).toBe(0);
       expect(normalizeScore('career_path', {})).toBe(0);
-      expect(normalizeScore('career_path', { points: 'invalid' })).toBe(0);
     });
   });
 
   describe('guess_the_transfer', () => {
-    it('normalizes perfect score (10/10) to 100', () => {
-      const metadata = { points: 10, maxPoints: 10, hintsRevealed: 0, incorrectGuesses: 0, won: true };
+    it('normalizes perfect score (no hints, no wrong guesses) to 100', () => {
+      const metadata = { won: true, hintsRevealed: 0, guesses: [] };
       expect(normalizeScore('guess_the_transfer', metadata)).toBe(100);
     });
 
-    it('normalizes 6/10 to 60', () => {
-      const metadata = { points: 6, maxPoints: 10, hintsRevealed: 2, incorrectGuesses: 0, won: true };
+    it('normalizes 6/10 (2 hints) to 60', () => {
+      const metadata = { won: true, hintsRevealed: 2, guesses: [] };
+      // Score = 10 - (2 * 2) - 0 = 6 points = 60%
       expect(normalizeScore('guess_the_transfer', metadata)).toBe(60);
     });
 
-    it('normalizes loss (0 points) to 0', () => {
-      const metadata = { points: 0, maxPoints: 10, hintsRevealed: 3, incorrectGuesses: 5, won: false };
+    it('normalizes loss to 0', () => {
+      const metadata = { won: false, hintsRevealed: 3, guesses: ['wrong1', 'wrong2'] };
       expect(normalizeScore('guess_the_transfer', metadata)).toBe(0);
     });
 
-    it('normalizes minimum winning score (1/10) to 10', () => {
-      const metadata = { points: 1, maxPoints: 10, hintsRevealed: 3, incorrectGuesses: 4, won: true };
+    it('normalizes minimum winning score to 10', () => {
+      const metadata = { won: true, hintsRevealed: 3, guesses: ['w1', 'w2', 'w3', 'w4'] };
+      // Score = max(1, 10 - 6 - 4) = 1 point = 10%
       expect(normalizeScore('guess_the_transfer', metadata)).toBe(10);
     });
   });
 
   describe('guess_the_goalscorers', () => {
-    it('uses percentage directly (100%)', () => {
-      const metadata = { percentage: 100, scorersFound: 5, totalScorers: 5, timeRemaining: 30, timeBonus: 60, allFound: true, won: true };
+    it('uses scorersFound/totalScorers (100%)', () => {
+      const metadata = { scorersFound: 5, totalScorers: 5 };
       expect(normalizeScore('guess_the_goalscorers', metadata)).toBe(100);
     });
 
-    it('uses percentage directly (60%)', () => {
-      const metadata = { percentage: 60, scorersFound: 3, totalScorers: 5, timeRemaining: 0, timeBonus: 0, allFound: false, won: false };
+    it('uses scorersFound/totalScorers (60%)', () => {
+      const metadata = { scorersFound: 3, totalScorers: 5 };
       expect(normalizeScore('guess_the_goalscorers', metadata)).toBe(60);
     });
 
-    it('uses percentage directly (0%)', () => {
-      const metadata = { percentage: 0, scorersFound: 0, totalScorers: 5, timeRemaining: 0, timeBonus: 0, allFound: false, won: false };
+    it('uses scorersFound/totalScorers (0%)', () => {
+      const metadata = { scorersFound: 0, totalScorers: 5 };
       expect(normalizeScore('guess_the_goalscorers', metadata)).toBe(0);
     });
   });
 
   describe('tic_tac_toe', () => {
     it('normalizes win to 100', () => {
-      const metadata = { points: 10, maxPoints: 10, result: 'win', playerCells: 5, aiCells: 4 };
+      const metadata = { result: 'win' };
       expect(normalizeScore('tic_tac_toe', metadata)).toBe(100);
     });
 
     it('normalizes draw to 50', () => {
-      const metadata = { points: 5, maxPoints: 10, result: 'draw', playerCells: 4, aiCells: 4 };
+      const metadata = { result: 'draw' };
       expect(normalizeScore('tic_tac_toe', metadata)).toBe(50);
     });
 
     it('normalizes loss to 0', () => {
-      const metadata = { points: 0, maxPoints: 10, result: 'loss', playerCells: 3, aiCells: 5 };
+      const metadata = { result: 'loss' };
       expect(normalizeScore('tic_tac_toe', metadata)).toBe(0);
     });
   });
 
   describe('topical_quiz', () => {
-    it('normalizes perfect score (10/10) to 100', () => {
-      const metadata = { points: 10, maxPoints: 10, correctCount: 5, totalQuestions: 5, won: true };
+    it('normalizes perfect score (5/5) to 100', () => {
+      const metadata = { correctCount: 5 };
       expect(normalizeScore('topical_quiz', metadata)).toBe(100);
     });
 
-    it('normalizes 6/10 to 60', () => {
-      const metadata = { points: 6, maxPoints: 10, correctCount: 3, totalQuestions: 5, won: true };
+    it('normalizes 3/5 to 60', () => {
+      const metadata = { correctCount: 3 };
       expect(normalizeScore('topical_quiz', metadata)).toBe(60);
     });
 
-    it('normalizes 0/10 to 0', () => {
-      const metadata = { points: 0, maxPoints: 10, correctCount: 0, totalQuestions: 5, won: true };
+    it('normalizes 0/5 to 0', () => {
+      const metadata = { correctCount: 0 };
       expect(normalizeScore('topical_quiz', metadata)).toBe(0);
     });
   });
 });
 
 describe('isPerfectScore', () => {
-  it('returns true for perfect career_path (points === maxPoints)', () => {
-    const metadata = { points: 10, maxPoints: 10, stepsRevealed: 1, won: true };
+  it('returns true for perfect career_path (won on first clue)', () => {
+    const metadata = { won: true, totalSteps: 10, revealedCount: 1 };
     expect(isPerfectScore('career_path', metadata)).toBe(true);
   });
 
   it('returns false for non-perfect career_path', () => {
-    const metadata = { points: 8, maxPoints: 10, stepsRevealed: 3, won: true };
+    const metadata = { won: true, totalSteps: 10, revealedCount: 3 };
     expect(isPerfectScore('career_path', metadata)).toBe(false);
   });
 
-  it('returns true for perfect transfer (10 points)', () => {
-    const metadata = { points: 10, maxPoints: 10, hintsRevealed: 0, incorrectGuesses: 0, won: true };
+  it('returns true for perfect transfer (no hints, no wrong guesses)', () => {
+    const metadata = { won: true, hintsRevealed: 0, guesses: [] };
     expect(isPerfectScore('guess_the_transfer', metadata)).toBe(true);
   });
 
   it('returns true for 100% goalscorer recall', () => {
-    const metadata = { percentage: 100, scorersFound: 5, totalScorers: 5, timeRemaining: 30, won: true };
+    const metadata = { scorersFound: 5, totalScorers: 5 };
     expect(isPerfectScore('guess_the_goalscorers', metadata)).toBe(true);
   });
 
   it('returns true for tic_tac_toe win', () => {
-    const metadata = { points: 10, maxPoints: 10, result: 'win', playerCells: 5, aiCells: 4 };
+    const metadata = { result: 'win' };
     expect(isPerfectScore('tic_tac_toe', metadata)).toBe(true);
   });
 
   it('returns false for tic_tac_toe draw', () => {
-    const metadata = { points: 5, maxPoints: 10, result: 'draw', playerCells: 4, aiCells: 4 };
+    const metadata = { result: 'draw' };
     expect(isPerfectScore('tic_tac_toe', metadata)).toBe(false);
   });
 
   it('returns true for perfect quiz (5/5)', () => {
-    const metadata = { points: 10, maxPoints: 10, correctCount: 5, totalQuestions: 5, won: true };
+    const metadata = { correctCount: 5 };
     expect(isPerfectScore('topical_quiz', metadata)).toBe(true);
   });
 });
@@ -177,9 +188,9 @@ describe('calculateProficiency', () => {
 
   it('calculates average percentage from multiple attempts', () => {
     const attempts = [
-      { metadata: { points: 10, maxPoints: 10, stepsRevealed: 1, won: true } }, // 100%
-      { metadata: { points: 5, maxPoints: 10, stepsRevealed: 6, won: true } },  // 50%
-      { metadata: { points: 8, maxPoints: 10, stepsRevealed: 3, won: true } },  // 80%
+      { metadata: { won: true, totalSteps: 10, revealedCount: 1 } },  // 100%
+      { metadata: { won: true, totalSteps: 10, revealedCount: 6 } },  // 50%
+      { metadata: { won: true, totalSteps: 10, revealedCount: 3 } },  // 80%
     ];
     const result = calculateProficiency('career_path', attempts as any);
     // Average: (100 + 50 + 80) / 3 = 76.67 rounded to 77
@@ -189,9 +200,9 @@ describe('calculateProficiency', () => {
 
   it('counts perfect scores correctly', () => {
     const attempts = [
-      { metadata: { points: 10, maxPoints: 10, stepsRevealed: 1, won: true } }, // Perfect
-      { metadata: { points: 5, maxPoints: 10, stepsRevealed: 6, won: true } },  // Not perfect
-      { metadata: { points: 10, maxPoints: 10, stepsRevealed: 1, won: true } }, // Perfect
+      { metadata: { won: true, totalSteps: 10, revealedCount: 1 } }, // Perfect
+      { metadata: { won: true, totalSteps: 10, revealedCount: 6 } }, // Not perfect
+      { metadata: { won: true, totalSteps: 10, revealedCount: 1 } }, // Perfect
     ];
     const result = calculateProficiency('career_path', attempts as any);
     expect(result.perfectScores).toBe(2);
@@ -205,9 +216,9 @@ describe('calculateProficiency', () => {
 
   it('handles mixed tic_tac_toe results', () => {
     const attempts = [
-      { metadata: { points: 10, result: 'win' } },  // 100%
-      { metadata: { points: 5, result: 'draw' } },  // 50%
-      { metadata: { points: 0, result: 'loss' } },  // 0%
+      { metadata: { result: 'win' } },   // 100%
+      { metadata: { result: 'draw' } },  // 50%
+      { metadata: { result: 'loss' } },  // 0%
     ];
     const result = calculateProficiency('tic_tac_toe', attempts as any);
     // Average: (100 + 50 + 0) / 3 = 50
