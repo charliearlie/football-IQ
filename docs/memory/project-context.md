@@ -1945,3 +1945,31 @@ case 'topical_quiz': {
 
 **Tests updated:**
 - `src/features/stats/__tests__/DataPipeline.test.ts` - Updated to use actual metadata fields
+
+## Dead Code Cleanup
+Performed: 2026-01-10
+
+### Overview
+Comprehensive audit and removal of unused files, components, and exports to reduce bundle size and cognitive load.
+
+### Files Deleted (309 lines total)
+| File | Lines | Reason |
+|------|-------|--------|
+| `src/features/home/components/CompletedStamp.tsx` | 64 | Never imported anywhere |
+| `src/features/home/components/TruncatedEmojiDisplay.tsx` | 89 | Never imported anywhere |
+| `src/features/career-path/components/GameResultBanner.tsx` | 156 | Replaced by GameResultModal/BaseResultModal pattern |
+
+### Exports Removed
+| Export | From | Reason |
+|--------|------|--------|
+| `GameResultBanner` | `src/features/career-path/index.ts` | Component deleted |
+| `formatScore` | `src/features/career-path/index.ts` | Only used in tests, not production |
+
+### Previously Deleted (before this cleanup)
+| File | Replacement |
+|------|-------------|
+| `src/features/archive/components/ArchivePuzzleCard.tsx` | `UniversalGameCard` |
+| `src/features/archive/components/LockedArchiveCard.tsx` | `UniversalGameCard` with `isLocked` prop |
+
+### Build Verification
+TypeScript compilation verified - no errors related to deleted code.
