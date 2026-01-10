@@ -1,0 +1,133 @@
+/**
+ * Validation utilities for The Grid game mode.
+ *
+ * Uses shared fuzzy matching from @/lib/validation.
+ */
+
+import { validateGuess } from '@/lib/validation';
+import { TheGridContent, GridCategory, CellIndex } from '../types/theGrid.types';
+
+/**
+ * Result of validating a cell guess.
+ */
+export interface CellGuessResult {
+  isValid: boolean;
+  matchedPlayer?: string;
+}
+
+/**
+ * Validate a player guess for a specific cell.
+ *
+ * Checks the guess against all valid answers for that cell
+ * using fuzzy matching (accents, typos, partial names).
+ *
+ * @param guess - User's player name guess
+ * @param cellIndex - Cell index (0-8)
+ * @param content - The Grid puzzle content
+ * @returns Validation result with matched player name if valid
+ *
+ * @example
+ * validateCellGuess('Messi', 4, content)
+ * // { isValid: true, matchedPlayer: 'Lionel Messi' }
+ *
+ * validateCellGuess('Harry Kane', 4, content)
+ * // { isValid: false }
+ */
+export function validateCellGuess(
+  guess: string,
+  cellIndex: CellIndex,
+  content: TheGridContent
+): CellGuessResult {
+  // Get valid answers for this cell
+  const validAnswers = content.valid_answers[String(cellIndex)] || [];
+
+  // Trim whitespace
+  const trimmedGuess = guess.trim();
+
+  // Empty guess is invalid
+  if (!trimmedGuess) {
+    return { isValid: false };
+  }
+
+  // Check against each valid answer using fuzzy matching
+  for (const answer of validAnswers) {
+    const result = validateGuess(trimmedGuess, answer);
+    if (result.isMatch) {
+      return { isValid: true, matchedPlayer: answer };
+    }
+  }
+
+  return { isValid: false };
+}
+
+/**
+ * Get the row and column categories for a cell.
+ *
+ * Cell layout:
+ * ```
+ *      | Col0 | Col1 | Col2 |
+ * -----|------|------|------|
+ * Row0 |  0   |  1   |  2   |
+ * Row1 |  3   |  4   |  5   |
+ * Row2 |  6   |  7   |  8   |
+ * ```
+ *
+ * @param cellIndex - Cell index (0-8)
+ * @param content - The Grid puzzle content
+ * @returns Object with row and column categories
+ *
+ * @example
+ * getCellCategories(0, content)
+ * // { row: { type: 'nation', value: 'Brazil' }, col: { type: 'club', value: 'Real Madrid' } }
+ *
+ * getCellCategories(4, content)
+ * // { row: { type: 'trophy', value: 'Champions League' }, col: { type: 'club', value: 'Barcelona' } }
+ */
+export function getCellCategories(
+  cellIndex: CellIndex,
+  content: TheGridContent
+): { row: GridCategory; col: GridCategory } {
+  const rowIndex = Math.floor(cellIndex / 3);
+  const colIndex = cellIndex % 3;
+
+  return {
+    row: content.yAxis[rowIndex],
+    col: content.xAxis[colIndex],
+  };
+}
+
+/**
+ * Check if a cell index is valid (0-8).
+ *
+ * @param index - Number to check
+ * @returns True if valid cell index
+ */
+export function isValidCellIndex(index: number): index is CellIndex {
+  return Number.isInteger(index) && index >= 0 && index <= 8;
+}
+
+/**
+ * Get all empty cell indices.
+ *
+ * @param cells - Current cell states
+ * @returns Array of empty cell indices
+ */
+export function getEmptyCells(cells: (unknown | null)[]): CellIndex[] {
+  const emptyCells: CellIndex[] = [];
+  for (let i = 0; i < 9; i++) {
+    if (cells[i] === null) {
+      emptyCells.push(i as CellIndex);
+    }
+  }
+  return emptyCells;
+}
+
+/**
+ * Count filled cells.
+ *
+ * @param cells - Current cell states
+ * @returns Number of filled cells
+ */
+export function countFilledCells(cells: (unknown | null)[]): number {
+  return cells.filter((cell) => cell !== null).length;
+}

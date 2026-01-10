@@ -3,7 +3,7 @@
 ## Project Overview
 Football IQ is a mobile trivia game for football fans featuring daily puzzles across 5 game modes:
 1. Career Path - Guess player from sequential clues
-2. Tic Tac Toe - 3x3 grid of categories
+2. The Grid - Fill 3x3 matrix with players matching row/column criteria
 3. Guess the Transfer - Identify player from transfer info
 4. Guess the Goalscorers - Name scorers from match result
 5. Topical Quiz - 5 multiple-choice questions on current events
@@ -771,6 +771,134 @@ src/features/tic-tac-toe/
 ### Navigation
 - Route: `/tic-tac-toe`
 - Accessible from Games tab card ('tic-tac-toe')
+
+## The Grid Game Mode
+Initialized: 2026-01-10
+
+### Overview
+Replacement for Tic Tac Toe. A 3x3 matrix puzzle where players fill all 9 cells by naming footballers who satisfy both row (Y-axis) and column (X-axis) criteria. No AI opponent - pure knowledge challenge.
+
+### Puzzle Content Structure
+```typescript
+type CategoryType = 'club' | 'nation' | 'stat' | 'trophy';
+
+interface GridCategory {
+  type: CategoryType;
+  value: string;  // e.g., "Real Madrid", "France", "100+ Goals"
+}
+
+interface TheGridContent {
+  xAxis: [GridCategory, GridCategory, GridCategory];  // Column headers
+  yAxis: [GridCategory, GridCategory, GridCategory];  // Row headers
+  valid_answers: {
+    [cellIndex: string]: string[];  // "0"-"8" → valid player names
+  };
+}
+```
+
+### Game State
+```
+cells: (FilledCell | null)[9] → each cell has player name or null
+selectedCell: CellIndex | null → currently targeted cell (0-8)
+currentGuess: string → text input value
+gameStatus: 'playing' | 'complete'
+score: TheGridScore | null → calculated on game complete
+attemptSaved: boolean → tracks persistence to SQLite
+lastGuessIncorrect: triggers shake animation
+```
+
+### Key Mechanics
+| Mechanic | Behavior |
+|----------|----------|
+| Cell Selection | Tap empty cell to target it |
+| Validation | Fuzzy matching against valid_answers for that cell |
+| Fill Cell | Correct guess fills cell, clears selection |
+| Incorrect Guess | Shake animation, no penalty (retry allowed) |
+| Game Complete | All 9 cells filled |
+
+### Scoring System
+Completion-based scoring: ~11 points per cell, max 100.
+```
+Formula: cellsFilled === 9 ? 100 : Math.round((cellsFilled / 9) * 100)
+
+Examples:
+- 9 cells filled: 100 points (perfect)
+- 7 cells filled: 78 points
+- 5 cells filled: 56 points
+```
+
+### Score Display (Emoji Grid)
+3x3 grid format:
+- ✅ = Cell filled
+- ❌ = Cell empty
+
+Example:
+```
+✅✅✅
+✅✅❌
+✅❌❌
+```
+
+### Validation
+Reuses Career Path's fuzzy matching from `@/lib/validation`:
+- Case insensitive, accent normalization
+- Partial name matching (surname only)
+- Typo tolerance (0.85 threshold)
+- Checks against all valid_answers for the specific cell
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `TheGridScreen` | Main screen with grid + action zone |
+| `TheGridBoard` | 3x3 grid with category headers |
+| `GridCell` | Individual cell (empty/filled states) |
+| `CategoryHeader` | Icon + label for row/col headers |
+| `TheGridActionZone` | Input when cell selected |
+| `TheGridResultModal` | Result modal with confetti + share |
+
+### Animations
+- **GridCell press**: Spring-based 3D button effect
+- **Fill animation**: Spring entrance for player name
+- **Action zone**: Slide-in/out + shake on error
+- **Confetti**: On perfect score (all 9 cells)
+
+### Files
+```
+src/features/the-grid/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── TheGridScreen.tsx
+  ├── components/
+  │   ├── TheGridBoard.tsx
+  │   ├── GridCell.tsx
+  │   ├── CategoryHeader.tsx
+  │   ├── TheGridActionZone.tsx
+  │   └── TheGridResultModal.tsx
+  ├── hooks/
+  │   └── useTheGridGame.ts
+  ├── utils/
+  │   ├── validation.ts           # Cell-specific validation
+  │   ├── scoring.ts              # Score calculation
+  │   ├── scoreDisplay.ts         # Emoji grid generation
+  │   └── share.ts                # Share functionality
+  ├── types/
+  │   └── theGrid.types.ts
+  └── __tests__/
+      ├── GridLogic.test.ts
+      ├── SchemaMigration.test.ts
+      └── TheGridUI.test.tsx
+```
+
+### Navigation
+- Route: `/the-grid`
+- Accessible from Home screen Daily 5 loop
+
+### Legacy Tic Tac Toe
+The original Tic Tac Toe game mode (`tic_tac_toe`) is preserved for:
+- Archive review mode (completed games can still be viewed)
+- Legacy puzzle data in database
+
+Both game modes coexist - no data migration needed.
 
 ## Topical Quiz Game Mode
 Initialized: 2025-12-27

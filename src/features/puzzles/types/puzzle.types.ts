@@ -34,6 +34,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 export type GameMode =
   | 'career_path'
   | 'tic_tac_toe'
+  | 'the_grid'
   | 'guess_the_transfer'
   | 'guess_the_goalscorers'
   | 'topical_quiz';

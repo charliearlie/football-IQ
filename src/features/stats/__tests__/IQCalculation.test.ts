@@ -233,6 +233,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
+      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
     expect(calculateGlobalIQ(proficiencies)).toBe(0);
@@ -244,6 +245,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
+      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
     ];
     expect(calculateGlobalIQ(proficiencies)).toBe(100);
@@ -251,14 +253,15 @@ describe('calculateGlobalIQ', () => {
 
   it('calculates weighted average with varied scores', () => {
     const proficiencies: GameProficiency[] = [
-      { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 5, perfectScores: 2 },        // 80 * 0.25 = 20
-      { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 3, perfectScores: 0 }, // 60 * 0.25 = 15
-      { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 70, gamesPlayed: 4, perfectScores: 1 },  // 70 * 0.20 = 14
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 50, gamesPlayed: 2, perfectScores: 1 },         // 50 * 0.15 = 7.5
-      { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 40, gamesPlayed: 1, perfectScores: 0 },        // 40 * 0.15 = 6
+      { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 5, perfectScores: 2 },                // 80 * 0.25 = 20
+      { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 3, perfectScores: 0 },  // 60 * 0.25 = 15
+      { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 70, gamesPlayed: 4, perfectScores: 1 },   // 70 * 0.20 = 14
+      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 50, gamesPlayed: 2, perfectScores: 1 },          // 50 * 0.05 = 2.5
+      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 90, gamesPlayed: 3, perfectScores: 2 },         // 90 * 0.10 = 9
+      { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 40, gamesPlayed: 1, perfectScores: 0 },         // 40 * 0.15 = 6
     ];
-    // Total: 20 + 15 + 14 + 7.5 + 6 = 62.5 -> rounds to 63
-    expect(calculateGlobalIQ(proficiencies)).toBe(63);
+    // Total: 20 + 15 + 14 + 2.5 + 9 + 6 = 66.5 -> rounds to 67
+    expect(calculateGlobalIQ(proficiencies)).toBe(67);
   });
 
   it('only uses modes that have been played', () => {
@@ -267,6 +270,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
+      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
     // Only career_path played (100%), weight = 0.25

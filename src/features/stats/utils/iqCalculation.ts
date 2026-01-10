@@ -86,6 +86,13 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
       return 0;
     }
 
+    case 'the_grid': {
+      // Games save: cellsFilled (0-9)
+      // 9 cells = 100%, proportional otherwise
+      const cellsFilled = getMetadataNumber(data, 'cellsFilled');
+      return Math.round((cellsFilled / 9) * 100);
+    }
+
     case 'topical_quiz': {
       // Games save: correctCount (0-5)
       // 5 correct = 100%, each correct = 20%
@@ -142,6 +149,12 @@ export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
     case 'tic_tac_toe': {
       // Perfect = win
       return data.result === 'win';
+    }
+
+    case 'the_grid': {
+      // Perfect = all 9 cells filled
+      const cellsFilled = getMetadataNumber(data, 'cellsFilled');
+      return cellsFilled === 9;
     }
 
     case 'topical_quiz': {
@@ -300,6 +313,12 @@ export function calculateBadges(
 
       case 'perfect_tictactoe': {
         const p = proficiencyMap.get('tic_tac_toe');
+        if (p && p.perfectScores > 0) earnedAt = now;
+        break;
+      }
+
+      case 'perfect_grid': {
+        const p = proficiencyMap.get('the_grid');
         if (p && p.perfectScores > 0) earnedAt = now;
         break;
       }

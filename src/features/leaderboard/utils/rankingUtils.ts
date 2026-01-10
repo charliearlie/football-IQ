@@ -67,6 +67,12 @@ export function normalizeModeScore(
       return 0;
     }
 
+    case 'the_grid': {
+      // The Grid: cellsFilled (0-9) → 0-100
+      const cellsFilled = getMetadataNumber(data, 'cellsFilled');
+      return Math.round((cellsFilled / 9) * 100);
+    }
+
     case 'topical_quiz': {
       const points = getMetadataNumber(data, 'points');
       // Quiz always has maxPoints of 10

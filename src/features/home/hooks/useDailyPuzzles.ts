@@ -47,7 +47,7 @@ const GAME_MODE_ORDER: GameMode[] = [
   'career_path',
   'guess_the_transfer',
   'guess_the_goalscorers',
-  'tic_tac_toe',
+  'the_grid',
   'topical_quiz',
 ];
 

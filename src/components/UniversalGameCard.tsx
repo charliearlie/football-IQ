@@ -110,6 +110,13 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
         icon: <Grid3X3 color={colors.floodlightWhite} size={32} />,
         iconColor: colors.floodlightWhite,
       };
+    case 'the_grid':
+      return {
+        title: 'The Grid',
+        subtitle: 'Fill the matrix',
+        icon: <Grid3X3 color={colors.pitchGreen} size={32} />,
+        iconColor: colors.pitchGreen,
+      };
     case 'topical_quiz':
       return {
         title: 'Quiz',

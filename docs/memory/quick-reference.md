@@ -291,6 +291,73 @@ checkDraw(cells)           // Returns true if draw
 generateTicTacToeEmojiGrid(cells);
 ```
 
+## The Grid Game
+```typescript
+import {
+  TheGridScreen,
+  useTheGridGame,
+  validateCellGuess,
+  getCellCategories,
+  calculateGridScore,
+  generateGridEmojiDisplay,
+  shareTheGridResult,
+} from '@/features/the-grid';
+
+// Puzzle content structure
+type CategoryType = 'club' | 'nation' | 'stat' | 'trophy';
+
+interface GridCategory {
+  type: CategoryType;
+  value: string;
+}
+
+interface TheGridContent {
+  xAxis: [GridCategory, GridCategory, GridCategory];  // Column headers
+  yAxis: [GridCategory, GridCategory, GridCategory];  // Row headers
+  valid_answers: {
+    [cellIndex: string]: string[];  // "0"-"8" → valid player names
+  };
+}
+
+// Hook usage (internal to TheGridScreen)
+const {
+  state,
+  gridContent,
+  selectedCellCategories,
+  selectCell,
+  deselectCell,
+  setCurrentGuess,
+  submitGuess,
+  shareResult,
+} = useTheGridGame(puzzle);
+
+// State values
+state.cells              // Array of 9 (FilledCell | null)
+state.selectedCell       // CellIndex (0-8) or null
+state.currentGuess       // Current text input value
+state.gameStatus         // 'playing' | 'complete'
+state.score              // TheGridScore | null
+state.lastGuessIncorrect // Triggers shake animation
+
+// Validation: check if player name is valid for a specific cell
+validateCellGuess('Vinícius Júnior', 0, gridContent)
+// { isValid: true, matchedPlayer: 'Vinícius Júnior' }
+
+// Get categories for a cell
+getCellCategories(4, gridContent)
+// { row: { type: 'club', value: 'Barcelona' }, col: { type: 'nation', value: 'France' } }
+
+// Scoring: ~11 points per cell, max 100
+calculateGridScore(9)   // { points: 100, maxPoints: 100, cellsFilled: 9 }
+calculateGridScore(7)   // { points: 78, maxPoints: 100, cellsFilled: 7 }
+
+// Emoji grid:
+// ✅✅✅
+// ✅✅❌
+// ✅❌❌
+generateGridEmojiDisplay(cells);
+```
+
 ## Topical Quiz Game
 ```typescript
 import {
@@ -391,7 +458,8 @@ const IQ_WEIGHTS = {
   career_path: 0.25,
   guess_the_transfer: 0.25,
   guess_the_goalscorers: 0.20,
-  tic_tac_toe: 0.15,
+  tic_tac_toe: 0.05,       // Legacy
+  the_grid: 0.10,          // Replaced Tic Tac Toe
   topical_quiz: 0.15,
 };
 
@@ -676,7 +744,8 @@ const result = await prefetchQuizImages(urls);
 - Career Path: `src/features/career-path/`
 - Transfer Guess: `src/features/transfer-guess/`
 - Goalscorer Recall: `src/features/goalscorer-recall/`
-- Tic Tac Toe: `src/features/tic-tac-toe/`
+- Tic Tac Toe: `src/features/tic-tac-toe/` (legacy)
+- The Grid: `src/features/the-grid/`
 - Topical Quiz: `src/features/topical-quiz/`
 - Archive: `src/features/archive/`
 - My IQ (Stats): `src/features/stats/`
@@ -689,11 +758,12 @@ const result = await prefetchQuizImages(urls);
 app/
   _layout.tsx           # Root layout (fonts, DB init, AuthProvider)
   (tabs)/_layout.tsx    # Tab navigator
-  career-path.tsx       # Career Path game route
-  tic-tac-toe.tsx       # Tic Tac Toe game route
-  transfer-guess.tsx    # Transfer Guess game route
-  goalscorer-recall.tsx # Goalscorer Recall game route
-  topical-quiz.tsx      # Topical Quiz game route
+  career-path/          # Career Path game routes
+  tic-tac-toe/          # Tic Tac Toe game routes (legacy)
+  the-grid/             # The Grid game routes
+  transfer-guess/       # Transfer Guess game routes
+  goalscorer-recall/    # Goalscorer Recall game routes
+  topical-quiz/         # Topical Quiz game routes
   leaderboard/          # Leaderboard screen with Daily/Global toggle
   design-lab.tsx        # Component showcase
 src/

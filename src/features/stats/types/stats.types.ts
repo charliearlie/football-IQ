@@ -26,6 +26,7 @@ export const GAME_MODE_DISPLAY: Record<
   guess_the_transfer: { displayName: 'Transfer Guess', skillName: 'Market Knowledge' },
   guess_the_goalscorers: { displayName: 'Goalscorer Recall', skillName: 'Rapid Recall' },
   tic_tac_toe: { displayName: 'Tic Tac Toe', skillName: 'Strategic Logic' },
+  the_grid: { displayName: 'The Grid', skillName: 'Pattern Recognition' },
   topical_quiz: { displayName: 'Topical Quiz', skillName: 'Current Affairs' },
 };
 
@@ -38,7 +39,8 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
   career_path: 0.25, // 25%
   guess_the_transfer: 0.25, // 25%
   guess_the_goalscorers: 0.2, // 20%
-  tic_tac_toe: 0.15, // 15%
+  tic_tac_toe: 0.05, // 5% (legacy)
+  the_grid: 0.1, // 10%
   topical_quiz: 0.15, // 15%
 };
 
@@ -129,6 +131,12 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     id: 'perfect_tictactoe',
     name: 'Tactician',
     description: 'Win Tic Tac Toe',
+    icon: 'Grid3X3',
+  },
+  {
+    id: 'perfect_grid',
+    name: 'Mastermind',
+    description: 'Complete The Grid perfectly',
     icon: 'Grid3X3',
   },
   {

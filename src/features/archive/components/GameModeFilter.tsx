@@ -61,6 +61,12 @@ const FILTER_OPTIONS: FilterOption[] = [
     iconColor: colors.redCard,
   },
   {
+    value: 'the_grid',
+    label: 'The Grid',
+    icon: <Grid3X3 size={18} />,
+    iconColor: colors.pitchGreen,
+  },
+  {
     value: 'tic_tac_toe',
     label: 'Tic Tac Toe',
     icon: <Grid3X3 size={18} />,
