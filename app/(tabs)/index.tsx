@@ -187,6 +187,14 @@ export default function HomeScreen() {
           gameMode={completedModal.card.gameMode}
           attempt={completedModal.card.attempt!}
           onClose={() => setCompletedModal(null)}
+          onReview={() => {
+            const route = ROUTE_MAP[completedModal.card.gameMode];
+            setCompletedModal(null);
+            router.push({
+              pathname: `/${route}/[puzzleId]`,
+              params: { puzzleId: completedModal.card.puzzleId, review: 'true' },
+            } as never);
+          }}
           testID="completed-game-modal"
         />
       )}

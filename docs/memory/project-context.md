@@ -1973,3 +1973,182 @@ Comprehensive audit and removal of unused files, components, and exports to redu
 
 ### Build Verification
 TypeScript compilation verified - no errors related to deleted code.
+
+## Review Mode Enhancement
+Implemented: 2026-01-10
+
+### Overview
+Enhanced Review Mode for Career Path, Transfer Guess, and Topical Quiz to visually display user-specific choices, hints used, and success/failure indicators.
+
+### Career Path Review - "Step Narrative"
+- **Winning Step Highlight**: Green border + glow on the step where user made correct guess
+- **Missed Badge**: Red "MISSED" badge on final step when lost
+- Uses `revealedCount` from metadata to identify winning step
+
+**Props added to `CareerStepCard`:**
+- `isWinningStep?: boolean` - Green border/glow for success step
+- `isMissedStep?: boolean` - Red border + "MISSED" badge for final step when lost
+
+### Transfer Guess Review - "Valuation Narrative"
+- **Actual Hints**: Shows only hints that were actually revealed (0-3), not all 3
+- **Review Mode State**: Unrevealed hints show "Not revealed" text with EyeOff icon (no blur)
+- Uses `hintsRevealed` from metadata to show correct number
+
+**Props added to components:**
+- `HintsSection`: `isReviewMode?: boolean`
+- `HintSlot`: `isReviewMode?: boolean` - Shows "Not revealed" instead of blur/lock
+
+### Topical Quiz Review - "Correction Narrative"
+Already complete - shows:
+- Score summary (X/5 and points)
+- All questions with colored options
+- Green highlight for correct answers
+- Red highlight for user's wrong answers
+- "✓ Your answer" / "✗ Your answer" indicators
+
+### Shared Component Typography
+- `ReviewGuessesSection` label now uses Bebas Neue (`fonts.headline`) with uppercase + letter-spacing
+
+### Files Modified
+```
+src/features/career-path/components/CareerStepCard.tsx
+  - Added isWinningStep/isMissedStep props
+  - Added winning/missed styles (green glow, red badge)
+  - Added CheckCircle icon for winning badge
+
+src/features/career-path/screens/CareerPathScreen.tsx
+  - Calculates winningStepIndex and missedStepIndex from metadata
+  - Passes flags to CareerStepCard in review mode
+
+src/features/transfer-guess/screens/TransferGuessScreen.tsx
+  - Fixed hintsRevealed to use actual metadata value (not hardcoded 3)
+  - Added isReviewMode prop to HintsSection
+
+src/features/transfer-guess/components/HintsSection.tsx
+  - Added isReviewMode prop, passes to HintSlot
+
+src/features/transfer-guess/components/HintSlot.tsx
+  - Added isReviewMode prop
+  - Added review-specific locked state (no blur, "Not revealed" text)
+
+src/components/ReviewMode/ReviewGuessesSection.tsx
+  - Updated label typography to use Bebas Neue (fonts.headline)
+```
+
+### Tests Added (Phase 1)
+```
+src/features/review/__tests__/ReviewNarrative.test.tsx  # 8 tests
+  - Winning step highlight
+  - Missed badge on final step
+  - Combined states (winning + latest, loan + winning)
+
+src/features/review/__tests__/QuizReview.test.tsx  # 6 tests
+  - Correct answer in green when user was wrong
+  - User wrong choice in red with X indicator
+  - User correct choice in green with checkmark
+  - All 4 options display correctly
+```
+
+## Review Mode Enhancement - Phase 2
+Implemented: 2026-01-10
+
+### Overview
+Added Goalscorer Recall "Found vs Missed" comparison view, global review mode banner for all game screens, and legacy mode notice for Tic Tac Toe.
+
+### Goalscorer Recall Review - "Found vs Missed" Comparison
+**Component:** `RecallComparisonView`
+
+Displays a partitioned view showing which scorers the user found vs missed:
+- **FOUND Section**: Green checkmark icon, scorers correctly named
+- **MISSED Section**: Red X icon, scorers the user overlooked
+- **OWN GOALS Section**: Gray styling (only shown if own goals exist)
+
+Uses `normalizeString()` from `@/lib/validation` to match found scorer names (stored normalized in metadata) against goal data.
+
+**Props:**
+- `goals: Goal[]` - All goals from the puzzle
+- `foundScorerNames: string[]` - Normalized names from metadata
+- `testID?: string`
+
+### "REVIEWING COMPLETED GAME" Banner
+**Component:** `ReviewModeBanner`
+
+Thin, high-contrast banner displayed at the top of ALL game screens when in review mode:
+- Stadium Navy background with Pitch Green text
+- Eye icon from lucide-react-native
+- Uses Bebas Neue font (`fonts.headline`)
+
+Added to all 5 game screens:
+- CareerPathScreen
+- TransferGuessScreen
+- TopicalQuizScreen
+- GoalscorerRecallScreen
+- TicTacToeScreen
+
+### Tic Tac Toe Legacy Mode Notice
+When viewing completed Tic Tac Toe games, a legacy notice is shown:
+- Yellow (cardYellow) AlertTriangle icon + text
+- "LEGACY MODE - PREVIEW ONLY" label
+- Indicates the game mode is being rebuilt
+
+### Files Created
+```
+src/features/goalscorer-recall/components/RecallComparisonView.tsx
+  - ScorerRow component for each goal
+  - EmptyState component for empty sections
+  - Partitions goals into found/missed/ownGoals
+
+src/components/ReviewMode/ReviewModeBanner.tsx
+  - Eye icon + "REVIEWING COMPLETED GAME" text
+  - Stadium Navy bg, Pitch Green text
+
+src/features/review/__tests__/RecallReview.test.tsx  # 9 tests
+  - Found/Missed count validation
+  - Row styling by variant
+  - Own goals section visibility
+  - Empty state rendering
+  - Name normalization (accents/case)
+
+src/features/ui/__tests__/ReviewBanner.test.tsx  # 4 tests
+  - Banner text and testID
+  - Visibility when rendered/not rendered
+  - Icon rendering
+
+src/features/tic-tac-toe/__tests__/LegacyMode.test.tsx  # 4 tests
+  - Legacy notice text and testID
+  - Visibility in review mode
+  - AlertTriangle icon rendering
+```
+
+### Files Modified
+```
+src/features/goalscorer-recall/screens/GoalscorerRecallScreen.tsx
+  - Replaced flat scorer list with RecallComparisonView
+  - Added ReviewModeBanner import and usage
+
+src/features/career-path/screens/CareerPathScreen.tsx
+  - Added ReviewModeBanner to review mode ScrollView
+
+src/features/transfer-guess/screens/TransferGuessScreen.tsx
+  - Added ReviewModeBanner to review mode ScrollView
+
+src/features/topical-quiz/screens/TopicalQuizScreen.tsx
+  - Added ReviewModeBanner to review mode ScrollView
+
+src/features/tic-tac-toe/screens/TicTacToeScreen.tsx
+  - Added ReviewModeBanner to review mode ScrollView
+  - Added legacy notice with AlertTriangle icon
+  - Added legacyNotice/legacyNoticeText styles
+
+src/components/ReviewMode/index.ts
+  - Added ReviewModeBanner export
+
+src/components/index.ts
+  - Added ReviewModeBanner to main exports
+```
+
+### Test Summary (Phase 2)
+- RecallReview.test.tsx: 9 tests
+- ReviewBanner.test.tsx: 4 tests
+- LegacyMode.test.tsx: 4 tests
+- **Total: 17 new tests passing**

@@ -27,6 +27,8 @@ interface TopicalQuizResultModalProps {
   answers: QuizAnswer[];
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
+  /** Callback to review the game */
+  onReview?: () => void;
   /** Callback to close/dismiss the modal */
   onClose: () => void;
   /** Test ID for testing */
@@ -61,6 +63,7 @@ export function TopicalQuizResultModal({
   score,
   answers,
   onShare,
+  onReview,
   onClose,
   testID,
 }: TopicalQuizResultModalProps) {
@@ -96,6 +99,7 @@ export function TopicalQuizResultModal({
       emojiGrid={emojiGrid}
       message={getMessage(score)}
       onShare={onShare}
+      onReview={onReview}
       onClose={onClose}
       showConfetti={isGood}
       testID={testID}

@@ -8,6 +8,8 @@ export interface HintsSectionProps {
   hints: [string, string, string];
   /** Number of hints revealed (0-3) */
   hintsRevealed: number;
+  /** Whether in review mode (shows "Not revealed" instead of blur/lock) */
+  isReviewMode?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -21,6 +23,7 @@ export interface HintsSectionProps {
 export function HintsSection({
   hints,
   hintsRevealed,
+  isReviewMode = false,
   testID,
 }: HintsSectionProps) {
   return (
@@ -35,6 +38,7 @@ export function HintsSection({
             hint={hints[index]}
             isRevealed={index < hintsRevealed}
             slotNumber={index + 1}
+            isReviewMode={isReviewMode}
             testID={`${testID}-slot-${index + 1}`}
           />
         ))}

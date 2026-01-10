@@ -27,6 +27,8 @@ interface TransferResultModalProps {
   correctAnswer: string;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
+  /** Callback to review the game */
+  onReview?: () => void;
   /** Callback to close/dismiss the modal */
   onClose: () => void;
   /** Test ID for testing */
@@ -62,6 +64,7 @@ export function TransferResultModal({
   score,
   correctAnswer,
   onShare,
+  onReview,
   onClose,
   testID,
 }: TransferResultModalProps) {
@@ -82,6 +85,7 @@ export function TransferResultModal({
       emojiGrid={emojiGrid}
       message={getMessage(won, score)}
       onShare={onShare}
+      onReview={onReview}
       onClose={onClose}
       testID={testID}
     >

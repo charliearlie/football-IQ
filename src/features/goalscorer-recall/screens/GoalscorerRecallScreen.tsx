@@ -3,6 +3,8 @@
  *
  * Displays a classic match and challenges players to name all goalscorers
  * within 60 seconds.
+ *
+ * Supports review mode for viewing completed games.
  */
 
 import {
@@ -15,7 +17,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -24,8 +26,13 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useStablePuzzle } from '@/features/puzzles';
+import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
-import { GameContainer } from '@/components';
+import {
+  GameContainer,
+  ReviewModeActionZone,
+  ReviewModeBanner,
+} from '@/components';
 import { useGoalscorerRecallGame } from '../hooks/useGoalscorerRecallGame';
 import { MatchHeader } from '../components/MatchHeader';
 import { Scoreboard } from '../components/Scoreboard';
@@ -34,8 +41,21 @@ import { RecallActionZone } from '../components/RecallActionZone';
 import { StartOverlay } from '../components/StartOverlay';
 import { GoalFlash } from '../components/GoalFlash';
 import { RecallResultModal } from '../components/RecallResultModal';
+import { RecallComparisonView } from '../components/RecallComparisonView';
 import { AdBanner } from '@/features/ads';
 import type { GoalscorerRecallContent } from '../types/goalscorerRecall.types';
+
+/**
+ * Metadata structure saved when a Goalscorer Recall game completes.
+ */
+interface GoalscorerRecallMetadata {
+  scorersFound: number;
+  totalScorers: number;
+  timeRemaining: number;
+  timeBonus: number;
+  won: boolean;
+  foundScorerNames: string[];
+}
 
 /**
  * Props for GoalscorerRecallScreen.
@@ -46,18 +66,32 @@ interface GoalscorerRecallScreenProps {
    * If not provided, loads today's guess_the_goalscorers puzzle.
    */
   puzzleId?: string;
+  /**
+   * Whether to show the game in review mode (read-only).
+   * When true, shows all scorers and highlights which ones the user found.
+   */
+  isReviewMode?: boolean;
 }
 
 /** Approximate height of the MatchHeader GlassCard */
 const MATCH_HEADER_HEIGHT = 140;
 
-export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps) {
+export function GoalscorerRecallScreen({
+  puzzleId,
+  isReviewMode = false,
+}: GoalscorerRecallScreenProps) {
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_goalscorers');
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
   const scrollRef = useRef<ScrollView>(null);
+
+  // Fetch saved attempt data for review mode
+  const {
+    metadata: reviewMetadata,
+    isLoading: isReviewLoading,
+  } = useReviewMode<GoalscorerRecallMetadata>(puzzleId, isReviewMode);
 
   // Keyboard visibility for collapsible match header animation
   const keyboardVisible = useSharedValue(0);
@@ -168,6 +202,88 @@ export function GoalscorerRecallScreen({ puzzleId }: GoalscorerRecallScreenProps
   }
 
   const content = puzzle.content as GoalscorerRecallContent;
+
+  // Review mode: Show all scorers with found/missed status
+  if (isReviewMode) {
+    // Still loading attempt data
+    if (isReviewLoading) {
+      return (
+        <GameContainer
+          title="Recall - Review"
+          collapsible={false}
+          keyboardAvoiding={false}
+          testID="goalscorer-recall-review"
+        >
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={colors.pitchGreen} />
+            <Text style={[textStyles.body, styles.loadingText]}>
+              Loading review...
+            </Text>
+          </View>
+        </GameContainer>
+      );
+    }
+
+    const allGoals = content.goals ?? [];
+
+    return (
+      <GameContainer
+        title="Recall - Review"
+        collapsible={false}
+        keyboardAvoiding={false}
+        testID="goalscorer-recall-review"
+      >
+        <ScrollView
+          contentContainerStyle={styles.reviewContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Review Mode Banner */}
+          <ReviewModeBanner testID="review-banner" />
+
+          {/* Match Header */}
+          <MatchHeader
+            homeTeam={content.home_team}
+            awayTeam={content.away_team}
+            homeScore={content.home_score}
+            awayScore={content.away_score}
+            competition={content.competition}
+            matchDate={content.match_date}
+          />
+
+          {/* Stats summary */}
+          <View style={styles.reviewStats}>
+            <Text style={styles.reviewStatsText}>
+              You found{' '}
+              <Text style={styles.reviewStatsHighlight}>
+                {reviewMetadata?.scorersFound ?? 0}
+              </Text>
+              {' of '}
+              <Text style={styles.reviewStatsHighlight}>
+                {reviewMetadata?.totalScorers ?? allGoals.length}
+              </Text>
+              {' scorers'}
+            </Text>
+            {reviewMetadata?.won && (
+              <Text style={styles.reviewWinText}>Complete!</Text>
+            )}
+          </View>
+
+          {/* Found vs Missed comparison view */}
+          <RecallComparisonView
+            goals={allGoals}
+            foundScorerNames={reviewMetadata?.foundScorerNames ?? []}
+            testID="recall-comparison"
+          />
+        </ScrollView>
+
+        {/* Close Review button */}
+        <ReviewModeActionZone
+          onClose={() => router.back()}
+          testID="review-action-zone"
+        />
+      </GameContainer>
+    );
+  }
   const isPlaying = state.gameStatus === 'playing';
   const isIdle = state.gameStatus === 'idle';
   const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'lost';
@@ -297,5 +413,97 @@ const styles = StyleSheet.create({
   scoreboardContainer: {
     flex: 1,
     paddingHorizontal: layout.screenPadding,
+  },
+  // Review mode styles
+  reviewContent: {
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: spacing.xl,
+    gap: spacing.lg,
+  },
+  reviewStats: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  reviewStatsText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  reviewStatsHighlight: {
+    color: colors.pitchGreen,
+    fontWeight: '600',
+  },
+  reviewWinText: {
+    ...textStyles.body,
+    color: colors.pitchGreen,
+    fontWeight: '600',
+    marginTop: spacing.xs,
+  },
+  reviewScorersContainer: {
+    backgroundColor: colors.glassBackground,
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  reviewSectionTitle: {
+    ...textStyles.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  reviewScorerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 8,
+    marginBottom: spacing.xs,
+  },
+  reviewScorerRowOwnGoal: {
+    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+  },
+  reviewScorerRowFound: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+  },
+  reviewScorerRowMissed: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  reviewScorerMinute: {
+    ...textStyles.bodySmall,
+    color: colors.textSecondary,
+    width: 36,
+  },
+  reviewScorerName: {
+    ...textStyles.body,
+    flex: 1,
+  },
+  reviewScorerNameOwnGoal: {
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  reviewScorerNameFound: {
+    color: colors.pitchGreen,
+  },
+  reviewScorerNameMissed: {
+    color: colors.redCard,
+  },
+  reviewScorerTeam: {
+    ...textStyles.bodySmall,
+    color: colors.textSecondary,
+    marginRight: spacing.sm,
+  },
+  reviewScorerStatus: {
+    fontSize: 16,
+    fontWeight: '600',
+    width: 20,
+    textAlign: 'center',
+  },
+  reviewStatusFound: {
+    color: colors.pitchGreen,
+  },
+  reviewStatusMissed: {
+    color: colors.redCard,
   },
 });

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Lock } from 'lucide-react-native';
+import { Lock, EyeOff } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -29,6 +29,8 @@ export interface HintSlotProps {
   isRevealed: boolean;
   /** The slot number (1, 2, or 3) */
   slotNumber: number;
+  /** Whether in review mode (shows "Not revealed" instead of blur/lock) */
+  isReviewMode?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -44,6 +46,7 @@ export function HintSlot({
   hint,
   isRevealed,
   slotNumber,
+  isReviewMode = false,
   testID,
 }: HintSlotProps) {
   const animatedProgress = useSharedValue(isRevealed ? 1 : 0);
@@ -77,6 +80,29 @@ export function HintSlot({
   }));
 
   if (!isRevealed) {
+    // Review mode: Show "Not revealed" state without blur
+    if (isReviewMode) {
+      return (
+        <View style={styles.container} testID={testID}>
+          <GlassCard style={styles.reviewLockedCard}>
+            <View style={styles.content}>
+              <View style={styles.slotBadge}>
+                <Text style={styles.slotNumber}>{slotNumber}</Text>
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.lockedLabel}>{label}</Text>
+                <Text style={styles.notRevealedText}>Not revealed</Text>
+              </View>
+              <View style={styles.reviewEyeIcon}>
+                <EyeOff size={18} color={colors.textSecondary} strokeWidth={2} />
+              </View>
+            </View>
+          </GlassCard>
+        </View>
+      );
+    }
+
+    // Gameplay mode: Show blurred locked state
     return (
       <View style={styles.container} testID={testID}>
         <GlassCard style={styles.lockedCard}>
@@ -212,5 +238,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  // Review mode styles for unrevealed hints
+  reviewLockedCard: {
+    opacity: 0.5,
+    borderStyle: 'dashed',
+    borderColor: colors.glassBorder,
+    borderWidth: 1,
+  },
+  notRevealedText: {
+    ...textStyles.bodySmall,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  reviewEyeIcon: {
+    marginLeft: spacing.sm,
   },
 });

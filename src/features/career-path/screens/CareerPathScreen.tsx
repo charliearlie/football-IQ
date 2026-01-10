@@ -1,20 +1,39 @@
+import { useCallback } from 'react';
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useStablePuzzle } from '@/features/puzzles';
+import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
-import { GameContainer } from '@/components';
+import {
+  GameContainer,
+  ReviewAnswerSection,
+  ReviewGuessesSection,
+  ReviewModeActionZone,
+  ReviewModeBanner,
+} from '@/components';
 import { useCareerPathGame } from '../hooks/useCareerPathGame';
 import { CareerStepCard } from '../components/CareerStepCard';
 import { ActionZone } from '../components/ActionZone';
 import { GameResultModal } from '../components/GameResultModal';
 import { CareerStep } from '../types/careerPath.types';
 import { AdBanner } from '@/features/ads';
+
+/**
+ * Metadata structure saved when a Career Path game completes.
+ */
+interface CareerPathMetadata {
+  guesses: string[];
+  revealedCount: number;
+  won: boolean;
+  totalSteps: number;
+}
 
 /**
  * Props for CareerPathScreen.
@@ -25,6 +44,11 @@ interface CareerPathScreenProps {
    * If not provided, loads today's career_path puzzle.
    */
   puzzleId?: string;
+  /**
+   * Whether to show the game in review mode (read-only).
+   * When true, shows all answers and the user's previous guesses.
+   */
+  isReviewMode?: boolean;
 }
 
 /**
@@ -33,8 +57,13 @@ interface CareerPathScreenProps {
  * Displays a player's career as a series of sequential clues.
  * Players guess the footballer, with each wrong guess revealing
  * the next career step as a penalty.
+ *
+ * Supports review mode for viewing completed games.
  */
-export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
+export function CareerPathScreen({
+  puzzleId,
+  isReviewMode = false,
+}: CareerPathScreenProps) {
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
@@ -50,6 +79,12 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
     shareResult,
     flatListRef,
   } = useCareerPathGame(puzzle);
+
+  // Fetch saved attempt data for review mode
+  const {
+    metadata: reviewMetadata,
+    isLoading: isReviewLoading,
+  } = useReviewMode<CareerPathMetadata>(puzzleId, isReviewMode);
 
   // Loading state
   if (isLoading) {
@@ -75,6 +110,82 @@ export function CareerPathScreen({ puzzleId }: CareerPathScreenProps) {
             Check back later for today's Career Path challenge
           </Text>
         </View>
+      </GameContainer>
+    );
+  }
+
+  // Review mode: Show all steps revealed with answer and guesses
+  if (isReviewMode) {
+    // Still loading attempt data
+    if (isReviewLoading) {
+      return (
+        <GameContainer title="Career Path - Review" testID="career-path-review">
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={colors.pitchGreen} />
+            <Text style={[textStyles.body, styles.loadingText]}>
+              Loading review...
+            </Text>
+          </View>
+        </GameContainer>
+      );
+    }
+
+    // Calculate winning/missed step indices for review highlighting
+    // If won, the winning step is the one where they made the correct guess (revealedCount - 1, 0-indexed)
+    // If lost, the missed step is the final step (last in the array)
+    const winningStepIndex = reviewMetadata?.won
+      ? (reviewMetadata.revealedCount - 1)
+      : null;
+    const missedStepIndex = reviewMetadata && !reviewMetadata.won
+      ? (careerSteps.length - 1)
+      : null;
+
+    return (
+      <GameContainer
+        title="Career Path - Review"
+        testID="career-path-review"
+      >
+        <ScrollView
+          contentContainerStyle={styles.reviewContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ReviewModeBanner testID="review-banner" />
+
+          {/* All career steps revealed with winning/missed highlighting */}
+          {careerSteps.map((step, index) => (
+            <CareerStepCard
+              key={index}
+              step={step}
+              stepNumber={index + 1}
+              isRevealed={true}
+              isLatest={false}
+              isWinningStep={index === winningStepIndex}
+              isMissedStep={index === missedStepIndex}
+              testID={`review-step-${index + 1}`}
+            />
+          ))}
+
+          {/* Answer section */}
+          <ReviewAnswerSection
+            answer={answer}
+            won={reviewMetadata?.won ?? false}
+            testID="review-answer-section"
+          />
+
+          {/* User's incorrect guesses */}
+          {reviewMetadata?.guesses && reviewMetadata.guesses.length > 0 && (
+            <ReviewGuessesSection
+              guesses={reviewMetadata.guesses}
+              testID="review-guesses-section"
+            />
+          )}
+        </ScrollView>
+
+        {/* Close Review button */}
+        <ReviewModeActionZone
+          onClose={() => router.back()}
+          testID="review-action-zone"
+        />
       </GameContainer>
     );
   }
@@ -186,6 +297,11 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: layout.screenPadding,
     paddingBottom: spacing.lg,
+    gap: layout.listGap,
+  },
+  reviewContent: {
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: spacing.xl,
     gap: layout.listGap,
   },
 });

@@ -27,6 +27,8 @@ export interface TicTacToeResultModalProps {
   cells: CellArray;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
+  /** Callback to review the game */
+  onReview?: () => void;
   /** Callback to close modal (optional) */
   onClose?: () => void;
   /** Test ID for testing */
@@ -69,6 +71,7 @@ export function TicTacToeResultModal({
   score,
   cells,
   onShare,
+  onReview,
   onClose,
   testID,
 }: TicTacToeResultModalProps) {
@@ -83,6 +86,7 @@ export function TicTacToeResultModal({
       title={getResultTitle(score.result)}
       emojiGrid={emojiGrid}
       onShare={onShare}
+      onReview={onReview}
       onClose={onClose}
       showConfetti={score.result === 'win'}
       testID={testID}

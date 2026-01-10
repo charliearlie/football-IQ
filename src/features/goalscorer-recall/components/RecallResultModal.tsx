@@ -30,6 +30,7 @@ interface RecallResultModalProps {
     matchDate: string;
   };
   puzzleDate: string;
+  onReview?: () => void;
   onContinue: () => void;
 }
 
@@ -39,6 +40,7 @@ export function RecallResultModal({
   goals,
   matchInfo,
   puzzleDate,
+  onReview,
   onContinue,
 }: RecallResultModalProps) {
   // Don't render if not visible or score not ready
@@ -70,6 +72,7 @@ export function RecallResultModal({
       emojiGrid={emojiGrid}
       message={getScoreMessage(score)}
       onShare={handleShare}
+      onReview={onReview}
       onClose={onContinue}
       closeLabel="Continue"
       showConfetti={score.won}

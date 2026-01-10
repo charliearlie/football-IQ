@@ -570,6 +570,7 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
             timeRemaining: state.score!.timeRemaining,
             timeBonus: state.score!.timeBonus,
             won: state.gameStatus === 'won',
+            foundScorerNames: Array.from(state.foundScorers),
           }),
           started_at: state.startedAt,
           completed_at: now,

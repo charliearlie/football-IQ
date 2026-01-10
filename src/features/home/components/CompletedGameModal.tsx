@@ -45,6 +45,10 @@ interface CompletedGameModalProps {
    */
   onClose: () => void;
   /**
+   * Callback to enter review mode (optional).
+   */
+  onReview?: () => void;
+  /**
    * Test ID for testing.
    */
   testID?: string;
@@ -108,6 +112,7 @@ export function CompletedGameModal({
   gameMode,
   attempt,
   onClose,
+  onReview,
   testID,
 }: CompletedGameModalProps) {
   // Parse metadata safely
@@ -140,6 +145,7 @@ export function CompletedGameModal({
       title={title}
       emojiGrid={emojiGrid || undefined}
       onShare={handleShare}
+      onReview={onReview}
       onClose={onClose}
       closeLabel="Close"
       showConfetti={false} // Don't celebrate again

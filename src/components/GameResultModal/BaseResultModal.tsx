@@ -47,6 +47,8 @@ export interface BaseResultModalProps {
 
   /** Callback to share result (optional) */
   onShare?: () => Promise<ShareResult>;
+  /** Callback to review the game (optional) */
+  onReview?: () => void;
   /** Callback to close modal (optional) */
   onClose?: () => void;
   /** Close button label (default: "Done") */
@@ -105,6 +107,7 @@ export function BaseResultModal({
   emojiGrid,
   message,
   onShare,
+  onReview,
   onClose,
   closeLabel = 'Done',
   showConfetti,
@@ -180,9 +183,21 @@ export function BaseResultModal({
                 title={buttonTitle}
                 onPress={handleShare}
                 size="medium"
+                fullWidth
                 topColor={buttonColors.topColor}
                 shadowColor={buttonColors.shadowColor}
                 testID="share-button"
+              />
+            )}
+            {onReview && (
+              <ElevatedButton
+                title="Review"
+                onPress={onReview}
+                size="medium"
+                fullWidth
+                topColor={colors.cardYellow}
+                shadowColor="#B8960F"
+                testID="review-button"
               />
             )}
             {onClose && (
@@ -190,6 +205,7 @@ export function BaseResultModal({
                 title={closeLabel}
                 onPress={onClose}
                 size="medium"
+                fullWidth
                 topColor={colors.floodlightWhite}
                 shadowColor={colors.textSecondary}
                 testID="done-button"
@@ -320,9 +336,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     gap: spacing.sm,
   },
 });

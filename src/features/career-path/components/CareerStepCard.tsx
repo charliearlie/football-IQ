@@ -7,6 +7,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
+import { CheckCircle } from 'lucide-react-native';
 import { GlassCard } from '@/components';
 import { colors, spacing, textStyles, borderRadius } from '@/theme';
 import { CareerStep } from '../types/careerPath.types';
@@ -30,6 +31,10 @@ export interface CareerStepCardProps {
   isLatest: boolean;
   /** Test ID for testing */
   testID?: string;
+  /** Highlight as the winning step in review mode (green border/glow) */
+  isWinningStep?: boolean;
+  /** Mark as the missed step when lost in review mode (red border + "MISSED" badge) */
+  isMissedStep?: boolean;
 }
 
 /**
@@ -45,6 +50,8 @@ export function CareerStepCard({
   isRevealed,
   isLatest,
   testID,
+  isWinningStep = false,
+  isMissedStep = false,
 }: CareerStepCardProps) {
   const animatedProgress = useSharedValue(isRevealed ? 1 : 0);
 
@@ -83,15 +90,34 @@ export function CareerStepCard({
 
   const isLoan = step.type === 'loan';
 
+  // Determine card style based on state (winning > missed > latest > default)
+  const getCardStyle = () => {
+    if (isWinningStep) return styles.winningCard;
+    if (isMissedStep) return styles.missedCard;
+    if (isLatest) return styles.latestCard;
+    return undefined;
+  };
+
+  // Determine step badge style
+  const getStepBadgeStyle = () => {
+    if (isWinningStep) return styles.stepBadgeWinning;
+    if (isLatest) return styles.stepBadgeLatest;
+    return undefined;
+  };
+
+  // Determine step number text style
+  const getStepNumberStyle = () => {
+    if (isWinningStep || isLatest) return styles.stepNumberLatest;
+    return undefined;
+  };
+
   return (
     <Animated.View style={animatedStyle} testID={testID}>
-      <GlassCard style={isLatest ? styles.latestCard : undefined}>
+      <GlassCard style={getCardStyle()}>
         <View style={styles.content}>
           {/* Step number badge */}
-          <View style={[styles.stepBadge, isLatest && styles.stepBadgeLatest]}>
-            <Text
-              style={[styles.stepNumber, isLatest && styles.stepNumberLatest]}
-            >
+          <View style={[styles.stepBadge, getStepBadgeStyle()]}>
+            <Text style={[styles.stepNumber, getStepNumberStyle()]}>
               {stepNumber}
             </Text>
           </View>
@@ -122,8 +148,22 @@ export function CareerStepCard({
               </View>
             )}
           </View>
+
+          {/* Winning badge */}
+          {isWinningStep && (
+            <View style={styles.winningBadge} testID="winning-badge">
+              <CheckCircle size={20} color={colors.stadiumNavy} strokeWidth={2.5} />
+            </View>
+          )}
         </View>
       </GlassCard>
+
+      {/* Missed badge - positioned outside GlassCard for overlap */}
+      {isMissedStep && (
+        <View style={styles.missedBadge} testID="missed-badge">
+          <Text style={styles.missedBadgeText}>MISSED</Text>
+        </View>
+      )}
     </Animated.View>
   );
 }
@@ -199,5 +239,48 @@ const styles = StyleSheet.create({
   statSeparator: {
     ...textStyles.caption,
     color: 'rgba(248, 250, 252, 0.5)', // muted separator
+  },
+  // Winning step styles (review mode)
+  winningCard: {
+    borderColor: colors.pitchGreen,
+    borderWidth: 2,
+    shadowColor: colors.pitchGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4, // Android shadow
+  },
+  stepBadgeWinning: {
+    backgroundColor: colors.pitchGreen,
+  },
+  winningBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.pitchGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Missed step styles (review mode)
+  missedCard: {
+    borderColor: colors.redCard,
+    borderWidth: 2,
+  },
+  missedBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.redCard,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    zIndex: 1,
+  },
+  missedBadgeText: {
+    ...textStyles.caption,
+    color: colors.floodlightWhite,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

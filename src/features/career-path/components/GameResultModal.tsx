@@ -29,6 +29,8 @@ interface GameResultModalProps {
   totalSteps: number;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
+  /** Callback to enter review mode (optional) */
+  onReview?: () => void;
   /** Callback to close/dismiss the modal */
   onClose: () => void;
   /** Test ID for testing */
@@ -45,6 +47,7 @@ export function GameResultModal({
   correctAnswer,
   totalSteps,
   onShare,
+  onReview,
   onClose,
   testID,
 }: GameResultModalProps) {
@@ -69,6 +72,7 @@ export function GameResultModal({
           : 'Better luck tomorrow!'
       }
       onShare={onShare}
+      onReview={onReview}
       onClose={onClose}
       testID={testID}
     >

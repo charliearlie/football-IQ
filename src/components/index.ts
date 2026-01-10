@@ -6,3 +6,15 @@ export {
   UniversalGameCard,
   type UniversalGameCardProps,
 } from './UniversalGameCard';
+
+// Review Mode components
+export {
+  ReviewAnswerSection,
+  ReviewGuessesSection,
+  ReviewModeActionZone,
+  ReviewModeBanner,
+  type ReviewAnswerSectionProps,
+  type ReviewGuessesSectionProps,
+  type ReviewModeActionZoneProps,
+  type ReviewModeBannerProps,
+} from './ReviewMode';
