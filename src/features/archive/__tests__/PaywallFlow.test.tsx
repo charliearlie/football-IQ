@@ -125,8 +125,7 @@ jest.mock('react-native-purchases', () => ({
 }));
 
 import { PremiumUpsellModal } from '../components/PremiumUpsellModal';
-import { LockedArchiveCard } from '../components/LockedArchiveCard';
-import { ArchivePuzzleCard } from '../components/ArchivePuzzleCard';
+import { UniversalGameCard } from '@/components';
 import { isPuzzleLocked } from '../utils/dateGrouping';
 import { ArchivePuzzle } from '../types/archive.types';
 
@@ -180,18 +179,21 @@ describe('Paywall Flow', () => {
         puzzleDate: oldDate,
       });
 
-      // Act: Render locked card and simulate press
+      // Act: Render locked card using UniversalGameCard
       const { getByTestId } = render(
-        <LockedArchiveCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={onPressMock}
+          variant="archive"
+          isLocked={true}
           testID="locked-card"
         />
       );
 
-      // The card should be rendered with lock overlay
+      // The card should be rendered with lock icon
       expect(getByTestId('locked-card')).toBeTruthy();
-      expect(getByTestId('locked-card-lock-overlay')).toBeTruthy();
+      expect(getByTestId('locked-card-lock')).toBeTruthy();
 
       // Verify that isPuzzleLocked returns true for this puzzle
       expect(isPuzzleLocked(oldDate, false)).toBe(true);
@@ -218,9 +220,11 @@ describe('Paywall Flow', () => {
       });
 
       const { getByText, getByTestId } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={onPressMock}
+          variant="archive"
           testID="archive-card"
         />
       );
@@ -251,9 +255,11 @@ describe('Paywall Flow', () => {
       });
 
       const { getByText, getByTestId } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={onPressMock}
+          variant="archive"
           testID="archive-card"
         />
       );

@@ -11,8 +11,7 @@
 
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { LockedArchiveCard } from '../components/LockedArchiveCard';
-import { ArchivePuzzleCard } from '../components/ArchivePuzzleCard';
+import { UniversalGameCard } from '@/components';
 import { isPuzzleLocked, isWithinFreeWindow } from '../utils/dateGrouping';
 import { ArchivePuzzle } from '../types/archive.types';
 
@@ -30,6 +29,7 @@ jest.mock('lucide-react-native', () => ({
   Grid3X3: 'Grid3X3',
   HelpCircle: 'HelpCircle',
   CheckCircle: 'CheckCircle',
+  Check: 'Check',
   Crown: 'Crown',
   Archive: 'Archive',
 }));
@@ -133,36 +133,42 @@ describe('Archive Gating', () => {
     });
   });
 
-  describe('LockedArchiveCard', () => {
-    it('renders the Lock icon overlay', () => {
+  describe('UniversalGameCard (Locked state)', () => {
+    it('renders the Lock icon when isLocked is true', () => {
       const puzzle = createMockPuzzle({ isLocked: true });
       const { getByTestId } = render(
-        <LockedArchiveCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
           testID="locked-card"
         />
       );
 
-      // Should have lock overlay
-      expect(getByTestId('locked-card-lock-overlay')).toBeTruthy();
+      // Should have lock icon
+      expect(getByTestId('locked-card-lock')).toBeTruthy();
     });
 
-    it('displays the formatted date', () => {
+    it('displays the subtitle', () => {
       const puzzle = createMockPuzzle({
         isLocked: true,
-        puzzleDate: '2024-12-20',
+        gameMode: 'career_path',
       });
       const { getByText } = render(
-        <LockedArchiveCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
           testID="locked-card"
         />
       );
 
-      // Should show the formatted date (Friday, Dec 20)
-      expect(getByText(/Dec 20/)).toBeTruthy();
+      // Should show the subtitle (same as daily variant)
+      expect(getByText('Guess the player')).toBeTruthy();
     });
 
     it('displays the game mode title', () => {
@@ -171,9 +177,12 @@ describe('Archive Gating', () => {
         gameMode: 'career_path',
       });
       const { getByText } = render(
-        <LockedArchiveCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
           testID="locked-card"
         />
       );
@@ -185,9 +194,12 @@ describe('Archive Gating', () => {
       const onPressMock = jest.fn();
       const puzzle = createMockPuzzle({ isLocked: true });
       const { getByTestId } = render(
-        <LockedArchiveCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={onPressMock}
+          variant="archive"
+          isLocked={true}
           testID="locked-card"
         />
       );
@@ -197,13 +209,15 @@ describe('Archive Gating', () => {
     });
   });
 
-  describe('ArchivePuzzleCard', () => {
+  describe('UniversalGameCard (Unlocked state)', () => {
     it('renders Play button when status is "play"', () => {
       const puzzle = createMockPuzzle({ status: 'play' });
       const { getByText } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
           testID="archive-card"
         />
       );
@@ -214,9 +228,11 @@ describe('Archive Gating', () => {
     it('renders Resume button when status is "resume"', () => {
       const puzzle = createMockPuzzle({ status: 'resume' });
       const { getByText } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
           testID="archive-card"
         />
       );
@@ -224,44 +240,49 @@ describe('Archive Gating', () => {
       expect(getByText('Resume')).toBeTruthy();
     });
 
-    it('renders checkmark when status is "done"', () => {
+    it('renders Result button when status is "done"', () => {
       const puzzle = createMockPuzzle({
         status: 'done',
-        scoreDisplay: '🟩🟩🟩',
       });
-      const { getByTestId, getByText } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+      const { getByText } = render(
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
           testID="archive-card"
         />
       );
 
-      expect(getByTestId('archive-card-checkmark')).toBeTruthy();
-      expect(getByText('🟩🟩🟩')).toBeTruthy();
+      // Cards show Result button only (emoji shown in CompletedGameModal)
+      expect(getByText('Result')).toBeTruthy();
     });
 
-    it('displays the formatted date in Card Yellow', () => {
-      const puzzle = createMockPuzzle({ puzzleDate: '2024-12-24' });
+    it('displays subtitle same as daily variant', () => {
+      const puzzle = createMockPuzzle({ gameMode: 'career_path' });
       const { getByText } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
           testID="archive-card"
         />
       );
 
-      // Should show the formatted date
-      expect(getByText(/Dec 24/)).toBeTruthy();
+      // Archive variant now shows same subtitle as daily variant
+      expect(getByText('Guess the player')).toBeTruthy();
     });
 
     it('is pressable (onPress callback available)', () => {
       const onPressMock = jest.fn();
       const puzzle = createMockPuzzle();
       const { getByTestId } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={onPressMock}
+          variant="archive"
           testID="archive-card"
         />
       );
@@ -285,13 +306,16 @@ describe('Archive Gating', () => {
         puzzleDate: oldDate,
       });
       const { getByTestId } = render(
-        <LockedArchiveCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
           testID="locked-card"
         />
       );
-      expect(getByTestId('locked-card-lock-overlay')).toBeTruthy();
+      expect(getByTestId('locked-card-lock')).toBeTruthy();
     });
 
     it('premium user: puzzle >7 days old should NOT be locked', () => {
@@ -308,9 +332,11 @@ describe('Archive Gating', () => {
         status: 'play',
       });
       const { getByText } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
           testID="archive-card"
         />
       );
@@ -331,9 +357,11 @@ describe('Archive Gating', () => {
         status: 'play',
       });
       const { getByText } = render(
-        <ArchivePuzzleCard
-          puzzle={puzzle}
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
           onPress={jest.fn()}
+          variant="archive"
           testID="archive-card"
         />
       );

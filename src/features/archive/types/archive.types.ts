@@ -6,6 +6,7 @@
  */
 
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { ParsedLocalAttempt } from '@/types/database';
 
 /**
  * Archive puzzle item - combines catalog metadata with full puzzle data.
@@ -28,6 +29,8 @@ export interface ArchivePuzzle {
   scoreDisplay?: string;
   /** Score value if completed */
   score?: number;
+  /** Full attempt data for completed games (needed for result modal) */
+  attempt?: ParsedLocalAttempt;
 }
 
 /**

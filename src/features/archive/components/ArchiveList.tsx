@@ -16,9 +16,8 @@ import {
   SectionListRenderItem,
 } from 'react-native';
 import { colors, textStyles, spacing } from '@/theme';
+import { UniversalGameCard } from '@/components';
 import { ArchivePuzzle, ArchiveSection } from '../types/archive.types';
-import { ArchivePuzzleCard } from './ArchivePuzzleCard';
-import { LockedArchiveCard } from './LockedArchiveCard';
 import { MonthHeader } from './MonthHeader';
 import { DayHeader } from './DayHeader';
 import { ArchiveSkeletonList } from '@/components/ui/Skeletons';
@@ -131,16 +130,17 @@ export function ArchiveList({
       const prevItem = index > 0 ? section.data[index - 1] : null;
       const isFirstOfDay = !prevItem || prevItem.puzzleDate !== item.puzzleDate;
 
-      const card = item.isLocked ? (
-        <LockedArchiveCard
-          puzzle={item}
-          onPress={() => onLockedPress(item)}
-          testID={`${testID}-locked-${item.id}`}
-        />
-      ) : (
-        <ArchivePuzzleCard
-          puzzle={item}
-          onPress={() => onPuzzlePress(item)}
+      // Use UniversalGameCard for both locked and unlocked states
+      // Note: date is NOT passed - DayHeader provides date context
+      const card = (
+        <UniversalGameCard
+          gameMode={item.gameMode}
+          status={item.status}
+          onPress={() =>
+            item.isLocked ? onLockedPress(item) : onPuzzlePress(item)
+          }
+          variant="archive"
+          isLocked={item.isLocked}
           testID={`${testID}-puzzle-${item.id}`}
         />
       );
@@ -224,6 +224,7 @@ export function ArchiveList({
 
 const styles = StyleSheet.create({
   contentContainer: {
+    paddingHorizontal: spacing.xl,
     paddingBottom: spacing['2xl'],
     flexGrow: 1,
   },
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   skeletonContainer: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
   },
   emptyContainer: {

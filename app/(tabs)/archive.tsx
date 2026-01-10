@@ -12,6 +12,7 @@ import {
   GameModeFilterType,
 } from '@/features/archive';
 import { useAds, UnlockChoiceModal } from '@/features/ads';
+import { CompletedGameModal } from '@/features/home';
 
 /**
  * Archive Screen
@@ -27,6 +28,7 @@ export default function ArchiveScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<GameModeFilterType>('all');
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
+  const [completedPuzzle, setCompletedPuzzle] = useState<ArchivePuzzle | null>(null);
 
   // Check if user should see ads (non-premium users)
   const { shouldShowAds } = useAds();
@@ -63,10 +65,34 @@ export default function ArchiveScreen() {
   });
 
   /**
+   * Handle puzzle press - show result modal for completed games,
+   * otherwise use gated navigation.
+   */
+  const handlePuzzlePress = useCallback(
+    (puzzle: ArchivePuzzle) => {
+      // Show results modal for completed games
+      if (puzzle.status === 'done' && puzzle.attempt) {
+        setCompletedPuzzle(puzzle);
+        return;
+      }
+      // Navigate (or show paywall) for play/resume
+      navigateToPuzzle(puzzle);
+    },
+    [navigateToPuzzle]
+  );
+
+  /**
    * Close the unlock modal.
    */
   const handleCloseModal = useCallback(() => {
     setLockedPuzzle(null);
+  }, []);
+
+  /**
+   * Close the completed game modal.
+   */
+  const handleCloseCompletedModal = useCallback(() => {
+    setCompletedPuzzle(null);
   }, []);
 
   /**
@@ -88,8 +114,8 @@ export default function ArchiveScreen() {
       {/* Archive List with Filter */}
       <ArchiveList
         sections={sections}
-        onPuzzlePress={navigateToPuzzle}
-        onLockedPress={navigateToPuzzle}
+        onPuzzlePress={handlePuzzlePress}
+        onLockedPress={handlePuzzlePress}
         onEndReached={loadMore}
         onRefresh={refresh}
         refreshing={isRefreshing}
@@ -118,6 +144,17 @@ export default function ArchiveScreen() {
           testID="unlock-choice-modal"
         />
       )}
+
+      {/* Completed Game Modal - shows result for done games */}
+      {completedPuzzle && completedPuzzle.attempt && (
+        <CompletedGameModal
+          visible={true}
+          gameMode={completedPuzzle.gameMode}
+          attempt={completedPuzzle.attempt}
+          onClose={handleCloseCompletedModal}
+          testID="archive-completed-modal"
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -133,7 +170,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   filterContainer: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     marginBottom: spacing.sm,
   },
 });

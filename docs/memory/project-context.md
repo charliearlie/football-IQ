@@ -269,6 +269,14 @@ src/
 - **ElevatedButton**: Neubrutalist 3D button with haptic feedback
   - `fullWidth` prop: Stretches button to fill container width
 - **GlassCard**: Frosted glass container (expo-blur)
+- **UniversalGameCard**: Unified game card for Home and Archive screens
+  - `variant: 'daily' | 'archive'`: Controls layout behavior
+  - `date?: string`: Shows compact date (archive variant only)
+  - `isLocked?: boolean`: Shows lock state (archive variant only)
+  - `scoreDisplay?: string`: Emoji grid for done state
+  - Uses `extractEmojiGrid()` from `@/utils/scoreDisplay` for text overflow prevention
+  - Done state shows "Result" button (yellow) on both variants for consistency
+  - Archive screen shows CompletedGameModal when clicking completed cards (matches Home behavior)
 
 ### Typography
 - **Headlines**: Bebas Neue
@@ -1023,57 +1031,65 @@ Archive Screen
 ├── GameModeFilter: Horizontal scroll chips (All, Career Path, etc.)
 ├── ArchiveList (SectionList)
 │   ├── MonthHeader: "December 2024" (sticky, cardYellow)
-│   ├── ArchivePuzzleCard (unlocked) OR LockedArchiveCard (locked)
+│   ├── UniversalGameCard (variant="archive", isLocked based on premium status)
 │   └── ... more cards
-└── PremiumUpsellModal (shown on locked card tap)
+├── PremiumUpsellModal (shown on locked card tap)
+└── CompletedGameModal (shown on completed card tap - matches Home behavior)
 ```
 
 ### Card States
-| Card Type | Condition | UI |
-|-----------|-----------|-----|
-| ArchivePuzzleCard | Puzzle in local SQLite | Date, mode icon, Play/Resume/Done |
-| LockedArchiveCard | Puzzle NOT in local SQLite OR date > 7 days (free user) | Blurred, lock icon overlay |
+Uses `UniversalGameCard` (shared with Home screen):
+| Status | isLocked | UI |
+|--------|----------|-----|
+| play | false | Green "Play" button, date shown above title |
+| resume | false | Yellow "Resume" button |
+| done | false | Yellow "Result" button + emoji grid |
+| any | true | Dimmed card with "Lock" button |
 
 ### Components
 | Component | Purpose |
 |-----------|---------|
 | `GameModeFilter` | Horizontal scroll filter chips |
 | `ArchiveList` | SectionList with month grouping |
-| `ArchivePuzzleCard` | Unlocked puzzle with play status |
-| `LockedArchiveCard` | Blurred card with lock icon |
 | `MonthHeader` | Sticky section header |
-| `PremiumUpsellModal` | Upgrade prompt (placeholder) |
+| `DayHeader` | Day sub-header within month |
+| `PremiumUpsellModal` | Upgrade prompt with RevenueCat |
+| `UniversalGameCard` | Unified card (from @/components) |
+| `CompletedGameModal` | Result modal for completed games (from @/features/home) |
 
 ### Hooks
 | Hook | Purpose |
 |------|---------|
-| `useArchivePuzzles(filter)` | Main data hook with pagination and grouping |
+| `useArchivePuzzles(filter)` | Main data hook with pagination, grouping, and attempt data |
+| `useGatedNavigation` | Premium gating for navigation |
 
 ### Navigation
-- Tapping unlocked puzzle → `router.push(`/${route}/${puzzleId}`)`
-- Tapping locked puzzle → Opens PremiumUpsellModal
+- Tapping completed puzzle → Shows `CompletedGameModal` (matches Home screen)
+- Tapping play/resume puzzle → `router.push(`/${route}/${puzzleId}`)`
+- Tapping locked puzzle → Opens `PremiumUpsellModal` or `UnlockChoiceModal` (ad option)
 
 ### Files
 ```
 src/features/archive/
   ├── index.ts                    # Feature exports
   ├── types/
-  │   └── archive.types.ts        # ArchivePuzzle, ArchiveSection, etc.
+  │   └── archive.types.ts        # ArchivePuzzle (includes attempt field), ArchiveSection, etc.
   ├── hooks/
-  │   └── useArchivePuzzles.ts    # Main data hook
+  │   ├── useArchivePuzzles.ts    # Main data hook (stores full attempt for completed games)
+  │   └── useGatedNavigation.ts   # Premium gating hook
   ├── components/
-  │   ├── ArchiveList.tsx         # SectionList
-  │   ├── ArchivePuzzleCard.tsx   # Unlocked card
-  │   ├── LockedArchiveCard.tsx   # Locked card with blur
+  │   ├── ArchiveList.tsx         # SectionList (uses UniversalGameCard)
   │   ├── GameModeFilter.tsx      # Filter chips
-  │   ├── MonthHeader.tsx         # Section header
+  │   ├── MonthHeader.tsx         # Month section header
+  │   ├── DayHeader.tsx           # Day sub-header
   │   └── PremiumUpsellModal.tsx  # Upgrade modal
   ├── services/
   │   └── catalogSyncService.ts   # Supabase RPC sync
   ├── utils/
   │   └── dateGrouping.ts         # Month grouping, lock logic
   └── __tests__/
-      └── Gating.test.tsx         # Lock visibility tests
+      ├── Gating.test.tsx         # Lock visibility tests
+      └── PaywallFlow.test.tsx    # Paywall flow tests
 
 src/lib/database.ts (additions)
   ├── puzzle_catalog table        # Migration v2

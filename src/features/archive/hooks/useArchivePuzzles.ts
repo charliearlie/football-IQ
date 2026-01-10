@@ -15,6 +15,7 @@ import {
   getAttemptByPuzzleId,
 } from '@/lib/database';
 import { LocalCatalogEntry } from '@/types/database';
+import { ParsedLocalAttempt } from '@/types/database';
 import {
   ArchivePuzzle,
   ArchiveSection,
@@ -67,6 +68,7 @@ export function useArchivePuzzles(
       let status: 'play' | 'resume' | 'done' = 'play';
       let scoreDisplay: string | undefined;
       let score: number | undefined;
+      let attemptData: ParsedLocalAttempt | undefined;
 
       if (!isLocked && fullPuzzle) {
         const attempt = await getAttemptByPuzzleId(entry.id);
@@ -75,6 +77,7 @@ export function useArchivePuzzles(
             status = 'done';
             scoreDisplay = attempt.score_display ?? undefined;
             score = attempt.score ?? undefined;
+            attemptData = attempt;
           } else {
             status = 'resume';
           }
@@ -90,6 +93,7 @@ export function useArchivePuzzles(
         status,
         scoreDisplay,
         score,
+        attempt: attemptData,
       };
     },
     [isPremium, adUnlocks]

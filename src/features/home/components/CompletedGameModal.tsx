@@ -25,6 +25,7 @@ import {
 import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { ParsedLocalAttempt } from '@/types/database';
+import { extractEmojiGrid } from '@/utils/scoreDisplay';
 
 interface CompletedGameModalProps {
   /**
@@ -90,28 +91,6 @@ function getGameModeName(gameMode: GameMode): string {
     default:
       return 'Game';
   }
-}
-
-/**
- * Extract only the emoji grid from the full score_display string.
- */
-function extractEmojiGrid(scoreDisplay: string | null | undefined): string {
-  if (!scoreDisplay || scoreDisplay.trim().length === 0) {
-    return '';
-  }
-
-  const lines = scoreDisplay.trim().split('\n');
-  const emojiPattern =
-    /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u2B1B\u2B1C\u2705\u274C\u2B55]/u;
-
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i].trim();
-    if (line && emojiPattern.test(line) && !line.includes(':') && !line.includes('Football IQ')) {
-      return line;
-    }
-  }
-
-  return '';
 }
 
 /**

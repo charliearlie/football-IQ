@@ -730,10 +730,32 @@ src/
 ```
 
 ## Core Components
-```
+```typescript
 <ElevatedButton title="Play" onPress={fn} />
 <ElevatedButton title="Continue" onPress={fn} fullWidth />  // Stretch to container
 <GlassCard>{children}</GlassCard>
+
+// UniversalGameCard - Unified card for Home and Archive screens
+import { UniversalGameCard } from '@/components';
+
+// Home screen usage (daily variant - no date, no lock)
+<UniversalGameCard
+  gameMode="career_path"
+  status="play"  // 'play' | 'resume' | 'done'
+  onPress={handlePress}
+  variant="daily"
+/>
+
+// Archive screen usage (archive variant - shows date, can be locked)
+<UniversalGameCard
+  gameMode="career_path"
+  status="done"
+  onPress={handlePress}
+  variant="archive"
+  date="2024-12-20"        // Shows compact date like "Fri, Dec 20"
+  isLocked={false}         // true shows dimmed card with Lock button
+  scoreDisplay="🟩🟩⬛⬛⬛" // Emoji grid for done state
+/>
 ```
 
 ## Scripts

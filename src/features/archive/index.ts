@@ -18,8 +18,6 @@ export { useGatedNavigation } from './hooks/useGatedNavigation';
 
 // Components
 export { ArchiveList } from './components/ArchiveList';
-export { ArchivePuzzleCard } from './components/ArchivePuzzleCard';
-export { LockedArchiveCard } from './components/LockedArchiveCard';
 export { GameModeFilter } from './components/GameModeFilter';
 export { MonthHeader } from './components/MonthHeader';
 export { DayHeader } from './components/DayHeader';
