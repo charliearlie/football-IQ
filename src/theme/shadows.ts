@@ -58,19 +58,19 @@ export const shadows = {
   none: createShadow('#000', 0, 0, 0, 0),
 
   /** Subtle shadow for slight depth (e.g., input fields) */
-  sm: createShadow('#000', 2, 0.1, 4, 2),
+  sm: createShadow('#000', 2, 0.15, 4, 2),
 
-  /** Medium shadow for cards (default for most UI elements) */
-  md: createShadow('#000', 4, 0.15, 8, 4),
+  /** Medium shadow for cards */
+  md: createShadow('#000', 4, 0.25, 8, 4),
 
-  /** Large shadow for elevated cards and modals */
-  lg: createShadow('#000', 8, 0.2, 16, 8),
+  /** Large shadow for elevated cards - prominent depth */
+  lg: createShadow('#000', 6, 0.35, 12, 8),
 
   /** Extra large shadow for popovers and floating elements */
-  xl: createShadow('#000', 12, 0.25, 24, 12),
+  xl: createShadow('#000', 10, 0.4, 20, 12),
 
   /** Heavy shadow for maximum depth (e.g., bottom sheets) */
-  '2xl': createShadow('#000', 16, 0.3, 32, 16),
+  '2xl': createShadow('#000', 14, 0.5, 28, 16),
 } as const;
 
 /**

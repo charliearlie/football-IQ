@@ -13,7 +13,7 @@ import {
   Target,
   Grid3X3,
 } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing, borderRadius, shadows } from '@/theme';
 import { GameModeFilter as FilterType, GameMode } from '../types/archive.types';
 
 interface GameModeFilterProps {
@@ -143,9 +143,11 @@ export function GameModeFilter({
 const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.lg,
+    marginHorizontal: -spacing.xl, // Extend to screen edge
   },
   scrollContent: {
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: spacing.xl, // Match Archive content padding
+    paddingVertical: spacing.xs, // Allow shadow to render
     gap: spacing.sm,
   },
   chip: {
@@ -155,13 +157,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.glassBackground,
+    backgroundColor: colors.stadiumNavy,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+    ...shadows.md,
   },
   chipSelected: {
     backgroundColor: colors.pitchGreen,
     borderColor: colors.pitchGreen,
+    ...shadows.md,
   },
   chipLabel: {
     ...textStyles.caption,

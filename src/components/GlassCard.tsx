@@ -43,7 +43,7 @@ export function GlassCard({
     return (
       <View
         style={[
-          styles.container,
+          styles.shadowWrapper,
           styles.fallback,
           shadowStyle,
           style,
@@ -55,25 +55,34 @@ export function GlassCard({
     );
   }
 
+  // Use wrapper approach: outer view for shadow (no overflow:hidden),
+  // inner view for blur clipping (overflow:hidden)
   return (
     <View
-      style={[styles.container, shadowStyle, style]}
+      style={[styles.shadowWrapper, shadowStyle, style]}
       testID={testID}
     >
-      <BlurView intensity={intensity} style={styles.blur} tint="dark" />
-      <View style={styles.content}>{children}</View>
+      <View style={styles.innerContainer}>
+        <BlurView intensity={intensity} style={styles.blur} tint="dark" />
+        <View style={styles.content}>{children}</View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  // Outer wrapper - shadow renders here (no overflow:hidden!)
+  shadowWrapper: {
+    borderRadius: borderRadius.xl,
+    // Background color required for Android elevation
+    backgroundColor: colors.stadiumNavy,
+  },
+  // Inner container - clips blur effect
+  innerContainer: {
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.glassBorder,
-    // Background color required for Android elevation to render
-    backgroundColor: colors.stadiumNavy,
   },
   blur: {
     ...StyleSheet.absoluteFillObject,
@@ -85,5 +94,7 @@ const styles = StyleSheet.create({
   fallback: {
     backgroundColor: 'rgba(15, 23, 42, 0.8)',
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
 });
