@@ -79,4 +79,104 @@ describe('ElevatedButton', () => {
 
     expect(getByTestId('test-button')).toBeTruthy();
   });
+
+  // === VARIANT TESTS (TDD) ===
+
+  describe('variants', () => {
+    it('renders primary variant by default', () => {
+      const { getByTestId } = render(
+        <ElevatedButton title="Primary" onPress={() => {}} testID="btn" />
+      );
+      // Should render without errors - primary is the default
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('renders primary variant explicitly', () => {
+      const { getByTestId } = render(
+        <ElevatedButton
+          title="Primary"
+          onPress={() => {}}
+          variant="primary"
+          testID="btn"
+        />
+      );
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('renders secondary variant', () => {
+      const { getByTestId } = render(
+        <ElevatedButton
+          title="Secondary"
+          onPress={() => {}}
+          variant="secondary"
+          testID="btn"
+        />
+      );
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('renders danger variant', () => {
+      const { getByTestId } = render(
+        <ElevatedButton
+          title="Danger"
+          onPress={() => {}}
+          variant="danger"
+          testID="btn"
+        />
+      );
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('renders outline variant with glass background', () => {
+      const { getByTestId } = render(
+        <ElevatedButton
+          title="Outline"
+          onPress={() => {}}
+          variant="outline"
+          testID="btn"
+        />
+      );
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('allows topColor to override variant color', () => {
+      const { getByTestId } = render(
+        <ElevatedButton
+          title="Custom"
+          onPress={() => {}}
+          variant="primary"
+          topColor="#FF0000"
+          testID="btn"
+        />
+      );
+      // Should render with custom color, overriding primary
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('allows shadowColor to override variant shadow', () => {
+      const { getByTestId } = render(
+        <ElevatedButton
+          title="Custom Shadow"
+          onPress={() => {}}
+          variant="primary"
+          shadowColor="#CC0000"
+          testID="btn"
+        />
+      );
+      expect(getByTestId('btn')).toBeTruthy();
+    });
+
+    it('maintains backward compatibility - no variant uses primary colors', () => {
+      // This test ensures old code without variant prop still works
+      const { getByTestId, getAllByText } = render(
+        <ElevatedButton
+          title="Legacy"
+          onPress={() => {}}
+          testID="btn"
+        />
+      );
+      expect(getByTestId('btn')).toBeTruthy();
+      expect(getAllByText('Legacy').length).toBeGreaterThanOrEqual(1);
+    });
+  });
 });

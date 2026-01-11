@@ -33,7 +33,6 @@ import {
   TrendingUp,
   X,
   Check,
-  RotateCcw,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
@@ -327,10 +326,15 @@ export default function PremiumModalScreen() {
             ))}
 
             {/* Restore */}
-            <Pressable style={styles.restoreButton} onPress={handleRestore}>
-              <RotateCcw size={14} color={colors.textSecondary} />
-              <Text style={styles.restoreText}>Restore Purchases</Text>
-            </Pressable>
+            <View style={styles.restoreContainer}>
+              <ElevatedButton
+                title="Restore Purchases"
+                onPress={handleRestore}
+                variant="outline"
+                size="small"
+                fullWidth
+              />
+            </View>
 
             <Text style={styles.planNote}>
               Cancel anytime in your App Store settings.
@@ -372,9 +376,8 @@ export default function PremiumModalScreen() {
             <ElevatedButton
               title="Cancel"
               onPress={handleClose}
+              variant="outline"
               size="medium"
-              topColor={colors.glassBackground}
-              shadowColor={colors.glassBorder}
               fullWidth
             />
           </View>
@@ -621,17 +624,9 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.textSecondary,
   },
-  restoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    gap: spacing.xs,
-  },
-  restoreText: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
+  restoreContainer: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
   },
   planNote: {
     ...textStyles.caption,

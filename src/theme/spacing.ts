@@ -44,12 +44,15 @@ export const borderRadius = {
 
 /**
  * Shadow offset for 3D button effect
+ * Values create prominent tactile depth like Duolingo/Headspace
  */
 export const shadowOffset = {
+  /** Small button press depth */
+  buttonSmall: 5,
   /** Standard button press depth */
-  button: 4,
+  button: 8,
   /** Large button press depth */
-  buttonLarge: 6,
+  buttonLarge: 10,
 } as const;
 
 /**

@@ -29,6 +29,10 @@ export const colors = {
   warningOrange: '#FF4D00',
   warningOrangeShadow: '#CC3D00',
 
+  // Amber for "costly but not negative" actions (e.g., Reveal Hint)
+  amber: '#F59E0B',
+  amberShadow: '#D97706',
+
   // Glass card effects
   glassBackground: 'rgba(255, 255, 255, 0.05)',
   glassBorder: 'rgba(255, 255, 255, 0.1)',

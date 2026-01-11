@@ -8,3 +8,11 @@
 export { colors, type ColorName } from './colors';
 export { fonts, fontWeights, textStyles, type FontFamily } from './typography';
 export { spacing, borderRadius, shadowOffset, layout } from './spacing';
+export {
+  shadows,
+  glows,
+  combineWithGlow,
+  type ShadowPreset,
+  type ShadowLevel,
+  type GlowColor,
+} from './shadows';

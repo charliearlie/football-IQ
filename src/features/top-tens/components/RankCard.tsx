@@ -18,7 +18,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { colors, textStyles, borderRadius } from '@/theme';
+import { colors, textStyles, borderRadius, glows } from '@/theme';
 import { RankSlotState } from '../types/topTens.types';
 
 /** Highlight type during climbing animation */
@@ -139,10 +139,9 @@ export function RankCard({
         backgroundColor: 'rgba(34, 197, 94, 0.2)',
         borderColor: colors.pitchGreen,
         borderWidth: 1.5,
-        shadowColor: colors.pitchGreen,
-        shadowOffset: { width: 0, height: 0 },
+        ...glows.green,
         shadowOpacity: isLatest ? 0.7 : 0.4,
-        shadowRadius: isLatest ? 10 : 6,
+        shadowRadius: isLatest ? 14 : 8,
       };
     }
 

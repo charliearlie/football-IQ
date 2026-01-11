@@ -370,8 +370,18 @@ src/
 
 ### Core Components
 - **ElevatedButton**: Neubrutalist 3D button with haptic feedback
+  - `variant: 'primary' | 'secondary' | 'danger' | 'outline'`: Semantic color presets
+    - `primary`: Pitch Green (default, main CTAs)
+    - `secondary`: Stadium Navy (cancel, less emphasis)
+    - `danger`: Red Card (destructive actions)
+    - `outline`: Glass + white border (ghost buttons)
+  - `topColor`/`shadowColor`: Override variant colors (backward compatible)
   - `fullWidth` prop: Stretches button to fill container width
+  - `size: 'small' | 'medium' | 'large'`: Size variants with different offsets
+  - Uses `triggerMedium()` haptics for prominent tactile feedback
 - **GlassCard**: Frosted glass container (expo-blur)
+  - `showShadow?: boolean`: Enables subtle drop shadow for depth (default: true)
+  - Shadow: iOS shadowOffset + Android elevation for cross-platform consistency
 - **UniversalGameCard**: Unified game card for Home and Archive screens
   - `variant: 'daily' | 'archive'`: Controls layout behavior
   - `date?: string`: Shows compact date (archive variant only)

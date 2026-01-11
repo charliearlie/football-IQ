@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { CheckCircle } from 'lucide-react-native';
 import { GlassCard } from '@/components';
-import { colors, spacing, textStyles, borderRadius } from '@/theme';
+import { colors, spacing, textStyles, borderRadius, glows } from '@/theme';
 import { CareerStep } from '../types/careerPath.types';
 import { LockedCard } from './LockedCard';
 
@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
   latestCard: {
     borderColor: colors.pitchGreen,
     borderWidth: 2,
+    ...glows.green,
   },
   stepBadge: {
     width: 32,
@@ -244,11 +245,9 @@ const styles = StyleSheet.create({
   winningCard: {
     borderColor: colors.pitchGreen,
     borderWidth: 2,
-    shadowColor: colors.pitchGreen,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4, // Android shadow
+    ...glows.green,
+    shadowOpacity: 0.6, // Stronger glow for winning state
+    shadowRadius: 16,
   },
   stepBadgeWinning: {
     backgroundColor: colors.pitchGreen,
@@ -265,6 +264,8 @@ const styles = StyleSheet.create({
   missedCard: {
     borderColor: colors.redCard,
     borderWidth: 2,
+    ...glows.red,
+    shadowOpacity: 0.4,
   },
   missedBadge: {
     position: 'absolute',

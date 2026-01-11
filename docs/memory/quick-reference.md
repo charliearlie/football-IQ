@@ -960,9 +960,20 @@ src/
 
 ## Core Components
 ```typescript
-<ElevatedButton title="Play" onPress={fn} />
-<ElevatedButton title="Continue" onPress={fn} fullWidth />  // Stretch to container
-<GlassCard>{children}</GlassCard>
+// ElevatedButton - Tactile 3D button with haptic feedback
+<ElevatedButton title="Play" onPress={fn} />                         // Primary (default)
+<ElevatedButton title="Cancel" onPress={fn} variant="secondary" />   // Stadium Navy
+<ElevatedButton title="Give Up" onPress={fn} variant="danger" />     // Red Card
+<ElevatedButton title="Maybe Later" onPress={fn} variant="outline" />// Glass + white border
+<ElevatedButton title="Continue" onPress={fn} fullWidth />           // Stretch to container
+<ElevatedButton title="Submit" onPress={fn} size="large" />          // Large size (6px offset)
+
+// Override variant colors (backward compatible)
+<ElevatedButton title="Custom" topColor="#FACC15" shadowColor="#D4A500" />
+
+// GlassCard - Frosted glass container with optional shadow
+<GlassCard>{children}</GlassCard>                    // With shadow (default)
+<GlassCard showShadow={false}>{children}</GlassCard> // Without shadow
 
 // UniversalGameCard - Unified card for Home and Archive screens
 import { UniversalGameCard } from '@/components';

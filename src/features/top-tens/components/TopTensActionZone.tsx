@@ -1,12 +1,14 @@
 /**
  * TopTensActionZone - Input and action buttons for Top Tens.
  *
- * Contains a text input for guesses and submit/give-up buttons.
- * Shows shake animation on incorrect guesses.
+ * Layout:
+ * - Input field + Submit button (inline row)
+ * - Feedback messages (duplicate/incorrect)
+ * - Give Up text link (red, subtle)
  */
 
 import { useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, Platform } from 'react-native';
+import { View, TextInput, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -45,17 +47,6 @@ export interface TopTensActionZoneProps {
   testID?: string;
 }
 
-/**
- * TopTensActionZone - Input and action area for Top Tens.
- *
- * Features:
- * - Text input for guessing answers
- * - Submit button (primary green)
- * - Give Up button (warning orange)
- * - Shake animation on incorrect guess
- * - Duplicate feedback message
- * - Progress display (X/10 found)
- */
 export function TopTensActionZone({
   currentGuess,
   onGuessChange,
@@ -71,7 +62,6 @@ export function TopTensActionZone({
 
   useEffect(() => {
     if (shouldShake) {
-      // Shake sequence: quick oscillation left-right
       shakeX.value = withSequence(
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),
@@ -94,22 +84,31 @@ export function TopTensActionZone({
 
   return (
     <View style={styles.container} testID={testID}>
-      {/* Input with shake animation */}
-      <Animated.View style={[styles.inputContainer, shakeStyle]}>
-        <TextInput
-          style={styles.input}
-          value={currentGuess}
-          onChangeText={onGuessChange}
-          placeholder="Enter your guess..."
-          placeholderTextColor={colors.textSecondary}
-          editable={!isGameOver}
-          autoCapitalize="words"
-          autoCorrect={false}
-          returnKeyType="done"
-          onSubmitEditing={handleSubmit}
-          testID={`${testID}-input`}
+      {/* Input + Submit inline row */}
+      <View style={styles.inputRow}>
+        <Animated.View style={[styles.inputContainer, shakeStyle]}>
+          <TextInput
+            style={styles.input}
+            value={currentGuess}
+            onChangeText={onGuessChange}
+            placeholder="Enter your guess..."
+            placeholderTextColor={colors.textSecondary}
+            editable={!isGameOver}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit}
+            testID={`${testID}-input`}
+          />
+        </Animated.View>
+        <ElevatedButton
+          title="Submit"
+          onPress={handleSubmit}
+          disabled={isGameOver || !currentGuess.trim()}
+          size="medium"
+          testID={`${testID}-submit`}
         />
-      </Animated.View>
+      </View>
 
       {/* Feedback messages */}
       {showDuplicate && (
@@ -119,27 +118,19 @@ export function TopTensActionZone({
         <Text style={styles.incorrectText}>Incorrect!</Text>
       )}
 
-      {/* Buttons - Give Up on left, Submit (primary) on right */}
-      <View style={styles.buttonRow}>
-        {!isGameOver && (
-          <ElevatedButton
-            title="Give Up"
-            onPress={onGiveUp}
-            topColor={colors.warningOrange}
-            shadowColor={colors.warningOrangeShadow}
-            size="medium"
-            testID={`${testID}-giveup`}
-          />
-        )}
-
-        <ElevatedButton
-          title="Submit"
-          onPress={handleSubmit}
-          disabled={isGameOver || !currentGuess.trim()}
-          size="medium"
-          testID={`${testID}-submit`}
-        />
-      </View>
+      {/* Give Up - red text link */}
+      {!isGameOver && (
+        <Pressable
+          onPress={onGiveUp}
+          style={({ pressed }) => [
+            styles.giveUpLink,
+            pressed && styles.giveUpLinkPressed,
+          ]}
+          testID={`${testID}-giveup`}
+        >
+          <Text style={styles.giveUpText}>Give up</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -153,20 +144,28 @@ const styles = StyleSheet.create({
     borderTopColor: colors.glassBorder,
     gap: spacing.md,
   },
+  inputRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
   inputContainer: {
+    flex: 1,
     borderRadius: borderRadius.xl,
     borderWidth: 2,
     borderColor: colors.glassBorder,
     backgroundColor: colors.glassBackground,
     overflow: 'hidden',
+    justifyContent: 'center',
   },
   input: {
     fontFamily: fonts.headline,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.floodlightWhite,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     letterSpacing: 0.5,
+    textAlignVertical: 'center',
   },
   duplicateText: {
     fontFamily: fonts.body,
@@ -180,9 +179,16 @@ const styles = StyleSheet.create({
     color: colors.redCard,
     textAlign: 'center',
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.md,
+  giveUpLink: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  giveUpLinkPressed: {
+    opacity: 0.7,
+  },
+  giveUpText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.redCard,
   },
 });

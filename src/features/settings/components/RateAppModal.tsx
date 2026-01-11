@@ -127,13 +127,14 @@ export function RateAppModal({
           />
 
           {/* Maybe Later Button */}
-          <Pressable
+          <ElevatedButton
+            title="Maybe Later"
             onPress={handleMaybeLater}
-            style={styles.laterButton}
+            variant="outline"
+            size="small"
+            fullWidth
             testID={testID ? `${testID}-later-button` : undefined}
-          >
-            <Text style={styles.laterButtonText}>Maybe Later</Text>
-          </Pressable>
+          />
         </Animated.View>
       </View>
     </Modal>
@@ -193,13 +194,5 @@ const styles = StyleSheet.create({
   rateButton: {
     width: '100%',
     marginBottom: spacing.md,
-  },
-  laterButton: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-  },
-  laterButtonText: {
-    ...textStyles.body,
-    color: colors.textSecondary,
   },
 });

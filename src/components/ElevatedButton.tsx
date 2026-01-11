@@ -3,26 +3,73 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  interpolate,
 } from 'react-native-reanimated';
 import { useHaptics } from '@/hooks/useHaptics';
 import { colors, textStyles, borderRadius, shadowOffset } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+/**
+ * Semantic button variants for consistent styling across the app.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline';
+
+/**
+ * Color configuration for each variant.
+ */
+interface VariantColorConfig {
+  backgroundColor: string;
+  borderBottomColor: string;
+  borderColor?: string;
+  textColor: string;
+}
+
+/**
+ * Variant color mappings using solid 3D technique.
+ * borderBottomColor is a darker shade of backgroundColor for the 3D depth effect.
+ */
+const VARIANT_COLORS: Record<ButtonVariant, VariantColorConfig> = {
+  primary: {
+    backgroundColor: colors.pitchGreen,
+    borderBottomColor: colors.grassShadow,
+    textColor: colors.stadiumNavy,
+  },
+  secondary: {
+    backgroundColor: colors.stadiumNavy,
+    borderBottomColor: '#0A1628', // Darker navy
+    borderColor: colors.floodlightWhite,
+    textColor: colors.floodlightWhite,
+  },
+  danger: {
+    backgroundColor: colors.redCard,
+    borderBottomColor: '#B91C1C', // Darker red
+    textColor: colors.floodlightWhite,
+  },
+  outline: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glass background
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)', // Slightly visible depth
+    borderColor: colors.floodlightWhite,
+    textColor: colors.floodlightWhite,
+  },
+};
+
 export interface ElevatedButtonProps {
   /** Button label text */
   title: string;
   /** Press handler */
   onPress: () => void;
-  /** Top layer color (default: Pitch Green) */
+  /** Semantic color variant (default: 'primary') */
+  variant?: ButtonVariant;
+  /** Background color (overrides variant) */
   topColor?: string;
-  /** Shadow/bottom layer color (default: Grass Shadow) */
+  /** Bottom border color for 3D effect (overrides variant) */
   shadowColor?: string;
   /** Button size variant */
   size?: 'small' | 'medium' | 'large';
   /** Disable the button */
   disabled?: boolean;
-  /** Stretch button to fill parent width (for modal buttons) */
+  /** Stretch button to fill parent width */
   fullWidth?: boolean;
   /** Additional container styles */
   style?: ViewStyle;
@@ -32,7 +79,7 @@ export interface ElevatedButtonProps {
 
 const SPRING_CONFIG = {
   damping: 15,
-  stiffness: 150,
+  stiffness: 300,
   mass: 0.5,
 };
 
@@ -40,35 +87,40 @@ const SIZE_CONFIG = {
   small: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    offset: 3,
+    depth: shadowOffset.buttonSmall,
     textStyle: textStyles.caption as TextStyle,
   },
   medium: {
     paddingHorizontal: 24,
     paddingVertical: 14,
-    offset: shadowOffset.button,
+    depth: shadowOffset.button,
     textStyle: textStyles.button as TextStyle,
   },
   large: {
     paddingHorizontal: 32,
     paddingVertical: 18,
-    offset: shadowOffset.buttonLarge,
+    depth: shadowOffset.buttonLarge,
     textStyle: textStyles.buttonLarge as TextStyle,
   },
 };
 
 /**
- * ElevatedButton - Neubrutalist 3D Button
+ * ElevatedButton - Duolingo-style 3D Tactile Button
  *
- * A tactile button with a 3D press effect and haptic feedback.
- * The top layer translates down on press to meet the shadow layer,
- * creating a satisfying "click" sensation.
+ * Uses the solid borderBottomWidth technique for reliable 3D depth.
+ * On press, the button translates down and the border shrinks,
+ * simulating being physically pressed into the screen.
+ *
+ * @example
+ * <ElevatedButton title="Play" onPress={handlePlay} />
+ * <ElevatedButton title="Give Up" onPress={handleGiveUp} variant="danger" />
  */
 export function ElevatedButton({
   title,
   onPress,
-  topColor = colors.pitchGreen,
-  shadowColor = colors.grassShadow,
+  variant = 'primary',
+  topColor,
+  shadowColor,
   size = 'medium',
   disabled = false,
   fullWidth = false,
@@ -76,13 +128,21 @@ export function ElevatedButton({
   testID,
 }: ElevatedButtonProps) {
   const pressed = useSharedValue(0);
-  const { triggerSelection } = useHaptics();
+  const { triggerMedium } = useHaptics();
+
+  const variantColors = VARIANT_COLORS[variant];
+  const backgroundColor = topColor ?? variantColors.backgroundColor;
+  const borderBottomColor = shadowColor ?? variantColors.borderBottomColor;
+  const borderColor = variantColors.borderColor ?? backgroundColor;
+  const textColor = variantColors.textColor;
 
   const sizeConfig = SIZE_CONFIG[size];
-  const offset = sizeConfig.offset;
+  const depth = sizeConfig.depth;
 
-  const animatedTopStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: pressed.value * offset }],
+  // Animate translateY and borderBottomWidth together
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(pressed.value, [0, 1], [0, depth]) }],
+    borderBottomWidth: interpolate(pressed.value, [0, 1], [depth, 0]),
   }));
 
   const handlePressIn = () => {
@@ -97,7 +157,7 @@ export function ElevatedButton({
 
   const handlePress = () => {
     if (!disabled) {
-      triggerSelection();
+      triggerMedium();
       onPress();
     }
   };
@@ -109,10 +169,19 @@ export function ElevatedButton({
       onPress={handlePress}
       disabled={disabled}
       style={[
-        styles.container,
-        { paddingBottom: offset },
+        styles.button,
+        {
+          // Keep original colors even when disabled - opacity handles the muted effect
+          backgroundColor: backgroundColor,
+          borderBottomColor: borderBottomColor,
+          borderColor: borderColor,
+          paddingHorizontal: sizeConfig.paddingHorizontal,
+          paddingVertical: sizeConfig.paddingVertical,
+          borderBottomWidth: depth,
+          opacity: disabled ? 0.4 : 1,
+        },
         fullWidth && styles.fullWidth,
-        disabled && styles.disabled,
+        animatedStyle,
         style,
       ]}
       testID={testID}
@@ -120,82 +189,22 @@ export function ElevatedButton({
       accessibilityLabel={title}
       accessibilityState={{ disabled }}
     >
-      {/* Shadow layer (bottom) */}
-      <Animated.View
-        style={[
-          styles.layer,
-          styles.shadow,
-          {
-            backgroundColor: disabled ? colors.textSecondary : shadowColor,
-            paddingHorizontal: sizeConfig.paddingHorizontal,
-            paddingVertical: sizeConfig.paddingVertical,
-          },
-        ]}
-      >
-        <Text style={[sizeConfig.textStyle, styles.text, { opacity: 0 }]}>
-          {title}
-        </Text>
-      </Animated.View>
-
-      {/* Top layer */}
-      <Animated.View
-        style={[
-          styles.layer,
-          styles.top,
-          {
-            backgroundColor: disabled ? colors.glassBorder : topColor,
-            paddingHorizontal: sizeConfig.paddingHorizontal,
-            paddingVertical: sizeConfig.paddingVertical,
-            top: 0,
-          },
-          animatedTopStyle,
-        ]}
-      >
-        <Text
-          style={[
-            sizeConfig.textStyle,
-            styles.text,
-            disabled && styles.textDisabled,
-          ]}
-        >
-          {title}
-        </Text>
-      </Animated.View>
+      <Text style={[sizeConfig.textStyle, { color: textColor }]}>
+        {title}
+      </Text>
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
+  button: {
     alignSelf: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
   },
   fullWidth: {
     alignSelf: 'stretch',
-  },
-  layer: {
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    borderColor: colors.stadiumNavy,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shadow: {
-    position: 'relative',
-  },
-  top: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  text: {
-    color: colors.stadiumNavy,
-    fontWeight: '600',
-  },
-  textDisabled: {
-    color: colors.textSecondary,
-  },
-  disabled: {
-    opacity: 0.7,
   },
 });

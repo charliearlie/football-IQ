@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, Platform } from 'react-native';
+import { View, TextInput, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
+import { Lightbulb } from 'lucide-react-native';
 import { ElevatedButton } from '@/components';
 import { colors, spacing, fonts, borderRadius, textStyles } from '@/theme';
 
@@ -45,11 +46,10 @@ export interface TransferActionZoneProps {
 /**
  * TransferActionZone - The input and action buttons area.
  *
- * Contains:
- * - Text input for player name guesses (shakes on incorrect)
- * - Guesses remaining indicator
- * - "Submit Guess" button (primary green)
- * - "Reveal Hint" button (warning orange, hidden when all hints revealed)
+ * Layout:
+ * - Guesses remaining indicator (caption)
+ * - Input field + Submit button (inline row)
+ * - "Reveal Hint" text link with lightbulb icon (amber, subtle)
  * - "Give Up" button (red, shown after 2+ incorrect guesses)
  */
 export function TransferActionZone({
@@ -101,44 +101,46 @@ export function TransferActionZone({
         </Text>
       </View>
 
-      {/* Input field */}
-      <Animated.View style={[styles.inputContainer, shakeStyle]}>
-        <TextInput
-          style={styles.input}
-          value={currentGuess}
-          onChangeText={onGuessChange}
-          placeholder="Enter player name..."
-          placeholderTextColor={colors.textSecondary}
-          editable={!isGameOver}
-          autoCapitalize="words"
-          autoCorrect={false}
-          returnKeyType="done"
-          onSubmitEditing={handleSubmit}
-          testID={`${testID}-input`}
-        />
-      </Animated.View>
-
-      {/* Primary action buttons */}
-      <View style={styles.buttonRow}>
+      {/* Input + Submit inline row */}
+      <View style={styles.inputRow}>
+        <Animated.View style={[styles.inputContainer, shakeStyle]}>
+          <TextInput
+            style={styles.input}
+            value={currentGuess}
+            onChangeText={onGuessChange}
+            placeholder="Enter player name..."
+            placeholderTextColor={colors.textSecondary}
+            editable={!isGameOver}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit}
+            testID={`${testID}-input`}
+          />
+        </Animated.View>
         <ElevatedButton
-          title="Submit Guess"
+          title="Submit"
           onPress={handleSubmit}
           disabled={isGameOver || !currentGuess.trim()}
           size="medium"
           testID={`${testID}-submit`}
         />
-
-        {canRevealHint && !isGameOver && (
-          <ElevatedButton
-            title="Reveal Hint"
-            onPress={onRevealHint}
-            topColor={colors.warningOrange}
-            shadowColor={colors.warningOrangeShadow}
-            size="medium"
-            testID={`${testID}-reveal`}
-          />
-        )}
       </View>
+
+      {/* Reveal Hint - subtle text link (costly action) */}
+      {canRevealHint && !isGameOver && (
+        <Pressable
+          onPress={onRevealHint}
+          style={({ pressed }) => [
+            styles.hintLink,
+            pressed && styles.hintLinkPressed,
+          ]}
+          testID={`${testID}-reveal`}
+        >
+          <Lightbulb size={18} color={colors.amber} />
+          <Text style={styles.hintText}>Reveal a hint</Text>
+        </Pressable>
+      )}
 
       {/* Give Up button (shown after 2+ wrong guesses) */}
       {showGiveUp && (
@@ -146,8 +148,7 @@ export function TransferActionZone({
           <ElevatedButton
             title="Give Up"
             onPress={onGiveUp}
-            topColor={colors.redCard}
-            shadowColor="#B91C1C"
+            variant="danger"
             size="small"
             testID={`${testID}-giveup`}
           />
@@ -175,27 +176,45 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
+  inputRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
   inputContainer: {
+    flex: 1,
     borderRadius: borderRadius.xl,
     borderWidth: 2,
     borderColor: colors.glassBorder,
     backgroundColor: colors.glassBackground,
     overflow: 'hidden',
+    justifyContent: 'center',
   },
   input: {
     fontFamily: fonts.headline,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.floodlightWhite,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     letterSpacing: 0.5,
+    textAlignVertical: 'center',
   },
-  buttonRow: {
+  hintLink: {
     flexDirection: 'row',
-    gap: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  hintLinkPressed: {
+    opacity: 0.7,
+  },
+  hintText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.amber,
   },
   giveUpRow: {
     alignItems: 'center',
-    marginTop: spacing.xs,
   },
 });
