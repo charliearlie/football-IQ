@@ -1,12 +1,13 @@
 # Football IQ - Project Context
 
 ## Project Overview
-Football IQ is a mobile trivia game for football fans featuring daily puzzles across 5 game modes:
+Football IQ is a mobile trivia game for football fans featuring daily puzzles across 6 game modes:
 1. Career Path - Guess player from sequential clues
 2. The Grid - Fill 3x3 matrix with players matching row/column criteria
 3. Guess the Transfer - Identify player from transfer info
 4. Guess the Goalscorers - Name scorers from match result
 5. Topical Quiz - 5 multiple-choice questions on current events
+6. Top Tens (Premium) - Name all 10 answers in a ranked list
 
 ## Tech Stack
 - **Mobile App**: React Native + Expo
@@ -1108,6 +1109,126 @@ src/features/topical-quiz/
 - Accessible from Games tab card ('topical-quiz')
 - Dynamic route: `/topical-quiz/[puzzleId]`
 
+## Top Tens Game Mode
+Initialized: 2026-01-11
+
+### Overview
+Premium-only ranking puzzle where players guess all 10 items in a top 10 list (inspired by TV show "Tenable"). Correct guesses reveal answers at their rank position. Players can continue guessing or give up to reveal all remaining answers.
+
+### Premium Access
+Top Tens is the first premium-only game mode. Non-premium users see it in the Daily Loop but must upgrade to play. Route-level protection via `PremiumOnlyGate` component.
+
+### Puzzle Content Structure
+```typescript
+interface TopTensAnswer {
+  name: string;           // Primary display name (e.g., "Alan Shearer")
+  aliases?: string[];     // Alternative names (e.g., ["Shearer"])
+  info?: string;          // Optional stat (e.g., "260 goals")
+}
+
+interface TopTensContent {
+  title: string;          // Puzzle title (e.g., "Top 10 Premier League Goalscorers")
+  category?: string;      // Category (e.g., "Premier League")
+  answers: TopTensAnswer[]; // Ordered array where index 0 = Rank #1
+}
+```
+
+### Game State
+```
+gameStatus: 'playing' | 'won' | 'lost'
+rankSlots: RankSlotState[10] → each slot has rank, found flag, answer
+foundCount: 0 → counts up to 10
+wrongGuessCount: 0 → increments on incorrect guess
+currentGuess: string → text input
+lastGuessCorrect: triggers reveal animation
+lastGuessIncorrect: triggers shake animation
+lastGuessDuplicate: triggers feedback message
+score: TopTensScore | null → calculated on game end
+```
+
+### Key Mechanics
+| Mechanic | Behavior |
+|----------|----------|
+| Guessing | Type answer into input, submit to check |
+| Correct Guess | Reveals at correct rank position (1-10) |
+| Incorrect Guess | Shake animation, count incremented |
+| Duplicate Guess | Feedback shown, no penalty |
+| Win Condition | All 10 answers found |
+| Give Up | Reveals all remaining answers, ends game |
+
+### Scoring System
+```
+Formula: Score = foundCount (0-10)
+
+Simple scoring: 1 point per answer found
+Max: 10 points (all found)
+Min: 0 points (none found)
+
+Format: "7/10"
+```
+
+### Score Display (Emoji Grid)
+Format: `✅✅✅✅✅✅✅❌❌❌` (one per rank)
+- `✅` = Answer found
+- `❌` = Answer missed
+
+Example: 7/10 = `✅✅✅✅✅✅✅❌❌❌`
+
+### Validation
+Reuses shared fuzzy matching from `@/lib/validation.ts`:
+- Case insensitive, accent normalization
+- Alias matching (checks all aliases per answer)
+- Surname matching (e.g., "Shearer" matches "Alan Shearer")
+- Typo tolerance (0.85 threshold)
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `TopTensScreen` | Main screen with grid + action zone |
+| `RankCard` | Individual rank slot (hidden/revealed states) |
+| `RankGrid` | Vertical list of 10 RankCards |
+| `TopTensActionZone` | TextInput + Submit/Give Up buttons |
+| `TopTensResultModal` | Result modal with confetti + share |
+| `PremiumOnlyGate` | HOC that blocks non-premium users |
+
+### Animations
+- **RankCard reveal**: Spring animation when answer found
+- **Action zone shake**: On incorrect guess
+- **Confetti**: On win (all 10 found)
+
+### Files
+```
+src/features/top-tens/
+  ├── index.ts                    # Public exports
+  ├── screens/
+  │   └── TopTensScreen.tsx
+  ├── components/
+  │   ├── RankCard.tsx
+  │   ├── RankGrid.tsx
+  │   ├── TopTensActionZone.tsx
+  │   ├── TopTensResultModal.tsx
+  │   └── PremiumOnlyGate.tsx
+  ├── hooks/
+  │   └── useTopTensGame.ts       # Reducer + validation + persistence
+  ├── utils/
+  │   ├── validation.ts           # Answer matching logic
+  │   ├── scoring.ts              # Score calculation
+  │   ├── scoreDisplay.ts         # Emoji grid generation
+  │   └── share.ts                # Share functionality
+  ├── types/
+  │   └── topTens.types.ts        # Type definitions
+  └── __tests__/
+      ├── validation.test.ts      # TDD validation tests
+      ├── scoring.test.ts         # TDD scoring tests
+      └── gameLogic.test.ts       # TDD reducer tests
+```
+
+### Navigation
+- Route: `/top-tens`
+- Route: `/top-tens/[puzzleId]`
+- Premium-only: `PremiumOnlyGate` wraps screens
+- Home screen shows locked state for non-premium users
+
 ## Daily Loop System
 Initialized: 2025-12-25
 
@@ -1118,7 +1239,7 @@ The Daily Loop connects the database to the UI, providing a centralized Home Scr
 **Location:** `app/(tabs)/index.tsx`
 
 Components:
-- **StreakHeader**: Displays current streak (fire icon + count) and daily progress (X/5)
+- **StreakHeader**: Displays current streak (fire icon + count) and daily progress (X/6)
 - **DailyStackCard**: Individual game card with state-dependent UI
 
 Card States:
@@ -1166,7 +1287,7 @@ Global streak increments when user completes at least 1 puzzle per day.
 | Hook | Purpose |
 |------|---------|
 | `useUserStats()` | Streak calculation, games played stats |
-| `useDailyPuzzles()` | Today's 5 puzzle cards with status |
+| `useDailyPuzzles()` | Today's 6 puzzle cards with status |
 | `usePuzzle(gameModeOrPuzzleId)` | Get puzzle by game mode OR puzzle ID |
 
 ### State Machine
@@ -1224,7 +1345,7 @@ src/lib/database.ts (additions)
 **Location:** `scripts/seed_data.sql`
 
 Development seed includes:
-- 35 puzzles: 5 modes × 7 days (CURRENT_DATE -3 to +3)
+- 42 puzzles: 6 modes × 7 days (CURRENT_DATE -3 to +3)
 - 10 match_data rows for Goalscorer Recall
 - All puzzles set to `status: 'live'` for RLS access
 
@@ -1664,7 +1785,7 @@ Initialized: 2026-01-02
 Comprehensive profile screen that aggregates all puzzle attempt data to calculate a "Football IQ" score and display proficiency across game modes. Replaced the placeholder Stats tab.
 
 ### Global IQ Calculation
-Weighted average of proficiency across 5 game modes:
+Weighted average of proficiency across 6 game modes:
 
 | Game Mode | Weight | Normalization |
 |-----------|--------|---------------|
@@ -2025,7 +2146,7 @@ src/lib/database.ts (migration v3)
 ### State Persistence (All Game Modes)
 Initialized: 2026-01-06
 
-All 5 game modes now support progressive save:
+All 6 game modes now support progressive save:
 - Game state saved to SQLite when app backgrounds (AppState listener)
 - State restored on mount if incomplete attempt exists (`completed: 0`)
 - Uses `attemptId` to track in-progress games
@@ -2308,7 +2429,7 @@ Thin, high-contrast banner displayed at the top of ALL game screens when in revi
 - Eye icon from lucide-react-native
 - Uses Bebas Neue font (`fonts.headline`)
 
-Added to all 5 game screens:
+Added to all 6 game screens:
 - CareerPathScreen
 - TransferGuessScreen
 - TopicalQuizScreen

@@ -501,6 +501,66 @@ calculateQuizScore(5)  // { points: 10, maxPoints: 10, correctCount: 5 }
 generateQuizEmojiGrid(answers)
 ```
 
+## Top Tens Game (Premium)
+```typescript
+import {
+  TopTensScreen,
+  useTopTensGame,
+  calculateTopTensScore,
+  formatTopTensScore,
+  generateTopTensEmojiGrid,
+  shareTopTensResult,
+  PremiumOnlyGate,
+} from '@/features/top-tens';
+
+// Puzzle content structure
+interface TopTensContent {
+  title: string;                    // "Top 10 Premier League Goalscorers"
+  category?: string;                // "Premier League"
+  answers: TopTensAnswer[];         // 10 items, index 0 = rank #1
+}
+
+interface TopTensAnswer {
+  name: string;                     // Primary display name
+  aliases?: string[];               // Alternative accepted names
+  info?: string;                    // Optional stat (e.g., "260 goals")
+}
+
+// Hook usage (internal to TopTensScreen)
+const {
+  state,
+  content,
+  submitGuess,
+  giveUp,
+  shareResult,
+} = useTopTensGame(puzzle);
+
+// State values
+state.gameStatus         // 'playing' | 'won' | 'lost'
+state.rankSlots          // Array of 10 { rank, found, answer }
+state.foundCount         // 0-10 (answers found)
+state.wrongGuessCount    // Count of incorrect guesses
+state.currentGuess       // Current input text
+state.score              // TopTensScore | null (set on game end)
+state.lastGuessIncorrect // Triggers shake animation
+state.lastGuessDuplicate // Triggers duplicate feedback
+
+// Scoring: 1 point per answer found, max 10
+calculateTopTensScore(7, 3, false)  // { points: 7, maxPoints: 10, won: false }
+calculateTopTensScore(10, 2, true)  // { points: 10, maxPoints: 10, won: true }
+
+// Format: "7/10"
+formatTopTensScore(score)
+
+// Emoji grid: ✅✅✅✅✅✅✅❌❌❌
+generateTopTensEmojiGrid(rankSlots, score)
+
+// Premium gating (route-level)
+<PremiumOnlyGate>
+  <TopTensScreen puzzleId={puzzleId} />
+</PremiumOnlyGate>
+```
+
 ## My IQ Profile Screen
 ```typescript
 import {
@@ -843,6 +903,7 @@ const result = await prefetchQuizImages(urls);
 - Tic Tac Toe: `src/features/tic-tac-toe/` (legacy)
 - The Grid: `src/features/the-grid/`
 - Topical Quiz: `src/features/topical-quiz/`
+- Top Tens: `src/features/top-tens/` (premium-only)
 - Archive: `src/features/archive/`
 - My IQ (Stats): `src/features/stats/`
 - Leaderboard: `src/features/leaderboard/`
@@ -860,6 +921,7 @@ app/
   transfer-guess/       # Transfer Guess game routes
   goalscorer-recall/    # Goalscorer Recall game routes
   topical-quiz/         # Topical Quiz game routes
+  top-tens/             # Top Tens game routes (premium-only)
   leaderboard/          # Leaderboard screen with Daily/Global toggle
   design-lab.tsx        # Component showcase
 src/
@@ -880,6 +942,7 @@ src/
     transfer-guess/    # TransferGuessScreen, useTransferGuessGame
     goalscorer-recall/ # GoalscorerRecallScreen, useGoalscorerRecallGame
     topical-quiz/      # TopicalQuizScreen, useTopicalQuizGame
+    top-tens/          # TopTensScreen, useTopTensGame (premium-only)
     home/
     games/
     archive/
@@ -945,7 +1008,7 @@ open tools/content-creator.html
 3. Fill form → Review JSON → Push to Supabase
 ```
 
-Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `topical_quiz`
+Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `topical_quiz`, `top_tens`
 
 ## RevenueCat Integration
 ```typescript

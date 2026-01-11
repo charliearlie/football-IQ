@@ -21,6 +21,8 @@ export interface DailyPuzzleCard {
   scoreDisplay?: string;
   difficulty?: string | null;
   attempt?: ParsedLocalAttempt;
+  /** Whether this game mode is premium-only (locked for free users) */
+  isPremiumOnly?: boolean;
 }
 
 /**
@@ -49,7 +51,14 @@ const GAME_MODE_ORDER: GameMode[] = [
   'guess_the_goalscorers',
   'the_grid',
   'topical_quiz',
+  'top_tens',
 ];
+
+/**
+ * Game modes that require premium subscription.
+ * These are shown as locked for free users.
+ */
+const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['top_tens']);
 
 /**
  * Hook to get today's puzzles with their completion status.
@@ -124,6 +133,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           scoreDisplay: attempt?.score_display ?? undefined,
           difficulty: puzzle.difficulty,
           attempt: attempt ?? undefined,
+          isPremiumOnly: PREMIUM_ONLY_MODES.has(gameMode),
         };
       });
 
@@ -148,6 +158,20 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
         };
         // Insert at correct position
         validCards.splice(quizIndex, 0, placeholderCard);
+      }
+
+      // If top_tens has no puzzle, add a placeholder (premium-only)
+      if (!puzzleMap.has('top_tens')) {
+        const topTensIndex = GAME_MODE_ORDER.indexOf('top_tens');
+        const placeholderCard: DailyPuzzleCard = {
+          puzzleId: 'coming-soon-top-tens',
+          gameMode: 'top_tens',
+          status: 'play', // Will be handled specially in the component
+          difficulty: null,
+          isPremiumOnly: true,
+        };
+        // Insert at correct position
+        validCards.splice(topTensIndex, 0, placeholderCard);
       }
 
       setCards(validCards);

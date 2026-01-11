@@ -24,6 +24,7 @@ import {
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { PremiumUpsellBanner } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
+import { useAuth } from '@/features/auth';
 
 /**
  * Route map for each game mode.
@@ -35,22 +36,32 @@ const ROUTE_MAP: Record<GameMode, string> = {
   tic_tac_toe: 'tic-tac-toe',
   the_grid: 'the-grid',
   topical_quiz: 'topical-quiz',
+  top_tens: 'top-tens',
 };
+
+/**
+ * DEV ONLY: Bypass premium gate for testing on simulator.
+ * Set to true to skip premium check in development.
+ */
+const DEV_BYPASS_PREMIUM = __DEV__ && true; // Set to false to test real premium gating
 
 /**
  * Home Screen - Daily Challenge Dashboard
  *
  * Main landing screen showing:
  * - Streak header with current streak and daily progress
- * - Daily stack of 5 game mode cards with Play/Resume/Done states
+ * - Daily stack of 6 game mode cards with Play/Resume/Done states
  *
  * Automatically refreshes when app comes to foreground (handles midnight transition).
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const { profile } = useAuth();
   const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
   const { cards, completedCount, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
 
+  // In dev mode with bypass enabled, treat user as premium
+  const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
   const isLoading = statsLoading || puzzlesLoading;
 
   // State for completed game modal
@@ -90,6 +101,15 @@ export default function HomeScreen() {
   // Navigate to game screen or show completed modal
   const handleCardPress = useCallback(
     (card: DailyPuzzleCard) => {
+      // Premium-only games: show premium modal for non-premium users
+      if (card.isPremiumOnly && !isPremium) {
+        router.push({
+          pathname: '/premium-modal',
+          params: { mode: 'premium_only' },
+        });
+        return;
+      }
+
       // Show results modal for completed games
       if (card.status === 'done' && card.attempt) {
         setCompletedModal({ card });
@@ -103,7 +123,7 @@ export default function HomeScreen() {
         router.push(`/${route}/${card.puzzleId}` as any);
       }
     },
-    [router]
+    [router, isPremium]
   );
 
   // Navigate to daily leaderboard
@@ -145,7 +165,7 @@ export default function HomeScreen() {
         <StreakHeader
           currentStreak={stats.currentStreak}
           completedCount={completedCount}
-          totalCount={5}
+          totalCount={cards.length || 6}
         />
 
         {/* Premium Upsell Banner (non-premium only) */}
@@ -174,6 +194,8 @@ export default function HomeScreen() {
                 gameMode={card.gameMode}
                 status={card.status}
                 onPress={() => handleCardPress(card)}
+                isPremiumOnly={card.isPremiumOnly}
+                isPremium={isPremium}
                 testID={`daily-card-${card.gameMode}`}
               />
             ))

@@ -24,6 +24,14 @@ interface DailyStackCardProps {
    */
   onPress: () => void;
   /**
+   * Whether this is a premium-only game mode.
+   */
+  isPremiumOnly?: boolean;
+  /**
+   * Whether the user has premium access.
+   */
+  isPremium?: boolean;
+  /**
    * Test ID for testing.
    */
   testID?: string;
@@ -36,11 +44,14 @@ interface DailyStackCardProps {
  * - play: "Play" button (green)
  * - resume: "Resume" button (yellow)
  * - done: "Result" button (yellow)
+ * - premiumLocked: "Unlock" button with crown badge (premium-only modes)
  */
 export function DailyStackCard({
   gameMode,
   status,
   onPress,
+  isPremiumOnly,
+  isPremium,
   testID,
 }: DailyStackCardProps) {
   return (
@@ -49,6 +60,8 @@ export function DailyStackCard({
       status={status}
       onPress={onPress}
       variant="daily"
+      isPremiumOnly={isPremiumOnly}
+      isPremium={isPremium}
       testID={testID}
     />
   );

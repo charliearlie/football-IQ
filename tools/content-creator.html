@@ -161,6 +161,7 @@
             <option value="guess_the_goalscorers">Goalscorer Recall</option>
             <option value="tic_tac_toe">Tic Tac Toe</option>
             <option value="topical_quiz">Topical Quiz</option>
+            <option value="top_tens">Top Tens (Premium)</option>
           </select>
         </div>
         <div>
@@ -324,6 +325,26 @@
           <p class="text-sm text-slate-400 mb-4">Create 5 multiple-choice questions. Each question can optionally include an image URL.</p>
           <div id="tq-questions" class="space-y-6"></div>
         </div>
+
+        <!-- Top Tens Form -->
+        <div id="top-tens-form" class="form-section hidden">
+          <p class="text-sm text-slate-400 mb-4">Create a Top 10 ranking puzzle. Players guess all 10 items in order. This is a <span class="text-cardYellow font-bold">premium-only</span> game mode.</p>
+
+          <div class="mb-4">
+            <label class="form-label">Puzzle Title</label>
+            <input type="text" id="tt-title" class="form-input" placeholder="e.g., Top 10 Premier League All-Time Goalscorers" oninput="updatePreview()">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Category (Optional)</label>
+            <input type="text" id="tt-category" class="form-input" placeholder="e.g., Premier League, World Cup" oninput="updatePreview()">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Answers (Rank #1 at top, #10 at bottom)</label>
+            <div id="tt-answers" class="space-y-2 mt-2"></div>
+          </div>
+        </div>
       </section>
 
       <!-- Preview Section -->
@@ -355,6 +376,7 @@
     let careerSteps = [];
     let goals = [];
     let quizQuestions = [];
+    let topTensAnswers = [];
 
     // ============ Initialization ============
     document.addEventListener('DOMContentLoaded', () => {
@@ -365,6 +387,7 @@
       addCareerStep(); // Minimum 3 steps
       addGoal(); // Start with one goal
       initQuizQuestions(); // Initialize 5 quiz questions
+      initTopTensAnswers(); // Initialize 10 answers for Top Tens
       updatePreview();
       updateTicTacToeLabels();
     });
@@ -429,7 +452,8 @@
         'guess_the_transfer': 'Transfer Guess',
         'guess_the_goalscorers': 'Goalscorer Recall',
         'tic_tac_toe': 'Tic Tac Toe',
-        'topical_quiz': 'Topical Quiz'
+        'topical_quiz': 'Topical Quiz',
+        'top_tens': 'Top Tens'
       };
 
       document.getElementById('form-title').textContent = titles[mode];
@@ -444,6 +468,8 @@
         document.getElementById('tic-tac-toe-form').classList.remove('hidden');
       } else if (mode === 'topical_quiz') {
         document.getElementById('topical-quiz-form').classList.remove('hidden');
+      } else if (mode === 'top_tens') {
+        document.getElementById('top-tens-form').classList.remove('hidden');
       }
 
       updatePreview();
@@ -687,6 +713,39 @@
       quizQuestions[index].options[optionIndex] = value;
     }
 
+    // ============ Top Tens Form ============
+    function initTopTensAnswers() {
+      topTensAnswers = [];
+      for (let i = 0; i < 10; i++) {
+        topTensAnswers.push({
+          rank: i + 1,
+          name: '',
+          aliases: '',
+          info: ''
+        });
+      }
+      renderTopTensAnswers();
+    }
+
+    function renderTopTensAnswers() {
+      const container = document.getElementById('tt-answers');
+      container.innerHTML = topTensAnswers.map((answer, index) => `
+        <div class="flex gap-2 items-center bg-slate-900/50 p-3 rounded-lg">
+          <span class="text-cardYellow font-bold w-8 text-center">#${answer.rank}</span>
+          <input type="text" class="form-input flex-1" placeholder="Primary name (e.g., Alan Shearer)"
+            value="${escapeHtml(answer.name)}" oninput="updateTopTensAnswer(${index}, 'name', this.value); updatePreview()">
+          <input type="text" class="form-input w-40" placeholder="Aliases (comma-sep)"
+            value="${escapeHtml(answer.aliases)}" oninput="updateTopTensAnswer(${index}, 'aliases', this.value); updatePreview()">
+          <input type="text" class="form-input w-32" placeholder="Info (e.g., 260 goals)"
+            value="${escapeHtml(answer.info)}" oninput="updateTopTensAnswer(${index}, 'info', this.value); updatePreview()">
+        </div>
+      `).join('');
+    }
+
+    function updateTopTensAnswer(index, field, value) {
+      topTensAnswers[index][field] = value;
+    }
+
     // ============ JSON Preview ============
     function generateContent() {
       const mode = document.getElementById('game-mode').value;
@@ -786,6 +845,30 @@
         };
       }
 
+      if (mode === 'top_tens') {
+        const content = {
+          title: document.getElementById('tt-title').value.trim(),
+          answers: topTensAnswers.map(a => {
+            const answer = { name: a.name.trim() };
+            // Parse aliases from comma-separated string
+            if (a.aliases && a.aliases.trim()) {
+              answer.aliases = a.aliases.split(',').map(alias => alias.trim()).filter(alias => alias);
+            }
+            // Only include info if it has a value
+            if (a.info && a.info.trim()) {
+              answer.info = a.info.trim();
+            }
+            return answer;
+          })
+        };
+        // Only include category if it has a value
+        const category = document.getElementById('tt-category').value.trim();
+        if (category) {
+          content.category = category;
+        }
+        return content;
+      }
+
       return {};
     }
 
@@ -876,6 +959,23 @@
             errors.push(`Question ${i + 1}: Valid correct answer must be selected`);
           }
         });
+      }
+
+      if (mode === 'top_tens') {
+        if (!content.title) errors.push('Puzzle title is required');
+        if (!content.answers || content.answers.length !== 10) {
+          errors.push('Exactly 10 answers are required');
+        } else {
+          content.answers.forEach((answer, i) => {
+            if (!answer.name) errors.push(`Rank #${i + 1}: Primary name is required`);
+          });
+          // Check for duplicate names
+          const names = content.answers.map(a => a.name.toLowerCase().trim()).filter(n => n);
+          const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
+          if (duplicates.length > 0) {
+            errors.push(`Duplicate names found: ${[...new Set(duplicates)].join(', ')}`);
+          }
+        }
       }
 
       return errors;
@@ -993,6 +1093,11 @@
 
       // Reset Topical Quiz
       initQuizQuestions();
+
+      // Reset Top Tens
+      document.getElementById('tt-title').value = '';
+      document.getElementById('tt-category').value = '';
+      initTopTensAnswers();
 
       // Hide validation
       document.getElementById('validation-section').classList.add('hidden');

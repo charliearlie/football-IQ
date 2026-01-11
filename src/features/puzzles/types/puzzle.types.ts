@@ -37,7 +37,8 @@ export type GameMode =
   | 'the_grid'
   | 'guess_the_transfer'
   | 'guess_the_goalscorers'
-  | 'topical_quiz';
+  | 'topical_quiz'
+  | 'top_tens';
 
 /**
  * Result of a sync operation

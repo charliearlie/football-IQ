@@ -15,6 +15,8 @@ import {
   HelpCircle,
   Check,
   Lock,
+  ListOrdered,
+  Crown,
 } from 'lucide-react-native';
 import { GlassCard } from './GlassCard';
 import { ElevatedButton } from './ElevatedButton';
@@ -60,6 +62,18 @@ export interface UniversalGameCardProps {
    * Shows dimmed state with lock button.
    */
   isLocked?: boolean;
+
+  /**
+   * Whether this is a premium-only game mode.
+   * Shows crown badge and unlock button for non-premium users.
+   */
+  isPremiumOnly?: boolean;
+
+  /**
+   * Whether the user has premium access.
+   * Used with isPremiumOnly to determine locked state.
+   */
+  isPremium?: boolean;
 
   /**
    * Test ID for testing.
@@ -124,6 +138,13 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
         icon: <HelpCircle color={colors.cardYellow} size={32} />,
         iconColor: colors.cardYellow,
       };
+    case 'top_tens':
+      return {
+        title: 'Top Tens',
+        subtitle: 'Name all 10',
+        icon: <ListOrdered color={colors.pitchGreen} size={32} />,
+        iconColor: colors.pitchGreen,
+      };
     default:
       return {
         title: 'Unknown',
@@ -168,6 +189,7 @@ function getButtonProps(status: CardStatus) {
  * - resume: "Resume" button (yellow)
  * - done: "Result" button (yellow) with completion badge
  * - locked: Lock button with dimmed appearance (archive only)
+ * - premiumLocked: Crown badge with "Unlock" button (premium-only modes)
  */
 export function UniversalGameCard({
   gameMode,
@@ -175,13 +197,18 @@ export function UniversalGameCard({
   onPress,
   variant = 'daily',
   isLocked = false,
+  isPremiumOnly = false,
+  isPremium = false,
   testID,
 }: UniversalGameCardProps) {
   const config = getGameModeConfig(gameMode);
   const buttonProps = getButtonProps(status);
 
+  // Determine if this card is premium-locked (premium-only mode + non-premium user)
+  const isPremiumLocked = isPremiumOnly && !isPremium;
+
   // Merge card styles (GlassCard expects ViewStyle, not array)
-  const cardStyle = isLocked
+  const cardStyle = isLocked || isPremiumLocked
     ? { ...styles.card, ...styles.lockedCard }
     : styles.card;
 
@@ -193,9 +220,15 @@ export function UniversalGameCard({
           <View style={styles.iconContainer}>
             {config.icon}
             {/* Completion badge - small checkmark in corner */}
-            {status === 'done' && !isLocked && (
+            {status === 'done' && !isLocked && !isPremiumLocked && (
               <View style={styles.completionBadge}>
                 <Check size={12} color={colors.stadiumNavy} strokeWidth={3} />
+              </View>
+            )}
+            {/* Premium badge - crown for premium-only modes */}
+            {isPremiumOnly && (
+              <View style={styles.premiumBadge} testID={`${testID}-premium-badge`}>
+                <Crown size={10} color={colors.stadiumNavy} strokeWidth={2.5} />
               </View>
             )}
           </View>
@@ -204,7 +237,7 @@ export function UniversalGameCard({
               {config.title}
             </Text>
             <Text style={styles.subtitle} numberOfLines={1}>
-              {config.subtitle}
+              {isPremiumLocked ? 'Premium' : config.subtitle}
             </Text>
           </View>
         </View>
@@ -215,6 +248,15 @@ export function UniversalGameCard({
             <View style={styles.lockButton} testID={`${testID}-lock`}>
               <Lock color={colors.floodlightWhite} size={18} />
             </View>
+          ) : isPremiumLocked ? (
+            <ElevatedButton
+              title="Unlock"
+              onPress={onPress}
+              size="small"
+              topColor={colors.cardYellow}
+              shadowColor="#D4A500"
+              testID={`${testID}-unlock`}
+            />
           ) : (
             <ElevatedButton
               title={buttonProps.title}
@@ -265,6 +307,19 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     backgroundColor: colors.pitchGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.stadiumNavy,
+  },
+  premiumBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.cardYellow,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
