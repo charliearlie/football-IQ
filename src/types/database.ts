@@ -86,3 +86,44 @@ export interface UnlockedPuzzle {
   puzzle_id: string;
   unlocked_at: string; // ISO timestamp
 }
+
+// ============ PLAYER DATABASE TYPES ============
+
+/**
+ * Raw player row as stored in SQLite player_database table.
+ * Clubs and nationalities are JSON stringified arrays.
+ */
+export interface LocalPlayer {
+  id: string;
+  external_id: number | null; // API-Football ID for deduplication
+  name: string; // Full display name (e.g., "Zlatan Ibrahimović")
+  search_name: string; // Normalized for search (e.g., "zlatan ibrahimovic")
+  clubs: string; // JSON array: ["AC Milan", "Inter Milan", "Barcelona"]
+  nationalities: string; // JSON array of ISO codes: ["SE", "BA"]
+  is_active: number; // SQLite boolean: 0 = inactive, 1 = active
+  last_synced_at: string | null;
+}
+
+/**
+ * Parsed player with proper TypeScript types.
+ * Used throughout the app after retrieval from SQLite.
+ */
+export interface ParsedPlayer {
+  id: string;
+  externalId: number | null;
+  name: string;
+  searchName: string;
+  clubs: string[];
+  nationalities: string[]; // ISO country codes (e.g., "BR", "FR")
+  isActive: boolean;
+  lastSyncedAt: string | null;
+}
+
+/**
+ * Search result with relevance ranking.
+ * Higher relevanceScore indicates closer match to search query.
+ */
+export interface PlayerSearchResult {
+  player: ParsedPlayer;
+  relevanceScore: number; // 0-1, higher is better match
+}

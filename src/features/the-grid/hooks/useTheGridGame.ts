@@ -22,7 +22,7 @@ import {
   RestoreProgressPayload,
   TheGridAttemptMetadata,
 } from '../types/theGrid.types';
-import { validateCellGuess, getCellCategories, countFilledCells } from '../utils/validation';
+import { validateCellGuess, getCellCategories, countFilledCells, validateCellWithDB } from '../utils/validation';
 import { calculateGridScore, isGridComplete } from '../utils/scoring';
 import { shareTheGridResult, ShareResult } from '../utils/share';
 import { generateTheGridScoreDisplay } from '../utils/scoreDisplay';
@@ -325,6 +325,34 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     }
   }, [state.selectedCell, state.currentGuess, gridContent]);
 
+  /**
+   * Submit a player selection from the PlayerSearchOverlay.
+   * Uses database validation instead of pre-defined valid_answers.
+   *
+   * @param playerId - Player database ID
+   * @param playerName - Player display name (used if valid)
+   */
+  const submitPlayerSelection = useCallback(
+    async (playerId: string, playerName: string) => {
+      if (state.selectedCell === null || !gridContent) return;
+
+      const result = await validateCellWithDB(playerId, state.selectedCell, gridContent);
+
+      if (result.isValid) {
+        dispatch({
+          type: 'CORRECT_GUESS',
+          payload: {
+            cellIndex: state.selectedCell,
+            player: playerName,
+          },
+        });
+      } else {
+        dispatch({ type: 'INCORRECT_GUESS' });
+      }
+    },
+    [state.selectedCell, gridContent]
+  );
+
   const shareResult = useCallback(async (): Promise<ShareResult> => {
     if (!state.score) {
       return { success: false, method: 'clipboard', error: new Error('No score to share') };
@@ -345,6 +373,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     deselectCell,
     setCurrentGuess,
     submitGuess,
+    submitPlayerSelection,
     shareResult,
     resetGame,
   };

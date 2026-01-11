@@ -159,6 +159,108 @@ Database initializes in `app/_layout.tsx` via `useEffect`, blocking splash scree
 ### Migration Strategy
 Uses `PRAGMA user_version` for incremental schema versioning.
 
+## Player Database
+Initialized: 2026-01-10
+
+### Overview
+Centralized SQLite database for local-first player search functionality. Powers "The Grid" game mode validation with plans to extend to "Goalscorer Recall".
+
+### Schema (Added in Migration v4)
+```sql
+player_database (
+  id TEXT PRIMARY KEY,
+  external_id INTEGER UNIQUE,      -- For sync deduplication
+  name TEXT,                       -- Display name (e.g., "Lionel Messi")
+  search_name TEXT,                -- Normalized for search (e.g., "lionel messi")
+  clubs TEXT,                      -- JSON array ["Barcelona", "PSG", "Inter Miami"]
+  nationalities TEXT,              -- JSON array of ISO codes ["AR"]
+  is_active INTEGER,               -- 0/1 boolean
+  last_synced_at TEXT
+)
+
+-- Indexes for performance
+idx_player_search_name ON player_database(search_name)
+idx_player_external_id ON player_database(external_id)
+```
+
+### Search Service
+**Location:** `src/services/player/`
+
+Key functions:
+| Function | Purpose |
+|----------|---------|
+| `searchPlayers(query, limit)` | LIKE query on search_name, ranked by relevance |
+| `getPlayerById(id)` | Single player lookup |
+| `didPlayerPlayFor(playerId, clubName)` | Club membership check with fuzzy tolerance |
+| `hasNationality(playerId, code)` | Nationality check (ISO code) |
+| `findPlayersMatchingCriteria(name, club?, nationality?)` | Combined search + filter |
+
+### Search Algorithm
+1. Minimum 3 characters required
+2. LIKE query on normalized `search_name`
+3. Results ranked by relevance score:
+   - Exact prefix match: 1.0
+   - Contains query: 0.8-0.9 (position-based)
+   - Fuzzy match: 0.0-0.6 (Levenshtein distance)
+
+### Utility Functions
+**Location:** `src/services/player/playerUtils.ts`
+
+| Function | Purpose |
+|----------|---------|
+| `normalizeSearchName(name)` | Lowercase, NFD normalization, special char mapping |
+| `levenshteinDistance(a, b)` | Edit distance for fuzzy matching |
+| `countryCodeToEmoji(code)` | ISO code to flag emoji (e.g., "BR" → "🇧🇷") |
+| `calculateRelevance(query, searchName)` | Relevance score 0-1 |
+| `clubsMatch(playerClub, targetClub, tolerance)` | Fuzzy club name matching |
+
+### UI Components
+**Location:** `src/components/PlayerSearchOverlay/`
+
+| Component | Purpose |
+|-----------|---------|
+| `PlayerSearchOverlay` | Modal overlay with debounced search (200ms) |
+| `PlayerResultItem` | Player row with flags, name, clubs |
+
+### The Grid Integration
+The Grid uses database validation instead of pre-defined `valid_answers`:
+1. User taps cell → opens `PlayerSearchOverlay`
+2. User searches and selects player
+3. `validateCellWithDB(playerId, cellIndex, content)` checks:
+   - Row criterion: club → `didPlayerPlayFor()`, nation → `hasNationality()`
+   - Column criterion: same checks
+   - Player must match BOTH criteria
+
+**Supported category types:**
+- `club`: Database lookup via `didPlayerPlayFor()`
+- `nation`: Database lookup via `hasNationality()` (converts name to ISO code)
+- `stat`/`trophy`: Not yet supported (returns false)
+
+### Files
+```
+src/services/player/
+  ├── index.ts                    # Barrel exports
+  ├── playerSearch.ts             # Search service
+  ├── playerUtils.ts              # Utility functions
+  └── __tests__/
+      └── SearchEngine.test.ts    # 37 TDD tests
+
+src/components/PlayerSearchOverlay/
+  ├── index.ts                    # Barrel exports
+  ├── PlayerSearchOverlay.tsx     # Modal overlay
+  └── PlayerResultItem.tsx        # Result row
+
+src/features/the-grid/
+  └── utils/validation.ts         # validateCellWithDB function
+
+src/lib/database.ts               # Migration v4 + player CRUD operations
+src/types/database.ts             # LocalPlayer, ParsedPlayer, PlayerSearchResult
+```
+
+### Tests
+- `src/services/player/__tests__/SearchEngine.test.ts` - 37 tests (normalize, levenshtein, emoji, search)
+- `src/features/the-grid/__tests__/DBValidation.test.ts` - 16 tests (validateCellWithDB)
+
 ## Sync Engine
 Initialized: 2025-12-24
 

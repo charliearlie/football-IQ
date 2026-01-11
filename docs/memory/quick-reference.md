@@ -358,6 +358,102 @@ calculateGridScore(7)   // { points: 78, maxPoints: 100, cellsFilled: 7 }
 generateGridEmojiDisplay(cells);
 ```
 
+## Player Search Service
+```typescript
+import {
+  searchPlayers,
+  getPlayerById,
+  didPlayerPlayFor,
+  hasNationality,
+  findPlayersMatchingCriteria,
+  normalizeSearchName,
+  levenshteinDistance,
+  countryCodeToEmoji,
+  calculateRelevance,
+  clubsMatch,
+} from '@/services/player';
+
+// Search players by name (min 3 chars)
+const results = await searchPlayers('messi', 10);
+// Returns: PlayerSearchResult[] sorted by relevance
+
+// Get player by ID
+const player = await getPlayerById('player-123');
+// Returns: ParsedPlayer | null
+
+// Check if player played for club
+await didPlayerPlayFor('player-123', 'Barcelona')  // true
+await didPlayerPlayFor('player-123', 'Real Madrid CF')  // true (fuzzy: "Real Madrid")
+
+// Check nationality
+await hasNationality('player-123', 'AR')  // true (Argentina)
+await hasNationality('player-123', 'br')  // works (case-insensitive)
+
+// Combined search + filter
+const players = await findPlayersMatchingCriteria('messi', 'Barcelona', 'AR');
+// Returns players matching name AND club AND nationality
+
+// Utility functions
+normalizeSearchName('Özil')           // "ozil"
+normalizeSearchName('Sørloth')        // "sorloth"
+normalizeSearchName('Ibrahimović')    // "ibrahimovic"
+
+levenshteinDistance('messi', 'mesi')  // 1 (deletion)
+levenshteinDistance('kitten', 'sitting')  // 3
+
+countryCodeToEmoji('BR')              // "🇧🇷"
+countryCodeToEmoji('FR')              // "🇫🇷"
+
+calculateRelevance('messi', 'lionel messi')  // ~0.85
+
+clubsMatch('Real Madrid', 'Real Madrid CF')  // true (fuzzy)
+clubsMatch('Barcelona', 'Barca', 2)          // true (tolerance: 2)
+```
+
+## Player Search Overlay
+```typescript
+import { PlayerSearchOverlay, PlayerResultItem } from '@/components/PlayerSearchOverlay';
+
+// Full overlay with search
+<PlayerSearchOverlay
+  visible={showSearch}
+  onSelectPlayer={(player) => {
+    // player: ParsedPlayer with id, name, clubs, nationalities
+    handleSelection(player);
+  }}
+  onClose={() => setShowSearch(false)}
+  title="Search Players"
+  isLoading={false}  // For future API integration
+  testID="player-search"
+/>
+
+// Individual result item (used internally)
+<PlayerResultItem
+  player={parsedPlayer}
+  onPress={() => handleSelect(player)}
+  testID="player-result-1"
+/>
+```
+
+## The Grid DB Validation
+```typescript
+import { validateCellWithDB } from '@/features/the-grid/utils/validation';
+
+// Validate player selection against database
+const result = await validateCellWithDB('player-123', 4, gridContent);
+// result: { isValid: true, matchedCriteria: { row: true, col: true } }
+
+// Cell index mapping (3x3 grid):
+// 0 1 2
+// 3 4 5
+// 6 7 8
+
+// Supported category types:
+// - 'club': Uses didPlayerPlayFor()
+// - 'nation': Uses hasNationality() with name→code mapping
+// - 'stat'/'trophy': Not yet supported (returns false)
+```
+
 ## Topical Quiz Game
 ```typescript
 import {

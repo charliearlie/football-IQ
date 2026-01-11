@@ -18,3 +18,11 @@ export {
   type ReviewModeActionZoneProps,
   type ReviewModeBannerProps,
 } from './ReviewMode';
+
+// Player Search components
+export {
+  PlayerSearchOverlay,
+  PlayerResultItem,
+  type PlayerSearchOverlayProps,
+  type PlayerResultItemProps,
+} from './PlayerSearchOverlay';

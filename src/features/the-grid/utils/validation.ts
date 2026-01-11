@@ -1,11 +1,56 @@
 /**
  * Validation utilities for The Grid game mode.
  *
- * Uses shared fuzzy matching from @/lib/validation.
+ * Uses shared fuzzy matching from @/lib/validation and
+ * database lookups for player-club/nationality validation.
  */
 
 import { validateGuess } from '@/lib/validation';
 import { TheGridContent, GridCategory, CellIndex } from '../types/theGrid.types';
+import { didPlayerPlayFor, hasNationality, getPlayerById } from '@/services/player';
+
+/**
+ * Mapping of country names to ISO 3166-1 alpha-2 codes.
+ * Used to convert Grid category values to database nationality codes.
+ */
+const COUNTRY_NAME_TO_CODE: Record<string, string> = {
+  'Brazil': 'BR',
+  'France': 'FR',
+  'Argentina': 'AR',
+  'Germany': 'DE',
+  'Spain': 'ES',
+  'England': 'GB',
+  'Italy': 'IT',
+  'Portugal': 'PT',
+  'Netherlands': 'NL',
+  'Belgium': 'BE',
+  'Croatia': 'HR',
+  'Uruguay': 'UY',
+  'Colombia': 'CO',
+  'Chile': 'CL',
+  'Poland': 'PL',
+  'Sweden': 'SE',
+  'Denmark': 'DK',
+  'Norway': 'NO',
+  'Wales': 'WL',
+  'Scotland': 'SC',
+  'Ireland': 'IE',
+  'Serbia': 'RS',
+  'Senegal': 'SN',
+  'Morocco': 'MA',
+  'Nigeria': 'NG',
+  'Egypt': 'EG',
+  'Ivory Coast': 'CI',
+  'Cameroon': 'CM',
+  'Ghana': 'GH',
+  'Algeria': 'DZ',
+  'Japan': 'JP',
+  'South Korea': 'KR',
+  'Australia': 'AU',
+  'Mexico': 'MX',
+  'USA': 'US',
+  'Canada': 'CA',
+};
 
 /**
  * Result of validating a cell guess.
@@ -130,4 +175,107 @@ export function getEmptyCells(cells: (unknown | null)[]): CellIndex[] {
  */
 export function countFilledCells(cells: (unknown | null)[]): number {
   return cells.filter((cell) => cell !== null).length;
+}
+
+/**
+ * Result of database-based cell validation.
+ */
+export interface DBValidationResult {
+  /** Whether the player is valid for this cell */
+  isValid: boolean;
+  /** Which criteria were matched (if player exists) */
+  matchedCriteria?: {
+    row: boolean;
+    col: boolean;
+  };
+}
+
+/**
+ * Validate a player selection for a cell using the local database.
+ *
+ * Checks if the player satisfies both row and column criteria:
+ * - For 'club' type: checks didPlayerPlayFor()
+ * - For 'nation' type: checks hasNationality()
+ * - For 'stat'/'trophy' types: not yet supported (returns false)
+ *
+ * @param playerId - Player database ID from selection
+ * @param cellIndex - Cell index (0-8)
+ * @param content - The Grid puzzle content
+ * @returns Validation result with matched criteria details
+ *
+ * @example
+ * // Player who played for Real Madrid and is Brazilian
+ * await validateCellWithDB('player-1', 0, content)
+ * // { isValid: true, matchedCriteria: { row: true, col: true } }
+ *
+ * // Player who only played for Real Madrid (not Brazilian)
+ * await validateCellWithDB('player-2', 0, content)
+ * // { isValid: false, matchedCriteria: { row: false, col: true } }
+ */
+export async function validateCellWithDB(
+  playerId: string,
+  cellIndex: CellIndex,
+  content: TheGridContent
+): Promise<DBValidationResult> {
+  // Check if player exists
+  const player = await getPlayerById(playerId);
+  if (!player) {
+    return { isValid: false };
+  }
+
+  // Get row and column categories for this cell
+  const { row, col } = getCellCategories(cellIndex, content);
+
+  // Check row criterion
+  const rowMatch = await checkCategoryMatch(playerId, row);
+
+  // Check column criterion
+  const colMatch = await checkCategoryMatch(playerId, col);
+
+  // Player must match BOTH criteria
+  const isValid = rowMatch && colMatch;
+
+  return {
+    isValid,
+    matchedCriteria: {
+      row: rowMatch,
+      col: colMatch,
+    },
+  };
+}
+
+/**
+ * Check if a player matches a single category criterion.
+ *
+ * @param playerId - Player database ID
+ * @param category - Grid category to check
+ * @returns true if player matches the category
+ */
+async function checkCategoryMatch(
+  playerId: string,
+  category: GridCategory
+): Promise<boolean> {
+  switch (category.type) {
+    case 'club':
+      return didPlayerPlayFor(playerId, category.value);
+
+    case 'nation': {
+      const code = COUNTRY_NAME_TO_CODE[category.value];
+      if (!code) {
+        console.warn(`Unknown country name: ${category.value}`);
+        return false;
+      }
+      return hasNationality(playerId, code);
+    }
+
+    case 'stat':
+    case 'trophy':
+      // Not yet supported - would require additional database fields
+      // For now, these categories will always fail DB validation
+      // and should rely on valid_answers fallback
+      return false;
+
+    default:
+      return false;
+  }
 }

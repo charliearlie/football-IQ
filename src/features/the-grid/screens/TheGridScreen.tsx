@@ -19,13 +19,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/theme';
 import { usePuzzle } from '@/features/puzzles';
 import { ReviewModeBanner } from '@/components/ReviewMode';
+import { PlayerSearchOverlay } from '@/components/PlayerSearchOverlay';
 import { AdBanner } from '@/features/ads';
 import { useTheGridGame } from '../hooks/useTheGridGame';
 import { TheGridBoard } from '../components/TheGridBoard';
-import { TheGridActionZone } from '../components/TheGridActionZone';
 import { TheGridResultModal } from '../components/TheGridResultModal';
 import { parseTheGridContent, FilledCell, TheGridAttemptMetadata } from '../types/theGrid.types';
-import { ParsedLocalAttempt } from '@/types/database';
+import { ParsedLocalAttempt, ParsedPlayer } from '@/types/database';
 
 export interface TheGridScreenProps {
   /** Puzzle ID to play (optional - uses today's puzzle if not provided) */
@@ -55,8 +55,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     selectedCellCategories,
     selectCell,
     deselectCell,
-    setCurrentGuess,
-    submitGuess,
+    submitPlayerSelection,
     shareResult,
   } = useTheGridGame(puzzle);
 
@@ -77,6 +76,11 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     const metadata = attempt.metadata as TheGridAttemptMetadata;
     return metadata.cells || null;
   }, [isReviewMode, attempt?.metadata]);
+
+  // Handle player selection from overlay
+  const handleSelectPlayer = async (player: ParsedPlayer) => {
+    await submitPlayerSelection(player.id, player.name);
+  };
 
   // Handle share
   const handleShare = async () => {
@@ -145,20 +149,6 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           />
         </View>
 
-        {/* Action Zone - only in play mode when cell is selected */}
-        {!isReviewMode && state.selectedCell !== null && selectedCellCategories && (
-          <TheGridActionZone
-            rowCategory={selectedCellCategories.row}
-            colCategory={selectedCellCategories.col}
-            value={state.currentGuess}
-            onChangeText={setCurrentGuess}
-            onSubmit={submitGuess}
-            onCancel={deselectCell}
-            isIncorrect={state.lastGuessIncorrect}
-            testID="action-zone"
-          />
-        )}
-
         {/* Progress indicator */}
         {!isReviewMode && state.gameStatus === 'playing' && (
           <View style={styles.progressContainer}>
@@ -191,6 +181,19 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
         }}
         onShare={handleShare}
         testID="result-modal"
+      />
+
+      {/* Player Search Overlay - opens when cell is selected */}
+      <PlayerSearchOverlay
+        visible={!isReviewMode && state.selectedCell !== null && state.gameStatus === 'playing'}
+        onSelectPlayer={handleSelectPlayer}
+        onClose={deselectCell}
+        title={
+          selectedCellCategories
+            ? `${selectedCellCategories.row.value} & ${selectedCellCategories.col.value}`
+            : 'Search Players'
+        }
+        testID="player-search-overlay"
       />
 
       {/* Ad Banner (non-premium users) */}

@@ -8,10 +8,12 @@ import {
   ParsedLocalAttempt,
   LocalCatalogEntry,
   UnlockedPuzzle,
+  LocalPlayer,
+  ParsedPlayer,
 } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -137,8 +139,30 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     `);
   }
 
+  // Migration v4: Add player_database table for centralized player validation
+  // Powers "The Grid" and "Goalscorer Recall" with local-first search
+  if (currentVersion < 4) {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS player_database (
+        id TEXT PRIMARY KEY NOT NULL,
+        external_id INTEGER UNIQUE,
+        name TEXT NOT NULL,
+        search_name TEXT NOT NULL,
+        clubs TEXT NOT NULL,
+        nationalities TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        last_synced_at TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_player_search_name ON player_database(search_name);
+      CREATE INDEX IF NOT EXISTS idx_player_external_id ON player_database(external_id);
+
+      PRAGMA user_version = 4;
+    `);
+  }
+
   // Future migrations would go here:
-  // if (currentVersion < 4) { ... }
+  // if (currentVersion < 5) { ... }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -622,6 +646,196 @@ export async function removeAdUnlock(puzzleId: string): Promise<void> {
 export async function clearAllAdUnlocks(): Promise<void> {
   const database = getDatabase();
   await database.runAsync('DELETE FROM unlocked_puzzles');
+}
+
+// ============ PLAYER DATABASE OPERATIONS ============
+
+/**
+ * Save a player to local storage.
+ * Uses INSERT OR REPLACE to handle both insert and update.
+ *
+ * @param player - LocalPlayer with clubs and nationalities as JSON strings
+ */
+export async function savePlayer(player: LocalPlayer): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync(
+    `INSERT OR REPLACE INTO player_database
+     (id, external_id, name, search_name, clubs, nationalities, is_active, last_synced_at)
+     VALUES ($id, $external_id, $name, $search_name, $clubs, $nationalities, $is_active, $last_synced_at)`,
+    {
+      $id: player.id,
+      $external_id: player.external_id,
+      $name: player.name,
+      $search_name: player.search_name,
+      $clubs: player.clubs,
+      $nationalities: player.nationalities,
+      $is_active: player.is_active,
+      $last_synced_at: player.last_synced_at,
+    }
+  );
+}
+
+/** Maximum players per batch to avoid SQLite parameter limits */
+const PLAYER_BATCH_SIZE = 50;
+
+/**
+ * Save multiple players to local storage in batches.
+ * Uses batched INSERT OR REPLACE for performance.
+ *
+ * @param players - Array of LocalPlayer objects to save
+ */
+export async function savePlayers(players: LocalPlayer[]): Promise<void> {
+  if (players.length === 0) return;
+
+  const database = getDatabase();
+
+  // Batch players to reduce SQLite roundtrips while staying under parameter limits
+  for (let i = 0; i < players.length; i += PLAYER_BATCH_SIZE) {
+    const batch = players.slice(i, i + PLAYER_BATCH_SIZE);
+
+    // Build parameterized multi-row INSERT
+    const placeholders = batch
+      .map((_, idx) => {
+        const base = idx * 8; // 8 params per player
+        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
+      })
+      .join(', ');
+
+    // Flatten parameters into positional object
+    const params: Record<string, string | number | null> = {};
+    batch.forEach((player, idx) => {
+      const base = idx * 8;
+      params[`$${base + 1}`] = player.id;
+      params[`$${base + 2}`] = player.external_id;
+      params[`$${base + 3}`] = player.name;
+      params[`$${base + 4}`] = player.search_name;
+      params[`$${base + 5}`] = player.clubs;
+      params[`$${base + 6}`] = player.nationalities;
+      params[`$${base + 7}`] = player.is_active;
+      params[`$${base + 8}`] = player.last_synced_at;
+    });
+
+    await database.runAsync(
+      `INSERT OR REPLACE INTO player_database
+       (id, external_id, name, search_name, clubs, nationalities, is_active, last_synced_at)
+       VALUES ${placeholders}`,
+      params
+    );
+  }
+}
+
+/**
+ * Get a player by their database ID.
+ *
+ * @param id - Player database ID
+ * @returns Parsed player or null if not found
+ */
+export async function getPlayerById(id: string): Promise<ParsedPlayer | null> {
+  const database = getDatabase();
+  const row = await database.getFirstAsync<LocalPlayer>(
+    'SELECT * FROM player_database WHERE id = $id',
+    { $id: id }
+  );
+  return row ? parsePlayer(row) : null;
+}
+
+/**
+ * Get a player by their external API ID.
+ * Used to prevent duplicates during sync.
+ *
+ * @param externalId - API-Football player ID
+ * @returns Parsed player or null if not found
+ */
+export async function getPlayerByExternalId(
+  externalId: number
+): Promise<ParsedPlayer | null> {
+  const database = getDatabase();
+  const row = await database.getFirstAsync<LocalPlayer>(
+    'SELECT * FROM player_database WHERE external_id = $external_id',
+    { $external_id: externalId }
+  );
+  return row ? parsePlayer(row) : null;
+}
+
+/**
+ * Get all players from local storage.
+ * Primarily used for debugging and testing.
+ *
+ * @returns Array of all parsed players
+ */
+export async function getAllPlayers(): Promise<ParsedPlayer[]> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<LocalPlayer>(
+    'SELECT * FROM player_database ORDER BY name ASC'
+  );
+  return rows.map(parsePlayer);
+}
+
+/**
+ * Get the total count of players in the database.
+ * Used for debugging and stats.
+ *
+ * @returns Total number of players
+ */
+export async function getPlayerCount(): Promise<number> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM player_database'
+  );
+  return result?.count ?? 0;
+}
+
+/**
+ * Delete a player from the database.
+ *
+ * @param id - Player database ID
+ */
+export async function deletePlayer(id: string): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync('DELETE FROM player_database WHERE id = $id', {
+    $id: id,
+  });
+}
+
+/**
+ * Clear all players from the database.
+ * Primarily used for testing cleanup.
+ */
+export async function clearAllPlayers(): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync('DELETE FROM player_database');
+}
+
+/**
+ * Parse a player row from SQLite, converting JSON strings to arrays
+ * and integers to booleans.
+ */
+function parsePlayer(row: LocalPlayer): ParsedPlayer {
+  let clubs: string[] = [];
+  let nationalities: string[] = [];
+
+  try {
+    clubs = JSON.parse(row.clubs);
+  } catch (error) {
+    console.error('Failed to parse player clubs:', row.id, error);
+  }
+
+  try {
+    nationalities = JSON.parse(row.nationalities);
+  } catch (error) {
+    console.error('Failed to parse player nationalities:', row.id, error);
+  }
+
+  return {
+    id: row.id,
+    externalId: row.external_id,
+    name: row.name,
+    searchName: row.search_name,
+    clubs,
+    nationalities,
+    isActive: row.is_active === 1,
+    lastSyncedAt: row.last_synced_at,
+  };
 }
 
 // ============ UTILITY FUNCTIONS ============
