@@ -3,9 +3,7 @@
  *
  * Generates emoji grids and formatted text for sharing results.
  *
- * Format: ⏱️42s | ✅✅✅✅✅
- * - ⏱️ followed by seconds remaining (or 0 if time ran out)
- * - | separator
+ * Format: ✅✅✅❌❌
  * - ✅ for each found goal (in chronological order)
  * - ❌ for each missed goal (in chronological order)
  */
@@ -16,23 +14,19 @@ import type { GoalWithState } from '../types/goalscorerRecall.types';
  * Generate the emoji grid for a goalscorer recall result.
  *
  * @param goals - All goals with their found state
- * @param timeRemaining - Seconds remaining when game ended
  * @returns Emoji grid string
  *
  * @example
- * // All found with time remaining
- * generateGoalscorerEmojiGrid(goals, 42)
- * // "⏱️42s | ✅✅✅✅✅"
+ * // All found
+ * generateGoalscorerEmojiGrid(goals)
+ * // "✅✅✅✅✅"
  *
  * @example
- * // Partial completion (time ran out)
- * generateGoalscorerEmojiGrid(goals, 0)
- * // "⏱️0s | ✅✅✅❌❌"
+ * // Partial completion
+ * generateGoalscorerEmojiGrid(goals)
+ * // "✅✅✅❌❌"
  */
-export function generateGoalscorerEmojiGrid(
-  goals: GoalWithState[],
-  timeRemaining: number
-): string {
+export function generateGoalscorerEmojiGrid(goals: GoalWithState[]): string {
   // Sort goals by minute for consistent display
   const sortedGoals = [...goals].sort((a, b) => a.minute - b.minute);
 
@@ -44,8 +38,7 @@ export function generateGoalscorerEmojiGrid(
     .map((goal) => (goal.found ? '✅' : '❌'))
     .join('');
 
-  // Format: ⏱️42s | ✅✅✅✅✅
-  return `⏱️${timeRemaining}s | ${goalEmojis}`;
+  return goalEmojis;
 }
 
 /**

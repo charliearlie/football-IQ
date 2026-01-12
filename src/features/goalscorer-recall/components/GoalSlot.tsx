@@ -3,7 +3,8 @@
  *
  * Displays a single goal slot that can be:
  * - Locked: Shows "???" placeholder with minute badge
- * - Revealed: Shows player name with minute badge (spring animation)
+ * - Revealed/Found: Shows player name with minute badge (green, spring animation)
+ * - Missed: Shows player name revealed in red (for end-of-game reveal)
  * - Own Goal: Always revealed with "OG" badge, dimmed styling
  */
 
@@ -11,7 +12,6 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withSpring,
-  withTiming,
   FadeIn,
   Layout,
 } from 'react-native-reanimated';
@@ -21,6 +21,8 @@ import type { GoalWithState } from '../types/goalscorerRecall.types';
 interface GoalSlotProps {
   goal: GoalWithState;
   isJustFound?: boolean;
+  /** Show as missed (red) - reveals name in red styling */
+  isMissed?: boolean;
 }
 
 const ENTRANCE_SPRING = {
@@ -29,8 +31,11 @@ const ENTRANCE_SPRING = {
   mass: 0.8,
 };
 
-export function GoalSlot({ goal, isJustFound = false }: GoalSlotProps) {
+export function GoalSlot({ goal, isJustFound = false, isMissed = false }: GoalSlotProps) {
   const { scorer, minute, found, isOwnGoal } = goal;
+
+  // Determine if the scorer name should be visible
+  const showName = found || isMissed || isOwnGoal;
 
   const animatedStyle = useAnimatedStyle(() => {
     if (found && isJustFound) {
@@ -56,29 +61,43 @@ export function GoalSlot({ goal, isJustFound = false }: GoalSlotProps) {
     return `${min}'`;
   };
 
+  // Determine container style based on state
+  const getContainerStyle = () => {
+    if (isOwnGoal) return styles.ownGoalContainer;
+    if (found) return styles.foundContainer;
+    if (isMissed) return styles.missedContainer;
+    return null;
+  };
+
   return (
     <Animated.View
       style={[
         styles.container,
-        found && styles.foundContainer,
-        isOwnGoal && styles.ownGoalContainer,
+        getContainerStyle(),
         animatedStyle,
       ]}
       layout={Layout.springify()}
     >
       {/* Minute Badge */}
-      <View style={[styles.minuteBadge, isOwnGoal && styles.ownGoalBadge]}>
+      <View
+        style={[
+          styles.minuteBadge,
+          isOwnGoal && styles.ownGoalBadge,
+          isMissed && !isOwnGoal && styles.missedBadge,
+        ]}
+      >
         <Text style={styles.minuteText}>{formatMinute(minute)}</Text>
       </View>
 
       {/* Scorer Name or Placeholder */}
       <View style={styles.scorerContainer}>
-        {found ? (
+        {showName ? (
           <Animated.View entering={FadeIn.duration(300)}>
             <Text
               style={[
                 styles.scorerName,
                 isOwnGoal && styles.ownGoalText,
+                isMissed && !isOwnGoal && styles.missedText,
               ]}
               numberOfLines={2}
               adjustsFontSizeToFit
@@ -111,6 +130,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(88, 204, 2, 0.1)',
     borderColor: colors.pitchGreen,
   },
+  missedContainer: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: colors.redCard,
+  },
   ownGoalContainer: {
     opacity: 0.6,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -123,6 +146,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     minWidth: 44,
     alignItems: 'center',
+  },
+  missedBadge: {
+    backgroundColor: colors.redCard,
   },
   ownGoalBadge: {
     backgroundColor: colors.redCard,
@@ -142,6 +168,9 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semiBold,
     fontSize: 16,
     color: colors.floodlightWhite,
+  },
+  missedText: {
+    color: colors.redCard,
   },
   ownGoalText: {
     color: colors.redCard,

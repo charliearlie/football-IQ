@@ -363,7 +363,7 @@ describe('useGoalscorerRecallGame', () => {
 
       expect(result.current.state.gameStatus).toBe('won');
       expect(result.current.state.score?.won).toBe(true);
-      expect(result.current.state.score?.timeRemaining).toBe(50);
+      expect(result.current.state.score?.allFound).toBe(true);
     });
 
     it('loses when time runs out', () => {
@@ -393,7 +393,8 @@ describe('useGoalscorerRecallGame', () => {
 
       expect(result.current.state.gameStatus).toBe('lost');
       expect(result.current.state.score?.won).toBe(false);
-      expect(result.current.state.score?.percentage).toBe(50);
+      expect(result.current.state.score?.scorersFound).toBe(1);
+      expect(result.current.state.score?.totalScorers).toBe(2);
     });
 
     it('loses when player gives up', () => {
@@ -420,7 +421,7 @@ describe('useGoalscorerRecallGame', () => {
 
       expect(result.current.state.gameStatus).toBe('lost');
       expect(result.current.state.score?.won).toBe(false);
-      expect(result.current.state.score?.timeRemaining).toBe(40);
+      expect(result.current.state.score?.scorersFound).toBe(0);
     });
 
     it('handles race condition: ALL_FOUND takes precedence over TIME_UP', () => {
@@ -469,7 +470,7 @@ describe('useGoalscorerRecallGame', () => {
   });
 
   describe('score calculation', () => {
-    it('calculates 100% when all unique scorers found', () => {
+    it('calculates 5 points when all unique scorers found', () => {
       // Use shorter names so surname matching works (40% threshold)
       const puzzle = createMockPuzzle([
         { scorer: 'Mo Salah', minute: 10, team: 'home' },
@@ -511,17 +512,17 @@ describe('useGoalscorerRecallGame', () => {
         result.current.submitGuess();
       });
 
-      // Verify game ended with win
+      // Verify game ended with win (2/2 = 100% = 5 points)
       expect(result.current.state.gameStatus).toBe('won');
-      expect(result.current.state.score?.percentage).toBe(100);
+      expect(result.current.state.score?.points).toBe(5);
       expect(result.current.state.score?.scorersFound).toBe(2);
       expect(result.current.state.score?.totalScorers).toBe(2);
     });
 
-    it('awards time bonus when all found with time remaining', () => {
-      // Use shorter name so surname matching works
+    it('awards partial points for incomplete games', () => {
       const puzzle = createMockPuzzle([
         { scorer: 'Mo Salah', minute: 10, team: 'home' },
+        { scorer: 'Sadio Mane', minute: 45, team: 'home' },
       ]);
 
       const { result } = renderHook(() => useGoalscorerRecallGame(puzzle));
@@ -530,10 +531,7 @@ describe('useGoalscorerRecallGame', () => {
         result.current.startGame();
       });
 
-      act(() => {
-        jest.advanceTimersByTime(15000); // 15 seconds
-      });
-
+      // Find one of two scorers
       act(() => {
         result.current.setCurrentGuess('Salah');
       });
@@ -541,8 +539,14 @@ describe('useGoalscorerRecallGame', () => {
         result.current.submitGuess();
       });
 
-      expect(result.current.state.score?.timeRemaining).toBe(45);
-      expect(result.current.state.score?.timeBonus).toBe(90); // 45 * 2
+      // Give up
+      act(() => {
+        result.current.giveUp();
+      });
+
+      // 1/2 = 50% = round(2.5) = 3 points
+      expect(result.current.state.score?.points).toBe(3);
+      expect(result.current.state.score?.scorersFound).toBe(1);
     });
   });
 

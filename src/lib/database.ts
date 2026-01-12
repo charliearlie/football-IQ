@@ -384,6 +384,36 @@ export async function markAttemptSynced(id: string): Promise<void> {
   });
 }
 
+/**
+ * Delete all attempts for a specific game mode.
+ * Useful for clearing stale data after scoring system changes.
+ *
+ * @param gameMode - The game mode to delete attempts for
+ * @returns Number of deleted attempts
+ */
+export async function deleteAttemptsByGameMode(gameMode: string): Promise<number> {
+  const database = getDatabase();
+
+  // First count how many will be deleted
+  const countResult = await database.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM attempts a
+     JOIN puzzles p ON a.puzzle_id = p.id
+     WHERE p.game_mode = $gameMode`,
+    { $gameMode: gameMode }
+  );
+  const count = countResult?.count ?? 0;
+
+  // Delete the attempts
+  await database.runAsync(
+    `DELETE FROM attempts WHERE puzzle_id IN (
+      SELECT id FROM puzzles WHERE game_mode = $gameMode
+    )`,
+    { $gameMode: gameMode }
+  );
+
+  return count;
+}
+
 // ============ SYNC QUEUE OPERATIONS ============
 
 /**

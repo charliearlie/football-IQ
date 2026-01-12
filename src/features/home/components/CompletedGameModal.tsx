@@ -133,8 +133,9 @@ export function CompletedGameModal({
     : normalizeScoreForMode(gameMode, score);
 
   // Determine result type and title
-  const resultType: ResultType = won ? 'complete' : 'loss';
-  const title = won ? 'COMPLETED!' : 'GAME OVER';
+  // Use neutral styling for viewing past results (not a fresh win/loss)
+  const resultType: ResultType = 'complete';
+  const title = 'YOUR RESULT';
 
   // Handle share - copy the full score_display to clipboard
   const handleShare = async () => {
@@ -158,8 +159,8 @@ export function CompletedGameModal({
       showConfetti={false} // Don't celebrate again
       testID={testID}
     >
-      {/* Career Path score is shown via distribution graph labels */}
-      {gameMode !== 'career_path' && (
+      {/* Career Path and Goalscorer Recall scores are shown via distribution graph */}
+      {gameMode !== 'career_path' && gameMode !== 'guess_the_goalscorers' && (
         <ScoreDisplay label={gameName} value={score} />
       )}
       <ScoreDistributionContainer

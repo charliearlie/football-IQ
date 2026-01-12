@@ -50,14 +50,38 @@ function transformCareerPathDistribution(
   }));
 }
 
+/**
+ * Transform Goalscorer Recall distribution from normalized 0-100 scores to scorer counts.
+ * Scorer count = normalizedScore / 100 * totalScorers
+ */
+function transformGoalscorerDistribution(
+  distribution: DistributionEntry[],
+  totalScorers: number
+): DistributionEntry[] {
+  const scorerMap = new Map<number, number>();
+
+  for (const entry of distribution) {
+    // Convert normalized score back to scorers found
+    const scorersFound = Math.round(entry.score / 100 * totalScorers);
+    const current = scorerMap.get(scorersFound) || 0;
+    scorerMap.set(scorersFound, current + entry.percentage);
+  }
+
+  return Array.from(scorerMap.entries()).map(([scorers, percentage]) => ({
+    score: scorers,
+    count: 0, // Not used for display
+    percentage,
+  }));
+}
+
 export interface ScoreDistributionContainerProps {
   /** Puzzle ID to fetch distribution for */
   puzzleId: string;
   /** Game mode for display configuration */
   gameMode: GameMode;
-  /** User's normalized score (0-100) for highlighting */
+  /** User's score for highlighting (raw score for dynamic modes, normalized for others) */
   userScore: number;
-  /** Max steps/clubs for career_path label generation */
+  /** Max steps for dynamic modes (career_path: clubs, guess_the_goalscorers: total scorers) */
   maxSteps?: number;
   /** Test ID */
   testID?: string;
@@ -81,11 +105,12 @@ export interface ScoreDistributionContainerProps {
  *   userScore={score.points * 10}  // Normalize 0-10 to 0-100
  * />
  *
- * // In GoalscorerRecallResultModal:
+ * // In GoalscorerRecallResultModal (dynamic scale):
  * <ScoreDistributionContainer
  *   puzzleId={puzzleId}
  *   gameMode="guess_the_goalscorers"
- *   userScore={score.percentage}  // Already 0-100
+ *   userScore={score.points}       // Raw scorer count (0-N)
+ *   maxSteps={score.totalScorers}  // For dynamic labels
  * />
  * ```
  */
@@ -131,6 +156,25 @@ export function ScoreDistributionContainer({
         userScore={userScore}
         maxScore={maxSteps}
         minScore={1}
+        bucketSize={1}
+        scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
+        isFirstPlayer={isFirstPlayer}
+        testID={testID}
+      />
+    );
+  }
+
+  // For Goalscorer Recall, transform distribution to scorer counts (dynamic scale)
+  if (gameMode === 'guess_the_goalscorers' && maxSteps) {
+    const transformedDistribution = transformGoalscorerDistribution(distribution, maxSteps);
+    // userScore is raw scorer count (0 to totalScorers)
+    return (
+      <ScoreDistributionGraph
+        distribution={transformedDistribution}
+        totalAttempts={isFirstPlayer ? 1 : totalAttempts}
+        userScore={userScore}
+        maxScore={maxSteps}
+        minScore={0}
         bucketSize={1}
         scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
         isFirstPlayer={isFirstPlayer}

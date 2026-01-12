@@ -33,7 +33,12 @@ export function MatchHeader({
       {/* Teams and Score */}
       <View style={styles.teamsRow}>
         <View style={styles.teamContainer}>
-          <Text style={[textStyles.subtitle, styles.teamName]} numberOfLines={1}>
+          <Text
+            style={[textStyles.subtitle, styles.teamName]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
             {homeTeam}
           </Text>
         </View>
@@ -48,6 +53,8 @@ export function MatchHeader({
           <Text
             style={[textStyles.subtitle, styles.teamName, styles.awayTeam]}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
           >
             {awayTeam}
           </Text>

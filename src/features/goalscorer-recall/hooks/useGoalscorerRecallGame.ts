@@ -314,8 +314,8 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
     const score = calculateGoalscorerScore(
       foundScorersCountRef.current,
       totalScorersRef.current,
-      0,
-      false
+      false,
+      0
     );
     dispatch({ type: 'TIME_UP', payload: score });
     triggerNotification('error');
@@ -478,8 +478,8 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
           const winScore = calculateGoalscorerScore(
             newFoundCount,
             totalScorers,
-            currentTime,
-            true
+            true,
+            currentTime
           );
           dispatch({ type: 'ALL_FOUND', payload: winScore });
           triggerNotification('success');
@@ -530,8 +530,8 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
     const score = calculateGoalscorerScore(
       foundScorersCount,
       totalScorers,
-      timer.timeRemaining,
-      false
+      false,
+      timer.timeRemaining
     );
     dispatch({ type: 'GIVE_UP', payload: score });
     triggerNotification('error');
@@ -564,13 +564,11 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
           id: state.attemptId ?? Crypto.randomUUID(),
           puzzle_id: puzzle.id,
           completed: 1,
-          score: state.score!.percentage,
-          score_display: `${state.score!.percentage}%`,
+          score: Math.round((state.score!.scorersFound / state.score!.totalScorers) * 100), // Normalize to 0-100 for distribution
+          score_display: `${state.score!.scorersFound}/${state.score!.totalScorers}`,
           metadata: JSON.stringify({
             scorersFound: state.score!.scorersFound,
             totalScorers: state.score!.totalScorers,
-            timeRemaining: state.score!.timeRemaining,
-            timeBonus: state.score!.timeBonus,
             won: state.gameStatus === 'won',
             foundScorerNames: Array.from(state.foundScorers),
           }),

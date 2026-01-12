@@ -51,8 +51,6 @@ import type { GoalscorerRecallContent } from '../types/goalscorerRecall.types';
 interface GoalscorerRecallMetadata {
   scorersFound: number;
   totalScorers: number;
-  timeRemaining: number;
-  timeBonus: number;
   won: boolean;
   foundScorerNames: string[];
 }
@@ -342,15 +340,17 @@ export function GoalscorerRecallScreen({
         />
       </View>
 
-      {/* Action Zone */}
-      <RecallActionZone
-        currentGuess={state.currentGuess}
-        onGuessChange={setCurrentGuess}
-        onSubmit={submitGuess}
-        onGiveUp={giveUp}
-        isPlaying={isPlaying}
-        showError={state.lastGuessIncorrect}
-      />
+      {/* Action Zone - hide when game is over */}
+      {!isGameOver && (
+        <RecallActionZone
+          currentGuess={state.currentGuess}
+          onGuessChange={setCurrentGuess}
+          onSubmit={submitGuess}
+          onGiveUp={giveUp}
+          isPlaying={isPlaying}
+          showError={state.lastGuessIncorrect}
+        />
+      )}
 
       {/* Start Overlay */}
       {isIdle && (
@@ -365,7 +365,7 @@ export function GoalscorerRecallScreen({
         visible={state.lastGuessCorrect}
       />
 
-      {/* Result Modal */}
+      {/* Result Modal - shows immediately when game ends */}
       <RecallResultModal
         visible={isGameOver}
         score={state.score}

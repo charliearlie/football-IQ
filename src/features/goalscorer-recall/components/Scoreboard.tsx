@@ -19,6 +19,8 @@ interface ScoreboardProps {
   lastFoundGoalId?: string;
   /** Optional ref for parent to control scroll position */
   scrollRef?: RefObject<ScrollView>;
+  /** Whether to reveal missed scorers (end-of-game state) */
+  isRevealingMissed?: boolean;
 }
 
 export function Scoreboard({
@@ -28,6 +30,7 @@ export function Scoreboard({
   awayGoals,
   lastFoundGoalId,
   scrollRef,
+  isRevealingMissed = false,
 }: ScoreboardProps) {
   return (
     <View style={styles.container}>
@@ -62,6 +65,7 @@ export function Scoreboard({
                   key={goal.id}
                   goal={goal}
                   isJustFound={goal.id === lastFoundGoalId}
+                  isMissed={isRevealingMissed && !goal.found && !goal.isOwnGoal}
                 />
               ))
             ) : (
@@ -82,6 +86,7 @@ export function Scoreboard({
                   key={goal.id}
                   goal={goal}
                   isJustFound={goal.id === lastFoundGoalId}
+                  isMissed={isRevealingMissed && !goal.found && !goal.isOwnGoal}
                 />
               ))
             ) : (

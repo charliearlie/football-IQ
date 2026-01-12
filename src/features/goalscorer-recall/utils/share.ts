@@ -3,9 +3,8 @@
  *
  * Generates shareable text for game results including:
  * - Match info
- * - Score percentage
+ * - Score (X/Y scorers found)
  * - Emoji grid
- * - Time bonus (if applicable)
  */
 
 import type {
@@ -35,8 +34,8 @@ interface MatchInfo {
  * // Football IQ ⚽ Goalscorer Recall
  * // Arsenal 4-2 Leicester (Jan 15)
  * //
- * // ⏱️42s | ✅✅✅✅✅✅
- * // 100% (+84 bonus)
+ * // ✅✅✅✅✅
+ * // 5/5 scorers found
  * //
  * // https://footballiq.app
  */
@@ -68,15 +67,11 @@ export function generateGoalscorerShareText(
   lines.push('');
 
   // Emoji grid
-  const emojiGrid = generateGoalscorerEmojiGrid(goals, score.timeRemaining);
+  const emojiGrid = generateGoalscorerEmojiGrid(goals);
   lines.push(emojiGrid);
 
   // Score line
-  if (score.timeBonus > 0) {
-    lines.push(`${score.percentage}% (+${score.timeBonus} bonus)`);
-  } else {
-    lines.push(`${score.percentage}%`);
-  }
+  lines.push(`${score.scorersFound}/${score.totalScorers} scorers found`);
 
   // Empty line and link
   lines.push('');

@@ -63,18 +63,15 @@ export type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
 
 /**
  * Score result for goalscorer recall.
+ * Simple scoring: 1 point per scorer found (max 5).
  */
 export interface GoalscorerRecallScore {
-  /** Percentage of unique scorers found (0-100) */
-  percentage: number;
+  /** Points scored (0-5, one per scorer found) */
+  points: number;
   /** Number of unique scorers found */
   scorersFound: number;
   /** Total unique scorers (excluding own goals) */
   totalScorers: number;
-  /** Seconds remaining when game ended */
-  timeRemaining: number;
-  /** Time bonus: remainingSeconds * 2 (only if all found) */
-  timeBonus: number;
   /** Whether all scorers were found */
   allFound: boolean;
   /** Whether the player won (found all before time) */
@@ -146,6 +143,3 @@ export const TIMER_DURATION = 60;
 
 /** Timer warning threshold (turns red below this) */
 export const TIMER_WARNING_THRESHOLD = 10;
-
-/** Time bonus multiplier when all scorers found */
-export const TIME_BONUS_MULTIPLIER = 2;

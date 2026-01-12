@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { useAuth } from '@/features/auth';
 import { useAds } from '@/features/ads';
 import {
@@ -51,6 +52,9 @@ export function useArchivePuzzles(
 
   // Track if catalog has been synced this session
   const catalogSynced = useRef(false);
+
+  // Track if initial load has completed (to skip first focus event)
+  const hasInitiallyLoaded = useRef(false);
 
   /**
    * Transform catalog entry to ArchivePuzzle with lock and status info.
@@ -161,6 +165,7 @@ export function useArchivePuzzles(
       console.error('Archive initial load error:', error);
     } finally {
       setIsLoading(false);
+      hasInitiallyLoaded.current = true;
     }
   }, [loadPage]);
 
@@ -199,6 +204,17 @@ export function useArchivePuzzles(
   useEffect(() => {
     initialLoad();
   }, [initialLoad]);
+
+  // Refresh attempt data when screen gains focus (e.g., after completing a game)
+  useFocusEffect(
+    useCallback(() => {
+      // Skip the initial focus event - only refresh on subsequent returns
+      if (!hasInitiallyLoaded.current) return;
+
+      // Reload first page to refresh attempt status
+      loadPage(0, true);
+    }, [loadPage])
+  );
 
   // Use a ref to access current puzzles without adding to dependencies
   // This prevents infinite loops when setPuzzles updates the array

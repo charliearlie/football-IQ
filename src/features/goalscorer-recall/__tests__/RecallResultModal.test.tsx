@@ -71,11 +71,9 @@ describe('RecallResultModal', () => {
   describe('rendering with valid score', () => {
     it('renders correctly when passed a valid score object', () => {
       const score: GoalscorerRecallScore = {
+        points: 3,
         scorersFound: 3,
         totalScorers: 5,
-        percentage: 60,
-        timeRemaining: 30,
-        timeBonus: 0,
         allFound: false,
         won: false,
       };
@@ -94,18 +92,15 @@ describe('RecallResultModal', () => {
         />
       );
 
-      // Check score display
+      // Check score display shows scorers found
       expect(screen.getByText('3 / 5')).toBeTruthy();
-      expect(screen.getByText('60%')).toBeTruthy();
     });
 
-    it('displays "All Scorers Found!" message when won', () => {
+    it('displays message for winning game', () => {
       const score: GoalscorerRecallScore = {
+        points: 5,
         scorersFound: 5,
         totalScorers: 5,
-        percentage: 100,
-        timeRemaining: 25,
-        timeBonus: 50,
         allFound: true,
         won: true,
       };
@@ -124,17 +119,14 @@ describe('RecallResultModal', () => {
         />
       );
 
-      expect(screen.getByText('All Scorers Found!')).toBeTruthy();
-      expect(screen.getByText('🏆')).toBeTruthy();
+      expect(screen.getByText('5 / 5')).toBeTruthy();
     });
 
-    it('displays "Time Up!" message when lost', () => {
+    it('displays correctly when lost', () => {
       const score: GoalscorerRecallScore = {
+        points: 2,
         scorersFound: 2,
         totalScorers: 5,
-        percentage: 40,
-        timeRemaining: 0,
-        timeBonus: 0,
         allFound: false,
         won: false,
       };
@@ -153,37 +145,7 @@ describe('RecallResultModal', () => {
         />
       );
 
-      expect(screen.getByText('Time Up!')).toBeTruthy();
-      expect(screen.getByText('⏱️')).toBeTruthy();
-    });
-
-    it('displays time bonus when earned', () => {
-      const score: GoalscorerRecallScore = {
-        scorersFound: 5,
-        totalScorers: 5,
-        percentage: 100,
-        timeRemaining: 30,
-        timeBonus: 60,
-        allFound: true,
-        won: true,
-      };
-
-      const goals = createMockGoals([true, true, true, true, true]);
-
-      render(
-        <RecallResultModal
-          visible={true}
-          score={score}
-          goals={goals}
-          matchInfo={mockMatchInfo}
-          puzzleDate="2024-01-15"
-          puzzleId="test-puzzle-id"
-          onContinue={jest.fn()}
-        />
-      );
-
-      expect(screen.getByText('+60')).toBeTruthy();
-      expect(screen.getByText('Time Bonus')).toBeTruthy();
+      expect(screen.getByText('2 / 5')).toBeTruthy();
     });
   });
 
@@ -222,86 +184,13 @@ describe('RecallResultModal', () => {
     });
   });
 
-  describe('missed scorers display', () => {
-    it('displays missed scorers when not all found', () => {
-      const score: GoalscorerRecallScore = {
-        scorersFound: 2,
-        totalScorers: 4,
-        percentage: 50,
-        timeRemaining: 0,
-        timeBonus: 0,
-        allFound: false,
-        won: false,
-      };
-
-      const goals: GoalWithState[] = [
-        { id: '1', scorer: 'Saka', minute: 15, team: 'home', found: true, isOwnGoal: false, displayOrder: 0 },
-        { id: '2', scorer: 'Rice', minute: 30, team: 'home', found: true, isOwnGoal: false, displayOrder: 1 },
-        { id: '3', scorer: 'Vardy', minute: 45, team: 'away', found: false, isOwnGoal: false, displayOrder: 2 },
-        { id: '4', scorer: 'Maddison', minute: 60, team: 'away', found: false, isOwnGoal: false, displayOrder: 3 },
-      ];
-
-      render(
-        <RecallResultModal
-          visible={true}
-          score={score}
-          goals={goals}
-          matchInfo={mockMatchInfo}
-          puzzleDate="2024-01-15"
-          puzzleId="test-puzzle-id"
-          onContinue={jest.fn()}
-        />
-      );
-
-      expect(screen.getByText('Missed scorers:')).toBeTruthy();
-      expect(screen.getByText("Vardy (45')")).toBeTruthy();
-      expect(screen.getByText("Maddison (60')")).toBeTruthy();
-    });
-
-    it('excludes own goals from missed scorers list', () => {
-      const score: GoalscorerRecallScore = {
-        scorersFound: 1,
-        totalScorers: 2,
-        percentage: 50,
-        timeRemaining: 0,
-        timeBonus: 0,
-        allFound: false,
-        won: false,
-      };
-
-      const goals: GoalWithState[] = [
-        { id: '1', scorer: 'Saka', minute: 15, team: 'home', found: true, isOwnGoal: false, displayOrder: 0 },
-        { id: '2', scorer: 'Vardy', minute: 45, team: 'away', found: false, isOwnGoal: false, displayOrder: 1 },
-        { id: '3', scorer: 'Own Goal', minute: 60, team: 'away', found: true, isOwnGoal: true, displayOrder: 2 },
-      ];
-
-      render(
-        <RecallResultModal
-          visible={true}
-          score={score}
-          goals={goals}
-          matchInfo={mockMatchInfo}
-          puzzleDate="2024-01-15"
-          puzzleId="test-puzzle-id"
-          onContinue={jest.fn()}
-        />
-      );
-
-      // Should show Vardy as missed but not "Own Goal"
-      expect(screen.getByText("Vardy (45')")).toBeTruthy();
-      expect(screen.queryByText("Own Goal (60')")).toBeNull();
-    });
-  });
-
   describe('interaction', () => {
     it('calls onContinue when Continue button is pressed', () => {
       const onContinue = jest.fn();
       const score: GoalscorerRecallScore = {
+        points: 5,
         scorersFound: 5,
         totalScorers: 5,
-        percentage: 100,
-        timeRemaining: 30,
-        timeBonus: 60,
         allFound: true,
         won: true,
       };

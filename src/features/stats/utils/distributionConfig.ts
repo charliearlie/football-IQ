@@ -34,6 +34,9 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
     case 'guess_the_transfer':
       // Transfer has 6 possible scores (0-5 points = 0, 20, 40, 60, 80, 100 normalized)
       return 20;
+    case 'guess_the_goalscorers':
+      // Dynamic: bucket size = 100 / totalScorers
+      return maxSteps ? Math.round(100 / maxSteps) : 20;
     default:
       // Default: 10-point buckets (0%, 10%, 20%, ..., 100%)
       return 10;
@@ -46,6 +49,9 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
 export function getBarCountForMode(gameMode: GameMode, maxSteps?: number): number {
   if (gameMode === 'career_path' && maxSteps) {
     return maxSteps; // One bar per club
+  }
+  if (gameMode === 'guess_the_goalscorers' && maxSteps) {
+    return maxSteps + 1; // One bar per possible score (0 to N)
   }
   const bucketSize = getBucketSizeForMode(gameMode, maxSteps);
   return Math.floor(100 / bucketSize) + 1;
@@ -95,6 +101,15 @@ export function getScoreLabelsForMode(
     case 'guess_the_transfer':
       // Transfer: show as X/5 format (hint-based scoring)
       return ['5/5', '4/5', '3/5', '2/5', '1/5', '0/5'];
+    case 'guess_the_goalscorers': {
+      // Dynamic: N, N-1, ..., 1, 0 based on totalScorers
+      const total = maxSteps || 5;
+      const labels: string[] = [];
+      for (let i = total; i >= 0; i--) {
+        labels.push(String(i));
+      }
+      return labels;
+    }
     default:
       // Default: use percentage labels
       return undefined;
@@ -133,7 +148,10 @@ export function normalizeScoreForMode(
       }
       return rawScore;
     case 'guess_the_goalscorers':
-      // Already percentage (0-100)
+      // Raw score / max * 100 (maxScore = totalScorers)
+      if (maxScore && maxScore > 0) {
+        return Math.round((rawScore / maxScore) * 100);
+      }
       return rawScore;
     case 'the_grid':
       // Already 0-100

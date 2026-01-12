@@ -20,11 +20,7 @@ export type {
   GoalscorerRecallState,
   GameStatus,
 } from './types/goalscorerRecall.types';
-export {
-  TIMER_DURATION,
-  TIMER_WARNING_THRESHOLD,
-  TIME_BONUS_MULTIPLIER,
-} from './types/goalscorerRecall.types';
+export { TIMER_DURATION, TIMER_WARNING_THRESHOLD } from './types/goalscorerRecall.types';
 
 // Utils
 export { calculateGoalscorerScore, formatGoalscorerScore, getScoreMessage } from './utils/scoring';
