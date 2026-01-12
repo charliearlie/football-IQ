@@ -219,6 +219,8 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
           revealedCount: s.revealedCount,
           won: s.gameStatus === 'won',
           totalSteps,
+          points: score.points,
+          maxPoints: score.maxPoints,
         }),
         started_at: s.startedAt,
         completed_at: completedAt,

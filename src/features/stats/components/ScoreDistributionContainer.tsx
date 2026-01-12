@@ -21,30 +21,39 @@ import {
 import { DistributionEntry } from '../services/distributionService';
 
 /**
- * Transform Career Path distribution from normalized 0-100 scores to club counts.
- * Club count = 1 + maxSteps * (1 - normalizedScore / 100)
+ * Transform Career Path distribution from normalized 0-100 scores to points.
+ *
+ * The bucket/label relationship:
+ * - Bucket 5 (points=5) -> index 0 -> label "1 club" (best)
+ * - Bucket 4 (points=4) -> index 1 -> label "2 clubs"
+ * - Bucket 1 (points=1) -> index 4 -> label "5 clubs" (worst)
+ *
+ * @see src/features/stats/utils/careerPathDistribution.ts for standalone version
  */
 function transformCareerPathDistribution(
   distribution: DistributionEntry[],
   maxSteps: number
 ): DistributionEntry[] {
-  // Group by club count
-  const clubMap = new Map<number, number>();
+  // Group by points value
+  const pointsMap = new Map<number, number>();
 
   for (const entry of distribution) {
-    // Convert normalized score to clubs revealed
-    // score = (points / maxPoints) * 100, where points = maxSteps - (clubsRevealed - 1)
-    // So: clubsRevealed = maxSteps - (score * maxSteps / 100) + 1
-    const clubsRevealed = Math.round(maxSteps - (entry.score * maxSteps / 100) + 1);
-    const clampedClubs = Math.max(1, Math.min(clubsRevealed, maxSteps));
+    // Convert normalized score (0-100) back to points (0 to maxSteps)
+    // normalized = (points / maxSteps) * 100
+    // points = normalized * maxSteps / 100
+    const points = Math.round((entry.score * maxSteps) / 100);
 
-    const current = clubMap.get(clampedClubs) || 0;
-    clubMap.set(clampedClubs, current + entry.percentage);
+    // Clamp to valid bucket range (1 to maxSteps)
+    // Score of 0 (loss) maps to bucket 1 (worst)
+    const clampedPoints = Math.max(1, Math.min(points, maxSteps));
+
+    const current = pointsMap.get(clampedPoints) || 0;
+    pointsMap.set(clampedPoints, current + entry.percentage);
   }
 
-  // Convert to array with club count as score
-  return Array.from(clubMap.entries()).map(([clubs, percentage]) => ({
-    score: clubs,
+  // Convert to array with points as score
+  return Array.from(pointsMap.entries()).map(([points, percentage]) => ({
+    score: points,
     count: 0, // Not used for display
     percentage,
   }));

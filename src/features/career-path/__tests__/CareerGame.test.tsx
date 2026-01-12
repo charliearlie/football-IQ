@@ -241,6 +241,120 @@ describe('useCareerPathGame Hook', () => {
 
     jest.useRealTimers();
   });
+
+  describe('score structure for RPC metadata', () => {
+    // The score object must contain points and maxPoints for the
+    // get_puzzle_score_distribution RPC to calculate normalized scores correctly.
+    // These fields are saved to metadata when the game ends.
+
+    it('score includes points field when game is won', () => {
+      const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+      act(() => {
+        result.current.setCurrentGuess('Morgan Rogers');
+      });
+
+      act(() => {
+        result.current.submitGuess();
+      });
+
+      expect(result.current.state.score).not.toBeNull();
+      expect(result.current.state.score).toHaveProperty('points');
+      expect(typeof result.current.state.score?.points).toBe('number');
+    });
+
+    it('score includes maxPoints field when game is won', () => {
+      const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+      act(() => {
+        result.current.setCurrentGuess('Morgan Rogers');
+      });
+
+      act(() => {
+        result.current.submitGuess();
+      });
+
+      expect(result.current.state.score).toHaveProperty('maxPoints');
+      expect(result.current.state.score?.maxPoints).toBe(5); // 5 career steps
+    });
+
+    it('score includes stepsRevealed field when game is won', () => {
+      const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+      // Reveal 2 more steps (3 total)
+      act(() => {
+        result.current.revealNext();
+        result.current.revealNext();
+      });
+
+      act(() => {
+        result.current.setCurrentGuess('Morgan Rogers');
+      });
+
+      act(() => {
+        result.current.submitGuess();
+      });
+
+      expect(result.current.state.score).toHaveProperty('stepsRevealed');
+      expect(result.current.state.score?.stepsRevealed).toBe(3);
+    });
+
+    it('calculates correct points based on steps revealed', () => {
+      const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+      // Reveal 1 more step (2 total revealed)
+      act(() => {
+        result.current.revealNext();
+      });
+
+      act(() => {
+        result.current.setCurrentGuess('Morgan Rogers');
+      });
+
+      act(() => {
+        result.current.submitGuess();
+      });
+
+      // points = totalSteps - (revealedCount - 1) = 5 - (2 - 1) = 4
+      expect(result.current.state.score?.points).toBe(4);
+      expect(result.current.state.score?.maxPoints).toBe(5);
+      expect(result.current.state.score?.stepsRevealed).toBe(2);
+    });
+
+    it('score includes all required fields for loss', () => {
+      jest.useFakeTimers();
+
+      const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+      // Reveal all steps
+      act(() => {
+        result.current.revealNext(); // 2
+        result.current.revealNext(); // 3
+        result.current.revealNext(); // 4
+        result.current.revealNext(); // 5
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      // Make incorrect guess to trigger loss
+      act(() => {
+        result.current.setCurrentGuess('Wrong Player');
+      });
+
+      act(() => {
+        result.current.submitGuess();
+      });
+
+      expect(result.current.state.score).toHaveProperty('points');
+      expect(result.current.state.score).toHaveProperty('maxPoints');
+      expect(result.current.state.score).toHaveProperty('stepsRevealed');
+      expect(result.current.state.score?.points).toBe(0); // Loss = 0 points
+
+      jest.useRealTimers();
+    });
+  });
 });
 
 describe('CareerPathScreen', () => {

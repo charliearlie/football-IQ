@@ -8,7 +8,6 @@ import React from 'react';
 import { Trophy, XCircle } from 'lucide-react-native';
 import {
   BaseResultModal,
-  ScoreDisplay,
   AnswerReveal,
 } from '@/components/GameResultModal';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
@@ -76,11 +75,7 @@ export function GameResultModal({
       onClose={onClose}
       testID={testID}
     >
-      {won ? (
-        <ScoreDisplay value={`${score.points}/${score.maxPoints}`} />
-      ) : (
-        <AnswerReveal value={correctAnswer} />
-      )}
+      {!won && <AnswerReveal value={correctAnswer} />}
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="career_path"
