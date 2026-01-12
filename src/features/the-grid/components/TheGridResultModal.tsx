@@ -13,14 +13,16 @@ import { BlurView } from 'expo-blur';
 import { GlassCard } from '@/components/GlassCard';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
+import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { TheGridScore, FilledCell } from '../types/theGrid.types';
-import { generateGridEmojiDisplay, getResultMessage } from '../utils/scoreDisplay';
+import { getResultMessage } from '../utils/scoreDisplay';
 
 export interface TheGridResultModalProps {
   visible: boolean;
   score: TheGridScore | null;
   cells: (FilledCell | null)[];
+  puzzleId: string;
   onClose: () => void;
   onShare: () => void;
   testID?: string;
@@ -33,6 +35,7 @@ export function TheGridResultModal({
   visible,
   score,
   cells,
+  puzzleId,
   onClose,
   onShare,
   testID,
@@ -40,8 +43,10 @@ export function TheGridResultModal({
   if (!score) return null;
 
   const isPerfect = score.cellsFilled === 9;
-  const emojiGrid = generateGridEmojiDisplay(cells);
   const resultMessage = getResultMessage(score.cellsFilled);
+
+  // Normalize The Grid score to 0-100 (cells filled out of 9)
+  const normalizedScore = Math.round((score.cellsFilled / 9) * 100);
 
   return (
     <Modal
@@ -80,11 +85,6 @@ export function TheGridResultModal({
             {/* Result message */}
             <Text style={styles.message}>{resultMessage}</Text>
 
-            {/* Emoji grid */}
-            <View style={styles.emojiGridContainer}>
-              <Text style={styles.emojiGrid}>{emojiGrid}</Text>
-            </View>
-
             {/* Score display */}
             <View style={styles.scoreContainer}>
               <Text style={styles.scoreLabel}>Score</Text>
@@ -96,6 +96,14 @@ export function TheGridResultModal({
                 {score.cellsFilled}/9 cells filled
               </Text>
             </View>
+
+            {/* Score Distribution */}
+            <ScoreDistributionContainer
+              puzzleId={puzzleId}
+              gameMode="the_grid"
+              userScore={normalizedScore}
+              testID={testID ? `${testID}-distribution` : undefined}
+            />
 
             {/* Action buttons */}
             <View style={styles.buttonContainer}>
@@ -161,17 +169,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: spacing.md,
-  },
-  emojiGridContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  emojiGrid: {
-    fontSize: 24,
-    lineHeight: 32,
-    textAlign: 'center',
   },
   scoreContainer: {
     alignItems: 'center',

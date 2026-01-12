@@ -89,6 +89,7 @@ describe('RecallResultModal', () => {
           goals={goals}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -118,6 +119,7 @@ describe('RecallResultModal', () => {
           goals={goals}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -146,6 +148,7 @@ describe('RecallResultModal', () => {
           goals={goals}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -174,6 +177,7 @@ describe('RecallResultModal', () => {
           goals={goals}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -192,6 +196,7 @@ describe('RecallResultModal', () => {
           goals={[]}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -208,6 +213,7 @@ describe('RecallResultModal', () => {
           goals={[]}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -242,6 +248,7 @@ describe('RecallResultModal', () => {
           goals={goals}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -275,6 +282,7 @@ describe('RecallResultModal', () => {
           goals={goals}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={jest.fn()}
         />
       );
@@ -305,6 +313,7 @@ describe('RecallResultModal', () => {
           goals={createMockGoals([true, true, true, true, true])}
           matchInfo={mockMatchInfo}
           puzzleDate="2024-01-15"
+          puzzleId="test-puzzle-id"
           onContinue={onContinue}
         />
       );

@@ -2,6 +2,7 @@ import { useReducer, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
+import { usePuzzleContext } from '@/features/puzzles';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { LocalAttempt } from '@/types/database';
@@ -137,6 +138,7 @@ function quizReducer(
 export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(quizReducer, createInitialState());
   const { triggerNotification, triggerSelection } = useHaptics();
+  const { syncAttempts } = usePuzzleContext();
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Ref to track current state for AppState callback
@@ -363,6 +365,11 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
 
           await saveAttempt(attempt);
           dispatch({ type: 'ATTEMPT_SAVED' });
+
+          // Fire-and-forget cloud sync
+          syncAttempts().catch((err) => {
+            console.error('[TopicalQuiz] Cloud sync failed:', err);
+          });
         } catch (error) {
           console.error('Failed to save quiz attempt:', error);
           // Don't block the game, just log the error

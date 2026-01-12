@@ -222,16 +222,16 @@
           </div>
           <div class="space-y-3">
             <div>
-              <label class="form-label">Hint 1 (Nationality)</label>
-              <input type="text" id="tg-hint1" class="form-input" placeholder="e.g., Portuguese" oninput="updatePreview()">
+              <label class="form-label">Hint 1 (Number)</label>
+              <input type="text" id="tg-hint1" class="form-input" placeholder="e.g., 7" oninput="updatePreview()">
             </div>
             <div>
               <label class="form-label">Hint 2 (Position)</label>
-              <input type="text" id="tg-hint2" class="form-input" placeholder="e.g., Forward" oninput="updatePreview()">
+              <input type="text" id="tg-hint2" class="form-input" placeholder="ATT, MID, DEF, GK" oninput="updatePreview()">
             </div>
             <div>
-              <label class="form-label">Hint 3 (Achievement)</label>
-              <input type="text" id="tg-hint3" class="form-input" placeholder="e.g., 5× Ballon d'Or winner" oninput="updatePreview()">
+              <label class="form-label">Hint 3 (Nation)</label>
+              <input type="text" id="tg-hint3" class="form-input" placeholder="e.g., 🇫🇷" oninput="updatePreview()">
             </div>
           </div>
         </div>
@@ -903,9 +903,9 @@
         if (!content.to_club) errors.push('To club is required');
         if (!content.year) errors.push('Year is required');
         if (!content.fee) errors.push('Fee is required');
-        if (!content.hints[0]) errors.push('Hint 1 (Nationality) is required');
+        if (!content.hints[0]) errors.push('Hint 1 (Number) is required');
         if (!content.hints[1]) errors.push('Hint 2 (Position) is required');
-        if (!content.hints[2]) errors.push('Hint 3 (Achievement) is required');
+        if (!content.hints[2]) errors.push('Hint 3 (Nation) is required');
       }
 
       if (mode === 'guess_the_goalscorers') {

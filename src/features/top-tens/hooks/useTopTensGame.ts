@@ -11,6 +11,7 @@ import * as Crypto from 'expo-crypto';
 import { ParsedLocalPuzzle } from '@/types/database';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { useHaptics } from '@/hooks/useHaptics';
+import { usePuzzleContext } from '@/features/puzzles';
 import {
   TopTensState,
   TopTensAction,
@@ -229,6 +230,7 @@ function createInitialGameState(): TopTensState {
 export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(topTensReducer, undefined, createInitialGameState);
   const { triggerNotification, triggerHeavy, triggerSelection } = useHaptics();
+  const { syncAttempts } = usePuzzleContext();
 
   // Keep a ref for async callbacks
   const stateRef = useRef(state);
@@ -353,6 +355,11 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
         });
 
         dispatch({ type: 'ATTEMPT_SAVED' });
+
+        // Fire-and-forget cloud sync
+        syncAttempts().catch((err) => {
+          console.error('[TopTens] Cloud sync failed:', err);
+        });
       } catch (error) {
         console.error('[TopTens] Failed to save attempt:', error);
       }

@@ -12,10 +12,7 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
 import type { CellArray, TicTacToeScore } from '../types/ticTacToe.types';
-import {
-  generateTicTacToeEmojiGrid,
-  getResultMessage,
-} from '../utils/scoreDisplay';
+import { getResultMessage } from '../utils/scoreDisplay';
 import type { ShareResult } from '@/components/GameResultModal';
 
 export interface TicTacToeResultModalProps {
@@ -75,7 +72,6 @@ export function TicTacToeResultModal({
   onClose,
   testID,
 }: TicTacToeResultModalProps) {
-  const emojiGrid = generateTicTacToeEmojiGrid(cells);
   const resultMessage = getResultMessage(score.result);
 
   return (
@@ -84,7 +80,6 @@ export function TicTacToeResultModal({
       resultType={score.result}
       icon={getResultIcon(score.result)}
       title={getResultTitle(score.result)}
-      emojiGrid={emojiGrid}
       onShare={onShare}
       onReview={onReview}
       onClose={onClose}

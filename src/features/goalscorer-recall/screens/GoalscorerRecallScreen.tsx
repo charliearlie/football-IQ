@@ -372,6 +372,7 @@ export function GoalscorerRecallScreen({
         goals={state.goals}
         matchInfo={matchInfo}
         puzzleDate={puzzle.puzzle_date}
+        puzzleId={puzzle.id}
         onContinue={() => router.back()}
       />
 

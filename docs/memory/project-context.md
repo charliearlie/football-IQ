@@ -1880,6 +1880,78 @@ app/(tabs)/_layout.tsx
   └── Tab renamed from "Stats" to "My IQ" with Brain icon
 ```
 
+## Score Distribution Graph ("How You Compare")
+Initialized: 2026-01-11
+
+### Overview
+Wordle-style horizontal bar chart showing how a user's score compares to all other players who completed the same puzzle globally. Displayed in result modals for all 6 main game modes.
+
+### Features
+- **Per-puzzle distribution**: Shows how this puzzle's scores are distributed (not game mode aggregate)
+- **Game modes supported**: Top Tens, Transfer Guess, Topical Quiz, Career Path, Goalscorer Recall, The Grid
+- **Always visible**: Graph shows even with 1 attempt (100% at user's score)
+- **Score normalization**: All scores normalized to 0-100 scale for consistent bucketing
+- **User highlighting**: User's score bucket highlighted in Pitch Green
+
+### Visual Design
+- **Header**: "HOW YOU COMPARE" (Bebas Neue, 14px, letter-spacing: 2)
+- **Bars**: 11 rows (0-100 in 10s), horizontal bars
+- **User's bar**: Pitch Green (#58CC02)
+- **Other bars**: Glass background (rgba(255,255,255,0.08))
+- **Score labels**: Left side (e.g., "100", "90", "80"...)
+- **Percentage labels**: Right side (e.g., "25%")
+- **Footer**: "Based on X global attempts"
+- **Loading**: Skeleton placeholder with shimmer animation
+
+### Score Normalization by Game Mode
+| Game Mode | Raw Score | Normalized |
+|-----------|-----------|------------|
+| Top Tens | 0-10 points | × 10 → 0-100 |
+| Transfer Guess | 0-10 points | × 10 → 0-100 |
+| Topical Quiz | 0-10 points | × 10 → 0-100 |
+| Career Path | points/maxPoints | × 100 → 0-100 |
+| Goalscorer Recall | percentage | Already 0-100 |
+| The Grid | cells/9 | × 100 → 0-100 |
+
+### Files
+```
+src/features/stats/
+  ├── __tests__/
+  │   └── DistributionLogic.test.ts      # 19 TDD tests
+  ├── components/
+  │   ├── ScoreDistributionContainer.tsx # Smart container
+  │   ├── ScoreDistributionGraph.tsx     # Horizontal bar chart
+  │   └── ScoreDistributionSkeleton.tsx  # Loading state
+  ├── hooks/
+  │   └── useScoreDistribution.ts        # Data fetching hook
+  ├── services/
+  │   └── distributionService.ts         # Supabase RPC calls
+  └── utils/
+      ├── distributionLogic.ts           # Bucket calculation
+      └── distributionConfig.ts          # Per-mode config
+
+supabase/migrations/
+  └── 008_score_distribution_rpc.sql     # RPC function
+```
+
+### Supabase RPC
+**Function**: `get_puzzle_score_distribution(target_puzzle_id UUID)`
+
+Returns normalized score distribution:
+- Groups scores into 10-point buckets (0, 10, 20, ..., 100)
+- Calculates percentage of attempts in each bucket
+- Returns total attempt count
+
+### Integration
+Each result modal passes `puzzleId` to `ScoreDistributionContainer`:
+```tsx
+<ScoreDistributionContainer
+  puzzleId={puzzle.id}
+  gameMode="top_tens"
+  userScore={score.points * 10}
+/>
+```
+
 ## Admin Tools
 
 ### Content Creator

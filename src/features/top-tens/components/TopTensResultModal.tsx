@@ -9,9 +9,9 @@ import {
   BaseResultModal,
   ScoreDisplay,
 } from '@/components/GameResultModal';
+import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { colors } from '@/theme/colors';
 import { TopTensScore, RankSlotState } from '../types/topTens.types';
-import { generateTopTensEmojiGrid } from '../utils/scoreDisplay';
 import { ShareResult } from '../utils/share';
 
 interface TopTensResultModalProps {
@@ -23,6 +23,8 @@ interface TopTensResultModalProps {
   score: TopTensScore;
   /** Array of rank slot states for emoji grid */
   rankSlots: RankSlotState[];
+  /** Puzzle ID for score distribution */
+  puzzleId: string;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
   /** Callback to close/dismiss the modal */
@@ -42,12 +44,11 @@ export function TopTensResultModal({
   won,
   score,
   rankSlots,
+  puzzleId,
   onShare,
   onClose,
   testID,
 }: TopTensResultModalProps) {
-  const emojiGrid = generateTopTensEmojiGrid(rankSlots, score);
-
   return (
     <BaseResultModal
       visible={visible}
@@ -60,7 +61,6 @@ export function TopTensResultModal({
         )
       }
       title={won ? 'ALL FOUND!' : 'GAME OVER'}
-      emojiGrid={emojiGrid}
       message={
         won
           ? `Perfect score with ${score.wrongGuessCount} wrong guess${score.wrongGuessCount !== 1 ? 'es' : ''}!`
@@ -71,6 +71,12 @@ export function TopTensResultModal({
       testID={testID}
     >
       <ScoreDisplay value={`${score.points}/${score.maxPoints}`} />
+      <ScoreDistributionContainer
+        puzzleId={puzzleId}
+        gameMode="top_tens"
+        userScore={score.points * 10}
+        testID={testID ? `${testID}-distribution` : undefined}
+      />
     </BaseResultModal>
   );
 }

@@ -11,9 +11,9 @@ import {
   ScoreDisplay,
   AnswerReveal,
 } from '@/components/GameResultModal';
+import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { colors } from '@/theme/colors';
 import { GameScore } from '../types/careerPath.types';
-import { generateEmojiGrid } from '../utils/scoreDisplay';
 import { ShareResult } from '../utils/share';
 
 interface GameResultModalProps {
@@ -27,6 +27,8 @@ interface GameResultModalProps {
   correctAnswer: string;
   /** Total steps in the puzzle */
   totalSteps: number;
+  /** Puzzle ID for score distribution */
+  puzzleId: string;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
   /** Callback to enter review mode (optional) */
@@ -46,13 +48,12 @@ export function GameResultModal({
   score,
   correctAnswer,
   totalSteps,
+  puzzleId,
   onShare,
   onReview,
   onClose,
   testID,
 }: GameResultModalProps) {
-  const emojiGrid = generateEmojiGrid(score, totalSteps);
-
   return (
     <BaseResultModal
       visible={visible}
@@ -65,7 +66,6 @@ export function GameResultModal({
         )
       }
       title={won ? 'CORRECT!' : 'GAME OVER'}
-      emojiGrid={emojiGrid}
       message={
         won
           ? `Solved with ${score.stepsRevealed} clue${score.stepsRevealed > 1 ? 's' : ''} revealed!`
@@ -81,6 +81,13 @@ export function GameResultModal({
       ) : (
         <AnswerReveal value={correctAnswer} />
       )}
+      <ScoreDistributionContainer
+        puzzleId={puzzleId}
+        gameMode="career_path"
+        userScore={totalSteps - score.stepsRevealed + 1}
+        maxSteps={totalSteps}
+        testID={testID ? `${testID}-distribution` : undefined}
+      />
     </BaseResultModal>
   );
 }

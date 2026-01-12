@@ -223,6 +223,7 @@ export function TopTensScreen({
           won={state.gameStatus === 'won'}
           score={state.score}
           rankSlots={state.rankSlots}
+          puzzleId={puzzle?.id ?? ''}
           onShare={shareResult}
           onClose={handleClose}
           testID="game-result-modal"

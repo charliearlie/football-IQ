@@ -25,6 +25,7 @@ import { generateGoalscorerShareText } from '../utils/share';
 import { validateGuess, normalizeString } from '@/lib/validation';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { useHaptics } from '@/hooks/useHaptics';
+import { usePuzzleContext } from '@/features/puzzles';
 import type { ParsedLocalPuzzle, LocalAttempt } from '@/types/database';
 
 /**
@@ -219,6 +220,7 @@ function initializeGoals(goals: Goal[]): GoalWithState[] {
 export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(reducer, createInitialState());
   const { triggerNotification, triggerHeavy, triggerSelection } = useHaptics();
+  const { syncAttempts } = usePuzzleContext();
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ref to track current state for AppState callback
@@ -580,6 +582,11 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
         try {
           await saveAttempt(attempt);
           dispatch({ type: 'ATTEMPT_SAVED' });
+
+          // Fire-and-forget cloud sync
+          syncAttempts().catch((err) => {
+            console.error('[GoalscorerRecall] Cloud sync failed:', err);
+          });
         } catch (error) {
           console.error('Failed to save attempt:', error);
         }

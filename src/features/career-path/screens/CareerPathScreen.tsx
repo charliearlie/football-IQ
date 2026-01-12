@@ -248,6 +248,7 @@ export function CareerPathScreen({
           score={state.score}
           correctAnswer={answer}
           totalSteps={totalSteps}
+          puzzleId={puzzle?.id ?? ''}
           onShare={shareResult}
           onClose={() => router.back()}
           testID="game-result-modal"

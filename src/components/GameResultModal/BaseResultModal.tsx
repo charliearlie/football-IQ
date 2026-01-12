@@ -13,8 +13,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, StyleSheet } from 'react-native';
+import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
+import { X } from 'lucide-react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
 import { colors } from '@/theme/colors';
@@ -40,8 +41,6 @@ export interface BaseResultModalProps {
 
   /** Game-specific content (scores, answers, stats) */
   children: React.ReactNode;
-  /** Optional emoji grid string */
-  emojiGrid?: string;
   /** Optional message below content */
   message?: string;
 
@@ -88,7 +87,6 @@ function getAccentColor(resultType: ResultType): string {
  *   resultType={won ? 'win' : 'loss'}
  *   icon={won ? <Trophy /> : <XCircle />}
  *   title={won ? 'CORRECT!' : 'GAME OVER'}
- *   emojiGrid={emojiGrid}
  *   onShare={handleShare}
  *   onClose={handleClose}
  * >
@@ -104,7 +102,6 @@ export function BaseResultModal({
   title,
   titleColor,
   children,
-  emojiGrid,
   message,
   onShare,
   onReview,
@@ -155,6 +152,18 @@ export function BaseResultModal({
           entering={SlideInDown.springify().damping(15).stiffness(100)}
           style={[styles.modal, { borderColor }]}
         >
+          {/* Close X button */}
+          {onClose && (
+            <Pressable
+              style={styles.closeButton}
+              onPress={onClose}
+              hitSlop={8}
+              testID="close-button"
+            >
+              <X size={24} color={colors.textSecondary} />
+            </Pressable>
+          )}
+
           {/* Icon */}
           <View style={[styles.iconContainer, { backgroundColor: accentColor }]}>
             {icon}
@@ -166,13 +175,6 @@ export function BaseResultModal({
           {/* Game-specific content */}
           {children}
 
-          {/* Emoji Grid (if provided) */}
-          {emojiGrid && (
-            <View style={styles.gridContainer}>
-              <Text style={styles.emojiGrid}>{emojiGrid}</Text>
-            </View>
-          )}
-
           {/* Message (if provided) */}
           {message && <Text style={styles.message}>{message}</Text>}
 
@@ -182,8 +184,8 @@ export function BaseResultModal({
               <ElevatedButton
                 title={buttonTitle}
                 onPress={handleShare}
-                size="medium"
-                fullWidth
+                size="small"
+                style={onReview ? styles.buttonHalf : styles.buttonFull}
                 topColor={buttonColors.topColor}
                 shadowColor={buttonColors.shadowColor}
                 testID="share-button"
@@ -193,22 +195,11 @@ export function BaseResultModal({
               <ElevatedButton
                 title="Review"
                 onPress={onReview}
-                size="medium"
-                fullWidth
+                size="small"
+                style={onShare ? styles.buttonHalf : styles.buttonFull}
                 topColor={colors.cardYellow}
                 shadowColor="#B8960F"
                 testID="review-button"
-              />
-            )}
-            {onClose && (
-              <ElevatedButton
-                title={closeLabel}
-                onPress={onClose}
-                size="medium"
-                fullWidth
-                topColor={colors.floodlightWhite}
-                shadowColor={colors.textSecondary}
-                testID="done-button"
               />
             )}
           </View>
@@ -270,6 +261,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     maxWidth: 340,
+    overflow: 'hidden',
   },
   iconContainer: {
     width: 64,
@@ -316,18 +308,6 @@ const styles = StyleSheet.create({
     color: colors.cardYellow,
     textAlign: 'center',
   },
-  gridContainer: {
-    backgroundColor: colors.glassBackground,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  emojiGrid: {
-    fontSize: 20,
-    lineHeight: 28,
-    letterSpacing: 2,
-    textAlign: 'center',
-  },
   message: {
     ...textStyles.body,
     color: colors.textSecondary,
@@ -336,8 +316,20 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
-    flexDirection: 'column',
-    alignItems: 'stretch',
+    flexDirection: 'row',
     gap: spacing.sm,
+  },
+  buttonHalf: {
+    flex: 1,
+  },
+  buttonFull: {
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    zIndex: 1,
+    padding: spacing.xs,
   },
 });

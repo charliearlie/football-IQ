@@ -32,3 +32,28 @@ export { IQCardOverlay } from './components/IQCardOverlay';
 // Share utilities
 export type { IQCardData, ShareIQResult } from './utils/shareIQ';
 export { captureIQCard, shareIQCard, captureAndShareIQCard } from './utils/shareIQ';
+
+// Score Distribution
+export { ScoreDistributionContainer } from './components/ScoreDistributionContainer';
+export { ScoreDistributionGraph } from './components/ScoreDistributionGraph';
+export { ScoreDistributionSkeleton } from './components/ScoreDistributionSkeleton';
+export { useScoreDistribution } from './hooks/useScoreDistribution';
+export {
+  getPuzzleScoreDistribution,
+  type DistributionEntry,
+  type DistributionResult,
+} from './services/distributionService';
+export {
+  calculateDistributionBuckets,
+  normalizeDistribution,
+  getPercentileRank,
+  type ScoreCount,
+  type DistributionBucket,
+} from './utils/distributionLogic';
+export {
+  getMaxScoreForMode,
+  getBucketSizeForMode,
+  getBarCountForMode,
+  getScoreLabelsForMode,
+  normalizeScoreForMode,
+} from './utils/distributionConfig';

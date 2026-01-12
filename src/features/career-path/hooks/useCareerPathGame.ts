@@ -2,6 +2,7 @@ import { useReducer, useEffect, useRef, useMemo, useCallback } from 'react';
 import { FlatList } from 'react-native';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useGamePersistence } from '@/hooks/useGamePersistence';
+import { usePuzzleContext } from '@/features/puzzles';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { LocalAttempt } from '@/types/database';
 import {
@@ -153,6 +154,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(careerPathReducer, createInitialState());
   const flatListRef = useRef<FlatList>(null);
   const { triggerNotification, triggerSelection } = useHaptics();
+  const { syncAttempts } = usePuzzleContext();
 
   // Parse puzzle content
   const puzzleContent = useMemo<CareerPathContent | null>(() => {
@@ -223,6 +225,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
         synced: 0,
       };
     },
+    onAttemptSaved: syncAttempts,
   });
 
   // Reveal the next step manually

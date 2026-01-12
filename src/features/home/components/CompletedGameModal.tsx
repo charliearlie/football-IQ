@@ -8,11 +8,6 @@
 
 import React from 'react';
 import {
-  Briefcase,
-  ArrowRightLeft,
-  Target,
-  Grid3X3,
-  HelpCircle,
   Trophy,
   XCircle,
 } from 'lucide-react-native';
@@ -22,10 +17,11 @@ import {
   ScoreDisplay,
   ResultType,
 } from '@/components/GameResultModal/BaseResultModal';
+import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
+import { normalizeScoreForMode } from '@/features/stats/utils/distributionConfig';
 import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { ParsedLocalAttempt } from '@/types/database';
-import { extractEmojiGrid } from '@/utils/scoreDisplay';
 
 interface CompletedGameModalProps {
   /**
@@ -59,6 +55,8 @@ interface CompletedGameModalProps {
  */
 interface GameMetadata {
   won?: boolean;
+  totalSteps?: number;
+  revealedCount?: number;
   [key: string]: unknown;
 }
 
@@ -106,7 +104,7 @@ function getGameModeName(gameMode: GameMode): string {
  * - Game-appropriate icon (trophy for win, x for loss)
  * - Title based on win/loss state
  * - Score from stored attempt
- * - Emoji grid from score_display
+ * - Score distribution graph
  * - Share and Close buttons only (no replay)
  */
 export function CompletedGameModal({
@@ -122,9 +120,17 @@ export function CompletedGameModal({
   const won = metadata.won ?? true; // Default to won if not specified
 
   // Extract display data
-  const emojiGrid = extractEmojiGrid(attempt.score_display);
   const score = attempt.score ?? 0;
   const gameName = getGameModeName(gameMode);
+
+  // For Career Path, use stepsRevealed as the score and pass totalSteps
+  // For other modes, normalize score to 0-100
+  const isCareerPath = gameMode === 'career_path';
+  const totalSteps = metadata.totalSteps;
+  const stepsRevealed = metadata.revealedCount;
+  const userScore = isCareerPath && stepsRevealed && totalSteps
+    ? totalSteps - stepsRevealed + 1
+    : normalizeScoreForMode(gameMode, score);
 
   // Determine result type and title
   const resultType: ResultType = won ? 'complete' : 'loss';
@@ -145,7 +151,6 @@ export function CompletedGameModal({
       resultType={resultType}
       icon={getResultIcon(gameMode, won)}
       title={title}
-      emojiGrid={emojiGrid || undefined}
       onShare={handleShare}
       onReview={onReview}
       onClose={onClose}
@@ -153,7 +158,17 @@ export function CompletedGameModal({
       showConfetti={false} // Don't celebrate again
       testID={testID}
     >
-      <ScoreDisplay label={gameName} value={score} />
+      {/* Career Path score is shown via distribution graph labels */}
+      {gameMode !== 'career_path' && (
+        <ScoreDisplay label={gameName} value={score} />
+      )}
+      <ScoreDistributionContainer
+        puzzleId={attempt.puzzle_id}
+        gameMode={gameMode}
+        userScore={userScore}
+        maxSteps={totalSteps}
+        testID={testID ? `${testID}-distribution` : undefined}
+      />
     </BaseResultModal>
   );
 }

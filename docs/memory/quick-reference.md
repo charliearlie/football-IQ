@@ -635,6 +635,52 @@ calculateGlobalIQ(proficiencies)  // Returns weighted average 0-100
 calculateBadges(proficiencies, currentStreak, totalPuzzles)  // Badge[]
 ```
 
+## Score Distribution Graph ("How You Compare")
+```typescript
+import {
+  ScoreDistributionContainer,
+  ScoreDistributionGraph,
+  ScoreDistributionSkeleton,
+  useScoreDistribution,
+  getPuzzleScoreDistribution,
+  normalizeScoreForMode,
+} from '@/features/stats';
+
+// In result modals - container handles data fetching
+<ScoreDistributionContainer
+  puzzleId={puzzle.id}
+  gameMode="top_tens"
+  userScore={score.points * 10}  // Normalized to 0-100
+/>
+
+// Hook usage (for custom implementations)
+const {
+  distribution,   // DistributionEntry[]
+  totalAttempts,  // number
+  isLoading,
+  error,
+  refetch,
+} = useScoreDistribution(puzzleId, gameMode);
+
+// Distribution entry structure
+interface DistributionEntry {
+  score: number;      // Bucket: 0, 10, 20, ..., 100
+  count: number;      // Players in this bucket
+  percentage: number; // % of total attempts
+}
+
+// Score normalization per game mode
+normalizeScoreForMode('top_tens', 7)                    // 70 (7*10)
+normalizeScoreForMode('career_path', 80, 100)           // 80 (80/100*100)
+normalizeScoreForMode('guess_the_goalscorers', 75)      // 75 (already %)
+normalizeScoreForMode('the_grid', 9, 9)                 // 100 (9/9*100)
+
+// Service function (direct RPC call)
+const result = await getPuzzleScoreDistribution(puzzleId);
+// result.distribution = [{ score: 100, count: 5, percentage: 10 }, ...]
+// result.totalAttempts = 50
+```
+
 ## Leaderboard
 ```typescript
 import {

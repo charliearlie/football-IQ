@@ -175,6 +175,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
         visible={showResultModal}
         score={state.score}
         cells={state.cells}
+        puzzleId={puzzle?.id ?? ''}
         onClose={() => {
           setShowResultModal(false);
           router.back();

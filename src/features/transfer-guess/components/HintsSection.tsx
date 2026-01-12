@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, textStyles } from '@/theme';
+import { View, StyleSheet } from 'react-native';
+import { spacing } from '@/theme';
 import { HintSlot } from './HintSlot';
 import { HINT_LABELS } from '../types/transferGuess.types';
 
@@ -8,7 +8,7 @@ export interface HintsSectionProps {
   hints: [string, string, string];
   /** Number of hints revealed (0-3) */
   hintsRevealed: number;
-  /** Whether in review mode (shows "Not revealed" instead of blur/lock) */
+  /** Whether in review mode (shows different styling for unrevealed) */
   isReviewMode?: boolean;
   /** Test ID for testing */
   testID?: string;
@@ -17,8 +17,7 @@ export interface HintsSectionProps {
 /**
  * HintsSection - Container for the 3 hint slots.
  *
- * Displays all hints in a vertical stack, with unrevealed
- * hints shown as locked cards.
+ * Displays hints in a horizontal row: Number | Position | Nation
  */
 export function HintsSection({
   hints,
@@ -28,9 +27,7 @@ export function HintsSection({
 }: HintsSectionProps) {
   return (
     <View style={styles.container} testID={testID}>
-      <Text style={styles.header}>Hints</Text>
-
-      <View style={styles.hintsContainer}>
+      <View style={styles.hintsRow}>
         {HINT_LABELS.map((label, index) => (
           <HintSlot
             key={label}
@@ -50,16 +47,10 @@ export function HintsSection({
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: spacing.lg,
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
   },
-  header: {
-    ...textStyles.h3,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  hintsContainer: {
-    gap: spacing.md,
+  hintsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
 });

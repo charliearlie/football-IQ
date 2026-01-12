@@ -116,6 +116,13 @@ export interface UseGamePersistenceConfig<TState extends BaseGameState, TMeta> {
     attemptId: string,
     completedAt: string
   ) => Omit<LocalAttempt, 'puzzle_id'>;
+
+  /**
+   * Optional callback to sync attempts to cloud after local save.
+   * Fire-and-forget - errors are logged but don't block the game.
+   * Pass `syncAttempts` from usePuzzles() context.
+   */
+  onAttemptSaved?: () => Promise<unknown>;
 }
 
 /**
@@ -171,6 +178,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     hasRestoredProgress,
     deserializeProgress,
     buildFinalAttempt,
+    onAttemptSaved,
   } = config;
 
   // 1. StateRef for AppState callbacks (avoids stale closure)
@@ -285,6 +293,13 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
 
         await saveAttempt(attempt);
         dispatch({ type: 'ATTEMPT_SAVED' });
+
+        // Fire-and-forget cloud sync if callback provided
+        if (onAttemptSaved) {
+          onAttemptSaved().catch((err) => {
+            console.error('Cloud sync failed:', err);
+          });
+        }
       } catch (error) {
         console.error('Failed to save attempt:', error);
         // Don't block the game, just log the error

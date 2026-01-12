@@ -50,7 +50,7 @@ export interface TransferActionZoneProps {
  * - Guesses remaining indicator (caption)
  * - Input field + Submit button (inline row)
  * - "Reveal Hint" text link with lightbulb icon (amber, subtle)
- * - "Give Up" button (red, shown after 2+ incorrect guesses)
+ * - "Give Up" button (red, shown when all hints revealed)
  */
 export function TransferActionZone({
   currentGuess,
@@ -89,8 +89,8 @@ export function TransferActionZone({
     }
   };
 
-  // Show Give Up button after 2+ incorrect guesses
-  const showGiveUp = incorrectGuesses >= 2 && !isGameOver;
+  // Show Give Up button when all hints are revealed (replaces hint link)
+  const showGiveUp = !canRevealHint && !isGameOver;
 
   return (
     <View style={styles.container} testID={testID}>
@@ -142,17 +142,18 @@ export function TransferActionZone({
         </Pressable>
       )}
 
-      {/* Give Up button (shown after 2+ wrong guesses) */}
+      {/* Give Up link (shown when all hints revealed) */}
       {showGiveUp && (
-        <View style={styles.giveUpRow}>
-          <ElevatedButton
-            title="Give Up"
-            onPress={onGiveUp}
-            variant="danger"
-            size="small"
-            testID={`${testID}-giveup`}
-          />
-        </View>
+        <Pressable
+          onPress={onGiveUp}
+          style={({ pressed }) => [
+            styles.hintLink,
+            pressed && styles.hintLinkPressed,
+          ]}
+          testID={`${testID}-giveup`}
+        >
+          <Text style={styles.giveUpText}>Give up</Text>
+        </Pressable>
       )}
     </View>
   );
@@ -214,7 +215,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.amber,
   },
-  giveUpRow: {
-    alignItems: 'center',
+  giveUpText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.redCard,
   },
 });

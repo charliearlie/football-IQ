@@ -2,6 +2,7 @@ import { useReducer, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
+import { usePuzzleContext } from '@/features/puzzles';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { LocalAttempt } from '@/types/database';
@@ -198,6 +199,7 @@ function ticTacToeReducer(
 export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(ticTacToeReducer, createInitialState());
   const { triggerNotification, triggerSelection, triggerHeavy } = useHaptics();
+  const { syncAttempts } = usePuzzleContext();
 
   // Ref to track if AI move is in progress (prevents multiple triggers)
   const aiMoveInProgress = useRef(false);
@@ -496,6 +498,11 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
 
         await saveAttempt(attempt);
         dispatch({ type: 'ATTEMPT_SAVED' });
+
+        // Fire-and-forget cloud sync
+        syncAttempts().catch((err) => {
+          console.error('[TicTacToe] Cloud sync failed:', err);
+        });
       } catch (error) {
         console.error('Failed to save attempt:', error);
       }
@@ -511,6 +518,7 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
     state.startedAt,
     state.attemptId,
     puzzle,
+    syncAttempts,
   ]);
 
   return {

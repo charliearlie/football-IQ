@@ -11,9 +11,9 @@ import {
   ScoreDisplay,
   AnswerReveal,
 } from '@/components/GameResultModal';
+import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { colors } from '@/theme/colors';
 import { TransferGuessScore, formatTransferScore } from '../utils/transferScoring';
-import { generateTransferEmojiGrid } from '../utils/transferScoreDisplay';
 import { ShareResult } from '../utils/transferShare';
 
 interface TransferResultModalProps {
@@ -25,6 +25,8 @@ interface TransferResultModalProps {
   score: TransferGuessScore;
   /** The correct answer (player name) */
   correctAnswer: string;
+  /** Puzzle ID for score distribution */
+  puzzleId: string;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
   /** Callback to review the game */
@@ -63,13 +65,12 @@ export function TransferResultModal({
   won,
   score,
   correctAnswer,
+  puzzleId,
   onShare,
   onReview,
   onClose,
   testID,
 }: TransferResultModalProps) {
-  const emojiGrid = generateTransferEmojiGrid(score);
-
   return (
     <BaseResultModal
       visible={visible}
@@ -82,7 +83,6 @@ export function TransferResultModal({
         )
       }
       title={won ? 'CORRECT!' : 'GAME OVER'}
-      emojiGrid={emojiGrid}
       message={getMessage(won, score)}
       onShare={onShare}
       onReview={onReview}
@@ -94,6 +94,12 @@ export function TransferResultModal({
       ) : (
         <AnswerReveal value={correctAnswer} />
       )}
+      <ScoreDistributionContainer
+        puzzleId={puzzleId}
+        gameMode="guess_the_transfer"
+        userScore={score.points * 20}
+        testID={testID ? `${testID}-distribution` : undefined}
+      />
     </BaseResultModal>
   );
 }

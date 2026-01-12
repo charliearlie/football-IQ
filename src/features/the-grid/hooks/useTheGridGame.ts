@@ -10,6 +10,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { ParsedLocalPuzzle } from '@/types/database';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
+import { usePuzzleContext } from '@/features/puzzles';
 import {
   TheGridState,
   TheGridAction,
@@ -128,6 +129,7 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
  */
 export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(theGridReducer, undefined, createInitialState);
+  const { syncAttempts } = usePuzzleContext();
 
   // Keep a ref for async callbacks
   const stateRef = useRef(state);
@@ -225,13 +227,18 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
         });
 
         dispatch({ type: 'MARK_ATTEMPT_SAVED' });
+
+        // Fire-and-forget cloud sync
+        syncAttempts().catch((err) => {
+          console.error('[TheGrid] Cloud sync failed:', err);
+        });
       } catch (error) {
         console.error('[TheGrid] Failed to save attempt:', error);
       }
     }
 
     saveCompletedAttempt();
-  }, [state.gameStatus, state.attemptSaved, puzzle]);
+  }, [state.gameStatus, state.attemptSaved, puzzle, syncAttempts]);
 
   // Save progress on app background
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useReducer, useEffect, useMemo, useCallback } from 'react';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useGamePersistence } from '@/hooks/useGamePersistence';
+import { usePuzzleContext } from '@/features/puzzles';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { validateGuess } from '@/lib/validation';
 import {
@@ -158,6 +159,7 @@ function transferGuessReducer(
 export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(transferGuessReducer, createInitialState());
   const { triggerNotification, triggerSelection } = useHaptics();
+  const { syncAttempts } = usePuzzleContext();
 
   // Parse puzzle content
   const transferContent = useMemo<TransferGuessContent | null>(() => {
@@ -220,6 +222,7 @@ export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
         synced: 0,
       };
     },
+    onAttemptSaved: syncAttempts,
   });
 
   // Reveal the next hint

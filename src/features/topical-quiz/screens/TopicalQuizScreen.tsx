@@ -294,6 +294,7 @@ export function TopicalQuizScreen({
           visible={isGameOver}
           score={state.score}
           answers={state.answers}
+          puzzleId={puzzle?.id ?? ''}
           onShare={shareResult}
           onClose={() => router.back()}
           testID="quiz-result-modal"

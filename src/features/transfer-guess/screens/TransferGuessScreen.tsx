@@ -217,6 +217,7 @@ export function TransferGuessScreen({
           won={state.gameStatus === 'won'}
           score={state.score}
           correctAnswer={answer}
+          puzzleId={puzzle?.id ?? ''}
           onShare={shareResult}
           onClose={() => router.back()}
           testID="transfer-result-modal"

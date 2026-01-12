@@ -26,7 +26,7 @@ export interface TransferGuessContent {
   year: number;
   /** Transfer fee display (e.g., "€80M", "Free", "Undisclosed") */
   fee: string;
-  /** Array of 3 hints: [nationality, position, achievement] */
+  /** Array of 3 hints: [number, position (ATT/MID/DEF/GK), nation (emoji flag)] */
   hints: [string, string, string];
 }
 
@@ -87,8 +87,9 @@ export type TransferGuessAction =
 
 /**
  * Hint category labels for display.
+ * Order: Number (shirt), Position (ATT/MID/DEF/GK), Nation (emoji flag)
  */
-export const HINT_LABELS = ['Nationality', 'Position', 'Achievement'] as const;
+export const HINT_LABELS = ['Number', 'Position', 'Nation'] as const;
 export type HintLabel = (typeof HINT_LABELS)[number];
 
 /**

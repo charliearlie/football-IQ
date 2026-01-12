@@ -9,13 +9,13 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Trophy, Star } from 'lucide-react-native';
 import { BaseResultModal } from '@/components/GameResultModal';
+import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { colors } from '@/theme/colors';
 import { textStyles } from '@/theme/typography';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 import { TopicalQuizScore, QuizAnswer } from '../types/topicalQuiz.types';
 import { formatQuizScore } from '../utils/quizScoring';
-import { generateQuizEmojiGrid } from '../utils/quizScoreDisplay';
 import { ShareResult } from '../utils/quizShare';
 
 interface TopicalQuizResultModalProps {
@@ -25,6 +25,8 @@ interface TopicalQuizResultModalProps {
   score: TopicalQuizScore;
   /** All answers for emoji grid */
   answers: QuizAnswer[];
+  /** Puzzle ID for score distribution */
+  puzzleId: string;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
   /** Callback to review the game */
@@ -62,13 +64,12 @@ export function TopicalQuizResultModal({
   visible,
   score,
   answers,
+  puzzleId,
   onShare,
   onReview,
   onClose,
   testID,
 }: TopicalQuizResultModalProps) {
-  const emojiGrid = generateQuizEmojiGrid(answers);
-
   // Determine color theme based on performance
   const isPerfect = score.correctCount === 5;
   const isGood = score.correctCount >= 3;
@@ -96,7 +97,6 @@ export function TopicalQuizResultModal({
       }
       title={isPerfect ? 'PERFECT!' : 'QUIZ COMPLETE'}
       titleColor={accentColor}
-      emojiGrid={emojiGrid}
       message={getMessage(score)}
       onShare={onShare}
       onReview={onReview}
@@ -109,6 +109,12 @@ export function TopicalQuizResultModal({
         <Text style={styles.scoreValue}>{formatQuizScore(score)}</Text>
         <Text style={styles.pointsValue}>{score.points} points</Text>
       </View>
+      <ScoreDistributionContainer
+        puzzleId={puzzleId}
+        gameMode="topical_quiz"
+        userScore={score.points * 10}
+        testID={testID ? `${testID}-distribution` : undefined}
+      />
     </BaseResultModal>
   );
 }

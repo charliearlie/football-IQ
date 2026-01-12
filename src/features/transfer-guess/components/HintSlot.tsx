@@ -1,257 +1,140 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { Lock, EyeOff } from 'lucide-react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  interpolate,
-  Extrapolation,
 } from 'react-native-reanimated';
-import { GlassCard } from '@/components';
-import { colors, spacing, textStyles, borderRadius } from '@/theme';
+import { colors, spacing, fonts, borderRadius } from '@/theme';
 import { HintLabel } from '../types/transferGuess.types';
 
-/** Spring configuration for entrance animation */
-const ENTRANCE_SPRING = {
-  damping: 12,
-  stiffness: 100,
-  mass: 0.8,
+/** Spring configuration for reveal animation */
+const REVEAL_SPRING = {
+  damping: 15,
+  stiffness: 150,
+  mass: 0.5,
+};
+
+/** Icon placeholders for each hint type (will be replaced with real icons later) */
+const ICON_PLACEHOLDERS: Record<HintLabel, string> = {
+  Number: '#',
+  Position: '⚽',
+  Nation: '🏴',
 };
 
 export interface HintSlotProps {
-  /** The hint label (Nationality, Position, Achievement) */
+  /** The hint label (Number, Position, Nation) */
   label: HintLabel;
   /** The hint text content */
   hint: string;
   /** Whether the hint has been revealed */
   isRevealed: boolean;
-  /** The slot number (1, 2, or 3) */
+  /** The slot number (1, 2, or 3) - kept for compatibility */
   slotNumber: number;
-  /** Whether in review mode (shows "Not revealed" instead of blur/lock) */
+  /** Whether in review mode (shows different styling for unrevealed) */
   isReviewMode?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
 
 /**
- * HintSlot - Displays a single hint, either locked or revealed.
+ * HintSlot - Displays a single hint as an icon box.
  *
- * When locked: Shows blurred content with lock icon.
- * When revealed: Shows hint with spring entrance animation.
+ * Hidden: Shows placeholder icon (e.g., #, ⚽, 🏴)
+ * Revealed: Shows actual value (e.g., 7, ATT, 🇧🇷)
  */
 export function HintSlot({
   label,
   hint,
   isRevealed,
-  slotNumber,
   isReviewMode = false,
   testID,
 }: HintSlotProps) {
-  const animatedProgress = useSharedValue(isRevealed ? 1 : 0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
     if (isRevealed) {
-      animatedProgress.value = withSpring(1, ENTRANCE_SPRING);
+      // Pop animation on reveal
+      scale.value = withSpring(1.1, { damping: 10, stiffness: 300 });
+      setTimeout(() => {
+        scale.value = withSpring(1, REVEAL_SPRING);
+      }, 100);
     }
-  }, [isRevealed, animatedProgress]);
+  }, [isRevealed, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: animatedProgress.value,
-    transform: [
-      {
-        translateY: interpolate(
-          animatedProgress.value,
-          [0, 1],
-          [20, 0],
-          Extrapolation.CLAMP
-        ),
-      },
-      {
-        scale: interpolate(
-          animatedProgress.value,
-          [0, 1],
-          [0.95, 1],
-          Extrapolation.CLAMP
-        ),
-      },
-    ],
+    transform: [{ scale: scale.value }],
   }));
 
-  if (!isRevealed) {
-    // Review mode: Show "Not revealed" state without blur
-    if (isReviewMode) {
-      return (
-        <View style={styles.container} testID={testID}>
-          <GlassCard style={styles.reviewLockedCard}>
-            <View style={styles.content}>
-              <View style={styles.slotBadge}>
-                <Text style={styles.slotNumber}>{slotNumber}</Text>
-              </View>
-              <View style={styles.textContainer}>
-                <Text style={styles.lockedLabel}>{label}</Text>
-                <Text style={styles.notRevealedText}>Not revealed</Text>
-              </View>
-              <View style={styles.reviewEyeIcon}>
-                <EyeOff size={18} color={colors.textSecondary} strokeWidth={2} />
-              </View>
-            </View>
-          </GlassCard>
-        </View>
-      );
-    }
-
-    // Gameplay mode: Show blurred locked state
-    return (
-      <View style={styles.container} testID={testID}>
-        <GlassCard style={styles.lockedCard}>
-          <View style={styles.content}>
-            <View style={styles.slotBadge}>
-              <Text style={styles.slotNumber}>{slotNumber}</Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text style={styles.lockedLabel}>{label}</Text>
-              <Text style={styles.lockedText}>???</Text>
-            </View>
-          </View>
-        </GlassCard>
-
-        {/* Blur overlay */}
-        {Platform.OS !== 'web' ? (
-          <BlurView
-            style={StyleSheet.absoluteFill}
-            intensity={15}
-            tint="dark"
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, styles.webOverlay]} />
-        )}
-
-        {/* Lock icon */}
-        <View style={styles.lockOverlay}>
-          <View style={styles.lockCircle}>
-            <Lock size={18} color={colors.textSecondary} strokeWidth={2} />
-          </View>
-        </View>
-      </View>
-    );
-  }
+  // What to display in the box
+  const displayValue = isRevealed ? hint : ICON_PLACEHOLDERS[label];
+  const isPlaceholder = !isRevealed;
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]} testID={testID}>
-      <GlassCard style={styles.revealedCard}>
-        <View style={styles.content}>
-          <View style={[styles.slotBadge, styles.slotBadgeRevealed]}>
-            <Text style={[styles.slotNumber, styles.slotNumberRevealed]}>
-              {slotNumber}
-            </Text>
-          </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.revealedLabel}>{label}</Text>
-            <Text style={styles.revealedText} testID={`${testID}-hint-text`}>
-              {hint}
-            </Text>
-          </View>
-        </View>
-      </GlassCard>
+    <Animated.View style={[styles.box, animatedStyle]} testID={testID}>
+      <View
+        style={[
+          styles.iconContainer,
+          isRevealed && styles.iconContainerRevealed,
+          !isRevealed && isReviewMode && styles.iconContainerNotRevealed,
+        ]}
+      >
+        <Text
+          style={[
+            styles.iconText,
+            isRevealed && styles.iconTextRevealed,
+            isPlaceholder && styles.iconTextPlaceholder,
+          ]}
+          testID={`${testID}-hint-text`}
+        >
+          {displayValue}
+        </Text>
+      </View>
+      <Text style={styles.label}>{label}</Text>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-  },
-  lockedCard: {
-    opacity: 0.6,
-  },
-  revealedCard: {
-    borderColor: colors.cardYellow,
-    borderWidth: 1,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    minHeight: 56,
-  },
-  slotBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.glassBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slotBadgeRevealed: {
-    backgroundColor: colors.cardYellow,
-  },
-  slotNumber: {
-    ...textStyles.subtitle,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  slotNumberRevealed: {
-    color: colors.stadiumNavy,
-  },
-  textContainer: {
+  box: {
     flex: 1,
-    gap: 2,
-  },
-  lockedLabel: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  lockedText: {
-    ...textStyles.body,
-    color: colors.textSecondary,
-  },
-  revealedLabel: {
-    ...textStyles.caption,
-    color: colors.cardYellow,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  revealedText: {
-    ...textStyles.body,
-    color: colors.floodlightWhite,
-  },
-  webOverlay: {
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
-  },
-  lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: spacing.xs,
   },
-  lockCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  iconContainer: {
+    width: '100%',
+    aspectRatio: 1.2,
+    backgroundColor: colors.glassBackground,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  // Review mode styles for unrevealed hints
-  reviewLockedCard: {
+  iconContainerRevealed: {
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    borderColor: colors.cardYellow,
+  },
+  iconContainerNotRevealed: {
     opacity: 0.5,
     borderStyle: 'dashed',
-    borderColor: colors.glassBorder,
-    borderWidth: 1,
   },
-  notRevealedText: {
-    ...textStyles.bodySmall,
+  iconText: {
+    fontFamily: fonts.headline,
+    fontSize: 24,
     color: colors.textSecondary,
-    fontStyle: 'italic',
   },
-  reviewEyeIcon: {
-    marginLeft: spacing.sm,
+  iconTextRevealed: {
+    color: colors.cardYellow,
+  },
+  iconTextPlaceholder: {
+    fontSize: 28,
+  },
+  label: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

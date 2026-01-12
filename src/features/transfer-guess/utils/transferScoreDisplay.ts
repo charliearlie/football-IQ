@@ -56,7 +56,7 @@ export interface ScoreDisplayOptions {
  * // Football IQ - Guess the Transfer
  * // 2025-01-15
  * //
- * // Score: 6/10
+ * // Score: 3/5
  * // 🟡⚫⚫ ❌❌✅
  */
 export function generateTransferScoreDisplay(

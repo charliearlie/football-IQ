@@ -23,8 +23,6 @@ export {
   calculateTransferScore,
   formatTransferScore,
   MAX_POINTS,
-  HINT_PENALTY,
-  GUESS_PENALTY,
   MAX_GUESSES as SCORING_MAX_GUESSES,
   MAX_HINTS as SCORING_MAX_HINTS,
   type TransferGuessScore,
