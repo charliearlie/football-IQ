@@ -56,10 +56,12 @@ BEGIN
 END $$;
 
 -- =============================================================================
--- TEST 2: Authenticated non-premium user sees last 7 days
+-- TEST 2: Authenticated non-premium user sees 7-day window
 -- =============================================================================
 -- To test: Create a test user, authenticate, verify 7-day window
--- Expected: Puzzles from today to 7 days ago (4 puzzles in our test data)
+-- Window = today + 6 previous days (7 days total)
+-- Expected: Puzzles from today to 6 days ago (3 puzzles in our test data)
+-- Note: 7 days ago is OUTSIDE the window and should be locked
 
 -- Note: For a complete test, you would:
 -- 1. Create a user via auth.users
@@ -67,9 +69,9 @@ END $$;
 -- 3. Query and count results
 
 -- SQL assertion for manual testing:
--- When authenticated as non-premium user, this should return 4 rows
+-- When authenticated as non-premium user, this should return 3 rows
 -- SELECT COUNT(*) FROM daily_puzzles WHERE game_mode = 'test_mode';
--- Expected: 4 (today, yesterday, 6 days, 7 days)
+-- Expected: 3 (today, yesterday, 6 days) - 7 days ago is locked
 
 -- =============================================================================
 -- TEST 3: Premium user sees full archive
@@ -118,10 +120,16 @@ END $$;
 -- SUMMARY
 -- =============================================================================
 -- RLS Policy Tests:
--- 1. daily_puzzles: 3-tier access (anon=today, auth=7days, premium=all)
+-- 1. daily_puzzles: 3-tier access
+--    - anon: today only
+--    - auth (non-premium): today + 6 previous days (7 days total)
+--    - premium: full archive
 -- 2. profiles: read all, update own only
 -- 3. puzzle_attempts: owner-only access
 -- 4. user_streaks: owner-only access
 -- 5. agent_runs: no RLS (admin table)
 -- 6. match_data: no RLS (admin table)
+--
+-- IMPORTANT: The RLS policy must use: puzzle_date >= CURRENT_DATE - INTERVAL '6 days'
+-- This creates a 7-day window (today counts as day 1).
 -- =============================================================================

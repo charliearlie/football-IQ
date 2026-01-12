@@ -1014,6 +1014,15 @@ src/
 <ElevatedButton title="Continue" onPress={fn} fullWidth />           // Stretch to container
 <ElevatedButton title="Submit" onPress={fn} size="large" />          // Large size (6px offset)
 
+// With leading icon (Velvet Rope pattern)
+<ElevatedButton
+  title="Unlock"
+  onPress={fn}
+  topColor={colors.cardYellow}
+  shadowColor="#D4A500"
+  icon={<Crown size={14} color={colors.stadiumNavy} />}  // Leading icon
+/>
+
 // Override variant colors (backward compatible)
 <ElevatedButton title="Custom" topColor="#FACC15" shadowColor="#D4A500" />
 
@@ -1039,7 +1048,7 @@ import { UniversalGameCard } from '@/components';
   onPress={handlePress}
   variant="archive"
   date="2024-12-20"        // Shows compact date like "Fri, Dec 20"
-  isLocked={false}         // true shows dimmed card with Lock button
+  isLocked={false}         // true shows vibrant card with gold border + "Unlock" button (Velvet Rope)
   scoreDisplay="🟩🟩⬛⬛⬛" // Emoji grid for done state
 />
 ```

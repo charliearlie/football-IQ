@@ -10,22 +10,10 @@ import {
   GameModeFilter,
   ArchivePuzzle,
   GameModeFilterType,
+  GAME_MODE_ROUTES,
 } from '@/features/archive';
-import { useAds, UnlockChoiceModal } from '@/features/ads';
+import { useAds, UnlockChoiceModal, PremiumUpsellBanner } from '@/features/ads';
 import { CompletedGameModal } from '@/features/home';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
-
-/**
- * Route map for each game mode.
- */
-const ROUTE_MAP: Record<GameMode, string> = {
-  career_path: 'career-path',
-  guess_the_transfer: 'transfer-guess',
-  guess_the_goalscorers: 'goalscorer-recall',
-  tic_tac_toe: 'tic-tac-toe',
-  the_grid: 'the-grid',
-  topical_quiz: 'topical-quiz',
-};
 
 /**
  * Archive Screen
@@ -124,6 +112,9 @@ export default function ArchiveScreen() {
         <Text style={textStyles.h1}>Archive</Text>
       </View>
 
+      {/* Premium Upsell Banner (non-premium only) */}
+      <PremiumUpsellBanner testID="archive-premium-upsell" />
+
       {/* Archive List with Filter */}
       <ArchiveList
         sections={sections}
@@ -166,7 +157,7 @@ export default function ArchiveScreen() {
           attempt={completedPuzzle.attempt}
           onClose={handleCloseCompletedModal}
           onReview={() => {
-            const route = ROUTE_MAP[completedPuzzle.gameMode];
+            const route = GAME_MODE_ROUTES[completedPuzzle.gameMode];
             setCompletedPuzzle(null);
             router.push({
               pathname: `/${route}/[puzzleId]`,

@@ -1,4 +1,5 @@
-import { Pressable, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle, View } from 'react-native';
+import type { ReactNode } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -59,6 +60,8 @@ export interface ElevatedButtonProps {
   title: string;
   /** Press handler */
   onPress: () => void;
+  /** Optional leading icon (rendered before title) */
+  icon?: ReactNode;
   /** Semantic color variant (default: 'primary') */
   variant?: ButtonVariant;
   /** Background color (overrides variant) */
@@ -118,6 +121,7 @@ const SIZE_CONFIG = {
 export function ElevatedButton({
   title,
   onPress,
+  icon,
   variant = 'primary',
   topColor,
   shadowColor,
@@ -189,9 +193,12 @@ export function ElevatedButton({
       accessibilityLabel={title}
       accessibilityState={{ disabled }}
     >
-      <Text style={[sizeConfig.textStyle, { color: textColor }]}>
-        {title}
-      </Text>
+      <View style={styles.content}>
+        {icon && <View style={styles.iconContainer}>{icon}</View>}
+        <Text style={[sizeConfig.textStyle, { color: textColor }]}>
+          {title}
+        </Text>
+      </View>
     </AnimatedPressable>
   );
 }
@@ -206,5 +213,15 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     alignSelf: 'stretch',
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

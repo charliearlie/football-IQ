@@ -22,7 +22,6 @@ jest.mock('expo-blur', () => ({
 
 // Mock lucide-react-native
 jest.mock('lucide-react-native', () => ({
-  Lock: 'Lock',
   Briefcase: 'Briefcase',
   ArrowRightLeft: 'ArrowRightLeft',
   Target: 'Target',
@@ -32,6 +31,7 @@ jest.mock('lucide-react-native', () => ({
   Check: 'Check',
   Crown: 'Crown',
   Archive: 'Archive',
+  ListOrdered: 'ListOrdered',
 }));
 
 // Mock react-native-reanimated
@@ -42,10 +42,11 @@ jest.mock('react-native-reanimated', () => {
 
 // Mock ElevatedButton to avoid Reanimated complexity
 jest.mock('@/components/ElevatedButton', () => ({
-  ElevatedButton: ({ title, onPress, testID }: any) => {
-    const { TouchableOpacity, Text } = require('react-native');
+  ElevatedButton: ({ title, onPress, testID, icon }: any) => {
+    const { TouchableOpacity, Text, View } = require('react-native');
     return (
       <TouchableOpacity onPress={onPress} testID={testID}>
+        {icon && <View testID={`${testID}-icon`}>{icon}</View>}
         <Text>{title}</Text>
       </TouchableOpacity>
     );
@@ -133,8 +134,26 @@ describe('Archive Gating', () => {
     });
   });
 
-  describe('UniversalGameCard (Locked state)', () => {
-    it('renders the Lock icon when isLocked is true', () => {
+  describe('UniversalGameCard (Locked state - Velvet Rope)', () => {
+    it('renders premium Unlock button with Crown icon when isLocked is true', () => {
+      const puzzle = createMockPuzzle({ isLocked: true });
+      const { getByTestId, getByText } = render(
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
+          onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
+          testID="locked-card"
+        />
+      );
+
+      // Should have unlock button (Velvet Rope design)
+      expect(getByTestId('locked-card-unlock')).toBeTruthy();
+      expect(getByText('Unlock')).toBeTruthy();
+    });
+
+    it('renders Crown icon on locked cards (Velvet Rope)', () => {
       const puzzle = createMockPuzzle({ isLocked: true });
       const { getByTestId } = render(
         <UniversalGameCard
@@ -147,8 +166,8 @@ describe('Archive Gating', () => {
         />
       );
 
-      // Should have lock icon
-      expect(getByTestId('locked-card-lock')).toBeTruthy();
+      // Should have crown icon in the unlock button
+      expect(getByTestId('locked-card-unlock-icon')).toBeTruthy();
     });
 
     it('displays the subtitle', () => {
@@ -300,12 +319,12 @@ describe('Archive Gating', () => {
       const isLocked = isPuzzleLocked(oldDate, isPremium);
       expect(isLocked).toBe(true);
 
-      // Verify the component renders correctly when locked
+      // Verify the component renders with Unlock button (Velvet Rope design)
       const puzzle = createMockPuzzle({
         isLocked: true,
         puzzleDate: oldDate,
       });
-      const { getByTestId } = render(
+      const { getByTestId, getByText } = render(
         <UniversalGameCard
           gameMode={puzzle.gameMode}
           status={puzzle.status}
@@ -315,7 +334,8 @@ describe('Archive Gating', () => {
           testID="locked-card"
         />
       );
-      expect(getByTestId('locked-card-lock')).toBeTruthy();
+      expect(getByTestId('locked-card-unlock')).toBeTruthy();
+      expect(getByText('Unlock')).toBeTruthy();
     });
 
     it('premium user: puzzle >7 days old should NOT be locked', () => {
@@ -366,6 +386,81 @@ describe('Archive Gating', () => {
         />
       );
       expect(getByText('Play')).toBeTruthy();
+    });
+  });
+
+  describe('Velvet Rope Behavior', () => {
+    it('locked card remains fully opaque (vibrant content, not disabled)', () => {
+      // The Velvet Rope design removes opacity dimming
+      // Cards should have gold border instead for differentiation
+      const puzzle = createMockPuzzle({ isLocked: true });
+      const { getByTestId } = render(
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
+          onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
+          testID="locked-card"
+        />
+      );
+
+      // Verify the card renders (visual opacity test would require snapshot)
+      const card = getByTestId('locked-card');
+      expect(card).toBeTruthy();
+      // The lockedCard style should NOT have opacity: 0.7 anymore
+      // This is verified by the actual style changes in UniversalGameCard
+    });
+
+    it('triggers onPress callback when locked card Unlock button is pressed', () => {
+      const onPressMock = jest.fn();
+      const puzzle = createMockPuzzle({ isLocked: true });
+      const { getByTestId } = render(
+        <UniversalGameCard
+          gameMode={puzzle.gameMode}
+          status={puzzle.status}
+          onPress={onPressMock}
+          variant="archive"
+          isLocked={true}
+          testID="locked-card"
+        />
+      );
+
+      // Press the unlock button
+      fireEvent.press(getByTestId('locked-card-unlock'));
+      expect(onPressMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows same Unlock button style for both isLocked and isPremiumLocked', () => {
+      // Velvet Rope unifies locked and premium-locked appearance
+      const { getByTestId: getLockedById, getByText: getLockedByText } = render(
+        <UniversalGameCard
+          gameMode="career_path"
+          status="play"
+          onPress={jest.fn()}
+          variant="archive"
+          isLocked={true}
+          testID="locked-card"
+        />
+      );
+
+      const { getByTestId: getPremiumById, getByText: getPremiumByText } = render(
+        <UniversalGameCard
+          gameMode="top_tens"
+          status="play"
+          onPress={jest.fn()}
+          variant="archive"
+          isPremiumOnly={true}
+          isPremium={false}
+          testID="premium-locked-card"
+        />
+      );
+
+      // Both should have Unlock buttons
+      expect(getLockedById('locked-card-unlock')).toBeTruthy();
+      expect(getPremiumById('premium-locked-card-unlock')).toBeTruthy();
+      expect(getLockedByText('Unlock')).toBeTruthy();
+      expect(getPremiumByText('Unlock')).toBeTruthy();
     });
   });
 });

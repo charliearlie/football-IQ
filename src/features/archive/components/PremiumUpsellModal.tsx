@@ -43,6 +43,7 @@ import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/features/career-path/components/Confetti';
 import { useAuth } from '@/features/auth';
+import { processPackagesWithOffers, type OfferInfo } from '@/features/subscription';
 import { colors } from '@/theme/colors';
 
 /**
@@ -402,10 +403,11 @@ function SelectingContent({
 
       <Text style={styles.plansTitle}>Choose Your Plan</Text>
 
-      {packages.map((pkg) => (
+      {processPackagesWithOffers(packages, 'MONTHLY').map(({ package: pkg, offer }) => (
         <PackageCard
           key={pkg.identifier}
           package={pkg}
+          offer={offer}
           onSelect={() => onSelectPackage(pkg)}
           testID={`${testID}-plan-${pkg.identifier}`}
         />
@@ -433,16 +435,18 @@ function SelectingContent({
  */
 function PackageCard({
   package: pkg,
+  offer,
   onSelect,
   testID,
 }: {
   package: PurchasesPackage;
+  offer: OfferInfo;
   onSelect: () => void;
   testID?: string;
 }) {
   const scale = useSharedValue(1);
   const product = pkg.product;
-  const isRecommended = pkg.packageType === 'MONTHLY';
+  const hasBadge = offer.badgeText !== null;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -484,27 +488,46 @@ function PackageCard({
       <Animated.View
         style={[
           styles.planCard,
-          isRecommended && styles.planCardRecommended,
+          hasBadge && styles.planCardHighlighted,
           animatedStyle,
         ]}
       >
-        {isRecommended && (
-          <View style={styles.recommendedBadge}>
-            <Text style={styles.recommendedText}>BEST VALUE</Text>
+        {hasBadge && (
+          <View
+            style={[
+              styles.badge,
+              offer.badgeText === 'LIMITED OFFER' && styles.badgeLimitedOffer,
+            ]}
+          >
+            <Text style={styles.badgeText}>{offer.badgeText}</Text>
           </View>
         )}
 
         <View style={styles.planInfo}>
           <Text style={styles.planLabel}>{product.title}</Text>
-          {product.description && (
-            <Text style={styles.planSavings} numberOfLines={1}>
-              {product.description}
-            </Text>
+          {offer.isOfferActive && offer.savingsText ? (
+            <Text style={styles.savingsText}>{offer.savingsText}</Text>
+          ) : (
+            product.description && (
+              <Text style={styles.planSavings} numberOfLines={1}>
+                {product.description}
+              </Text>
+            )
           )}
         </View>
 
         <View style={styles.planPricing}>
-          <Text style={styles.planPrice}>{product.priceString}</Text>
+          {offer.isOfferActive && (
+            <Text style={styles.originalPrice}>{offer.originalPriceString}</Text>
+          )}
+          <Text
+            style={[
+              styles.planPrice,
+              offer.isOfferActive && styles.planPriceHighlighted,
+            ]}
+          >
+            {offer.discountedPriceString}
+          </Text>
           <Text style={styles.planPeriod}>{getPeriodLabel()}</Text>
         </View>
       </Animated.View>
@@ -727,11 +750,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     position: 'relative',
   },
-  planCardRecommended: {
+  planCardHighlighted: {
     borderColor: colors.cardYellow,
     backgroundColor: 'rgba(250, 204, 21, 0.1)',
   },
-  recommendedBadge: {
+  badge: {
     position: 'absolute',
     top: -10,
     right: spacing.md,
@@ -740,7 +763,10 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
-  recommendedText: {
+  badgeLimitedOffer: {
+    backgroundColor: colors.pitchGreen,
+  },
+  badgeText: {
     fontFamily: fonts.headline,
     fontSize: 10,
     letterSpacing: 1,
@@ -765,6 +791,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 24,
     color: colors.cardYellow,
+  },
+  planPriceHighlighted: {
+    color: colors.pitchGreen,
+  },
+  originalPrice: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textDecorationLine: 'line-through',
+    fontSize: 14,
+  },
+  savingsText: {
+    ...textStyles.caption,
+    color: colors.pitchGreen,
+    fontWeight: '600',
   },
   planPeriod: {
     ...textStyles.caption,

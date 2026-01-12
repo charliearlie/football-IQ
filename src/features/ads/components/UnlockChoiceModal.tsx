@@ -98,17 +98,17 @@ export function UnlockChoiceModal({
    * Handle "Go Premium" button press.
    * Closes this modal and navigates to the native premium modal.
    * Uses delay to let RN Modal animate out before navigating.
+   * Note: Navigation happens regardless of mount state (safe to do after unmount).
    */
   const handleGoPremium = useCallback(() => {
     onClose();
     // Small delay to let the RN Modal animate out before navigating
+    // Don't check isMountedRef here - router.push is safe after unmount
     setTimeout(() => {
-      if (isMountedRef.current) {
-        router.push({
-          pathname: '/premium-modal',
-          params: { puzzleDate, mode: 'blocked' },
-        });
-      }
+      router.push({
+        pathname: '/premium-modal',
+        params: { puzzleDate, mode: 'blocked' },
+      });
     }, 150);
   }, [onClose, router, puzzleDate]);
 

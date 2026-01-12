@@ -11,19 +11,8 @@ import { useRouter, Href } from 'expo-router';
 import { useAuth } from '@/features/auth';
 import { useAds } from '@/features/ads';
 import { isPuzzleLocked } from '../utils/dateGrouping';
-import { ArchivePuzzle, GameMode } from '../types/archive.types';
-
-/**
- * Route map for each game mode.
- */
-const ROUTE_MAP: Record<GameMode, string> = {
-  career_path: 'career-path',
-  guess_the_transfer: 'transfer-guess',
-  guess_the_goalscorers: 'goalscorer-recall',
-  tic_tac_toe: 'tic-tac-toe',
-  the_grid: 'the-grid',
-  topical_quiz: 'topical-quiz',
-};
+import { ArchivePuzzle } from '../types/archive.types';
+import { GAME_MODE_ROUTES } from '../constants/routes';
 
 /**
  * Options for useGatedNavigation hook.
@@ -98,7 +87,7 @@ export function useGatedNavigation(
       }
 
       // User has access - navigate to puzzle
-      const route = ROUTE_MAP[puzzle.gameMode];
+      const route = GAME_MODE_ROUTES[puzzle.gameMode];
       if (route) {
         // Navigate to dynamic route with puzzle ID
         const href = `/${route}/${puzzle.id}` as Href;

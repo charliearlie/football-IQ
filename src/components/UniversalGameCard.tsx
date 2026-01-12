@@ -14,7 +14,6 @@ import {
   Grid3X3,
   HelpCircle,
   Check,
-  Lock,
   ListOrdered,
   Crown,
 } from 'lucide-react-native';
@@ -242,19 +241,17 @@ export function UniversalGameCard({
           </View>
         </View>
 
-        {/* Right: Action Button or Lock */}
+        {/* Right: Action Button or Unlock CTA */}
         <View style={styles.right}>
-          {isLocked ? (
-            <View style={styles.lockButton} testID={`${testID}-lock`}>
-              <Lock color={colors.floodlightWhite} size={18} />
-            </View>
-          ) : isPremiumLocked ? (
+          {isLocked || isPremiumLocked ? (
+            // "Velvet Rope" design: Premium unlock button instead of static lock
             <ElevatedButton
               title="Unlock"
               onPress={onPress}
               size="small"
               topColor={colors.cardYellow}
               shadowColor="#D4A500"
+              icon={<Crown size={14} color={colors.stadiumNavy} />}
               testID={`${testID}-unlock`}
             />
           ) : (
@@ -278,7 +275,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   lockedCard: {
-    opacity: 0.7,
+    // "Velvet Rope" design: content stays vibrant, subtle gold border signals premium
+    borderWidth: 1,
+    borderColor: 'rgba(250, 204, 21, 0.3)',
   },
   content: {
     flexDirection: 'row',
@@ -339,13 +338,5 @@ const styles = StyleSheet.create({
   right: {
     marginLeft: spacing.md,
     flexShrink: 0, // Don't shrink the button area
-  },
-  lockButton: {
-    width: 56,
-    height: 36,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

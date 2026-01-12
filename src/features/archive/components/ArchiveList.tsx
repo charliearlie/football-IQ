@@ -16,6 +16,7 @@ import {
   SectionListRenderItem,
 } from 'react-native';
 import { colors, textStyles, spacing } from '@/theme';
+import { triggerHeavy } from '@/lib/haptics';
 import { UniversalGameCard } from '@/components';
 import { ArchivePuzzle, ArchiveSection } from '../types/archive.types';
 import { MonthHeader } from './MonthHeader';
@@ -130,15 +131,23 @@ export function ArchiveList({
       const prevItem = index > 0 ? section.data[index - 1] : null;
       const isFirstOfDay = !prevItem || prevItem.puzzleDate !== item.puzzleDate;
 
+      // Handle locked press with heavy haptic for "Velvet Rope" feedback
+      const handlePress = () => {
+        if (item.isLocked) {
+          triggerHeavy(); // Heavy haptic = "hitting a gate"
+          onLockedPress(item);
+        } else {
+          onPuzzlePress(item);
+        }
+      };
+
       // Use UniversalGameCard for both locked and unlocked states
       // Note: date is NOT passed - DayHeader provides date context
       const card = (
         <UniversalGameCard
           gameMode={item.gameMode}
           status={item.status}
-          onPress={() =>
-            item.isLocked ? onLockedPress(item) : onPuzzlePress(item)
-          }
+          onPress={handlePress}
           variant="archive"
           isLocked={item.isLocked}
           testID={`${testID}-puzzle-${item.id}`}

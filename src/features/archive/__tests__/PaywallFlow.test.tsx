@@ -191,9 +191,9 @@ describe('Paywall Flow', () => {
         />
       );
 
-      // The card should be rendered with lock icon
+      // The card should be rendered with Unlock button (Velvet Rope design)
       expect(getByTestId('locked-card')).toBeTruthy();
-      expect(getByTestId('locked-card-lock')).toBeTruthy();
+      expect(getByTestId('locked-card-unlock')).toBeTruthy();
 
       // Verify that isPuzzleLocked returns true for this puzzle
       expect(isPuzzleLocked(oldDate, false)).toBe(true);

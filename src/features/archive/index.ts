@@ -33,3 +33,6 @@ export {
   isWithinFreeWindow,
   isPuzzleLocked,
 } from './utils/dateGrouping';
+
+// Constants
+export { GAME_MODE_ROUTES } from './constants/routes';

@@ -1398,14 +1398,20 @@ Archive Screen
 └── CompletedGameModal (shown on completed card tap - matches Home behavior)
 ```
 
-### Card States
+### Card States ("Velvet Rope" Design)
 Uses `UniversalGameCard` (shared with Home screen):
 | Status | isLocked | UI |
 |--------|----------|-----|
 | play | false | Green "Play" button, date shown above title |
 | resume | false | Yellow "Resume" button |
 | done | false | Yellow "Result" button + emoji grid |
-| any | true | Dimmed card with "Lock" button |
+| any | true | **Vibrant card** with gold border + Crown "Unlock" button (no opacity dimming) |
+
+**Velvet Rope UX (Updated 2026-01-12):**
+- Locked cards stay **fully opaque** to create desire, not frustration
+- Gold border (`rgba(250, 204, 21, 0.3)`) differentiates locked from unlocked
+- Crown icon + "Unlock" button replaces static lock icon (premium CTA)
+- Heavy haptic feedback on locked press reinforces "hitting a gate"
 
 ### Components
 | Component | Purpose |

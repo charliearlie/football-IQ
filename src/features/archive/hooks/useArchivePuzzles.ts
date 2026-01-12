@@ -61,29 +61,29 @@ export function useArchivePuzzles(
    */
   const transformEntry = useCallback(
     async (entry: LocalCatalogEntry): Promise<ArchivePuzzle> => {
-      // Check if we have full puzzle data (unlocked)
-      const fullPuzzle = await getPuzzle(entry.id);
-      // Check lock status including ad unlocks
-      const isLocked = fullPuzzle
-        ? false
-        : isPuzzleLocked(entry.puzzle_date, isPremium, entry.id, adUnlocks);
+      // ALWAYS check lock status first based on date, premium, and ad unlocks
+      // This ensures the 7-day rolling window is enforced even for cached puzzles
+      const isLocked = isPuzzleLocked(entry.puzzle_date, isPremium, entry.id, adUnlocks);
 
-      // Get attempt status if not locked
+      // Only fetch puzzle data and attempt status if not locked
       let status: 'play' | 'resume' | 'done' = 'play';
       let scoreDisplay: string | undefined;
       let score: number | undefined;
       let attemptData: ParsedLocalAttempt | undefined;
 
-      if (!isLocked && fullPuzzle) {
-        const attempt = await getAttemptByPuzzleId(entry.id);
-        if (attempt) {
-          if (attempt.completed) {
-            status = 'done';
-            scoreDisplay = attempt.score_display ?? undefined;
-            score = attempt.score ?? undefined;
-            attemptData = attempt;
-          } else {
-            status = 'resume';
+      if (!isLocked) {
+        const fullPuzzle = await getPuzzle(entry.id);
+        if (fullPuzzle) {
+          const attempt = await getAttemptByPuzzleId(entry.id);
+          if (attempt) {
+            if (attempt.completed) {
+              status = 'done';
+              scoreDisplay = attempt.score_display ?? undefined;
+              score = attempt.score ?? undefined;
+              attemptData = attempt;
+            } else {
+              status = 'resume';
+            }
           }
         }
       }
@@ -127,7 +127,9 @@ export function useArchivePuzzles(
       const transformed = await Promise.all(entries.map(transformEntry));
 
       // Filter out future dates - only show puzzles up to today
-      const today = new Date().toISOString().split('T')[0];
+      // Use local date (not UTC) to avoid timezone-related filtering bugs
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const filtered = transformed.filter((p) => p.puzzleDate <= today);
 
       // Update state
@@ -205,14 +207,24 @@ export function useArchivePuzzles(
     initialLoad();
   }, [initialLoad]);
 
-  // Refresh attempt data when screen gains focus (e.g., after completing a game)
+  // Sync catalog and refresh data when screen gains focus
+  // This ensures new puzzles from Supabase are fetched on every tab visit
   useFocusEffect(
     useCallback(() => {
-      // Skip the initial focus event - only refresh on subsequent returns
+      // Skip the initial focus event - initialLoad handles that
       if (!hasInitiallyLoaded.current) return;
 
-      // Reload first page to refresh attempt status
-      loadPage(0, true);
+      const syncAndReload = async () => {
+        try {
+          // Always sync from Supabase to get latest puzzles
+          await syncCatalogFromSupabase();
+          // Reload first page with fresh data
+          await loadPage(0, true);
+        } catch (error) {
+          console.error('Archive focus sync error:', error);
+        }
+      };
+      syncAndReload();
     }, [loadPage])
   );
 
@@ -229,16 +241,13 @@ export function useArchivePuzzles(
     }
 
     // Re-check lock status for all puzzles
+    // ALWAYS check lock status based on date, premium, and ad unlocks
+    // This ensures the 7-day rolling window is enforced correctly
     const recheck = async () => {
-      const updated = await Promise.all(
-        currentPuzzles.map(async (p) => {
-          const fullPuzzle = await getPuzzle(p.id);
-          const isLocked = fullPuzzle
-            ? false
-            : isPuzzleLocked(p.puzzleDate, isPremium, p.id, adUnlocks);
-          return { ...p, isLocked };
-        })
-      );
+      const updated = currentPuzzles.map((p) => {
+        const isLocked = isPuzzleLocked(p.puzzleDate, isPremium, p.id, adUnlocks);
+        return { ...p, isLocked };
+      });
       setPuzzles(updated);
       setSections(groupByMonth(updated));
     };

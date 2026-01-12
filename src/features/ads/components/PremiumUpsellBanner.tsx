@@ -85,6 +85,7 @@ export function PremiumUpsellBanner({ testID }: Omit<PremiumUpsellBannerProps, '
 
 const styles = StyleSheet.create({
   container: {
+    marginHorizontal: spacing.xl,
     marginBottom: spacing.md,
   },
   pressed: {
