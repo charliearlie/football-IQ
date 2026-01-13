@@ -542,10 +542,11 @@ export async function getCatalogEntriesPaginated(
 ): Promise<LocalCatalogEntry[]> {
   const database = getDatabase();
 
+  // Filter out future-dated puzzles at SQL level to ensure page 0 returns valid data
   if (gameMode) {
     return database.getAllAsync<LocalCatalogEntry>(
       `SELECT * FROM puzzle_catalog
-       WHERE game_mode = $gameMode
+       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime')
        ORDER BY puzzle_date DESC
        LIMIT $limit OFFSET $offset`,
       { $gameMode: gameMode, $limit: limit, $offset: offset }
@@ -554,6 +555,7 @@ export async function getCatalogEntriesPaginated(
 
   return database.getAllAsync<LocalCatalogEntry>(
     `SELECT * FROM puzzle_catalog
+     WHERE puzzle_date <= date('now', 'localtime')
      ORDER BY puzzle_date DESC
      LIMIT $limit OFFSET $offset`,
     { $limit: limit, $offset: offset }
@@ -562,23 +564,26 @@ export async function getCatalogEntriesPaginated(
 
 /**
  * Get the total count of catalog entries, with optional game mode filter.
- * Used for pagination calculations.
+ * Used for pagination calculations. Excludes future-dated puzzles.
  */
 export async function getCatalogEntryCount(
   gameMode?: string | null
 ): Promise<number> {
   const database = getDatabase();
 
+  // Filter out future-dated puzzles to match getCatalogEntriesPaginated
   if (gameMode) {
     const result = await database.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) as count FROM puzzle_catalog WHERE game_mode = $gameMode',
+      `SELECT COUNT(*) as count FROM puzzle_catalog
+       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime')`,
       { $gameMode: gameMode }
     );
     return result?.count ?? 0;
   }
 
   const result = await database.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) as count FROM puzzle_catalog'
+    `SELECT COUNT(*) as count FROM puzzle_catalog
+     WHERE puzzle_date <= date('now', 'localtime')`
   );
   return result?.count ?? 0;
 }

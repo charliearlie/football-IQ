@@ -4,12 +4,37 @@
  * Handles syncing puzzle catalog (metadata only) from Supabase to SQLite.
  * Uses an RPC function that bypasses RLS, allowing all users to see
  * what puzzles exist (for showing "locked" placeholders).
+ *
+ * Supports incremental sync - only fetches new entries since last sync.
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { saveCatalogEntries } from '@/lib/database';
 import { LocalCatalogEntry } from '@/types/database';
 import { CatalogSyncResult } from '../types/archive.types';
+
+/** AsyncStorage key for tracking last catalog sync timestamp */
+const CATALOG_LAST_SYNC_KEY = '@catalog_last_synced_at';
+
+/**
+ * Get the timestamp of the last successful catalog sync.
+ * @returns ISO timestamp string or null if never synced
+ */
+export async function getLastCatalogSyncTime(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(CATALOG_LAST_SYNC_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Store the timestamp of a successful catalog sync.
+ */
+async function setLastCatalogSyncTime(timestamp: string): Promise<void> {
+  await AsyncStorage.setItem(CATALOG_LAST_SYNC_KEY, timestamp);
+}
 
 /**
  * Raw catalog entry from Supabase RPC function.
@@ -28,13 +53,21 @@ interface SupabaseCatalogEntry {
  * returning metadata for all published puzzles. This allows the
  * Archive screen to show locked placeholders for premium content.
  *
+ * Supports incremental sync - if `since` is provided, only fetches
+ * entries created after that timestamp.
+ *
+ * @param since - Optional ISO timestamp to fetch only newer entries
  * @returns CatalogSyncResult with success status and count of synced entries
  */
-export async function syncCatalogFromSupabase(): Promise<CatalogSyncResult> {
+export async function syncCatalogFromSupabase(
+  since?: string | null
+): Promise<CatalogSyncResult> {
   try {
     // Call RPC function that bypasses RLS
-    // The function returns array of {id, game_mode, puzzle_date, difficulty}
-    const { data: entries, error } = await supabase.rpc('get_puzzle_catalog');
+    // Pass since_timestamp for incremental sync (null = full sync)
+    const { data: entries, error } = await supabase.rpc('get_puzzle_catalog', {
+      since_timestamp: since || null,
+    });
 
     if (error) {
       console.error('Catalog sync error:', error);
@@ -46,6 +79,8 @@ export async function syncCatalogFromSupabase(): Promise<CatalogSyncResult> {
     }
 
     if (!entries || entries.length === 0) {
+      // Even with no new entries, update sync timestamp
+      await setLastCatalogSyncTime(new Date().toISOString());
       return {
         success: true,
         syncedCount: 0,
@@ -55,6 +90,9 @@ export async function syncCatalogFromSupabase(): Promise<CatalogSyncResult> {
     // Transform and save entries to SQLite
     const localEntries = entries.map(transformSupabaseCatalogToLocal);
     await saveCatalogEntries(localEntries);
+
+    // Update last sync timestamp on success
+    await setLastCatalogSyncTime(new Date().toISOString());
 
     return {
       success: true,
