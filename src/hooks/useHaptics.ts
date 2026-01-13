@@ -64,11 +64,57 @@ export function useHaptics() {
     [isHapticsSupported]
   );
 
+  // ============================================================
+  // SEMANTIC HAPTICS - Game-oriented feedback patterns
+  // ============================================================
+
+  /**
+   * Success feedback - Correct answers, achievements
+   */
+  const triggerSuccess = useCallback(async () => {
+    if (!isHapticsSupported) return;
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [isHapticsSupported]);
+
+  /**
+   * Error feedback - Wrong answers (double-tap pattern)
+   */
+  const triggerError = useCallback(async () => {
+    if (!isHapticsSupported) return;
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, [isHapticsSupported]);
+
+  /**
+   * Completion feedback - Finishing puzzle (double success)
+   */
+  const triggerCompletion = useCallback(async () => {
+    if (!isHapticsSupported) return;
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [isHapticsSupported]);
+
+  /**
+   * Incomplete action feedback - Tapping filled cell
+   */
+  const triggerIncomplete = useCallback(async () => {
+    if (!isHapticsSupported) return;
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [isHapticsSupported]);
+
   return {
+    // Primitives (keep for backward compatibility)
     triggerLight,
     triggerMedium,
     triggerHeavy,
     triggerSelection,
     triggerNotification,
+    // Semantic (new)
+    triggerSuccess,
+    triggerError,
+    triggerCompletion,
+    triggerIncomplete,
   };
 }

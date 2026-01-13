@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { Lightbulb } from 'lucide-react-native';
-import { ElevatedButton } from '@/components';
+import { ElevatedButton, ErrorFlashOverlay } from '@/components';
 import { colors, spacing, fonts, borderRadius, textStyles } from '@/theme';
 
 /** Spring configuration for shake recovery */
@@ -116,6 +116,11 @@ export function TransferActionZone({
             returnKeyType="done"
             onSubmitEditing={handleSubmit}
             testID={`${testID}-input`}
+          />
+          <ErrorFlashOverlay
+            active={shouldShake}
+            style={{ borderRadius: borderRadius.xl }}
+            testID={`${testID}-error-flash`}
           />
         </Animated.View>
         <ElevatedButton

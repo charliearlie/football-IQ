@@ -12,6 +12,9 @@ import {
   TOTAL_QUESTIONS,
 } from '../types/topicalQuiz.types';
 
+// Re-export type for convenience
+export type { TopicalQuizScore };
+
 /**
  * Calculate quiz score based on number of correct answers.
  *

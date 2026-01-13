@@ -153,7 +153,7 @@ function careerPathReducer(
 export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(careerPathReducer, createInitialState());
   const flatListRef = useRef<FlatList>(null);
-  const { triggerNotification, triggerSelection } = useHaptics();
+  const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
 
   // Parse puzzle content
@@ -250,7 +250,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
       // Calculate score on correct guess
       const gameScore = calculateScore(totalSteps, state.revealedCount, true);
       dispatch({ type: 'CORRECT_GUESS', payload: gameScore });
-      triggerNotification('success');
+      triggerSuccess();
     } else {
       // Check if all clues are already revealed (this is the player's last chance)
       const wasLastChance = state.revealedCount >= totalSteps;
@@ -259,11 +259,11 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
         // Player guessed wrong with all clues revealed - game over
         const gameScore = calculateScore(totalSteps, state.revealedCount, false);
         dispatch({ type: 'GAME_LOST', payload: gameScore });
-        triggerNotification('error');
+        triggerError();
       } else {
         // Penalty reveal - show next clue and let player try again
         dispatch({ type: 'INCORRECT_GUESS', payload: guess });
-        triggerNotification('error');
+        triggerError();
       }
     }
   }, [
@@ -272,7 +272,8 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     state.revealedCount,
     totalSteps,
     answer,
-    triggerNotification,
+    triggerSuccess,
+    triggerError,
   ]);
 
   // Set current guess text

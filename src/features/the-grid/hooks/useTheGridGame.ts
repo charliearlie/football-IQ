@@ -11,6 +11,7 @@ import * as Crypto from 'expo-crypto';
 import { ParsedLocalPuzzle } from '@/types/database';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useHaptics } from '@/hooks/useHaptics';
 import {
   TheGridState,
   TheGridAction,
@@ -130,6 +131,7 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
 export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(theGridReducer, undefined, createInitialState);
   const { syncAttempts } = usePuzzleContext();
+  const { triggerSuccess, triggerError, triggerCompletion } = useHaptics();
 
   // Keep a ref for async callbacks
   const stateRef = useRef(state);
@@ -187,10 +189,12 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     if (state.gameStatus !== 'playing') return;
 
     if (isGridComplete(state.cells)) {
+      // Celebration haptic for completing the grid
+      triggerCompletion();
       const score = calculateGridScore(9);
       dispatch({ type: 'GAME_COMPLETE', payload: score });
     }
-  }, [state.cells, state.gameStatus]);
+  }, [state.cells, state.gameStatus, triggerCompletion]);
 
   // Save attempt on game complete
   useEffect(() => {
@@ -320,6 +324,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     const result = validateCellGuess(state.currentGuess, state.selectedCell, gridContent);
 
     if (result.isValid && result.matchedPlayer) {
+      triggerSuccess();
       dispatch({
         type: 'CORRECT_GUESS',
         payload: {
@@ -328,9 +333,10 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
         },
       });
     } else {
+      triggerError();
       dispatch({ type: 'INCORRECT_GUESS' });
     }
-  }, [state.selectedCell, state.currentGuess, gridContent]);
+  }, [state.selectedCell, state.currentGuess, gridContent, triggerSuccess, triggerError]);
 
   /**
    * Submit a player selection from the PlayerSearchOverlay.
@@ -346,6 +352,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
       const result = await validateCellWithDB(playerId, state.selectedCell, gridContent);
 
       if (result.isValid) {
+        triggerSuccess();
         dispatch({
           type: 'CORRECT_GUESS',
           payload: {
@@ -354,10 +361,11 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
           },
         });
       } else {
+        triggerError();
         dispatch({ type: 'INCORRECT_GUESS' });
       }
     },
-    [state.selectedCell, gridContent]
+    [state.selectedCell, gridContent, triggerSuccess, triggerError]
   );
 
   const shareResult = useCallback(async (): Promise<ShareResult> => {

@@ -339,21 +339,26 @@ Initialized: 2025-12-23
 ### Folder Structure
 ```
 app/                    # Expo Router screens
-  (tabs)/              # Bottom tab navigator
+  (tabs)/              # Bottom tab navigator (4 tabs)
+    _layout.tsx        # Tab config + global AdBanner
     index.tsx          # Home tab
-    games.tsx          # Games tab
     archive.tsx        # Archive tab
-    stats.tsx          # Stats tab
+    stats.tsx          # My IQ tab
+    settings.tsx       # Settings tab
+  premium-modal.tsx    # Native premium subscription modal
+  leaderboard/         # Leaderboard screen
   design-lab.tsx       # Component showcase (dev)
 src/
   components/          # Shared UI components
   features/            # Folder-by-feature modules
     home/
-    games/
     archive/
     stats/
+    settings/
+    ads/
+    subscription/
   hooks/               # Shared hooks
-  lib/                 # Utilities (Supabase client)
+  lib/                 # Utilities (Supabase client, database)
   theme/               # Design system tokens
   types/               # TypeScript types
 ```
@@ -396,8 +401,9 @@ src/
 - **Body/UI**: Inter (Regular + Bold)
 
 ### Navigation
-- Bottom tabs: Home, Games, Archive, Stats
+- Bottom tabs: Home, Archive, My IQ, Settings (4 tabs)
 - Icons: lucide-react-native (2px stroke)
+- Global AdBanner above home indicator (auto-hides for premium)
 
 ## Career Path Game Mode
 Initialized: 2025-12-24
@@ -2593,3 +2599,366 @@ src/components/index.ts
 - ReviewBanner.test.tsx: 4 tests
 - LegacyMode.test.tsx: 4 tests
 - **Total: 17 new tests passing**
+
+## Settings Screen & Tab
+Initialized: 2026-01-13
+
+### Overview
+Fourth tab in bottom navigation (replacing the old Games tab) providing legal compliance, app rating, and developer tools.
+
+### Navigation Structure (Updated)
+**Bottom Tabs (4 tabs):**
+| Tab | Icon | Route | Label |
+|-----|------|-------|-------|
+| 1 | Home | `/` | Home |
+| 2 | Archive | `/archive` | Archive |
+| 3 | Brain | `/stats` | My IQ |
+| 4 | Settings | `/settings` | Settings |
+
+All tab screens now include global AdBanner positioned above home indicator.
+
+### Settings Features
+| Feature | Icon | Action |
+|---------|------|--------|
+| Privacy Policy | Shield | Opens `LegalModal` with privacy content |
+| Terms of Service | FileText | Opens `LegalModal` with terms content |
+| Rate App | Star | Opens `RateAppModal` → triggers App Store review |
+
+**Secret Dev Menu:**
+- Tap version text 7 times (within 2 seconds) → enables developer mode
+- Shows "Clear Attempts" rows for each game mode (destructive testing utility)
+
+### Components
+| Component | Purpose |
+|-----------|---------|
+| `SettingsScreen` | Main screen with sections |
+| `SettingsSection` | Grouped settings container |
+| `SettingsRow` | Individual pressable row with icon |
+| `LegalModal` | Full-screen modal with markdown content |
+| `RateAppModal` | Confirmation modal before app store review |
+
+### App Store Review
+Uses `expo-store-review` (v9.0.9) to trigger native review prompt:
+```typescript
+import * as StoreReview from 'expo-store-review';
+
+if (await StoreReview.hasAction()) {
+  await StoreReview.requestReview();
+}
+```
+
+**Flow:**
+1. User taps "Rate App" → `RateAppModal` opens
+2. User confirms "Rate Now" → `StoreReview.requestReview()`
+3. Native iOS/Android review sheet appears (no redirect)
+4. Modal closes after 1.5s delay
+
+### Legal Content
+**Privacy Policy**: Covers data collection, Supabase usage, RevenueCat integration  
+**Terms of Service**: Usage terms, account rules, premium subscriptions
+
+Both modals use `ScrollView` with markdown-style formatting.
+
+### Dev Mode Utilities
+Hidden until activated (7 taps on version):
+- **Clear Career Path Attempts**: `deleteAttemptsByGameMode('career_path')`
+- **Clear Transfer Guess Attempts**: `deleteAttemptsByGameMode('guess_the_transfer')`
+- **Clear Goalscorer Recall Attempts**: `deleteAttemptsByGameMode('guess_the_goalscorers')`
+- **Clear Topical Quiz Attempts**: `deleteAttemptsByGameMode('topical_quiz')`
+- **Clear The Grid Attempts**: `deleteAttemptsByGameMode('the_grid')`
+- **Clear Top Tens Attempts**: `deleteAttemptsByGameMode('top_tens')`
+
+Each uses Alert confirmation before destructive operation.
+
+### Files
+```
+src/features/settings/
+  ├── index.ts                    # Exports
+  ├── screens/
+  │   └── SettingsScreen.tsx      # Main screen with sections
+  ├── components/
+  │   ├── SettingsRow.tsx         # Icon + text + chevron
+  │   ├── SettingsSection.tsx     # Section container
+  │   ├── LegalModal.tsx          # Privacy/Terms modal
+  │   ├── RateAppModal.tsx        # Rate app confirmation
+  │   └── index.ts                # Component exports
+  └── __tests__/
+      ├── SettingsScreen.test.tsx
+      ├── LegalModal.test.tsx
+      └── RateAppModal.test.tsx
+
+app/(tabs)/settings.tsx            # Tab screen wrapper
+app/(tabs)/_layout.tsx             # Updated 4-tab config + AdBanner
+src/lib/database.ts
+  └── deleteAttemptsByGameMode()  # Dev utility
+```
+
+## Native Premium Modal (Route-Based)
+Updated: 2026-01-13
+
+### Overview
+Converted from React Native Modal to native Expo Router modal screen using `presentation: 'formSheet'` for iOS/Android sheet animations.
+
+**Route:** `/premium-modal`  
+**File:** [app/premium-modal.tsx](app/premium-modal.tsx)
+
+### Navigation Methods
+```typescript
+// From Archive locked cards
+router.push('/premium-modal?mode=locked&puzzleDate=2024-12-15');
+
+// From UnlockChoiceModal "Go Premium" button
+router.push('/premium-modal');
+
+// From Home upsell banner
+router.push('/premium-modal');
+```
+
+**Params:**
+- `mode?: string` - 'locked' | 'blocked' (shows specific messaging)
+- `puzzleDate?: string` - For locked puzzle context
+
+### Stack Configuration
+```typescript
+// app/_layout.tsx
+<Stack.Screen
+  name="premium-modal"
+  options={{
+    presentation: 'formSheet',  // iOS sheet style
+    headerShown: false,
+    gestureEnabled: true,       // Swipe to dismiss
+  }}
+/>
+```
+
+### Subscription Offer Detection
+**Library:** `src/features/subscription/utils/offerDetection.ts`
+
+Automatically detects App Store promotional offers:
+
+```typescript
+interface OfferInfo {
+  hasOffer: boolean;
+  offerType: 'free-trial' | 'intro-price' | null;
+  period?: string;         // e.g., "7 days"
+  originalPrice?: string;  // e.g., "$4.99"
+  savingsPercent?: number; // e.g., 20
+}
+```
+
+**Detection Logic:**
+- Checks `PurchasesPackage.product.introPrice` for promotional pricing
+- Identifies free trials (price = 0) vs discounted intro pricing
+- Calculates savings percentage for intro offers
+- Formats offer period (e.g., "3 months" → "first 3 months")
+
+**UI Integration:**
+- Offer badge shown on package cards (e.g., "FREE FOR 7 DAYS")
+- CTA text adapted (e.g., "Start 7-Day Free Trial")
+- Savings percentage displayed (e.g., "Save 20% for first 3 months")
+
+### Files
+```
+app/premium-modal.tsx                       # Native modal screen
+src/features/subscription/
+  ├── index.ts                              # Exports
+  ├── types/subscription.types.ts           # OfferInfo, PackageWithOffer
+  └── utils/
+      └── offerDetection.ts                 # Offer detection utilities
+```
+
+### Key Improvements Over Modal Version
+1. **Native animations**: iOS sheet swipe-down dismissal
+2. **Gesture support**: Swipe to dismiss enabled
+3. **Better routing**: Uses Expo Router navigation
+4. **Cleaner architecture**: Separate screen file vs nested modal
+5. **Offer detection**: Automatic promotional offer handling
+
+## Subscription Sync System
+Location: [src/features/auth/context/SubscriptionSyncContext.tsx](src/features/auth/context/SubscriptionSyncContext.tsx)
+
+### Provider Structure (Updated)
+```
+app/_layout.tsx:
+  <AuthProvider>
+    <SubscriptionSyncProvider>          ← Syncs RevenueCat → Supabase
+      <GestureHandlerRootView>
+        <AuthGate>
+          <PuzzleProvider>
+            <QuizPrefetchProvider>
+              <AdProvider>              ← Checks is_premium from profile
+                <Stack>
+                  {/* Routes */}
+                </Stack>
+              </AdProvider>
+            </QuizPrefetchProvider>
+          </PuzzleProvider>
+        </AuthGate>
+      </GestureHandlerRootView>
+    </SubscriptionSyncProvider>
+  </AuthProvider>
+```
+
+**Sync Flow:**
+1. `SubscriptionSyncProvider` mounts after AuthProvider
+2. Calls `Purchases.getCustomerInfo()` to check entitlements
+3. If `premium_access` entitlement differs from `profiles.is_premium`:
+   - Updates Supabase via `updateProfile({ is_premium: true/false })`
+4. Listens to RevenueCat customer updates → triggers sync on change
+5. `AdProvider` reads `profile.is_premium` to determine `shouldShowAds`
+
+## App Configuration & Build Settings
+
+### app.json Configuration
+```json
+{
+  "expo": {
+    "name": "Football IQ",
+    "slug": "football-iq",
+    "version": "1.0.0",
+    "ios": {
+      "bundleIdentifier": "com.charliearlie.footballiq.app",
+      "buildNumber": "17"
+    },
+    "plugins": [
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-9426782115883407~1712062487",
+          "iosAppId": "ca-app-pub-9426782115883407~8797195643"
+        }
+      ]
+    ]
+  }
+}
+```
+
+**CRITICAL:** Increment `buildNumber` before each App Store submission. This is the build version that appears in App Store Connect as "1.0.0 (17)", "1.0.0 (18)", etc.
+
+### Updated Migrations
+
+**Supabase Migrations:**
+```
+001_create_base_tables.sql           # 6 tables with constraints
+002_enable_rls_policies.sql          # RLS + access policies (includes premium access)
+003_create_triggers.sql              # Profile creation + updated_at
+004_security_fixes.sql               # Function search_path + admin table RLS
+005_create_puzzle_catalog_rpc.sql    # RPC function for catalog sync
+006_create_leaderboard_rpcs.sql      # 3 RPCs + performance indexes
+008_score_distribution_rpc.sql       # Distribution graph RPC function
+009_fix_career_path_distribution.sql # Fix career path score normalization
+```
+
+**SQLite Migrations (via PRAGMA user_version):**
+```
+v1: Initial schema - puzzles, attempts, sync_queue
+v2: Added puzzle_catalog table for archive metadata
+v3: Added unlocked_puzzles table for ad unlocks (permanent)
+v4: Added player_database table for local player search
+```
+
+## Feedback System
+Initialized: 2026-01-13
+
+### Overview
+Premium tactile feedback system providing consistent, satisfying haptic and visual feedback across all game modes. Based on Duolingo's feedback patterns.
+
+### Semantic Haptics API
+
+Located in `src/lib/haptics.ts` and `src/hooks/useHaptics.ts`:
+
+| Function | Pattern | Use Case |
+|----------|---------|----------|
+| `triggerSuccess()` | Notification Success | Correct answers, achievements |
+| `triggerError()` | Heavy + 100ms + Medium | Wrong answers (synchronized with shake) |
+| `triggerCompletion()` | Success × 2 (150ms gap) | Puzzle completion |
+| `triggerSelection()` | Selection async | UI selections, button taps |
+| `triggerIncomplete()` | Light impact | Blocked actions (e.g., filled cell tap) |
+
+### Visual Feedback Components
+
+**ErrorFlashOverlay** (`src/components/ErrorFlashOverlay.tsx`)
+- Red overlay (#EF4444) at 30% opacity
+- Timing: 150ms fade in → 100ms hold → 200ms fade out
+- Absolute fill with `pointerEvents="none"`
+- Used in Career Path and Transfer Guess ActionZones
+
+**SuccessParticleBurst** (`src/components/SuccessParticleBurst.tsx`)
+- 12 particles radiating outward from origin point
+- Pitch Green (#58CC02) circles, 6-12px diameter
+- 600ms burst duration with `Easing.out(Easing.cubic)`
+- Built with react-native-reanimated (Skia not installed)
+
+### useFeedback Hook
+
+Unified feedback hook (`src/hooks/useFeedback.ts`) combining haptics with visual state:
+
+```typescript
+const { feedbackState, onSuccess, onError, onCompletion } = useFeedback();
+
+// feedbackState: { showShake, showErrorFlash, showParticleBurst, particleBurstOrigin }
+// onSuccess(origin?) - haptic + optional particle burst
+// onError() - haptic + shake + flash (auto-clears after 500ms)
+// onCompletion(origin?) - double haptic + optional particle burst
+// onSelection() - selection haptic only
+// onIncomplete() - light haptic only
+```
+
+### Game Mode Integration
+
+| Game Mode | Success | Error | Completion | Selection | Incomplete |
+|-----------|---------|-------|------------|-----------|------------|
+| The Grid | ✅ | ✅ + shake | ✅ | ✅ (empty cell) | ✅ (filled cell) |
+| Career Path | ✅ | ✅ + shake + flash | - | ✅ (reveal) | - |
+| Transfer Guess | ✅ | ✅ + shake + flash | - | ✅ (hint/give up) | - |
+| Topical Quiz | ✅ | ✅ | - | ✅ (auto-advance) | - |
+| Player Search | - | - | - | ✅ (result tap) | - |
+
+### Shake Animation Synchronization
+
+The shake animation in ActionZone components is synchronized with `triggerError()`:
+```
+Shake:    0ms(-10) → 50ms(+10) → 100ms(-10) → 150ms(+10) → spring settle
+Haptic:   0ms(Heavy) ────────→ 100ms(Medium)
+```
+
+This creates a "double-tap" feel synchronized with the visual oscillation.
+
+## Feature Summary (Complete App)
+
+### Game Modes (6)
+1. **Career Path** - Guess player from career steps (fuzzy validation, 1-10 point scoring)
+2. **Transfer Guess** - Identify player from transfer details (hints with penalties, 0-10 points)
+3. **Goalscorer Recall** - Name all scorers within 60 seconds (percentage + time bonus)
+4. **The Grid** - Fill 3x3 matrix with players (database validation, 0-100 points)
+5. **Topical Quiz** - 5 multiple-choice questions (2 points each, 0-10 total)
+6. **Top Tens** - Premium-only ranking puzzle (1 point per answer, 0-10 total)
+7. **Tic Tac Toe** - Legacy mode (archive review only, AI opponent)
+
+### Core Systems
+- **Authentication**: Anonymous auto sign-in + email OTP upgrade
+- **Puzzle Sync**: Supabase (cloud) ↔ SQLite (local) with offline-first
+- **Premium Gating**: 2-layer defense (UI + route protection) with 7-day free window
+- **Leaderboard**: Daily (0-500) and Global IQ (0-100) rankings with tie-breaking
+- **IQ Calculation**: Weighted average across game modes (0-100 scale)
+- **Score Distribution**: Wordle-style comparison graph per puzzle
+- **Streak Tracking**: Global streak (1+ game per day)
+- **Player Search**: Local SQLite database with fuzzy matching
+- **Ad Monetization**: Google AdMob with permanent ad-to-unlock
+- **Subscriptions**: RevenueCat integration with offer detection
+- **Review Mode**: Visual replay of completed games with user choices
+
+### Architecture Patterns
+- **Offline-first**: SQLite cache with Supabase sync
+- **Premium tiering**: Free (7 days) → Premium (full archive)
+- **Ad-based unlock**: Permanent puzzle access via rewarded ads
+- **Progressive saves**: Resume in-progress games on app restart
+- **Fuzzy validation**: Accent-insensitive, typo-tolerant name matching
+- **Route-based modals**: Native modal animations via Expo Router
+
+### Deployment Status
+- **Platform**: iOS + Android (React Native 0.76.5, Expo SDK 52)
+- **Backend**: Supabase PostgreSQL with RLS
+- **Payments**: RevenueCat (production mode)
+- **Ads**: Google AdMob (production mode)
+- **Build**: Version 1.0.0, Build 17 (increment for each submission)

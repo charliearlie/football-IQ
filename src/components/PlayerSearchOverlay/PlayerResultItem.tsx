@@ -11,6 +11,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { ParsedPlayer } from '@/types/database';
 import { countryCodeToEmoji } from '@/services/player/playerUtils';
+import { triggerSelection } from '@/lib/haptics';
 
 export interface PlayerResultItemProps {
   /** Player data to display */
@@ -35,6 +36,12 @@ export function PlayerResultItem({
   onPress,
   testID,
 }: PlayerResultItemProps) {
+  // Handle press with haptic feedback
+  const handlePress = () => {
+    triggerSelection();
+    onPress();
+  };
+
   // Convert nationality codes to emoji flags
   const flags = player.nationalities.map(countryCodeToEmoji).join(' ');
 
@@ -46,7 +53,7 @@ export function PlayerResultItem({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => [styles.container, pressed && styles.pressed]}
       testID={testID}
     >

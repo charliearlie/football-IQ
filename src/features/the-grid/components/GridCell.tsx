@@ -14,6 +14,7 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { colors, fonts, borderRadius } from '@/theme';
+import { triggerSelection, triggerIncomplete } from '@/lib/haptics';
 import { FilledCell, CellIndex } from '../types/theGrid.types';
 
 export interface GridCellProps {
@@ -57,7 +58,14 @@ export function GridCell({
   };
 
   const handlePress = () => {
-    if (!isFilled && !disabled) {
+    if (isFilled) {
+      // Gentle feedback when tapping already-filled cell
+      triggerIncomplete();
+      return;
+    }
+    if (!disabled) {
+      // Selection feedback when tapping empty cell
+      triggerSelection();
       onPress(index);
     }
   };

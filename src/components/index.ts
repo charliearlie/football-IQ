@@ -26,3 +26,13 @@ export {
   type PlayerSearchOverlayProps,
   type PlayerResultItemProps,
 } from './PlayerSearchOverlay';
+
+// Feedback components
+export {
+  ErrorFlashOverlay,
+  type ErrorFlashOverlayProps,
+} from './ErrorFlashOverlay';
+export {
+  SuccessParticleBurst,
+  type SuccessParticleBurstProps,
+} from './SuccessParticleBurst';

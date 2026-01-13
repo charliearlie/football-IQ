@@ -60,3 +60,48 @@ export async function triggerNotification(
 
   await Haptics.notificationAsync(feedbackType);
 }
+
+// ============================================================
+// SEMANTIC HAPTICS - Game-oriented feedback patterns
+// ============================================================
+
+/**
+ * Success feedback - Correct answers, achievements
+ * Uses: Notification Success pattern (satisfying "ding")
+ */
+export async function triggerSuccess(): Promise<void> {
+  if (!isHapticsSupported) return;
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}
+
+/**
+ * Error feedback - Wrong answers, invalid actions
+ * Uses: Heavy impact + delay + Medium impact (double-tap "thud")
+ * Synchronized with visual shake animation timing (~100ms between taps)
+ */
+export async function triggerError(): Promise<void> {
+  if (!isHapticsSupported) return;
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+}
+
+/**
+ * Completion feedback - Finishing a puzzle, game over (win)
+ * Uses: Double Notification Success with stagger (celebration)
+ */
+export async function triggerCompletion(): Promise<void> {
+  if (!isHapticsSupported) return;
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}
+
+/**
+ * Incomplete action feedback - Tapping already-filled cell, invalid state
+ * Uses: Light impact (gentle reminder)
+ */
+export async function triggerIncomplete(): Promise<void> {
+  if (!isHapticsSupported) return;
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+}

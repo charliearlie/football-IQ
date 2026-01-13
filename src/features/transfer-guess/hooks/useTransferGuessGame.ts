@@ -158,7 +158,7 @@ function transferGuessReducer(
  */
 export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(transferGuessReducer, createInitialState());
-  const { triggerNotification, triggerSelection } = useHaptics();
+  const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
 
   // Parse puzzle content
@@ -249,11 +249,11 @@ export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
         true
       );
       dispatch({ type: 'CORRECT_GUESS', payload: gameScore });
-      triggerNotification('success');
+      triggerSuccess();
     } else {
       // Record incorrect guess (no hint reveal penalty)
       dispatch({ type: 'INCORRECT_GUESS', payload: guess });
-      triggerNotification('error');
+      triggerError();
     }
   }, [
     state.currentGuess,
@@ -261,7 +261,8 @@ export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
     state.hintsRevealed,
     state.guesses.length,
     answer,
-    triggerNotification,
+    triggerSuccess,
+    triggerError,
   ]);
 
   // Give up
@@ -274,8 +275,8 @@ export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
       false
     );
     dispatch({ type: 'GIVE_UP', payload: gameScore });
-    triggerNotification('error');
-  }, [state.gameStatus, state.hintsRevealed, state.guesses.length, triggerNotification]);
+    triggerError();
+  }, [state.gameStatus, state.hintsRevealed, state.guesses.length, triggerError]);
 
   // Set current guess text
   const setCurrentGuess = useCallback((text: string) => {

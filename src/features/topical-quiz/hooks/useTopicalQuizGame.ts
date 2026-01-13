@@ -137,7 +137,7 @@ function quizReducer(
  */
 export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(quizReducer, createInitialState());
-  const { triggerNotification, triggerSelection } = useHaptics();
+  const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -197,9 +197,9 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
 
       // Haptic feedback
       if (isCorrect) {
-        triggerNotification('success');
+        triggerSuccess();
       } else {
-        triggerNotification('error');
+        triggerError();
       }
 
       // Schedule auto-advance
@@ -223,7 +223,8 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
       state.answers,
       isGameOver,
       currentQuestion,
-      triggerNotification,
+      triggerSuccess,
+      triggerError,
       triggerSelection,
     ]
   );
