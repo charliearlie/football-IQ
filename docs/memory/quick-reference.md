@@ -1146,8 +1146,9 @@ const {
   grantAdUnlock,       // Grant permanent unlock after ad watch
 } = useAds();
 
-// AdBanner (game screens) - auto-hides for premium
-<AdBanner testID="game-ad-banner" />
+// Global AdBanner (tab layout) - auto-hides for premium
+// Placed in app/(tabs)/_layout.tsx, visible on all tab screens
+<AdBanner testID="global-banner-ad" />
 
 // PremiumUpsellBanner (Home screen) - auto-hides for premium
 <PremiumUpsellBanner testID="home-upsell" />
@@ -1171,6 +1172,12 @@ isPuzzleLocked('2024-12-15', false, 'p-123', [{ puzzle_id: 'p-123', ... }])  // 
 // Ad Unit IDs (test IDs in __DEV__, production otherwise)
 getAdUnitId('banner')    // Returns iOS/Android banner ad unit ID
 getAdUnitId('rewarded')  // Returns iOS/Android rewarded ad unit ID
+
+// Production Ad Unit IDs:
+// Banner iOS:    ca-app-pub-9426782115883407/8614691809
+// Banner Android: ca-app-pub-9426782115883407/4156572045
+// Rewarded iOS:   ca-app-pub-9426782115883407/6782735388
+// Rewarded Android: ca-app-pub-9426782115883407/1028873493
 
 // AdMob App IDs (app.json config plugin)
 // iOS: ca-app-pub-9426782115883407~8797195643

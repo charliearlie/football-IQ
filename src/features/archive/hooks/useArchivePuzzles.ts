@@ -170,7 +170,11 @@ export function useArchivePuzzles(
       if (!catalogSynced.current) {
         console.log('[Archive:initialLoad] Syncing catalog from Supabase');
         // ALWAYS do full sync (pass null) - incremental sync was causing data loss
-        await syncCatalogFromSupabase(null);
+        const syncResult = await syncCatalogFromSupabase(null);
+        console.log('[Archive:initialLoad] Sync result:', syncResult.success, 'count:', syncResult.syncedCount);
+        if (!syncResult.success) {
+          console.error('[Archive:initialLoad] Sync FAILED:', syncResult.error);
+        }
         catalogSynced.current = true;
       }
 
@@ -206,7 +210,11 @@ export function useArchivePuzzles(
 
     try {
       // Force full resync (null = no timestamp filter)
-      await syncCatalogFromSupabase(null);
+      const syncResult = await syncCatalogFromSupabase(null);
+      console.log('[Archive:refresh] Sync result:', syncResult.success, 'count:', syncResult.syncedCount);
+      if (!syncResult.success) {
+        console.error('[Archive:refresh] Sync FAILED:', syncResult.error);
+      }
 
       // Reset and reload
       setPage(0);

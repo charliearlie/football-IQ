@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing['2xl'],
+    paddingBottom: spacing['2xl'] + 60, // Extra padding for ad banner
   },
   sectionTitle: {
     ...textStyles.h2,

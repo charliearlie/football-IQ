@@ -2095,12 +2095,12 @@ Hybrid monetization system with Google AdMob providing:
 | Android | `ca-app-pub-9426782115883407~1712062487` |
 
 ### Ad Unit IDs
-| Type | iOS (Test) | Android (Test) |
-|------|------------|----------------|
-| Banner | `ca-app-pub-3940256099942544/2934735716` | `ca-app-pub-3940256099942544/6300978111` |
-| Rewarded | `ca-app-pub-3940256099942544/1712485313` | `ca-app-pub-3940256099942544/5224354917` |
+| Type | iOS | Android |
+|------|-----|---------|
+| Banner | `ca-app-pub-9426782115883407/8614691809` | `ca-app-pub-9426782115883407/4156572045` |
+| Rewarded | `ca-app-pub-9426782115883407/6782735388` | `ca-app-pub-9426782115883407/1028873493` |
 
-Production ad unit IDs to be created in AdMob console.
+Test ad unit IDs (Google's official) are used in `__DEV__` mode. Production IDs above are used in release builds.
 
 ### Architecture
 ```
@@ -2187,12 +2187,14 @@ function isPuzzleLocked(
 | `PremiumUpsellBanner` | Home screen | Subscription CTA |
 
 ### AdBanner Placement
-Added to all game screens (returns null for premium users):
-- `CareerPathScreen`
-- `TransferGuessScreen`
-- `GoalscorerRecallScreen`
-- `TicTacToeScreen`
-- `TopicalQuizScreen`
+**Global Banner** - Added to tab layout (`app/(tabs)/_layout.tsx`):
+- Visible on all tab screens (Home, Archive, My IQ, Settings)
+- Returns null for premium users (no ads)
+- Returns null on web platform
+- Positioned above home indicator using safe area insets
+- Automatically hidden behind modal overlays (premium-modal, UnlockChoiceModal, etc.)
+
+Content areas have +60px bottom padding to prevent banner from obscuring last items.
 
 ### Key Files
 ```

@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing['3xl'],
+    paddingBottom: spacing['3xl'] + 60, // Extra padding for ad banner
   },
   emptyState: {
     padding: spacing.xl,

@@ -27,19 +27,16 @@ const TEST_AD_UNIT_IDS = {
 
 /**
  * Production ad unit IDs.
- * These should be created in the AdMob console for Football IQ app.
- * TODO: Replace with actual production ad unit IDs once created.
+ * Created in the AdMob console for Football IQ app.
  */
 const PRODUCTION_AD_UNIT_IDS = {
   banner: {
-    // TODO: Create banner ad units in AdMob console
-    ios: 'ca-app-pub-9426782115883407/BANNER_IOS',
-    android: 'ca-app-pub-9426782115883407/BANNER_ANDROID',
+    ios: 'ca-app-pub-9426782115883407/8614691809',
+    android: 'ca-app-pub-9426782115883407/4156572045',
   },
   rewarded: {
-    // TODO: Create rewarded ad units in AdMob console
-    ios: 'ca-app-pub-9426782115883407/REWARDED_IOS',
-    android: 'ca-app-pub-9426782115883407/REWARDED_ANDROID',
+    ios: 'ca-app-pub-9426782115883407/6782735388',
+    android: 'ca-app-pub-9426782115883407/1028873493',
   },
 } as const;
 

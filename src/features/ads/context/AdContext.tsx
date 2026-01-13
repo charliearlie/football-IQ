@@ -15,6 +15,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from 'react';
 import { Platform, AppState, AppStateStatus } from 'react-native';
 import { useAuth } from '@/features/auth';
@@ -22,7 +23,27 @@ import { UnlockedPuzzle } from '@/types/database';
 import { getValidAdUnlocks, saveAdUnlock } from '@/lib/database';
 import { isPuzzleInUnlocks } from '../services/adUnlockService';
 import { AdContextValue, RewardedAdState } from '../types/ads.types';
-import { isAdsSupportedPlatform } from '../config/adUnits';
+import { isAdsSupportedPlatform, getAdUnitId } from '../config/adUnits';
+
+// Conditionally import RewardedAd SDK components only on native platforms
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let RewardedAd: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let RewardedAdEventType: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let AdEventType: any = null;
+
+if (Platform.OS === 'ios' || Platform.OS === 'android') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mobileAds = require('react-native-google-mobile-ads');
+    RewardedAd = mobileAds.RewardedAd;
+    RewardedAdEventType = mobileAds.RewardedAdEventType;
+    AdEventType = mobileAds.AdEventType;
+  } catch {
+    // Module not available
+  }
+}
 
 const AdContext = createContext<AdContextValue | null>(null);
 
@@ -49,6 +70,12 @@ export function AdProvider({ children }: AdProviderProps) {
 
   // Rewarded ad state
   const [rewardedAdState, setRewardedAdState] = useState<RewardedAdState>('idle');
+
+  // Refs for rewarded ad instance and callback
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rewardedAdRef = useRef<any>(null);
+  const rewardCallbackRef = useRef<((rewarded: boolean) => void) | null>(null);
+  const unsubscribersRef = useRef<(() => void)[]>([]);
 
   // Determine if ads should be shown
   const shouldShowAds = useMemo(() => {
@@ -93,6 +120,15 @@ export function AdProvider({ children }: AdProviderProps) {
     return () => subscription.remove();
   }, [refreshAdUnlocks]);
 
+  // Cleanup rewarded ad on unmount
+  useEffect(() => {
+    return () => {
+      unsubscribersRef.current.forEach((unsub) => unsub());
+      unsubscribersRef.current = [];
+      rewardedAdRef.current = null;
+    };
+  }, []);
+
   // Check if a specific puzzle is ad-unlocked
   const isAdUnlockedPuzzle = useCallback(
     (puzzleId: string): boolean => {
@@ -115,29 +151,98 @@ export function AdProvider({ children }: AdProviderProps) {
     [refreshAdUnlocks]
   );
 
-  // Load a rewarded ad (placeholder - will be implemented with actual SDK)
+  // Clean up rewarded ad listeners
+  const cleanupRewardedAd = useCallback(() => {
+    unsubscribersRef.current.forEach((unsub) => unsub());
+    unsubscribersRef.current = [];
+    rewardedAdRef.current = null;
+  }, []);
+
+  // Load a rewarded ad using the actual SDK
   const loadRewardedAd = useCallback(async (): Promise<void> => {
     if (!shouldShowAds) {
       return;
     }
 
-    // Skip on unsupported platforms
-    if (Platform.OS === 'web') {
+    // Skip on unsupported platforms or if SDK not available
+    if (!RewardedAd || !AdEventType || !RewardedAdEventType) {
+      console.warn('[AdContext] RewardedAd SDK not available');
       return;
     }
+
+    const adUnitId = getAdUnitId('rewarded');
+    if (!adUnitId) {
+      return;
+    }
+
+    // Clean up existing ad instance
+    cleanupRewardedAd();
 
     setRewardedAdState('loading');
 
     try {
-      // TODO: Implement actual rewarded ad loading with react-native-google-mobile-ads
-      // For now, simulate loading
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setRewardedAdState('loaded');
+      const rewarded = RewardedAd.createForAdRequest(adUnitId, {
+        requestNonPersonalizedAdsOnly: false,
+      });
+
+      // Set up event listeners
+      const unsubscribeLoaded = rewarded.addAdEventListener(
+        RewardedAdEventType.LOADED,
+        () => {
+          setRewardedAdState('loaded');
+        }
+      );
+
+      const unsubscribeError = rewarded.addAdEventListener(
+        AdEventType.ERROR,
+        (error: Error) => {
+          console.error('[AdContext] Rewarded ad error:', error);
+          setRewardedAdState('error');
+          cleanupRewardedAd();
+        }
+      );
+
+      const unsubscribeClosed = rewarded.addAdEventListener(
+        AdEventType.CLOSED,
+        () => {
+          // If user closed without earning reward, resolve with false
+          if (rewardCallbackRef.current) {
+            rewardCallbackRef.current(false);
+            rewardCallbackRef.current = null;
+          }
+          setRewardedAdState('idle');
+          cleanupRewardedAd();
+        }
+      );
+
+      const unsubscribeEarned = rewarded.addAdEventListener(
+        RewardedAdEventType.EARNED_REWARD,
+        () => {
+          setRewardedAdState('rewarded');
+          // User earned the reward
+          if (rewardCallbackRef.current) {
+            rewardCallbackRef.current(true);
+            rewardCallbackRef.current = null;
+          }
+        }
+      );
+
+      // Store reference and unsubscribers for cleanup
+      rewardedAdRef.current = rewarded;
+      unsubscribersRef.current = [
+        unsubscribeLoaded,
+        unsubscribeError,
+        unsubscribeClosed,
+        unsubscribeEarned,
+      ];
+
+      // Load the ad
+      rewarded.load();
     } catch (error) {
-      console.error('Failed to load rewarded ad:', error);
+      console.error('[AdContext] Failed to create rewarded ad:', error);
       setRewardedAdState('error');
     }
-  }, [shouldShowAds]);
+  }, [shouldShowAds, cleanupRewardedAd]);
 
   // Show the loaded rewarded ad
   const showRewardedAd = useCallback(async (): Promise<boolean> => {
@@ -145,23 +250,24 @@ export function AdProvider({ children }: AdProviderProps) {
       return false;
     }
 
-    setRewardedAdState('showing');
-
-    try {
-      // TODO: Implement actual rewarded ad showing with react-native-google-mobile-ads
-      // For now, simulate watching ad
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setRewardedAdState('rewarded');
-
-      // Reset state after reward
-      setTimeout(() => setRewardedAdState('idle'), 500);
-
-      return true; // User earned reward
-    } catch (error) {
-      console.error('Failed to show rewarded ad:', error);
-      setRewardedAdState('error');
+    if (!rewardedAdRef.current) {
       return false;
     }
+
+    return new Promise<boolean>((resolve) => {
+      // Store callback to be called when ad closes or reward earned
+      rewardCallbackRef.current = resolve;
+      setRewardedAdState('showing');
+
+      try {
+        rewardedAdRef.current.show();
+      } catch (error) {
+        console.error('[AdContext] Failed to show rewarded ad:', error);
+        setRewardedAdState('error');
+        rewardCallbackRef.current = null;
+        resolve(false);
+      }
+    });
   }, [shouldShowAds, rewardedAdState]);
 
   // Check if rewarded ad is ready

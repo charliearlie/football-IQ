@@ -20,6 +20,19 @@ import { AdProvider } from '@/features/ads';
 import { QuizPrefetchProvider } from '@/features/topical-quiz';
 import { getRevenueCatApiKey } from '@/config/revenueCat';
 
+// Conditionally import MobileAds only on native platforms
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let MobileAds: (() => { initialize: () => Promise<void> }) | null = null;
+if (Platform.OS === 'ios' || Platform.OS === 'android') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mobileAds = require('react-native-google-mobile-ads');
+    MobileAds = mobileAds.default;
+  } catch {
+    // Module not available
+  }
+}
+
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
@@ -66,6 +79,7 @@ export default function RootLayout() {
   });
   const [dbReady, setDbReady] = useState(false);
   const [rcReady, setRcReady] = useState(false);
+  const [adsReady, setAdsReady] = useState(false);
 
   // Initialize local SQLite database
   useEffect(() => {
@@ -101,18 +115,40 @@ export default function RootLayout() {
     initRevenueCat();
   }, []);
 
-  // Hide splash screen when fonts, database, and RevenueCat are ready
+  // Initialize Google Mobile Ads SDK
   useEffect(() => {
-    if ((fontsLoaded || fontError) && dbReady && rcReady) {
+    const initMobileAds = async () => {
+      // Skip on web or if module not available
+      if (Platform.OS === 'web' || !MobileAds) {
+        setAdsReady(true);
+        return;
+      }
+
+      try {
+        await MobileAds().initialize();
+        console.log('[MobileAds] SDK initialized successfully');
+        setAdsReady(true);
+      } catch (error) {
+        console.error('[MobileAds] SDK initialization failed:', error);
+        // Continue in degraded mode - ads won't work but app functions
+        setAdsReady(true);
+      }
+    };
+    initMobileAds();
+  }, []);
+
+  // Hide splash screen when fonts, database, RevenueCat, and ads are ready
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && dbReady && rcReady && adsReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, dbReady, rcReady]);
+  }, [fontsLoaded, fontError, dbReady, rcReady, adsReady]);
 
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
-  if (!dbReady || !rcReady) {
+  if (!dbReady || !rcReady || !adsReady) {
     return null;
   }
 

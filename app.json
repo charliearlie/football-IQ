@@ -16,7 +16,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.charliearlie.footballiq.app",
-      "icon": "./assets/images/footballiq-icon.png"
+      "icon": "./assets/images/footballiq-icon.png",
+      "buildNumber": "17"
     },
     "android": {
       "adaptiveIcon": {

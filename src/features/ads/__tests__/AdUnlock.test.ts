@@ -69,7 +69,7 @@ describe('Ad Unlock Feature', () => {
 
     it('skips migration if already at version 3', async () => {
       // Arrange
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
 
       // Act
       await initDatabase();
@@ -81,7 +81,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('saveAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
       await initDatabase();
     });
 
@@ -135,7 +135,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('isAdUnlocked', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
       await initDatabase();
     });
 
@@ -183,7 +183,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('getValidAdUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
       await initDatabase();
     });
 
@@ -234,7 +234,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('clearExpiredUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
       await initDatabase();
     });
 
@@ -249,7 +249,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('removeAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
       await initDatabase();
     });
 
@@ -267,7 +267,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('clearAllAdUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
       await initDatabase();
     });
 
