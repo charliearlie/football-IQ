@@ -18,7 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePuzzle } from '@/features/puzzles/hooks/usePuzzle';
 import { isPuzzleLocked } from '@/features/archive/utils/dateGrouping';
 import { getValidAdUnlocks } from '@/lib/database';
-import type { UnlockedPuzzle } from '@/features/ads/types/ads.types';
+import type { UnlockedPuzzle } from '@/types/database';
 import { colors } from '@/theme/colors';
 
 /**
@@ -131,6 +131,12 @@ export function PremiumGate({
     // Guard: only navigate once to prevent infinite loops
     if (hasNavigatedRef.current) return;
 
+    // NEVER navigate away if puzzle is ad-unlocked - let the puzzle screen handle missing state
+    // This fixes race condition where SQLite fetch completes after PremiumGate renders
+    if (isAdUnlocked) {
+      return;
+    }
+
     if (isMissing) {
       hasNavigatedRef.current = true;
       router.push({
@@ -144,7 +150,7 @@ export function PremiumGate({
         params: { puzzleDate: puzzle.puzzle_date, mode: 'blocked' },
       });
     }
-  }, [isMissing, isLocked, puzzle, router]);
+  }, [isMissing, isLocked, puzzle, router, isAdUnlocked]);
 
   // NOTE: Previously had a useEffect to reset hasNavigatedRef when user becomes authorized.
   // This was REMOVED because it caused race conditions with ad unlocks - the guard would
@@ -154,7 +160,9 @@ export function PremiumGate({
   // - Ad unlock: user navigates from archive screen, this is a fresh mount
 
   // Handle loading state or blocked state (show loading while redirecting)
-  if (isLoading || isMissing || isLocked) {
+  // EXCEPTION: Don't show loading screen for ad-unlocked puzzles - let puzzle screen handle it
+  // This fixes race condition where PremiumGate finishes loading but puzzle is still fetching from SQLite
+  if ((isLoading || isMissing || isLocked) && !isAdUnlocked) {
     return <>{fallback ?? <DefaultLoadingScreen />}</>;
   }
 
