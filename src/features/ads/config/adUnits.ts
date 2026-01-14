@@ -59,7 +59,13 @@ export function getAdUnitId(type: AdUnitType): string | null {
   }
 
   const platform = Platform.OS as 'ios' | 'android';
-  const adUnitIds = __DEV__ ? TEST_AD_UNIT_IDS : PRODUCTION_AD_UNIT_IDS;
+
+  // Use test ads if:
+  // 1. In development (__DEV__)
+  // 2. EXPO_PUBLIC_USE_TEST_ADS env var is set to 'true' (for TestFlight testing)
+  const useTestAds =
+    __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === 'true';
+  const adUnitIds = useTestAds ? TEST_AD_UNIT_IDS : PRODUCTION_AD_UNIT_IDS;
 
   return adUnitIds[type][platform];
 }

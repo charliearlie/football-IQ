@@ -245,8 +245,17 @@ export function useArchivePuzzles(
       const syncAndReload = async () => {
         try {
           // ALWAYS do full sync (pass null) - incremental sync was causing data loss
-          await syncCatalogFromSupabase(null);
-          console.log('[Archive:focus] Sync complete, loading page');
+          const syncResult = await syncCatalogFromSupabase(null);
+          console.log(
+            '[Archive:focus] Sync result:',
+            syncResult.success,
+            'count:',
+            syncResult.syncedCount
+          );
+          if (!syncResult.success) {
+            console.error('[Archive:focus] Sync FAILED:', syncResult.error);
+          }
+          console.log('[Archive:focus] Loading page');
           await loadPage(0, true);
           console.log('[Archive:focus] Load complete');
         } catch (error) {

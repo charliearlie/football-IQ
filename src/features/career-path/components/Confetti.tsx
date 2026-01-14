@@ -15,6 +15,7 @@ import Animated, {
   withRepeat,
   Easing,
   interpolate,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { colors } from '@/theme/colors';
 
@@ -80,6 +81,12 @@ function ConfettiPiece({
         false
       )
     );
+
+    // Cleanup: Cancel animations on unmount to prevent UI freeze
+    return () => {
+      cancelAnimation(progress);
+      cancelAnimation(rotate);
+    };
   }, [delay, progress, rotate]);
 
   const animatedStyle = useAnimatedStyle(() => {

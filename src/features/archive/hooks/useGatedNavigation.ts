@@ -3,14 +3,12 @@
  *
  * Centralizes premium gating logic for navigation actions.
  * Returns a function that either navigates to the puzzle
- * or triggers the paywall modal based on premium status.
+ * or triggers the paywall modal based on lock status.
  */
 
 import { useCallback } from 'react';
 import { useRouter, Href } from 'expo-router';
 import { useAuth } from '@/features/auth';
-import { useAds } from '@/features/ads';
-import { isPuzzleLocked } from '../utils/dateGrouping';
 import { ArchivePuzzle } from '../types/archive.types';
 import { GAME_MODE_ROUTES } from '../constants/routes';
 
@@ -43,10 +41,9 @@ interface UseGatedNavigationResult {
 /**
  * Hook that provides gated navigation for archive puzzles.
  *
- * Checks if the user has access to a puzzle based on:
- * - Premium status
- * - Puzzle date (7-day free window)
- * - Ad unlocks (individual puzzle unlocks via rewarded ads)
+ * Trusts the puzzle's `isLocked` property from the archive list,
+ * which is already computed based on premium status, free window,
+ * and ad unlocks. This avoids stale closure issues.
  *
  * @param options - Configuration options
  * @returns Navigation function and premium status
@@ -66,21 +63,14 @@ export function useGatedNavigation(
 ): UseGatedNavigationResult {
   const router = useRouter();
   const { profile } = useAuth();
-  const { adUnlocks } = useAds();
   const isPremium = profile?.is_premium ?? false;
 
   const navigateToPuzzle = useCallback(
     (puzzle: ArchivePuzzle) => {
-      // Check if user has access to this puzzle
-      // Includes premium status, 7-day window, and ad unlocks
-      const isLocked = isPuzzleLocked(
-        puzzle.puzzleDate,
-        isPremium,
-        puzzle.id,
-        adUnlocks
-      );
-
-      if (isLocked) {
+      // Trust the puzzle's isLocked property from the archive list
+      // The list already checks isPuzzleLocked with the latest adUnlocks
+      // This avoids stale closure issues with adUnlocks state
+      if (puzzle.isLocked) {
         // User doesn't have access - show paywall/unlock modal
         options.onShowPaywall(puzzle);
         return;
@@ -94,7 +84,7 @@ export function useGatedNavigation(
         router.push(href);
       }
     },
-    [isPremium, adUnlocks, router, options]
+    [router, options]
   );
 
   return {

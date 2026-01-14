@@ -7,6 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
   Easing,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { ArrowRight } from 'lucide-react-native';
 import { GlassCard } from '@/components';
@@ -50,6 +51,11 @@ export function TransferCard({
       -1, // infinite
       true // reverse
     );
+
+    // Cleanup: Cancel animation on unmount to prevent UI freeze
+    return () => {
+      cancelAnimation(floatY);
+    };
   }, [floatY]);
 
   const floatStyle = useAnimatedStyle(() => ({

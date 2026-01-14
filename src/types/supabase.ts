@@ -251,7 +251,7 @@ export type Database = {
     Functions: {
       get_daily_leaderboard: {
         Args: {
-          for_date: string
+          for_date?: string
           limit_count?: number
         }
         Returns: {
@@ -261,7 +261,7 @@ export type Database = {
           avatar_url: string | null
           daily_score: number
           games_played: number
-          earliest_completion: string
+          last_completed_at: string
         }[]
       }
       get_global_iq_leaderboard: {
@@ -277,25 +277,58 @@ export type Database = {
           total_games: number
         }[]
       }
+      get_puzzle_by_id: {
+        Args: {
+          puzzle_id: string
+        }
+        Returns: {
+          id: string
+          game_mode: string
+          puzzle_date: string
+          content: Json
+          difficulty: string
+        }[]
+      }
+      get_puzzle_catalog:
+        | {
+            Args: Record<string, never>
+            Returns: {
+              id: string
+              game_mode: string
+              puzzle_date: string
+              difficulty: string
+            }[]
+          }
+        | {
+            Args: { since_timestamp?: string }
+            Returns: {
+              id: string
+              game_mode: string
+              puzzle_date: string
+              difficulty: string
+            }[]
+          }
+      get_puzzle_score_distribution: {
+        Args: {
+          target_puzzle_id: string
+        }
+        Returns: {
+          score: number
+          count: number
+          percentage: number
+          total_attempts: number
+        }[]
+      }
       get_user_rank: {
         Args: {
           target_user_id: string
-          leaderboard_type: string
+          leaderboard_type?: string
           for_date?: string
         }
         Returns: {
           rank: number
           score: number
           total_users: number
-        }[]
-      }
-      get_puzzle_catalog: {
-        Args: Record<string, never>
-        Returns: {
-          id: string
-          game_mode: string
-          puzzle_date: string
-          difficulty: string | null
         }[]
       }
     }

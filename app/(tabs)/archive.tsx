@@ -96,15 +96,6 @@ export default function ArchiveScreen() {
     setCompletedPuzzle(null);
   }, []);
 
-  /**
-   * Handle successful ad unlock - refresh list and close modal.
-   */
-  const handleUnlockSuccess = useCallback(() => {
-    setLockedPuzzle(null);
-    // The useArchivePuzzles hook will automatically recheck lock status
-    // when adUnlocks changes, so we don't need to manually refresh
-  }, []);
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -137,17 +128,17 @@ export default function ArchiveScreen() {
         testID="archive-list"
       />
 
-      {/* Unlock Choice Modal - shows ad option for non-premium users */}
-      {lockedPuzzle && (
-        <UnlockChoiceModal
-          visible={!!lockedPuzzle}
-          onClose={handleCloseModal}
-          puzzleId={lockedPuzzle.id}
-          puzzleDate={lockedPuzzle.puzzleDate}
-          onUnlockSuccess={handleUnlockSuccess}
-          testID="unlock-choice-modal"
-        />
-      )}
+      {/* Unlock Choice Modal - shows ad option for non-premium users
+          IMPORTANT: Keep component always mounted to let Modal animate out properly.
+          Conditional render causes Modal to unmount mid-animation, leaving overlay stuck. */}
+      <UnlockChoiceModal
+        visible={!!lockedPuzzle}
+        onClose={handleCloseModal}
+        puzzleId={lockedPuzzle?.id ?? ''}
+        puzzleDate={lockedPuzzle?.puzzleDate ?? ''}
+        gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
+        testID="unlock-choice-modal"
+      />
 
       {/* Completed Game Modal - shows result for done games */}
       {completedPuzzle && completedPuzzle.attempt && (

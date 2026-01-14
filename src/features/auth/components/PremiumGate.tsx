@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { usePuzzle } from '@/features/puzzles/hooks/usePuzzle';
 import { isPuzzleLocked } from '@/features/archive/utils/dateGrouping';
+import { useAdsOptional } from '@/features/ads';
 import { colors } from '@/theme/colors';
 
 /**
@@ -70,16 +71,41 @@ export function PremiumGate({
   const router = useRouter();
   const { profile, isLoading: isAuthLoading } = useAuth();
   const { puzzle, isLoading: isPuzzleLoading } = usePuzzle(puzzleId);
+  const adsContext = useAdsOptional();
 
   // Guard against re-triggering navigation
   const hasNavigatedRef = useRef(false);
 
   const isPremium = profile?.is_premium ?? false;
   const isLoading = isAuthLoading || isPuzzleLoading;
+  const adUnlocks = adsContext?.adUnlocks;
+
+  // Check if puzzle is ad-unlocked (doesn't require puzzle data from context)
+  const isAdUnlocked = adUnlocks?.some(u => u.puzzle_id === puzzleId) ?? false;
 
   // Check premium access using client-side logic
-  const isLocked = !isLoading && puzzle && isPuzzleLocked(puzzle.puzzle_date, isPremium);
-  const isMissing = !isLoading && !puzzle;
+  // Pass puzzleId and adUnlocks to check for ad-unlocked puzzles
+  // CRITICAL: Ad-unlocked puzzles are never locked, even if puzzle data is missing
+  const isLocked = !isLoading && puzzle && !isAdUnlocked && isPuzzleLocked(
+    puzzle.puzzle_date,
+    isPremium,
+    puzzleId,
+    adUnlocks
+  );
+  // CRITICAL: Don't treat ad-unlocked puzzles as "missing" even if not in PuzzleContext
+  // (Archive puzzles aren't in PuzzleContext - only today's puzzles are)
+  const isMissing = !isLoading && !puzzle && !isAdUnlocked;
+
+  // Diagnostic logging
+  console.log('[PremiumGate] Check:', {
+    puzzleId,
+    puzzleDate: puzzle?.puzzle_date,
+    isPremium,
+    adUnlocksCount: adUnlocks?.length ?? 0,
+    isAdUnlocked,
+    isLocked,
+    isMissing,
+  });
 
   // Navigate to premium modal when blocked (missing or locked puzzle)
   // Uses push instead of replace to preserve navigation history
@@ -102,12 +128,12 @@ export function PremiumGate({
     }
   }, [isMissing, isLocked, puzzle, router]);
 
-  // Reset navigation guard when user becomes authorized (e.g., premium upgrade)
-  useEffect(() => {
-    if (!isLocked && !isMissing && !isLoading) {
-      hasNavigatedRef.current = false;
-    }
-  }, [isLocked, isMissing, isLoading]);
+  // NOTE: Previously had a useEffect to reset hasNavigatedRef when user becomes authorized.
+  // This was REMOVED because it caused race conditions with ad unlocks - the guard would
+  // reset while puzzle was still loading, causing infinite re-render loops and app freeze.
+  // The guard doesn't need to reset because:
+  // - Premium upgrade: user navigates back, component remounts with fresh ref
+  // - Ad unlock: user navigates from archive screen, this is a fresh mount
 
   // Handle loading state or blocked state (show loading while redirecting)
   if (isLoading || isMissing || isLocked) {

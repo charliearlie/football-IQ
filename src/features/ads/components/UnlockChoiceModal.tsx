@@ -38,9 +38,9 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { ElevatedButton } from '@/components/ElevatedButton';
-import { Confetti } from '@/features/career-path/components/Confetti';
 import { useAds } from '../context/AdContext';
 import { formatPuzzleDate } from '@/features/archive/utils/dateGrouping';
+import { GAME_MODE_ROUTES } from '@/features/archive/constants/routes';
 import { UnlockChoiceModalProps, UnlockChoiceState } from '../types/ads.types';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
@@ -54,7 +54,7 @@ export function UnlockChoiceModal({
   onClose,
   puzzleId,
   puzzleDate,
-  onUnlockSuccess,
+  gameMode,
   testID,
 }: UnlockChoiceModalProps) {
   const router = useRouter();
@@ -81,18 +81,47 @@ export function UnlockChoiceModal({
     }
   }, [visible]);
 
-  // Auto-close after ad success
+  // Pre-load rewarded ad when modal opens (only in idle state)
+  // Don't re-load if we're in the middle of showing/completing an ad
+  useEffect(() => {
+    if (visible && state === 'idle' && !isRewardedAdReady) {
+      loadRewardedAd().catch((error) => {
+        console.warn('[UnlockChoiceModal] Failed to pre-load ad:', error);
+      });
+    }
+  }, [visible, state, isRewardedAdReady, loadRewardedAd]);
+
+  // Auto-navigate after ad success
+  // CRITICAL: Capture values in a ref when ad succeeds to avoid race conditions.
+  const navigationRef = useRef<{ puzzleId: string; gameMode: typeof gameMode } | null>(null);
+
+  // Capture navigation params when entering ad_success state
   useEffect(() => {
     if (state === 'ad_success') {
+      navigationRef.current = { puzzleId, gameMode };
+    }
+  }, [state, puzzleId, gameMode]);
+
+  // Navigate after showing success message
+  useEffect(() => {
+    if (state === 'ad_success' && navigationRef.current) {
+      const nav = navigationRef.current;
       const timer = setTimeout(() => {
-        if (isMountedRef.current) {
-          onUnlockSuccess();
-          onClose();
+        const route = GAME_MODE_ROUTES[nav.gameMode];
+        if (route && nav.puzzleId) {
+          // Navigate FIRST, then close modal after a delay
+          // This prevents race conditions from onClose triggering re-renders
+          router.push({
+            pathname: `/${route}/[puzzleId]`,
+            params: { puzzleId: nav.puzzleId },
+          } as never);
+          // Close modal after navigation has started
+          setTimeout(() => onClose(), 100);
         }
-      }, 2000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [state, onUnlockSuccess, onClose]);
+  }, [state, router, onClose]);
 
   /**
    * Handle "Go Premium" button press.
@@ -130,8 +159,13 @@ export function UnlockChoiceModal({
       const rewarded = await showRewardedAd();
 
       if (rewarded) {
-        // Grant the unlock
+        // Grant the unlock (also fetches and saves puzzle to SQLite)
         await grantAdUnlock(puzzleId);
+
+        // Note: Don't call refreshLocalPuzzles() here - it reads ALL puzzles
+        // and can block the JS thread. useStablePuzzle will fetch the puzzle
+        // directly from SQLite on the game screen.
+
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch {
@@ -173,9 +207,6 @@ export function UnlockChoiceModal({
       testID={testID}
     >
       <View style={styles.overlay}>
-        {/* Success Confetti */}
-        <Confetti active={state === 'ad_success'} testID={`${testID}-confetti`} />
-
         <Animated.View
           entering={SlideInDown.springify().damping(15).stiffness(100)}
           style={styles.modal}
@@ -228,6 +259,7 @@ export function UnlockChoiceModal({
             <IdleContent
               onGoPremium={handleGoPremium}
               onWatchAd={handleWatchAd}
+              isAdReady={isRewardedAdReady}
               testID={testID}
             />
           )}
@@ -260,10 +292,12 @@ export function UnlockChoiceModal({
 function IdleContent({
   onGoPremium,
   onWatchAd,
+  isAdReady,
   testID,
 }: {
   onGoPremium: () => void;
   onWatchAd: () => void;
+  isAdReady: boolean;
   testID?: string;
 }) {
   return (
@@ -308,11 +342,12 @@ function IdleContent({
           </View>
         </View>
         <ElevatedButton
-          title="Watch"
+          title={isAdReady ? 'Watch' : 'Loading...'}
           onPress={onWatchAd}
           size="small"
-          topColor={colors.pitchGreen}
-          shadowColor={colors.grassShadow}
+          topColor={isAdReady ? colors.pitchGreen : colors.glassBackground}
+          shadowColor={isAdReady ? colors.grassShadow : colors.glassBorder}
+          disabled={!isAdReady}
           testID={`${testID}-watch-ad-button`}
         />
       </View>

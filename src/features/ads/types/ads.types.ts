@@ -6,6 +6,7 @@
  */
 
 import { UnlockedPuzzle } from '@/types/database';
+import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 /**
  * Ad unit types supported by the app.
@@ -89,8 +90,8 @@ export interface UnlockChoiceModalProps {
   puzzleId: string;
   /** Puzzle date for display (YYYY-MM-DD) */
   puzzleDate: string;
-  /** Callback after successful unlock (ad or premium) */
-  onUnlockSuccess: () => void;
+  /** Game mode for navigation after unlock */
+  gameMode: GameMode;
   /** Test ID for testing */
   testID?: string;
 }

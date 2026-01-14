@@ -2185,6 +2185,9 @@ function isPuzzleLocked(
     Auto-close (2s)
 ```
 
+**Known Issue - Ad Unlock Navigation UX:**
+The success message ("Puzzle Unlocked!") appears briefly (~1.5s) then the modal closes and navigates to the game. This is a workaround for a race condition where React callback reference changes caused app freezes. The ideal UX would show the success message for a full 2 seconds with a smooth transition. The fix involved moving navigation logic into the modal itself using refs to capture navigation params, avoiding dependency array issues. See `UnlockChoiceModal.tsx` lines 85-115 for the workaround. Future improvement: use a global navigation queue or portal-based approach to decouple modal lifecycle from navigation timing.
+
 ### Components
 | Component | Location | Purpose |
 |-----------|----------|---------|

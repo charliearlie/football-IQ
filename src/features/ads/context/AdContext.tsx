@@ -17,11 +17,12 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { Platform, AppState, AppStateStatus } from 'react-native';
+import { Platform, AppState, AppStateStatus, Alert } from 'react-native';
 import { useAuth } from '@/features/auth';
 import { UnlockedPuzzle } from '@/types/database';
 import { getValidAdUnlocks, saveAdUnlock } from '@/lib/database';
 import { isPuzzleInUnlocks } from '../services/adUnlockService';
+import { fetchAndSavePuzzle } from '../services/puzzleFetchService';
 import { AdContextValue, RewardedAdState } from '../types/ads.types';
 import { isAdsSupportedPlatform, getAdUnitId } from '../config/adUnits';
 
@@ -141,7 +142,15 @@ export function AdProvider({ children }: AdProviderProps) {
   const grantAdUnlock = useCallback(
     async (puzzleId: string): Promise<void> => {
       try {
+        // Save the unlock record
         await saveAdUnlock(puzzleId);
+
+        // Fetch and save full puzzle content from Supabase
+        // This ensures the puzzle data is available locally for free users
+        // who haven't synced archive puzzles (only last 7 days are synced)
+        await fetchAndSavePuzzle(puzzleId);
+
+        // Refresh ad unlocks state
         await refreshAdUnlocks();
       } catch (error) {
         console.error('Failed to grant ad unlock:', error);
@@ -159,6 +168,7 @@ export function AdProvider({ children }: AdProviderProps) {
   }, []);
 
   // Load a rewarded ad using the actual SDK
+  // Returns a Promise that resolves when ad is loaded or rejects on error
   const loadRewardedAd = useCallback(async (): Promise<void> => {
     if (!shouldShowAds) {
       return;
@@ -180,77 +190,89 @@ export function AdProvider({ children }: AdProviderProps) {
 
     setRewardedAdState('loading');
 
-    try {
-      const rewarded = RewardedAd.createForAdRequest(adUnitId, {
-        requestNonPersonalizedAdsOnly: false,
-      });
+    // Return a Promise that resolves when ad is loaded
+    return new Promise<void>((resolve, reject) => {
+      try {
+        const rewarded = RewardedAd.createForAdRequest(adUnitId, {
+          requestNonPersonalizedAdsOnly: false,
+        });
 
-      // Set up event listeners
-      const unsubscribeLoaded = rewarded.addAdEventListener(
-        RewardedAdEventType.LOADED,
-        () => {
-          setRewardedAdState('loaded');
-        }
-      );
-
-      const unsubscribeError = rewarded.addAdEventListener(
-        AdEventType.ERROR,
-        (error: Error) => {
-          console.error('[AdContext] Rewarded ad error:', error);
-          setRewardedAdState('error');
-          cleanupRewardedAd();
-        }
-      );
-
-      const unsubscribeClosed = rewarded.addAdEventListener(
-        AdEventType.CLOSED,
-        () => {
-          // If user closed without earning reward, resolve with false
-          if (rewardCallbackRef.current) {
-            rewardCallbackRef.current(false);
-            rewardCallbackRef.current = null;
+        // Set up event listeners
+        const unsubscribeLoaded = rewarded.addAdEventListener(
+          RewardedAdEventType.LOADED,
+          () => {
+            setRewardedAdState('loaded');
+            resolve(); // Resolve when ad is loaded
           }
-          setRewardedAdState('idle');
-          cleanupRewardedAd();
-        }
-      );
+        );
 
-      const unsubscribeEarned = rewarded.addAdEventListener(
-        RewardedAdEventType.EARNED_REWARD,
-        () => {
-          setRewardedAdState('rewarded');
-          // User earned the reward
-          if (rewardCallbackRef.current) {
-            rewardCallbackRef.current(true);
-            rewardCallbackRef.current = null;
+        const unsubscribeError = rewarded.addAdEventListener(
+          AdEventType.ERROR,
+          (error: Error) => {
+            console.error('[AdContext] Rewarded ad error:', error);
+            setRewardedAdState('error');
+            cleanupRewardedAd();
+            reject(error); // Reject on error
           }
-        }
-      );
+        );
 
-      // Store reference and unsubscribers for cleanup
-      rewardedAdRef.current = rewarded;
-      unsubscribersRef.current = [
-        unsubscribeLoaded,
-        unsubscribeError,
-        unsubscribeClosed,
-        unsubscribeEarned,
-      ];
+        const unsubscribeClosed = rewarded.addAdEventListener(
+          AdEventType.CLOSED,
+          () => {
+            // If user closed without earning reward, resolve with false
+            if (rewardCallbackRef.current) {
+              rewardCallbackRef.current(false);
+              rewardCallbackRef.current = null;
+            }
+            setRewardedAdState('idle');
+            cleanupRewardedAd();
+          }
+        );
 
-      // Load the ad
-      rewarded.load();
-    } catch (error) {
-      console.error('[AdContext] Failed to create rewarded ad:', error);
-      setRewardedAdState('error');
-    }
+        const unsubscribeEarned = rewarded.addAdEventListener(
+          RewardedAdEventType.EARNED_REWARD,
+          () => {
+            setRewardedAdState('rewarded');
+            // User earned the reward
+            if (rewardCallbackRef.current) {
+              rewardCallbackRef.current(true);
+              rewardCallbackRef.current = null;
+            }
+          }
+        );
+
+        // Store reference and unsubscribers for cleanup
+        rewardedAdRef.current = rewarded;
+        unsubscribersRef.current = [
+          unsubscribeLoaded,
+          unsubscribeError,
+          unsubscribeClosed,
+          unsubscribeEarned,
+        ];
+
+        // Load the ad
+        rewarded.load();
+      } catch (error) {
+        console.error('[AdContext] Failed to create rewarded ad:', error);
+        setRewardedAdState('error');
+        reject(error);
+      }
+    });
   }, [shouldShowAds, cleanupRewardedAd]);
 
   // Show the loaded rewarded ad
   const showRewardedAd = useCallback(async (): Promise<boolean> => {
-    if (!shouldShowAds || rewardedAdState !== 'loaded') {
+    if (!shouldShowAds) {
       return false;
     }
 
-    if (!rewardedAdRef.current) {
+    // Handle case where ad is not loaded yet
+    if (rewardedAdState !== 'loaded' || !rewardedAdRef.current) {
+      Alert.alert(
+        'Ad Not Ready',
+        'The ad is still loading. Please wait a moment and try again.',
+        [{ text: 'OK' }]
+      );
       return false;
     }
 
@@ -263,6 +285,11 @@ export function AdProvider({ children }: AdProviderProps) {
         rewardedAdRef.current.show();
       } catch (error) {
         console.error('[AdContext] Failed to show rewarded ad:', error);
+        Alert.alert(
+          'Ad Error',
+          'Failed to show the ad. Please try again later.',
+          [{ text: 'OK' }]
+        );
         setRewardedAdState('error');
         rewardCallbackRef.current = null;
         resolve(false);

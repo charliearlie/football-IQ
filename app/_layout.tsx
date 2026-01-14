@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases from 'react-native-purchases';
 import { colors, fonts } from '@/theme';
@@ -115,7 +116,7 @@ export default function RootLayout() {
     initRevenueCat();
   }, []);
 
-  // Initialize Google Mobile Ads SDK
+  // Initialize Google Mobile Ads SDK (with ATT on iOS)
   useEffect(() => {
     const initMobileAds = async () => {
       // Skip on web or if module not available
@@ -125,6 +126,13 @@ export default function RootLayout() {
       }
 
       try {
+        // Request ATT permission on iOS BEFORE initializing ads
+        // This ensures ad personalization status is known before ad requests
+        if (Platform.OS === 'ios') {
+          const { status } = await requestTrackingPermissionsAsync();
+          console.log('[ATT] Tracking permission status:', status);
+        }
+
         await MobileAds().initialize();
         console.log('[MobileAds] SDK initialized successfully');
         setAdsReady(true);
