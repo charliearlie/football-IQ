@@ -69,12 +69,21 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     }
   }, [state.gameStatus, state.attemptSaved, isReviewMode]);
 
-  // Parse review mode cells from attempt metadata
+  // Parse review mode cells from attempt metadata with defensive type checking
   const reviewCells: (FilledCell | null)[] | null = React.useMemo(() => {
     if (!isReviewMode || !attempt?.metadata) return null;
 
+    // Defensive type check before casting
+    if (typeof attempt.metadata !== 'object' || Array.isArray(attempt.metadata) || attempt.metadata === null) {
+      return null;
+    }
+
     const metadata = attempt.metadata as TheGridAttemptMetadata;
-    return metadata.cells || null;
+    // Validate cells array exists and is an array
+    if (!metadata.cells || !Array.isArray(metadata.cells)) {
+      return null;
+    }
+    return metadata.cells;
   }, [isReviewMode, attempt?.metadata]);
 
   // Handle player selection from overlay
@@ -163,7 +172,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           <View style={styles.reviewScoreContainer}>
             <Text style={styles.reviewScoreLabel}>Final Score</Text>
             <Text style={styles.reviewScoreValue}>
-              {attempt.score}
+              {typeof attempt.score === 'number' ? attempt.score : 0}
               <Text style={styles.reviewScoreMax}>/100</Text>
             </Text>
           </View>

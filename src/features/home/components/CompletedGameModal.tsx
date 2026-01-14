@@ -115,8 +115,13 @@ export function CompletedGameModal({
   onReview,
   testID,
 }: CompletedGameModalProps) {
-  // Parse metadata safely
-  const metadata = (attempt.metadata as GameMetadata) || {};
+  // Parse metadata safely with type guard
+  const metadata: GameMetadata = (() => {
+    if (!attempt.metadata || typeof attempt.metadata !== 'object' || Array.isArray(attempt.metadata)) {
+      return {};
+    }
+    return attempt.metadata as GameMetadata;
+  })();
   const won = metadata.won ?? true; // Default to won if not specified
 
   // Extract display data

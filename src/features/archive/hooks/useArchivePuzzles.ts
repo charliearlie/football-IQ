@@ -79,16 +79,9 @@ export function useArchivePuzzles(
         hasCompletedAttempt  // NEW: Pass completion status
       );
 
-      // Log lock checks for recent puzzles (diagnostic logging)
-      if (entry.puzzle_date >= '2026-01-10') {
-        console.log('[useArchivePuzzles] Lock check:', {
-          puzzleId: entry.id,
-          puzzleDate: entry.puzzle_date,
-          isPremium,
-          hasCompletedAttempt,
-          adUnlocksCount: allUnlocks.length,
-          isLocked,
-        });
+      // Development-only logging for lock checks
+      if (__DEV__ && entry.puzzle_date >= '2026-01-10') {
+        console.log('[useArchivePuzzles] Lock check:', entry.id, isLocked);
       }
 
       // Determine status and extract display data
@@ -128,7 +121,7 @@ export function useArchivePuzzles(
    */
   const loadPage = useCallback(
     async (pageNum: number, reset: boolean = false) => {
-      console.log(`[Archive:loadPage] START pageNum=${pageNum} reset=${reset}`);
+      if (__DEV__) console.log(`[Archive:loadPage] START pageNum=${pageNum} reset=${reset}`);
       // Set flag to prevent lock recheck effect from running during load (race condition fix)
       isLoadingOperation.current = true;
 
@@ -143,13 +136,13 @@ export function useArchivePuzzles(
           // Special handling for incomplete filter - query puzzles without completed attempts
           entries = await getCatalogEntriesIncomplete(offset, PAGE_SIZE);
           totalCount = await getCatalogEntryCountIncomplete();
-          console.log(`[Archive:loadPage] Incomplete filter: ${entries.length} entries, ${totalCount} total`);
+          if (__DEV__) console.log(`[Archive:loadPage] Incomplete filter: ${entries.length} entries, ${totalCount} total`);
         } else {
           // Standard filtering by game mode
           const gameMode = filter === 'all' ? null : filter;
           entries = await getCatalogEntriesPaginated(offset, PAGE_SIZE, gameMode);
           totalCount = await getCatalogEntryCount(gameMode);
-          console.log(`[Archive:loadPage] Standard filter (${filter}): ${entries.length} entries`);
+          if (__DEV__) console.log(`[Archive:loadPage] Standard filter (${filter}): ${entries.length} entries`);
         }
 
         // Check if there are more pages
@@ -158,28 +151,28 @@ export function useArchivePuzzles(
 
         // Fetch ad unlocks ONCE for this page load (performance optimization)
         const allUnlocks = await getValidAdUnlocks();
-        console.log(`[Archive:loadPage] Fetched ${allUnlocks.length} ad unlocks`);
+        if (__DEV__) console.log(`[Archive:loadPage] Fetched ${allUnlocks.length} ad unlocks`);
 
         // Transform entries to ArchivePuzzles, passing unlocks to each
         // Note: Future-dated puzzles are already filtered out at the SQL level
         const transformed = await Promise.all(entries.map(entry => transformEntry(entry, allUnlocks)));
-        console.log(`[Archive:loadPage] Transformed ${transformed.length} puzzles, first 3:`, transformed.slice(0, 3).map(p => p.puzzleDate));
+        if (__DEV__) console.log(`[Archive:loadPage] Transformed ${transformed.length} puzzles, first 3:`, transformed.slice(0, 3).map(p => p.puzzleDate));
 
         // Update state
         if (reset) {
-          console.log(`[Archive:loadPage] RESET: Setting ${transformed.length} puzzles`);
+          if (__DEV__) console.log(`[Archive:loadPage] RESET: Setting ${transformed.length} puzzles`);
           setPuzzles(transformed);
           setSections(groupByMonth(transformed));
         } else {
           setPuzzles((prev) => {
-            console.log(`[Archive:loadPage] APPEND: prev=${prev.length}, adding=${transformed.length}`);
+            if (__DEV__) console.log(`[Archive:loadPage] APPEND: prev=${prev.length}, adding=${transformed.length}`);
             const updated = [...prev, ...transformed];
             setSections(groupByMonth(updated));
             return updated;
           });
         }
       } finally {
-        console.log(`[Archive:loadPage] END`);
+        if (__DEV__) console.log(`[Archive:loadPage] END`);
         isLoadingOperation.current = false;
       }
     },
@@ -190,17 +183,17 @@ export function useArchivePuzzles(
    * Initial load - sync catalog and load first page.
    */
   const initialLoad = useCallback(async () => {
-    console.log('[Archive:initialLoad] START');
+    if (__DEV__) console.log('[Archive:initialLoad] START');
     setIsLoading(true);
 
     try {
       // Sync catalog from Supabase if not done this session
       if (!catalogSynced.current) {
-        console.log('[Archive:initialLoad] Syncing catalog from Supabase');
+        if (__DEV__) console.log('[Archive:initialLoad] Syncing catalog from Supabase');
         // ALWAYS do full sync (pass null) - incremental sync was causing data loss
         const syncResult = await syncCatalogFromSupabase(null);
-        console.log('[Archive:initialLoad] Sync result:', syncResult.success, 'count:', syncResult.syncedCount);
-        if (!syncResult.success) {
+        if (__DEV__) console.log('[Archive:initialLoad] Sync result:', syncResult.success, 'count:', syncResult.syncedCount);
+        if (!syncResult.success && __DEV__) {
           console.error('[Archive:initialLoad] Sync FAILED:', syncResult.error);
         }
         catalogSynced.current = true;
@@ -209,11 +202,11 @@ export function useArchivePuzzles(
       // Reset pagination and load first page
       setPage(0);
       await loadPage(0, true);
-      console.log('[Archive:initialLoad] Load complete');
+      if (__DEV__) console.log('[Archive:initialLoad] Load complete');
     } catch (error) {
-      console.error('Archive initial load error:', error);
+      if (__DEV__) console.error('Archive initial load error:', error);
     } finally {
-      console.log('[Archive:initialLoad] END - setting isLoading=false');
+      if (__DEV__) console.log('[Archive:initialLoad] END - setting isLoading=false');
       setIsLoading(false);
       hasInitiallyLoaded.current = true;
     }
@@ -239,8 +232,8 @@ export function useArchivePuzzles(
     try {
       // Force full resync (null = no timestamp filter)
       const syncResult = await syncCatalogFromSupabase(null);
-      console.log('[Archive:refresh] Sync result:', syncResult.success, 'count:', syncResult.syncedCount);
-      if (!syncResult.success) {
+      if (__DEV__) console.log('[Archive:refresh] Sync result:', syncResult.success, 'count:', syncResult.syncedCount);
+      if (!syncResult.success && __DEV__) {
         console.error('[Archive:refresh] Sync FAILED:', syncResult.error);
       }
 
@@ -248,7 +241,7 @@ export function useArchivePuzzles(
       setPage(0);
       await loadPage(0, true);
     } catch (error) {
-      console.error('Archive refresh error:', error);
+      if (__DEV__) console.error('Archive refresh error:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -265,29 +258,31 @@ export function useArchivePuzzles(
     useCallback(() => {
       // Skip the initial focus event - initialLoad handles that
       if (!hasInitiallyLoaded.current) {
-        console.log('[Archive:focus] Skipping - initial load not complete');
+        if (__DEV__) console.log('[Archive:focus] Skipping - initial load not complete');
         return;
       }
 
-      console.log('[Archive:focus] Screen focused, starting sync');
+      if (__DEV__) console.log('[Archive:focus] Screen focused, starting sync');
       const syncAndReload = async () => {
         try {
           // ALWAYS do full sync (pass null) - incremental sync was causing data loss
           const syncResult = await syncCatalogFromSupabase(null);
-          console.log(
-            '[Archive:focus] Sync result:',
-            syncResult.success,
-            'count:',
-            syncResult.syncedCount
-          );
-          if (!syncResult.success) {
+          if (__DEV__) {
+            console.log(
+              '[Archive:focus] Sync result:',
+              syncResult.success,
+              'count:',
+              syncResult.syncedCount
+            );
+          }
+          if (!syncResult.success && __DEV__) {
             console.error('[Archive:focus] Sync FAILED:', syncResult.error);
           }
-          console.log('[Archive:focus] Loading page');
+          if (__DEV__) console.log('[Archive:focus] Loading page');
           await loadPage(0, true);
-          console.log('[Archive:focus] Load complete');
+          if (__DEV__) console.log('[Archive:focus] Load complete');
         } catch (error) {
-          console.error('Archive focus sync error:', error);
+          if (__DEV__) console.error('Archive focus sync error:', error);
         }
       };
       syncAndReload();

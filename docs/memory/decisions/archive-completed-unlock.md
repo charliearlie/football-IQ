@@ -105,14 +105,13 @@ Added special SQL query handling for incomplete filter:
 - Performance optimized with index on `attempts(puzzle_id, completed)`
 - New functions: `getCatalogEntriesIncomplete()` and `getCatalogEntryCountIncomplete()`
 
-### 2. Anonymous User Attempt Syncing (RLS Policy Update)
-Fixed RLS policy to allow anonymous users to insert puzzle attempts:
-- Migration: `supabase/migrations/010_allow_anonymous_attempts.sql`
-- Policy change: Split "Own attempts" policy into 4 separate policies (INSERT, SELECT, UPDATE, DELETE)
-- Anonymous INSERT: Allows `auth.uid() IS NULL` with client-generated UUID as user_id
-- Grants `INSERT` and `SELECT` permissions to `anon` role
-- Updated `attemptSyncService.ts` to use `userId ?? attempt.id` for anonymous users
-- Updated `PuzzleContext.tsx` to allow sync for both authenticated and anonymous users
+### 2. Anonymous User Attempt Syncing (Updated 2026-01-14)
+Anonymous users via `signInAnonymously()` already have a persistent `user.id` from Supabase.
+- Migration: `012_safe_attempt_upsert.sql` - Hardened RLS policies, removed overly permissive anon role
+- Key insight: The original `010_allow_anonymous_attempts.sql` was incorrectly permissive
+- `PuzzleContext.tsx` now guards against null userId (waits for auth to initialize)
+- `attemptSyncService.ts` requires non-null userId (no fallback to attempt.id)
+- See decision doc: `decisions/sync-safety-completion-protection.md`
 
 ## References
 

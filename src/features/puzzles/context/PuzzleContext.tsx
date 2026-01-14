@@ -111,10 +111,18 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   /**
    * Sync local attempts to Supabase.
    * Supports both authenticated and anonymous users.
+   * Requires userId to be available (auth must be initialized).
    */
   const syncAttempts = useCallback(async (): Promise<SyncResult> => {
     try {
-      // Allow sync for both authenticated and anonymous users
+      // Guard: Don't sync if auth hasn't provided a user ID yet
+      // Anonymous users via signInAnonymously() have a persistent user.id
+      if (!userId) {
+        if (__DEV__) {
+          console.log('[PuzzleContext] Skipping attempt sync - no user ID available');
+        }
+        return { success: true, syncedCount: 0 };
+      }
       const result = await syncAttemptsToSupabase(userId);
       return result;
     } catch (err) {
