@@ -15,7 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import { usePuzzle } from '@/features/puzzles/hooks/usePuzzle';
+import { useStablePuzzle } from '@/features/puzzles/hooks/useStablePuzzle';
 import { isPuzzleLocked } from '@/features/archive/utils/dateGrouping';
 import { getValidAdUnlocks } from '@/lib/database';
 import type { UnlockedPuzzle } from '@/types/database';
@@ -71,7 +71,7 @@ export function PremiumGate({
 }: PremiumGateProps): React.ReactElement {
   const router = useRouter();
   const { profile, isLoading: isAuthLoading } = useAuth();
-  const { puzzle, isLoading: isPuzzleLoading } = usePuzzle(puzzleId);
+  const { puzzle, isLoading: isPuzzleLoading } = useStablePuzzle(puzzleId);
 
   // Local state for ad unlocks (fetched directly from database)
   const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[]>([]);
