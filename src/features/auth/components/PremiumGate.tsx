@@ -11,13 +11,14 @@
  * If unauthorized, navigates to the premium modal and goes back when closed.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { usePuzzle } from '@/features/puzzles/hooks/usePuzzle';
 import { isPuzzleLocked } from '@/features/archive/utils/dateGrouping';
-import { useAdsOptional } from '@/features/ads';
+import { getValidAdUnlocks } from '@/lib/database';
+import type { UnlockedPuzzle } from '@/features/ads/types/ads.types';
 import { colors } from '@/theme/colors';
 
 /**
@@ -71,14 +72,31 @@ export function PremiumGate({
   const router = useRouter();
   const { profile, isLoading: isAuthLoading } = useAuth();
   const { puzzle, isLoading: isPuzzleLoading } = usePuzzle(puzzleId);
-  const adsContext = useAdsOptional();
+
+  // Local state for ad unlocks (fetched directly from database)
+  const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[]>([]);
+  const [isLoadingUnlocks, setIsLoadingUnlocks] = useState(true);
 
   // Guard against re-triggering navigation
   const hasNavigatedRef = useRef(false);
 
   const isPremium = profile?.is_premium ?? false;
-  const isLoading = isAuthLoading || isPuzzleLoading;
-  const adUnlocks = adsContext?.adUnlocks;
+  const isLoading = isAuthLoading || isPuzzleLoading || isLoadingUnlocks;
+
+  // Fetch ad unlocks directly from database
+  useEffect(() => {
+    const fetchUnlocks = async () => {
+      try {
+        const unlocks = await getValidAdUnlocks();
+        setAdUnlocks(unlocks);
+      } catch (error) {
+        console.error('[PremiumGate] Failed to load ad unlocks:', error);
+      } finally {
+        setIsLoadingUnlocks(false);
+      }
+    };
+    fetchUnlocks();
+  }, []);
 
   // Check if puzzle is ad-unlocked (doesn't require puzzle data from context)
   const isAdUnlocked = adUnlocks?.some(u => u.puzzle_id === puzzleId) ?? false;

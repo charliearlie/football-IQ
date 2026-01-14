@@ -8,15 +8,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useAuth } from '@/features/auth';
-import { useAds } from '@/features/ads';
 import {
   getCatalogEntriesPaginated,
   getCatalogEntryCount,
-  getPuzzle,
   getAttemptByPuzzleId,
+  getValidAdUnlocks,
 } from '@/lib/database';
-import { LocalCatalogEntry } from '@/types/database';
-import { ParsedLocalAttempt } from '@/types/database';
+import { LocalCatalogEntry, ParsedLocalAttempt, UnlockedPuzzle } from '@/types/database';
 import {
   ArchivePuzzle,
   ArchiveSection,
@@ -40,7 +38,6 @@ export function useArchivePuzzles(
   filter: GameModeFilter
 ): UseArchivePuzzlesResult {
   const { profile } = useAuth();
-  const { adUnlocks } = useAds();
   const isPremium = profile?.is_premium ?? false;
 
   const [puzzles, setPuzzles] = useState<ArchivePuzzle[]>([]);
@@ -61,32 +58,38 @@ export function useArchivePuzzles(
 
   /**
    * Transform catalog entry to ArchivePuzzle with lock and status info.
+   *
+   * Performance: We accept ad unlocks as a parameter to avoid fetching from database
+   * for every puzzle. The caller fetches once and passes to all transforms.
    */
   const transformEntry = useCallback(
-    async (entry: LocalCatalogEntry): Promise<ArchivePuzzle> => {
-      // ALWAYS check lock status first based on date, premium, and ad unlocks
-      // This ensures the 7-day rolling window is enforced even for cached puzzles
-      const isLocked = isPuzzleLocked(entry.puzzle_date, isPremium, entry.id, adUnlocks);
+    async (entry: LocalCatalogEntry, allUnlocks: UnlockedPuzzle[]): Promise<ArchivePuzzle> => {
+      // Check lock status with provided unlocks
+      let isLocked = isPuzzleLocked(
+        entry.puzzle_date,
+        isPremium,
+        entry.id,
+        allUnlocks
+      );
 
-      // Only fetch puzzle data and attempt status if not locked
+      // Only fetch heavy data for unlocked puzzles
       let status: 'play' | 'resume' | 'done' = 'play';
       let scoreDisplay: string | undefined;
       let score: number | undefined;
       let attemptData: ParsedLocalAttempt | undefined;
 
       if (!isLocked) {
-        const fullPuzzle = await getPuzzle(entry.id);
-        if (fullPuzzle) {
-          const attempt = await getAttemptByPuzzleId(entry.id);
-          if (attempt) {
-            if (attempt.completed) {
-              status = 'done';
-              scoreDisplay = attempt.score_display ?? undefined;
-              score = attempt.score ?? undefined;
-              attemptData = attempt;
-            } else {
-              status = 'resume';
-            }
+        const attempt = await getAttemptByPuzzleId(entry.id);
+        if (attempt) {
+          if (attempt.completed) {
+            status = 'done';
+            scoreDisplay = attempt.score_display ?? undefined;
+            score = attempt.score ?? undefined;
+            attemptData = attempt;
+            // Completed puzzles are NEVER locked (can always view results)
+            isLocked = false;
+          } else {
+            status = 'resume';
           }
         }
       }
@@ -103,7 +106,7 @@ export function useArchivePuzzles(
         attempt: attemptData,
       };
     },
-    [isPremium, adUnlocks]
+    [isPremium]
   );
 
   /**
@@ -116,6 +119,7 @@ export function useArchivePuzzles(
       isLoadingOperation.current = true;
 
       try {
+        // Get game mode filter
         const gameMode = filter === 'all' ? null : filter;
         const offset = pageNum * PAGE_SIZE;
 
@@ -132,9 +136,13 @@ export function useArchivePuzzles(
         const loadedCount = offset + entries.length;
         setHasMore(loadedCount < totalCount);
 
-        // Transform entries to ArchivePuzzles
+        // Fetch ad unlocks ONCE for this page load (performance optimization)
+        const allUnlocks = await getValidAdUnlocks();
+        console.log(`[Archive:loadPage] Fetched ${allUnlocks.length} ad unlocks`);
+
+        // Transform entries to ArchivePuzzles, passing unlocks to each
         // Note: Future-dated puzzles are already filtered out at the SQL level
-        const transformed = await Promise.all(entries.map(transformEntry));
+        const transformed = await Promise.all(entries.map(entry => transformEntry(entry, allUnlocks)));
         console.log(`[Archive:loadPage] Transformed ${transformed.length} puzzles, first 3:`, transformed.slice(0, 3).map(p => p.puzzleDate));
 
         // Update state
@@ -265,44 +273,6 @@ export function useArchivePuzzles(
       syncAndReload();
     }, [loadPage])
   );
-
-  // Use a ref to access current puzzles without adding to dependencies
-  // This prevents infinite loops when setPuzzles updates the array
-  const puzzlesRef = useRef(puzzles);
-  puzzlesRef.current = puzzles;
-
-  // Re-check lock status when premium status or ad unlocks change
-  useEffect(() => {
-    console.log(`[Archive:lockRecheck] Effect triggered - isLoadingOp=${isLoadingOperation.current}, isLoading=${isLoading}, puzzlesRef.length=${puzzlesRef.current.length}`);
-
-    // CRITICAL: Skip if a load operation is in progress to prevent race condition
-    // where stale puzzlesRef data overwrites fresh data being loaded
-    if (isLoadingOperation.current) {
-      console.log('[Archive:lockRecheck] SKIPPED - load operation in progress');
-      return;
-    }
-
-    const currentPuzzles = puzzlesRef.current;
-    if (isLoading || currentPuzzles.length === 0) {
-      console.log(`[Archive:lockRecheck] SKIPPED - isLoading=${isLoading}, puzzles=${currentPuzzles.length}`);
-      return;
-    }
-
-    // Re-check lock status for all puzzles
-    // ALWAYS check lock status based on date, premium, and ad unlocks
-    // This ensures the 7-day rolling window is enforced correctly
-    const recheck = async () => {
-      console.log(`[Archive:lockRecheck] Rechecking ${currentPuzzles.length} puzzles, first 3:`, currentPuzzles.slice(0, 3).map(p => p.puzzleDate));
-      const updated = currentPuzzles.map((p) => {
-        const isLocked = isPuzzleLocked(p.puzzleDate, isPremium, p.id, adUnlocks);
-        return { ...p, isLocked };
-      });
-      console.log(`[Archive:lockRecheck] SETTING ${updated.length} puzzles`);
-      setPuzzles(updated);
-      setSections(groupByMonth(updated));
-    };
-    recheck();
-  }, [isPremium, adUnlocks, isLoading]); // puzzles accessed via ref to avoid dep cycle
 
   return {
     sections,
