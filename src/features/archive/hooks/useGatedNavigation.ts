@@ -80,7 +80,14 @@ export function useGatedNavigation(
       const route = GAME_MODE_ROUTES[puzzle.gameMode];
       if (route) {
         // Navigate to dynamic route with puzzle ID
-        const href = `/${route}/${puzzle.id}` as Href;
+        // Navigate to dynamic route with puzzle ID and Date for synchronous checks
+        const href = {
+          pathname: `/${route}/[puzzleId]`,
+          params: { 
+            puzzleId: puzzle.id,
+            puzzleDate: puzzle.puzzleDate // Pass date for PremiumGate sync check
+          }
+        } as unknown as Href;
         router.push(href);
       }
     },

@@ -12,6 +12,7 @@ import {
   ArrowRightLeft,
   Target,
   Grid3X3,
+  CircleDashed,
 } from 'lucide-react-native';
 import { colors, textStyles, spacing, borderRadius, shadows } from '@/theme';
 import { GameModeFilter as FilterType, GameMode } from '../types/archive.types';
@@ -41,6 +42,12 @@ const FILTER_OPTIONS: FilterOption[] = [
     label: 'All',
     icon: <LayoutGrid size={18} />,
     iconColor: colors.floodlightWhite,
+  },
+  {
+    value: 'incomplete',
+    label: 'Incomplete',
+    icon: <CircleDashed size={18} />,
+    iconColor: colors.cardYellow,
   },
   {
     value: 'career_path',

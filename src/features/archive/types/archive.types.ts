@@ -62,9 +62,10 @@ export interface ArchiveSection {
 
 /**
  * Game mode filter for archive browsing.
- * 'all' shows all game modes, or filter by specific mode.
+ * 'all' shows all game modes, 'incomplete' shows unfinished puzzles,
+ * or filter by specific mode.
  */
-export type GameModeFilter = 'all' | GameMode;
+export type GameModeFilter = 'all' | 'incomplete' | GameMode;
 
 /**
  * Filter option for the horizontal filter bar.

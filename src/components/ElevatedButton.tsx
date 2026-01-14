@@ -76,6 +76,8 @@ export interface ElevatedButtonProps {
   fullWidth?: boolean;
   /** Additional container styles */
   style?: ViewStyle;
+  /** Custom text styles (overrides size config) */
+  textStyle?: TextStyle;
   /** Test ID for testing */
   testID?: string;
 }
@@ -129,6 +131,7 @@ export function ElevatedButton({
   disabled = false,
   fullWidth = false,
   style,
+  textStyle,
   testID,
 }: ElevatedButtonProps) {
   const pressed = useSharedValue(0);
@@ -195,7 +198,7 @@ export function ElevatedButton({
     >
       <View style={styles.content}>
         {icon && <View style={styles.iconContainer}>{icon}</View>}
-        <Text style={[sizeConfig.textStyle, { color: textColor }]}>
+        <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
           {title}
         </Text>
       </View>

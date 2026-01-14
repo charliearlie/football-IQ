@@ -1391,11 +1391,13 @@ function isPuzzleLocked(puzzleDate: string, isPremium: boolean): boolean {
 }
 ```
 
+**Important:** Completed puzzles are **permanently unlocked** for viewing results, regardless of the 7-day window. The lock check is bypassed if `status === 'done'`, allowing users to always view their past performance even for old puzzles.
+
 ### Screen Layout
 ```
 Archive Screen
 ├── Header: "Archive" (h1)
-├── GameModeFilter: Horizontal scroll chips (All, Career Path, etc.)
+├── GameModeFilter: Horizontal scroll chips (All, Incomplete, Career Path, etc.)
 ├── ArchiveList (SectionList)
 │   ├── MonthHeader: "December 2024" (sticky, cardYellow)
 │   ├── UniversalGameCard (variant="archive", isLocked based on premium status)
@@ -1410,14 +1412,25 @@ Uses `UniversalGameCard` (shared with Home screen):
 |--------|----------|-----|
 | play | false | Green "Play" button, date shown above title |
 | resume | false | Yellow "Resume" button |
-| done | false | Yellow "Result" button + emoji grid |
-| any | true | **Vibrant card** with gold border + Crown "Unlock" button (no opacity dimming) |
+| done | false | Yellow "Result" button + emoji grid (always unlocked for viewing) |
+| play/resume | true | **Vibrant card** with gold border + Crown "Unlock" button (no opacity dimming) |
+
+**Important:** Completed puzzles (`status === 'done'`) are NEVER locked, even if older than 7 days. Users can always view their past results.
 
 **Velvet Rope UX (Updated 2026-01-12):**
 - Locked cards stay **fully opaque** to create desire, not frustration
 - Gold border (`rgba(250, 204, 21, 0.3)`) differentiates locked from unlocked
 - Crown icon + "Unlock" button replaces static lock icon (premium CTA)
 - Heavy haptic feedback on locked press reinforces "hitting a gate"
+
+### Filters
+| Filter | Description |
+|--------|-------------|
+| All | Shows all puzzles across all game modes |
+| Incomplete | Shows only puzzles with `status !== 'done'` (not started OR in-progress), across all game modes and dates |
+| Career Path, The Grid, etc. | Shows only puzzles for that specific game mode |
+
+The Incomplete filter helps users focus on puzzles they haven't finished yet, regardless of whether they're locked or not.
 
 ### Components
 | Component | Purpose |

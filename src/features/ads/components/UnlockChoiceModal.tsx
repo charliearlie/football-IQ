@@ -10,6 +10,7 @@
  * - loading_ad: Loading rewarded ad
  * - showing_ad: Ad is being displayed
  * - ad_success: Ad completed, unlock granted (auto-closes)
+ * - redirecting: DEPRECATED (Removed for manual confirmation)
  * - ad_error: Ad failed to load/show
  * - premium_flow: Delegated to PremiumUpsellModal
  */
@@ -34,6 +35,7 @@ import {
   X,
   Check,
   AlertCircle,
+  ArrowRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -91,48 +93,37 @@ export function UnlockChoiceModal({
     }
   }, [visible, state, isRewardedAdReady, loadRewardedAd]);
 
-  // Auto-navigate after ad success
-  // CRITICAL: Capture values in a ref when ad succeeds to avoid race conditions.
-  const navigationRef = useRef<{ puzzleId: string; gameMode: typeof gameMode } | null>(null);
 
-  // Capture navigation params when entering ad_success state
-  useEffect(() => {
-    if (state === 'ad_success') {
-      navigationRef.current = { puzzleId, gameMode };
-    }
-  }, [state, puzzleId, gameMode]);
+  // IMPORTANT: No auto-navigation listeners.
+  // We rely entirely on the user pressing "Play Now" or "Close".
 
-  // Navigate after showing success message
-  useEffect(() => {
-    if (state === 'ad_success' && navigationRef.current) {
-      const nav = navigationRef.current;
-      const timer = setTimeout(() => {
-        const route = GAME_MODE_ROUTES[nav.gameMode];
-        if (route && nav.puzzleId) {
-          // Navigate FIRST, then close modal after a delay
-          // This prevents race conditions from onClose triggering re-renders
-          router.push({
-            pathname: `/${route}/[puzzleId]`,
-            params: { puzzleId: nav.puzzleId },
-          } as never);
-          // Close modal after navigation has started
-          setTimeout(() => onClose(), 100);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
+  /**
+   * Handle "Play Now" press (Manual Navigation)
+   */
+  const handlePlayNow = useCallback(() => {
+    const route = GAME_MODE_ROUTES[gameMode];
+    if (route && puzzleId) {
+      // 1. Close Modal (to clear overlay)
+      onClose();
+      
+      // 2. Navigate (with small delay to allow modal to close cleanly)
+      setTimeout(() => {
+         router.push({
+          pathname: `/${route}/[puzzleId]`,
+          params: { 
+            puzzleId, 
+            puzzleDate // Synchronous access check
+          },
+        } as never);
+      }, 100);
     }
-  }, [state, router, onClose]);
+  }, [gameMode, puzzleId, puzzleDate, router, onClose]);
 
   /**
    * Handle "Go Premium" button press.
-   * Closes this modal and navigates to the native premium modal.
-   * Uses delay to let RN Modal animate out before navigating.
-   * Note: Navigation happens regardless of mount state (safe to do after unmount).
    */
   const handleGoPremium = useCallback(() => {
     onClose();
-    // Small delay to let the RN Modal animate out before navigating
-    // Don't check isMountedRef here - router.push is safe after unmount
     setTimeout(() => {
       router.push({
         pathname: '/premium-modal',
@@ -159,18 +150,13 @@ export function UnlockChoiceModal({
       const rewarded = await showRewardedAd();
 
       if (rewarded) {
-        // Grant the unlock (also fetches and saves puzzle to SQLite)
+        // Grant the unlock
         await grantAdUnlock(puzzleId);
-
-        // Note: Don't call refreshLocalPuzzles() here - it reads ALL puzzles
-        // and can block the JS thread. useStablePuzzle will fetch the puzzle
-        // directly from SQLite on the game screen.
 
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {
-          // Haptics not available on all devices - ignore
-        }
+        } catch { /* ignore */ }
+        
         if (isMountedRef.current) {
           setState('ad_success');
         }
@@ -211,15 +197,17 @@ export function UnlockChoiceModal({
           entering={SlideInDown.springify().damping(15).stiffness(100)}
           style={styles.modal}
         >
-          {/* Close Button */}
-          <Pressable
-            style={styles.closeButton}
-            onPress={onClose}
-            hitSlop={12}
-            testID={`${testID}-close`}
-          >
-            <X size={24} color={colors.textSecondary} />
-          </Pressable>
+          {/* Close Button - Always visible except when loading/showing ad or SUCCESS (handled by back link) */}
+          {state !== 'loading_ad' && state !== 'showing_ad' && state !== 'ad_success' && (
+            <Pressable
+              style={styles.closeButton}
+              onPress={onClose}
+              hitSlop={12}
+              testID={`${testID}-close`}
+            >
+              <X size={24} color={colors.textSecondary} />
+            </Pressable>
+          )}
 
           {/* Icon */}
           <View
@@ -243,7 +231,7 @@ export function UnlockChoiceModal({
           {/* Subtitle */}
           <Text style={styles.subtitle}>
             {state === 'ad_success'
-              ? 'This puzzle is now permanently unlocked'
+              ? 'This puzzle is now unlocked forever.'
               : 'Choose how you want to access this puzzle'}
           </Text>
 
@@ -269,7 +257,11 @@ export function UnlockChoiceModal({
           )}
 
           {state === 'ad_success' && (
-            <SuccessContent testID={testID} />
+            <SuccessContent 
+              onPlayNow={handlePlayNow} 
+              onClose={onClose} 
+              testID={testID} 
+            />
           )}
 
           {state === 'ad_error' && (
@@ -302,7 +294,6 @@ function IdleContent({
 }) {
   return (
     <View style={styles.optionsContainer}>
-      {/* Premium Option */}
       <View style={styles.optionCard}>
         <View style={styles.optionHeader}>
           <Crown size={24} color={colors.cardYellow} />
@@ -323,14 +314,12 @@ function IdleContent({
         />
       </View>
 
-      {/* Divider */}
       <View style={styles.divider}>
         <View style={styles.dividerLine} />
         <Text style={styles.dividerText}>OR</Text>
         <View style={styles.dividerLine} />
       </View>
 
-      {/* Ad Option */}
       <View style={styles.optionCard}>
         <View style={styles.optionHeader}>
           <Play size={24} color={colors.pitchGreen} />
@@ -352,14 +341,13 @@ function IdleContent({
         />
       </View>
 
-      {/* Free label */}
       <Text style={styles.freeLabel}>FREE</Text>
     </View>
   );
 }
 
 /**
- * Loading state content - shows loading indicator.
+ * Loading state content.
  */
 function LoadingContent({ state }: { state: UnlockChoiceState }) {
   return (
@@ -376,20 +364,55 @@ function LoadingContent({ state }: { state: UnlockChoiceState }) {
 }
 
 /**
- * Success state content.
+ * Success state content with MANUAL navigation controls.
+ * Redesigned for a "gamified" look with prominent Play button.
  */
-function SuccessContent({ testID }: { testID?: string }) {
+function SuccessContent({ 
+  onPlayNow, 
+  onClose,
+  testID 
+}: { 
+  onPlayNow: () => void; 
+  onClose: () => void;
+  testID?: string;
+}) {
   return (
     <Animated.View
-      entering={FadeIn.duration(200)}
+      entering={FadeIn.duration(300).delay(100)}
       style={styles.successContainer}
     >
-      <Text style={styles.successText}>
-        Enjoy your puzzle!
-      </Text>
-      <Text style={styles.successSubtext}>
-        You can revisit this puzzle anytime
-      </Text>
+      <View style={styles.buttonContainer}>
+        {/* Play Now Button - Primary Action - LARGE and FUN */}
+        <ElevatedButton
+          title="PLAY NOW"
+          onPress={onPlayNow}
+          size="large"
+          topColor={colors.pitchGreen}
+          shadowColor={colors.grassShadow}
+          icon={<Play size={24} color={colors.stadiumNavy} fill={colors.stadiumNavy} />}
+          testID={`${testID}-play-now-button`}
+          style={{ width: '100%' }}
+          textStyle={{ 
+            fontSize: 20, 
+            letterSpacing: 1.5,
+            fontWeight: '800',
+            fontFamily: fonts.headline // Ensure font matches game aesthetic
+          }}
+        />
+
+        {/* Close/Archive Button - Secondary Action - Subtle but VISIBLE */}
+        <Pressable 
+          onPress={onClose}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+          ]}
+          hitSlop={12}
+          testID={`${testID}-success-close-button`}
+        >
+          <Text style={styles.secondaryButtonText}>Back to Archive</Text>
+        </Pressable>
+      </View>
     </Animated.View>
   );
 }
@@ -488,6 +511,7 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     textAlign: 'center',
+    marginBottom: spacing.md,
   },
   puzzleDate: {
     ...textStyles.bodySmall,
@@ -498,7 +522,7 @@ const styles = StyleSheet.create({
   // Options
   optionsContainer: {
     width: '100%',
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
     gap: spacing.md,
   },
   optionCard: {
@@ -565,20 +589,10 @@ const styles = StyleSheet.create({
   },
   // Success
   successContainer: {
+    width: '100%',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
-  },
-  successText: {
-    ...textStyles.body,
-    color: colors.pitchGreen,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  successSubtext: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.lg,
   },
   // Error
   errorContainer: {
@@ -595,6 +609,18 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.lg, // Increased gap for better separation
+  },
+  secondaryButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  secondaryButtonText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    letterSpacing: 0.5,
   },
 });

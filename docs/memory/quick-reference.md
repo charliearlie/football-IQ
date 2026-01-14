@@ -791,11 +791,18 @@ import {
 
 // Hook usage
 const { sections, isLoading, isRefreshing, hasMore, loadMore, refresh } = useArchivePuzzles('all');
-const { sections } = useArchivePuzzles('career_path'); // Filter by mode
+const { sections } = useArchivePuzzles('career_path');    // Filter by mode
+const { sections } = useArchivePuzzles('incomplete');     // Filter by incomplete
+
+// Filter types: 'all' | 'incomplete' | GameMode
+// 'incomplete' shows puzzles with status !== 'done' (not started OR in-progress)
 
 // Lock check
 isPuzzleLocked('2024-12-15', false) // true (>7 days, non-premium)
 isPuzzleLocked('2024-12-15', true)  // false (premium sees all)
+
+// IMPORTANT: Completed puzzles are PERMANENTLY unlocked for viewing results
+// Even if older than 7 days, completed puzzles show "Result" (not "Unlock")
 
 // Date formatting
 formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"

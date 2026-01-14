@@ -12,8 +12,9 @@ import { extractSingleParam } from '@/lib/routeParams';
  * - Shows upsell modal if puzzle is locked for free users
  */
 export default function TheGridRoute() {
-  const params = useLocalSearchParams<{ puzzleId: string }>();
+  const params = useLocalSearchParams<{ puzzleId: string; puzzleDate?: string }>();
   const puzzleId = extractSingleParam(params.puzzleId);
+  const puzzleDate = extractSingleParam(params.puzzleDate);
 
   // Guard against missing puzzleId (malformed deep links)
   if (!puzzleId) {
@@ -23,7 +24,7 @@ export default function TheGridRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
         <TheGridScreen puzzleId={puzzleId} />
       </PremiumGate>
     </>

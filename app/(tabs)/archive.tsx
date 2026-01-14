@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   useArchivePuzzles,
@@ -42,6 +42,16 @@ export default function ArchiveScreen() {
     loadMore,
     refresh,
   } = useArchivePuzzles(filter);
+
+  // NUCLEAR OPTION: Refresh archive list when screen comes into focus
+  // This ensures unlocked puzzles show correct state after returning from game
+  // No state synchronization - just fresh data from database
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[Archive] Screen focused, refreshing list');
+      refresh();
+    }, [refresh])
+  );
 
   /**
    * Use gated navigation hook for premium access control.

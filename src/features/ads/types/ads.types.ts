@@ -33,6 +33,7 @@ export type UnlockChoiceState =
   | 'loading_ad' // Loading rewarded ad
   | 'showing_ad' // Ad is being displayed
   | 'ad_success' // Ad completed, unlock granted
+  | 'redirecting' // Transition buffer before navigation
   | 'ad_error' // Ad failed to load/show
   | 'premium_flow'; // Delegated to PremiumUpsellModal
 
@@ -55,17 +56,8 @@ export interface AdContextValue {
   /** Show the loaded rewarded ad. Returns true if user earned reward. */
   showRewardedAd: () => Promise<boolean>;
 
-  /** All current valid ad unlocks (for reactive updates) */
-  adUnlocks: UnlockedPuzzle[];
-
-  /** Check if a specific puzzle is ad-unlocked */
-  isAdUnlockedPuzzle: (puzzleId: string) => boolean;
-
-  /** Grant an ad unlock for a puzzle */
+  /** Grant an ad unlock for a puzzle (saves to database only, no state updates) */
   grantAdUnlock: (puzzleId: string) => Promise<void>;
-
-  /** Refresh the list of ad unlocks from database */
-  refreshAdUnlocks: () => Promise<void>;
 }
 
 /**

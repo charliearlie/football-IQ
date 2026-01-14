@@ -14,8 +14,9 @@ import { extractSingleParam } from '@/lib/routeParams';
  * - Shows upsell modal if puzzle is locked for free users
  */
 export default function CareerPathRoute() {
-  const params = useLocalSearchParams<{ puzzleId: string; review?: string }>();
+  const params = useLocalSearchParams<{ puzzleId: string; puzzleDate?: string; review?: string }>();
   const puzzleId = extractSingleParam(params.puzzleId);
+  const puzzleDate = extractSingleParam(params.puzzleDate);
   const isReviewMode = params.review === 'true';
 
   // Guard against missing puzzleId (malformed deep links)
@@ -26,7 +27,7 @@ export default function CareerPathRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
         <CareerPathScreen puzzleId={puzzleId} isReviewMode={isReviewMode} />
       </PremiumGate>
     </>

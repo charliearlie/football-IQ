@@ -17,11 +17,9 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { Platform, AppState, AppStateStatus, Alert } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { useAuth } from '@/features/auth';
-import { UnlockedPuzzle } from '@/types/database';
-import { getValidAdUnlocks, saveAdUnlock } from '@/lib/database';
-import { isPuzzleInUnlocks } from '../services/adUnlockService';
+import { saveAdUnlock } from '@/lib/database';
 import { fetchAndSavePuzzle } from '../services/puzzleFetchService';
 import { AdContextValue, RewardedAdState } from '../types/ads.types';
 import { isAdsSupportedPlatform, getAdUnitId } from '../config/adUnits';
@@ -65,10 +63,6 @@ export function AdProvider({ children }: AdProviderProps) {
   const { profile } = useAuth();
   const isPremium = profile?.is_premium ?? false;
 
-  // Ad unlocks state
-  const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[]>([]);
-  const [isLoadingUnlocks, setIsLoadingUnlocks] = useState(true);
-
   // Rewarded ad state
   const [rewardedAdState, setRewardedAdState] = useState<RewardedAdState>('idle');
 
@@ -91,35 +85,6 @@ export function AdProvider({ children }: AdProviderProps) {
     return true;
   }, [isPremium]);
 
-  // Load ad unlocks from database
-  const refreshAdUnlocks = useCallback(async () => {
-    try {
-      // Get all unlocks (permanent - no expiry)
-      const unlocks = await getValidAdUnlocks();
-      setAdUnlocks(unlocks);
-    } catch (error) {
-      console.error('Failed to load ad unlocks:', error);
-    } finally {
-      setIsLoadingUnlocks(false);
-    }
-  }, []);
-
-  // Initial load of ad unlocks
-  useEffect(() => {
-    refreshAdUnlocks();
-  }, [refreshAdUnlocks]);
-
-  // Refresh ad unlocks when app comes to foreground
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active') {
-        refreshAdUnlocks();
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription.remove();
-  }, [refreshAdUnlocks]);
 
   // Cleanup rewarded ad on unmount
   useEffect(() => {
@@ -130,15 +95,9 @@ export function AdProvider({ children }: AdProviderProps) {
     };
   }, []);
 
-  // Check if a specific puzzle is ad-unlocked
-  const isAdUnlockedPuzzle = useCallback(
-    (puzzleId: string): boolean => {
-      return isPuzzleInUnlocks(puzzleId, adUnlocks);
-    },
-    [adUnlocks]
-  );
-
   // Grant an ad unlock for a puzzle
+  // Nuclear option: Just save to database, no state updates
+  // Archive will refresh naturally when user returns (useFocusEffect)
   const grantAdUnlock = useCallback(
     async (puzzleId: string): Promise<void> => {
       try {
@@ -150,14 +109,14 @@ export function AdProvider({ children }: AdProviderProps) {
         // who haven't synced archive puzzles (only last 7 days are synced)
         await fetchAndSavePuzzle(puzzleId);
 
-        // Refresh ad unlocks state
-        await refreshAdUnlocks();
+        // That's it - no state updates, no callbacks
+        // Archive will refresh when user returns to it
       } catch (error) {
         console.error('Failed to grant ad unlock:', error);
         throw error;
       }
     },
-    [refreshAdUnlocks]
+    []
   );
 
   // Clean up rewarded ad listeners
@@ -310,10 +269,7 @@ export function AdProvider({ children }: AdProviderProps) {
       rewardedAdState,
       loadRewardedAd,
       showRewardedAd,
-      adUnlocks,
-      isAdUnlockedPuzzle,
       grantAdUnlock,
-      refreshAdUnlocks,
     }),
     [
       shouldShowAds,
@@ -321,10 +277,7 @@ export function AdProvider({ children }: AdProviderProps) {
       rewardedAdState,
       loadRewardedAd,
       showRewardedAd,
-      adUnlocks,
-      isAdUnlockedPuzzle,
       grantAdUnlock,
-      refreshAdUnlocks,
     ]
   );
 

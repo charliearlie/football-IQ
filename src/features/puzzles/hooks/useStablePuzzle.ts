@@ -17,6 +17,8 @@ function isGameMode(value: string): value is GameMode {
   return GAME_MODES.includes(value as GameMode);
 }
 
+import { fetchAndSavePuzzle } from '@/features/puzzles/services/puzzleSyncService';
+
 /**
  * A wrapper around usePuzzle that maintains a stable puzzle reference.
  *
@@ -29,6 +31,7 @@ function isGameMode(value: string): value is GameMode {
  * - Once puzzle is loaded, maintains stable reference across re-renders
  * - Background sync updates are ignored (puzzle data rarely changes mid-game)
  * - Falls back to SQLite lookup for archive puzzles not in context
+ * - Final fallback: fetches from network if missing locally (e.g. ad-unlocked)
  *
  * Use this hook in game screens where you need to preserve in-memory game
  * state across app background/foreground cycles.
@@ -44,60 +47,90 @@ export function useStablePuzzle(
     refetch,
   } = usePuzzle(gameModeOrPuzzleId);
 
-  // Cache puzzle in local state to maintain stable reference
-  const [stablePuzzle, setStablePuzzle] = useState<ParsedLocalPuzzle | null>(
-    null
-  );
-  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
-  const [hasAttemptedSqlite, setHasAttemptedSqlite] = useState(false);
+  const [stablePuzzle, setStablePuzzle] = useState<ParsedLocalPuzzle | null>(null);
+  
+  // State machine for loading process
+  // idle: waiting for context to load
+  // context_checked: context loaded, checking if we have puzzle
+  // checking_sqlite: checking sqlite fallback
+  // checking_network: checking network fallback
+  // resolved: puzzle found (or definitively not found)
+  const [loadState, setLoadState] = useState<
+    'idle' | 'context_checked' | 'checking_sqlite' | 'checking_network' | 'resolved'
+  >('idle');
 
-  // Update stable puzzle only on first successful fetch
+  // Effect 1: Sync with Context
   useEffect(() => {
-    if (fetchedPuzzle && !stablePuzzle) {
-      setStablePuzzle(fetchedPuzzle);
-    }
-    // Mark that we've attempted to load (even if puzzle is null)
-    if (!contextLoading && !hasAttemptedLoad) {
-      setHasAttemptedLoad(true);
-    }
-  }, [fetchedPuzzle, stablePuzzle, contextLoading]);  // Removed hasAttemptedLoad - guard prevents re-execution
-
-  // Fallback: Try SQLite directly if puzzle not in context
-  // This handles archive puzzles that were just unlocked via ad
-  useEffect(() => {
-    async function tryFetchFromSqlite() {
-      // Only try SQLite if:
-      // - We've attempted context load and it's done
-      // - No puzzle found in context
-      // - We haven't already cached a puzzle
-      // - This is a puzzle ID (not a game mode)
-      // - We haven't already tried SQLite
-      if (
-        hasAttemptedLoad &&
-        !fetchedPuzzle &&
-        !stablePuzzle &&
-        !isGameMode(gameModeOrPuzzleId) &&
-        !hasAttemptedSqlite
-      ) {
-        setHasAttemptedSqlite(true);
-        try {
-          const sqlitePuzzle = await getPuzzle(gameModeOrPuzzleId);
-          if (sqlitePuzzle) {
-            setStablePuzzle(sqlitePuzzle);
-          }
-        } catch (error) {
-          console.warn('[useStablePuzzle] SQLite fallback failed:', error);
-        }
+    if (!contextLoading && loadState === 'idle') {
+      if (fetchedPuzzle) {
+        setStablePuzzle(fetchedPuzzle);
+        setLoadState('resolved');
+      } else {
+        setLoadState('context_checked');
       }
+    } else if (fetchedPuzzle && !stablePuzzle) {
+      // Late arrival from context (e.g. background sync)
+      setStablePuzzle(fetchedPuzzle);
+      setLoadState('resolved');
     }
-    tryFetchFromSqlite();
-  }, [hasAttemptedLoad, fetchedPuzzle, gameModeOrPuzzleId]);  // Removed stablePuzzle, hasAttemptedSqlite - guards prevent re-execution
+  }, [contextLoading, loadState, fetchedPuzzle, stablePuzzle]);
 
-  // Show loading when:
-  // - We don't have a cached puzzle yet AND
-  // - Either context hasn't attempted OR SQLite hasn't attempted
-  // This ensures loading stays true during SQLite fallback
-  const isLoading = !stablePuzzle && (!hasAttemptedLoad || !hasAttemptedSqlite);
+  // Effect 2: Fallback Logic
+  useEffect(() => {
+    async function executeFallback() {
+      // Only proceed if we've checked context and haven't found a puzzle yet
+      if (loadState !== 'context_checked' || stablePuzzle || isGameMode(gameModeOrPuzzleId)) {
+        if (loadState === 'context_checked' && isGameMode(gameModeOrPuzzleId)) {
+           // Game modes don't fallback to UUID logic, so we are done
+           setLoadState('resolved');
+        }
+        return;
+      }
+
+      // Start SQLite check
+      setLoadState('checking_sqlite');
+      console.log('[useStablePuzzle] Checking SQLite for:', gameModeOrPuzzleId);
+      
+      try {
+        const sqlitePuzzle = await getPuzzle(gameModeOrPuzzleId);
+        if (sqlitePuzzle) {
+          console.log('[useStablePuzzle] Found in SQLite');
+          setStablePuzzle(sqlitePuzzle);
+          setLoadState('resolved');
+          return;
+        }
+      } catch (e) {
+        console.error('[useStablePuzzle] SQLite check failed', e);
+      }
+
+      // SQLite failed, try Network
+      setLoadState('checking_network');
+      console.log('[useStablePuzzle] Checking Network for:', gameModeOrPuzzleId);
+
+      try {
+        const networkPuzzle = await fetchAndSavePuzzle(gameModeOrPuzzleId);
+        if (networkPuzzle) {
+           console.log('[useStablePuzzle] Found in Network');
+           // Re-fetch from SQLite to get parsed object
+           const reloaded = await getPuzzle(gameModeOrPuzzleId);
+           if (reloaded) {
+             setStablePuzzle(reloaded);
+           }
+        } else {
+            console.warn('[useStablePuzzle] Network fetch failed');
+        }
+      } catch (e) {
+        console.error('[useStablePuzzle] Network check failed', e);
+      }
+
+      // Done
+      setLoadState('resolved');
+    }
+
+    executeFallback();
+  }, [loadState, stablePuzzle, gameModeOrPuzzleId]);
+
+  const isLoading = !stablePuzzle && loadState !== 'resolved';
 
   return {
     puzzle: stablePuzzle ?? fetchedPuzzle,
