@@ -93,11 +93,11 @@ export function useStablePuzzle(
     tryFetchFromSqlite();
   }, [hasAttemptedLoad, fetchedPuzzle, gameModeOrPuzzleId]);  // Removed stablePuzzle, hasAttemptedSqlite - guards prevent re-execution
 
-  // Only show loading on true first load:
-  // - We don't have a cached puzzle yet
-  // - We haven't attempted to load yet
-  // - The underlying hook is still loading
-  const isLoading = !stablePuzzle && !hasAttemptedLoad && contextLoading;
+  // Show loading when:
+  // - We don't have a cached puzzle yet AND
+  // - Either context hasn't attempted OR SQLite hasn't attempted
+  // This ensures loading stays true during SQLite fallback
+  const isLoading = !stablePuzzle && (!hasAttemptedLoad || !hasAttemptedSqlite);
 
   return {
     puzzle: stablePuzzle ?? fetchedPuzzle,
