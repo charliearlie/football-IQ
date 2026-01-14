@@ -60,7 +60,7 @@ export function useStablePuzzle(
     if (!contextLoading && !hasAttemptedLoad) {
       setHasAttemptedLoad(true);
     }
-  }, [fetchedPuzzle, stablePuzzle, contextLoading, hasAttemptedLoad]);
+  }, [fetchedPuzzle, stablePuzzle, contextLoading]);  // Removed hasAttemptedLoad - guard prevents re-execution
 
   // Fallback: Try SQLite directly if puzzle not in context
   // This handles archive puzzles that were just unlocked via ad
@@ -91,7 +91,7 @@ export function useStablePuzzle(
       }
     }
     tryFetchFromSqlite();
-  }, [hasAttemptedLoad, fetchedPuzzle, stablePuzzle, gameModeOrPuzzleId, hasAttemptedSqlite]);
+  }, [hasAttemptedLoad, fetchedPuzzle, gameModeOrPuzzleId]);  // Removed stablePuzzle, hasAttemptedSqlite - guards prevent re-execution
 
   // Only show loading on true first load:
   // - We don't have a cached puzzle yet
