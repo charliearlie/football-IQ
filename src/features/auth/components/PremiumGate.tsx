@@ -123,6 +123,11 @@ export function PremiumGate({
     adUnlocks || []
   );
 
+  // If we can't find the puzzle date AND user is not obviously authorized,
+  // ALLOW ACCESS instead of blocking. This handles:
+  // - Recent puzzles not yet synced to SQLite
+  // - Navigation param issues
+  // Default to permissive rather than blocking legitimate access
   const isMissing = !canAccessFast && !isPuzzleLoading && !puzzleDate;
 
   // 5. Navigation Side Effect
@@ -130,26 +135,38 @@ export function PremiumGate({
     if (hasNavigatedRef.current) return;
     if (isLoading) return;
 
-    if (isMissing) {
-       console.log('[PremiumGate] Blocking: Missing puzzle');
+    // Only block if puzzle is explicitly locked (we have date and it's outside free window)
+    // Do NOT block if puzzle is missing - assume it's accessible
+    if (isLocked) {
+       console.log('[PremiumGate] Blocking: Locked puzzle', { puzzleDate, isPremium });
        hasNavigatedRef.current = true;
-       router.push({ pathname: '/premium-modal', params: { mode: 'blocked' } });
-    } else if (isLocked) {
-       console.log('[PremiumGate] Blocking: Locked puzzle');
-       hasNavigatedRef.current = true;
-       router.push({ 
-         pathname: '/premium-modal', 
-         params: { puzzleDate: puzzleDate!, mode: 'blocked' } 
+       router.push({
+         pathname: '/premium-modal',
+         params: { puzzleDate: puzzleDate!, mode: 'blocked' }
        });
+    } else if (isMissing) {
+       // Log but don't block - allow access to missing puzzles
+       console.warn('[PremiumGate] Missing puzzle date, allowing access (fail-open)');
     }
-  }, [isLoading, isMissing, isLocked, router, puzzleDate]);
+  }, [isLoading, isMissing, isLocked, router, puzzleDate, isPremium]);
 
   // Render
   if (canAccessFast) {
     return <>{children}</>;
   }
 
-  if (isLoading || isMissing || isLocked) {
+  // Allow access if puzzle is missing (fail-open approach for unsynced/recent puzzles)
+  if (isMissing) {
+    return <>{children}</>;
+  }
+
+  // Show loading state while checking
+  if (isLoading) {
+    return <>{fallback ?? <DefaultLoadingScreen />}</>;
+  }
+
+  // Block locked puzzles
+  if (isLocked) {
     return <>{fallback ?? <DefaultLoadingScreen />}</>;
   }
 

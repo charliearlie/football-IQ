@@ -110,13 +110,11 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
 
   /**
    * Sync local attempts to Supabase.
+   * Supports both authenticated and anonymous users.
    */
   const syncAttempts = useCallback(async (): Promise<SyncResult> => {
-    if (!userId) {
-      return { success: false, error: new Error('User not authenticated') };
-    }
-
     try {
+      // Allow sync for both authenticated and anonymous users
       const result = await syncAttemptsToSupabase(userId);
       return result;
     } catch (err) {

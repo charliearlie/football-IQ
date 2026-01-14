@@ -589,6 +589,55 @@ export async function getCatalogEntryCount(
 }
 
 /**
+ * Get catalog entries for incomplete filter.
+ * Returns puzzles where:
+ * - No attempt exists, OR
+ * - Attempt exists with completed=0
+ *
+ * Excludes future-dated puzzles.
+ * Uses LEFT JOIN to include puzzles without attempts.
+ *
+ * @param offset - Number of entries to skip
+ * @param limit - Maximum number of entries to return
+ * @returns Array of catalog entries for incomplete puzzles
+ */
+export async function getCatalogEntriesIncomplete(
+  offset: number,
+  limit: number
+): Promise<LocalCatalogEntry[]> {
+  const database = getDatabase();
+
+  return database.getAllAsync<LocalCatalogEntry>(
+    `SELECT pc.* FROM puzzle_catalog pc
+     LEFT JOIN attempts a ON pc.id = a.puzzle_id
+     WHERE pc.puzzle_date <= date('now', 'localtime')
+       AND (a.id IS NULL OR a.completed = 0)
+     GROUP BY pc.id
+     ORDER BY pc.puzzle_date DESC
+     LIMIT $limit OFFSET $offset`,
+    { $limit: limit, $offset: offset }
+  );
+}
+
+/**
+ * Get count of incomplete catalog entries.
+ * Used for pagination with incomplete filter.
+ *
+ * @returns Total number of incomplete puzzles
+ */
+export async function getCatalogEntryCountIncomplete(): Promise<number> {
+  const database = getDatabase();
+
+  const result = await database.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(DISTINCT pc.id) as count FROM puzzle_catalog pc
+     LEFT JOIN attempts a ON pc.id = a.puzzle_id
+     WHERE pc.puzzle_date <= date('now', 'localtime')
+       AND (a.id IS NULL OR a.completed = 0)`
+  );
+  return result?.count ?? 0;
+}
+
+/**
  * Clear all catalog entries.
  * Used for full resync scenarios.
  */

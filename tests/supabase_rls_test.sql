@@ -117,6 +117,95 @@ END $$;
 -- DELETE FROM daily_puzzles WHERE game_mode LIKE 'test_%';
 
 -- =============================================================================
+-- TEST 7: Anonymous user CAN INSERT puzzle attempts
+-- =============================================================================
+-- Test that anonymous users can insert attempts for distribution graph
+-- Expected: Insert succeeds
+
+DO $$
+DECLARE
+  v_test_puzzle_id UUID;
+BEGIN
+  -- Simulate anonymous context
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+
+  -- Get a test puzzle ID
+  SELECT id INTO STRICT v_test_puzzle_id
+  FROM daily_puzzles
+  WHERE game_mode = 'test_mode'
+  LIMIT 1;
+
+  -- Attempt anonymous insert
+  INSERT INTO puzzle_attempts (id, user_id, puzzle_id, completed, score)
+  VALUES (gen_random_uuid(), gen_random_uuid(), v_test_puzzle_id, true, 80);
+
+  -- Should succeed (no exception thrown)
+  RAISE NOTICE 'TEST 7 PASSED: Anonymous user can insert attempts';
+
+  -- Cleanup
+  DELETE FROM puzzle_attempts WHERE puzzle_id = v_test_puzzle_id;
+END $$;
+
+-- =============================================================================
+-- TEST 8: Anonymous user CANNOT READ others' attempts
+-- =============================================================================
+-- Test that anonymous users cannot see other users' data
+-- Expected: SELECT returns empty (RLS blocks)
+
+DO $$
+DECLARE
+  v_count INTEGER;
+BEGIN
+  -- Simulate anonymous context
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+
+  SELECT COUNT(*) INTO v_count FROM puzzle_attempts;
+
+  IF v_count != 0 THEN
+    RAISE EXCEPTION 'TEST 8 FAILED: Anonymous should see 0 attempts, got %', v_count;
+  END IF;
+
+  RAISE NOTICE 'TEST 8 PASSED: Anonymous cannot read others attempts';
+END $$;
+
+-- =============================================================================
+-- TEST 9: Authenticated user cannot insert with different user_id
+-- =============================================================================
+-- Test that authenticated users can only insert with their own user_id
+-- Expected: Insert fails (RLS blocks)
+
+DO $$
+DECLARE
+  v_test_puzzle_id UUID;
+BEGIN
+  -- Simulate authenticated user
+  PERFORM set_config('request.jwt.claim.sub', 'user-123', true);
+
+  -- Get a test puzzle ID
+  SELECT id INTO STRICT v_test_puzzle_id
+  FROM daily_puzzles
+  WHERE game_mode = 'test_mode'
+  LIMIT 1;
+
+  -- Attempt insert with different user_id (should fail)
+  BEGIN
+    INSERT INTO puzzle_attempts (id, user_id, puzzle_id, completed)
+    VALUES (gen_random_uuid(), 'different-user', v_test_puzzle_id, true);
+
+    -- Should not reach here
+    RAISE EXCEPTION 'TEST 9 FAILED: Should have been blocked by RLS';
+  EXCEPTION
+    WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST 9 PASSED: Authenticated user cannot insert for others';
+    WHEN check_violation THEN
+      RAISE NOTICE 'TEST 9 PASSED: Authenticated user cannot insert for others';
+  END;
+
+  -- Reset context
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+END $$;
+
+-- =============================================================================
 -- SUMMARY
 -- =============================================================================
 -- RLS Policy Tests:
@@ -125,11 +214,13 @@ END $$;
 --    - auth (non-premium): today + 6 previous days (7 days total)
 --    - premium: full archive
 -- 2. profiles: read all, update own only
--- 3. puzzle_attempts: owner-only access
+-- 3. puzzle_attempts: owner-only access (UPDATED: anonymous can INSERT)
 -- 4. user_streaks: owner-only access
 -- 5. agent_runs: no RLS (admin table)
 -- 6. match_data: no RLS (admin table)
 --
 -- IMPORTANT: The RLS policy must use: puzzle_date >= CURRENT_DATE - INTERVAL '6 days'
 -- This creates a 7-day window (today counts as day 1).
+--
+-- NEW (2026-01-14): Anonymous users can INSERT puzzle_attempts for distribution graphs
 -- =============================================================================

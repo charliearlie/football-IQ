@@ -795,13 +795,16 @@ const { sections } = useArchivePuzzles('career_path');    // Filter by mode
 const { sections } = useArchivePuzzles('incomplete');     // Filter by incomplete
 
 // Filter types: 'all' | 'incomplete' | GameMode
-// 'incomplete' shows puzzles with status !== 'done' (not started OR in-progress)
+// 'incomplete' shows puzzles with no attempt OR completed=0 (SQL-level LEFT JOIN)
+// Includes both 'play' (not started) and 'resume' (in-progress) status
 
-// Lock check
-isPuzzleLocked('2024-12-15', false) // true (>7 days, non-premium)
-isPuzzleLocked('2024-12-15', true)  // false (premium sees all)
+// Lock check (updated 2026-01-14 with completion parameter)
+isPuzzleLocked('2024-12-15', false, 'p-123', [], false) // true (locked - not completed)
+isPuzzleLocked('2024-12-15', false, 'p-123', [], true)  // false (unlocked - completed!)
+isPuzzleLocked('2024-12-15', true, 'p-123', [], false)  // false (premium sees all)
 
-// IMPORTANT: Completed puzzles are PERMANENTLY unlocked for viewing results
+// IMPORTANT: Completed puzzles are PERMANENTLY unlocked (highest priority)
+// Lock priority: 1. Completion > 2. Premium > 3. 7-day window > 4. Ad unlock > 5. Locked
 // Even if older than 7 days, completed puzzles show "Result" (not "Unlock")
 
 // Date formatting

@@ -1380,18 +1380,42 @@ To show locked puzzles that aren't in local SQLite (RLS blocks them for free use
 2. **SQLite `puzzle_catalog` table**: Stores catalog entries for all users.
 3. **Merge logic**: If puzzle exists in `puzzles` table → unlocked, else → locked based on 7-day rule.
 
-#### Lock Logic
+#### Lock Logic (Updated 2026-01-14)
 ```typescript
-function isPuzzleLocked(puzzleDate: string, isPremium: boolean): boolean {
+function isPuzzleLocked(
+  puzzleDate: string,
+  isPremium: boolean,
+  puzzleId?: string,
+  adUnlocks?: UnlockedPuzzle[],
+  hasCompletedAttempt?: boolean
+): boolean {
+  // HIGHEST PRIORITY: Completed puzzles are never locked (permanent unlock)
+  if (hasCompletedAttempt) return false;
+
+  // Premium users: never locked
   if (isPremium) return false;
-  const date = new Date(puzzleDate);
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  return date < sevenDaysAgo;
+
+  // Within free window (7 days): not locked
+  if (isWithinFreeWindow(puzzleDate)) return false;
+
+  // Has valid ad unlock: not locked
+  if (puzzleId && adUnlocks && hasValidAdUnlock(puzzleId, adUnlocks)) {
+    return false;
+  }
+
+  // Otherwise: locked
+  return true;
 }
 ```
 
-**Important:** Completed puzzles are **permanently unlocked** for viewing results, regardless of the 7-day window. The lock check is bypassed if `status === 'done'`, allowing users to always view their past performance even for old puzzles.
+**Lock Priority Hierarchy (Updated 2026-01-14):**
+1. **Completed puzzles** → Always unlocked ✓ (PERMANENT UNLOCK)
+2. **Premium users** → Always unlocked
+3. **Within 7-day window** → Unlocked
+4. **Has ad unlock** → Unlocked
+5. **Otherwise** → Locked
+
+**Important:** Completed puzzles are **permanently unlocked** for viewing results, regardless of age, premium status, or ad unlocks. Users can always view their past performance for puzzles they've completed, even if the puzzle is months old. This is the highest priority check in the lock logic.
 
 ### Screen Layout
 ```
@@ -1423,12 +1447,20 @@ Uses `UniversalGameCard` (shared with Home screen):
 - Crown icon + "Unlock" button replaces static lock icon (premium CTA)
 - Heavy haptic feedback on locked press reinforces "hitting a gate"
 
-### Filters
+### Filters (Updated 2026-01-14)
 | Filter | Description |
 |--------|-------------|
 | All | Shows all puzzles across all game modes |
 | Incomplete | Shows only puzzles with `status !== 'done'` (not started OR in-progress), across all game modes and dates |
 | Career Path, The Grid, etc. | Shows only puzzles for that specific game mode |
+
+**Incomplete Filter Implementation (Updated 2026-01-14):**
+- SQL-level filtering using LEFT JOIN on attempts table
+- Query: `SELECT pc.* FROM puzzle_catalog pc LEFT JOIN attempts a ON pc.id = a.puzzle_id WHERE (a.id IS NULL OR a.completed = 0)`
+- Shows puzzles where: no attempt exists OR `attempt.completed = 0`
+- Includes both "not started" (`status='play'`) and "in-progress" (`status='resume'`)
+- Performance optimized with index on `attempts(puzzle_id, completed)`
+- Uses `GROUP BY pc.id` to prevent duplicates from multiple attempts
 
 The Incomplete filter helps users focus on puzzles they haven't finished yet, regardless of whether they're locked or not.
 

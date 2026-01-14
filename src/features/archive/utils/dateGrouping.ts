@@ -173,26 +173,34 @@ export function hasValidAdUnlock(
 }
 
 /**
- * Determine if a puzzle should be locked based on user's premium status and ad unlocks.
+ * Determine if a puzzle should be locked based on user's premium status,
+ * ad unlocks, and completion status.
  *
- * Access hierarchy:
- * 1. Premium users: always unlocked
- * 2. Within free window (7 days): unlocked
- * 3. Has valid ad unlock: unlocked
- * 4. Otherwise: locked
+ * Access hierarchy (checked in order):
+ * 1. Completed puzzles: always unlocked (can view results indefinitely)
+ * 2. Premium users: always unlocked
+ * 3. Within free window (7 days): unlocked
+ * 4. Has valid ad unlock: unlocked
+ * 5. Otherwise: locked
  *
  * @param puzzleDate - Puzzle date in YYYY-MM-DD format
  * @param isPremium - Whether the user has premium access
- * @param puzzleId - Optional puzzle ID for ad unlock checking
+ * @param puzzleId - Optional puzzle ID for ad unlock and completion checking
  * @param adUnlocks - Optional array of valid ad unlocks
+ * @param hasCompletedAttempt - Optional flag indicating puzzle completion
  * @returns true if the puzzle should show as locked
  */
 export function isPuzzleLocked(
   puzzleDate: string,
   isPremium: boolean,
   puzzleId?: string,
-  adUnlocks?: UnlockedPuzzle[]
+  adUnlocks?: UnlockedPuzzle[],
+  hasCompletedAttempt?: boolean
 ): boolean {
+  // HIGHEST PRIORITY: Completed puzzles are never locked (permanent unlock)
+  // Users can always view results for puzzles they've completed
+  if (hasCompletedAttempt) return false;
+
   // Premium users: never locked
   if (isPremium) return false;
 

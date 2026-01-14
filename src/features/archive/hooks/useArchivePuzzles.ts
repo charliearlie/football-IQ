@@ -11,6 +11,8 @@ import { useAuth } from '@/features/auth';
 import {
   getCatalogEntriesPaginated,
   getCatalogEntryCount,
+  getCatalogEntriesIncomplete,
+  getCatalogEntryCountIncomplete,
   getAttemptByPuzzleId,
   getValidAdUnlocks,
 } from '@/lib/database';
@@ -64,33 +66,45 @@ export function useArchivePuzzles(
    */
   const transformEntry = useCallback(
     async (entry: LocalCatalogEntry, allUnlocks: UnlockedPuzzle[]): Promise<ArchivePuzzle> => {
-      // Check lock status with provided unlocks
-      let isLocked = isPuzzleLocked(
+      // Fetch attempt data first to check completion status
+      const attempt = await getAttemptByPuzzleId(entry.id);
+      const hasCompletedAttempt = attempt?.completed === true;
+
+      // Check lock status - completed puzzles are NEVER locked
+      const isLocked = isPuzzleLocked(
         entry.puzzle_date,
         isPremium,
         entry.id,
-        allUnlocks
+        allUnlocks,
+        hasCompletedAttempt  // NEW: Pass completion status
       );
 
-      // Only fetch heavy data for unlocked puzzles
+      // Log lock checks for recent puzzles (diagnostic logging)
+      if (entry.puzzle_date >= '2026-01-10') {
+        console.log('[useArchivePuzzles] Lock check:', {
+          puzzleId: entry.id,
+          puzzleDate: entry.puzzle_date,
+          isPremium,
+          hasCompletedAttempt,
+          adUnlocksCount: allUnlocks.length,
+          isLocked,
+        });
+      }
+
+      // Determine status and extract display data
       let status: 'play' | 'resume' | 'done' = 'play';
       let scoreDisplay: string | undefined;
       let score: number | undefined;
       let attemptData: ParsedLocalAttempt | undefined;
 
-      if (!isLocked) {
-        const attempt = await getAttemptByPuzzleId(entry.id);
-        if (attempt) {
-          if (attempt.completed) {
-            status = 'done';
-            scoreDisplay = attempt.score_display ?? undefined;
-            score = attempt.score ?? undefined;
-            attemptData = attempt;
-            // Completed puzzles are NEVER locked (can always view results)
-            isLocked = false;
-          } else {
-            status = 'resume';
-          }
+      if (attempt) {
+        if (attempt.completed) {
+          status = 'done';
+          scoreDisplay = attempt.score_display ?? undefined;
+          score = attempt.score ?? undefined;
+          attemptData = attempt;
+        } else {
+          status = 'resume';
         }
       }
 
@@ -119,20 +133,26 @@ export function useArchivePuzzles(
       isLoadingOperation.current = true;
 
       try {
-        // Get game mode filter
-        const gameMode = filter === 'all' ? null : filter;
         const offset = pageNum * PAGE_SIZE;
 
-        // Get catalog entries
-        const entries = await getCatalogEntriesPaginated(
-          offset,
-          PAGE_SIZE,
-          gameMode
-        );
-        console.log(`[Archive:loadPage] SQLite returned ${entries.length} entries`);
+        // Get catalog entries based on filter type
+        let entries: LocalCatalogEntry[];
+        let totalCount: number;
+
+        if (filter === 'incomplete') {
+          // Special handling for incomplete filter - query puzzles without completed attempts
+          entries = await getCatalogEntriesIncomplete(offset, PAGE_SIZE);
+          totalCount = await getCatalogEntryCountIncomplete();
+          console.log(`[Archive:loadPage] Incomplete filter: ${entries.length} entries, ${totalCount} total`);
+        } else {
+          // Standard filtering by game mode
+          const gameMode = filter === 'all' ? null : filter;
+          entries = await getCatalogEntriesPaginated(offset, PAGE_SIZE, gameMode);
+          totalCount = await getCatalogEntryCount(gameMode);
+          console.log(`[Archive:loadPage] Standard filter (${filter}): ${entries.length} entries`);
+        }
 
         // Check if there are more pages
-        const totalCount = await getCatalogEntryCount(gameMode);
         const loadedCount = offset + entries.length;
         setHasMore(loadedCount < totalCount);
 

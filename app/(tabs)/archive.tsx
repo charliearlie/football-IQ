@@ -62,6 +62,18 @@ export default function ArchiveScreen() {
    */
   const { navigateToPuzzle } = useGatedNavigation({
     onShowPaywall: (puzzle) => {
+      console.log('[Archive] onShowPaywall called:', {
+        puzzleId: puzzle.id,
+        shouldShowAds,
+        isLocked: puzzle.isLocked,
+      });
+
+      // Defensive check: only show modal if puzzle is actually locked
+      if (!puzzle.isLocked) {
+        console.warn('[Archive] onShowPaywall called for unlocked puzzle, ignoring');
+        return;
+      }
+
       if (shouldShowAds) {
         // Show choice modal for ad-eligible users
         setLockedPuzzle(puzzle);

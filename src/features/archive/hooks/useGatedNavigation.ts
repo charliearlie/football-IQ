@@ -67,15 +67,25 @@ export function useGatedNavigation(
 
   const navigateToPuzzle = useCallback(
     (puzzle: ArchivePuzzle) => {
+      console.log('[useGatedNavigation] Navigate requested:', {
+        puzzleId: puzzle.id,
+        puzzleDate: puzzle.puzzleDate,
+        isLocked: puzzle.isLocked,
+        status: puzzle.status,
+        gameMode: puzzle.gameMode,
+      });
+
       // Trust the puzzle's isLocked property from the archive list
       // The list already checks isPuzzleLocked with the latest adUnlocks
       // This avoids stale closure issues with adUnlocks state
       if (puzzle.isLocked) {
+        console.log('[useGatedNavigation] BLOCKED - showing paywall');
         // User doesn't have access - show paywall/unlock modal
         options.onShowPaywall(puzzle);
         return;
       }
 
+      console.log('[useGatedNavigation] ALLOWED - navigating to game');
       // User has access - navigate to puzzle
       const route = GAME_MODE_ROUTES[puzzle.gameMode];
       if (route) {
@@ -83,7 +93,7 @@ export function useGatedNavigation(
         // Navigate to dynamic route with puzzle ID and Date for synchronous checks
         const href = {
           pathname: `/${route}/[puzzleId]`,
-          params: { 
+          params: {
             puzzleId: puzzle.id,
             puzzleDate: puzzle.puzzleDate // Pass date for PremiumGate sync check
           }
