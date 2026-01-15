@@ -12,6 +12,9 @@ import {
   ParsedPlayer,
 } from '@/types/database';
 
+// Re-export types for convenience
+export type { LocalCatalogEntry } from '@/types/database';
+
 const DATABASE_NAME = 'football_iq.db';
 const SCHEMA_VERSION = 4;
 
@@ -375,6 +378,34 @@ export async function getAllCompletedAttemptsWithGameMode(): Promise<
 }
 
 /**
+ * Raw calendar attempt data from SQLite query.
+ * Lightweight version for calendar display - only essential fields.
+ */
+export interface CalendarAttemptRow {
+  puzzle_date: string;
+  game_mode: string;
+  score: number | null;
+  metadata: string | null;
+}
+
+/**
+ * Get completed attempts for calendar display.
+ * Returns lightweight data (date, mode, score, metadata) for aggregation.
+ * Used by the Streak Calendar component to show daily completion history.
+ */
+export async function getCalendarAttempts(): Promise<CalendarAttemptRow[]> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<CalendarAttemptRow>(
+    `SELECT p.puzzle_date, p.game_mode, a.score, a.metadata
+     FROM attempts a
+     JOIN puzzles p ON a.puzzle_id = p.id
+     WHERE a.completed = 1
+     ORDER BY p.puzzle_date DESC`
+  );
+  return rows;
+}
+
+/**
  * Mark an attempt as synced to Supabase.
  */
 export async function markAttemptSynced(id: string): Promise<void> {
@@ -524,6 +555,25 @@ export async function getAllCatalogEntries(): Promise<LocalCatalogEntry[]> {
   const database = getDatabase();
   return database.getAllAsync<LocalCatalogEntry>(
     'SELECT * FROM puzzle_catalog ORDER BY puzzle_date DESC'
+  );
+}
+
+/**
+ * Get all catalog entries (available puzzles) for a specific date.
+ * Used by Streak Calendar to show available games per day.
+ *
+ * @param puzzleDate - Date in YYYY-MM-DD format
+ * @returns Array of catalog entries for that date
+ */
+export async function getCatalogEntriesForDate(
+  puzzleDate: string
+): Promise<LocalCatalogEntry[]> {
+  const database = getDatabase();
+  return database.getAllAsync<LocalCatalogEntry>(
+    `SELECT * FROM puzzle_catalog
+     WHERE puzzle_date = $date
+     ORDER BY game_mode ASC`,
+    { $date: puzzleDate }
   );
 }
 

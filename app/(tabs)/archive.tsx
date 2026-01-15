@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, SectionList, InteractionManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   useArchivePuzzles,
@@ -9,6 +9,7 @@ import {
   ArchiveList,
   GameModeFilter,
   ArchivePuzzle,
+  ArchiveSection,
   GameModeFilterType,
   GAME_MODE_ROUTES,
 } from '@/features/archive';
@@ -27,9 +28,15 @@ import { CompletedGameModal } from '@/features/home';
  */
 export default function ArchiveScreen() {
   const router = useRouter();
+  // Accept filterDate param from calendar navigation (for deep linking)
+  const { filterDate } = useLocalSearchParams<{ filterDate?: string }>();
   const [filter, setFilter] = useState<GameModeFilterType>('all');
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
   const [completedPuzzle, setCompletedPuzzle] = useState<ArchivePuzzle | null>(null);
+
+  // Ref for scrolling to specific date
+  const listRef = useRef<SectionList<ArchivePuzzle, ArchiveSection>>(null);
+  const hasScrolledToDate = useRef(false);
 
   // Check if user should see ads (non-premium users)
   const { shouldShowAds } = useAds();
@@ -42,6 +49,43 @@ export default function ArchiveScreen() {
     loadMore,
     refresh,
   } = useArchivePuzzles(filter);
+
+  // Scroll to target date when coming from calendar
+  useEffect(() => {
+    if (!filterDate || hasScrolledToDate.current || sections.length === 0 || isLoading) return;
+
+    // Find section index for the filter date's month (YYYY-MM)
+    const targetMonth = filterDate.substring(0, 7);
+    const sectionIndex = sections.findIndex((section) => {
+      const firstPuzzle = section.data[0];
+      return firstPuzzle?.puzzleDate.startsWith(targetMonth);
+    });
+
+    if (sectionIndex >= 0 && listRef.current) {
+      // Use InteractionManager to wait for animations/layout to complete
+      // This is more reliable than arbitrary setTimeout
+      const scrollTask = InteractionManager.runAfterInteractions(() => {
+        // Verify listRef still exists and sections haven't changed
+        if (listRef.current && sections.length > sectionIndex) {
+          listRef.current.scrollToLocation({
+            sectionIndex,
+            itemIndex: 0,
+            viewOffset: 0,
+            animated: true,
+          });
+        }
+      });
+      hasScrolledToDate.current = true;
+
+      // Cleanup if effect re-runs before interaction completes
+      return () => scrollTask.cancel();
+    }
+  }, [filterDate, sections, isLoading]);
+
+  // Reset scroll flag when filterDate changes
+  useEffect(() => {
+    hasScrolledToDate.current = false;
+  }, [filterDate]);
 
   // NUCLEAR OPTION: Refresh archive list when screen comes into focus
   // This ensures unlocked puzzles show correct state after returning from game
@@ -130,6 +174,7 @@ export default function ArchiveScreen() {
 
       {/* Archive List with Filter */}
       <ArchiveList
+        ref={listRef}
         sections={sections}
         onPuzzlePress={handlePuzzlePress}
         onLockedPress={handlePuzzlePress}

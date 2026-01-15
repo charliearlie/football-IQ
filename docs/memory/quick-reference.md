@@ -681,6 +681,60 @@ const result = await getPuzzleScoreDistribution(puzzleId);
 // result.totalAttempts = 50
 ```
 
+## Streak Calendar
+```typescript
+import {
+  StreakCalendar,
+  useStreakCalendar,
+  MonthGrid,
+  DayCell,
+  DayTooltip,
+  MonthHeader,
+  LockedMonthOverlay,
+} from '@/features/stats';
+
+// Main component usage (in stats.tsx)
+<StreakCalendar
+  isPremium={profile?.is_premium ?? false}
+  onPremiumPress={() => router.push('/premium-modal')}
+/>
+
+// Hook usage (for custom implementations)
+const { data, isLoading, error, refresh } = useStreakCalendar();
+
+// Calendar data structure
+interface CalendarData {
+  months: CalendarMonth[];     // Ordered by recency (newest first)
+  overallLongestStreak: number;
+  overallTotalIQ: number;
+}
+
+interface CalendarMonth {
+  monthKey: string;           // "2026-01"
+  monthName: string;          // "January 2026"
+  year: number;
+  month: number;
+  days: CalendarDay[];
+  longestStreak: number;      // For flame icon
+  totalIQ: number;
+  perfectWeeks: number[];     // Week indices with Mon-Sun completions
+}
+
+interface CalendarDay {
+  date: string;               // "2026-01-15"
+  count: number;              // Games completed (0-6)
+  totalIQ: number;
+  gameModes: GameModeCompletion[];
+}
+
+// Cell intensity levels
+// empty: 0 games (Stadium Navy #16212B)
+// low: 1-3 games (Pitch Green 50% opacity)
+// high: 4+ games (Pitch Green 100%)
+
+// Premium gating: Free users see 60 days, older months blurred
+```
+
 ## Leaderboard
 ```typescript
 import {

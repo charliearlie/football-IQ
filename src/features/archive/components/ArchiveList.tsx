@@ -5,7 +5,7 @@
  * Supports pagination, pull-to-refresh, and sticky section headers.
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, forwardRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   SectionListRenderItem,
 } from 'react-native';
+import type { SectionList as SectionListType } from 'react-native';
 import { colors, textStyles, spacing } from '@/theme';
 import { triggerHeavy } from '@/lib/haptics';
 import { UniversalGameCard } from '@/components';
@@ -89,18 +90,24 @@ function LoadingFooter() {
  *
  * Uses SectionList for efficient rendering with sticky month headers.
  */
-export function ArchiveList({
-  sections,
-  onPuzzlePress,
-  onLockedPress,
-  onEndReached,
-  onRefresh,
-  refreshing,
-  isLoading,
-  hasMore,
-  ListHeaderComponent,
-  testID,
-}: ArchiveListProps) {
+export const ArchiveList = forwardRef<
+  SectionListType<ArchivePuzzle, ArchiveSection>,
+  ArchiveListProps
+>(function ArchiveList(
+  {
+    sections,
+    onPuzzlePress,
+    onLockedPress,
+    onEndReached,
+    onRefresh,
+    refreshing,
+    isLoading,
+    hasMore,
+    ListHeaderComponent,
+    testID,
+  },
+  ref
+) {
   /**
    * Render section header (month/year).
    */
@@ -206,6 +213,7 @@ export function ArchiveList({
 
   return (
     <SectionList
+      ref={ref}
       sections={sections}
       keyExtractor={keyExtractor}
       renderItem={renderPuzzleItem}
@@ -229,7 +237,7 @@ export function ArchiveList({
       testID={testID}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   contentContainer: {

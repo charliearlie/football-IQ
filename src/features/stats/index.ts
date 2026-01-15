@@ -7,9 +7,11 @@
 
 // Types
 export * from './types/stats.types';
+export * from './types/calendar.types';
 
 // Hooks
 export { usePerformanceStats } from './hooks/usePerformanceStats';
+export { useStreakCalendar } from './hooks/useStreakCalendar';
 
 // Utilities
 export {
@@ -28,6 +30,14 @@ export { ProficiencySection } from './components/ProficiencySection';
 export { TrophyRoom } from './components/TrophyRoom';
 export { StatsGrid } from './components/StatsGrid';
 export { IQCardOverlay } from './components/IQCardOverlay';
+
+// Streak Calendar
+export { StreakCalendar } from './components/StreakCalendar';
+export { MonthGrid } from './components/StreakCalendar';
+export { DayCell } from './components/StreakCalendar';
+export { DayDetailSheet } from './components/StreakCalendar';
+export { MonthHeader } from './components/StreakCalendar';
+export { LockedMonthOverlay } from './components/StreakCalendar';
 
 // Share utilities
 export type { IQCardData, ShareIQResult } from './utils/shareIQ';

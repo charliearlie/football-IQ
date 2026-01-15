@@ -14,6 +14,7 @@ import {
   TrophyRoom,
   StatsGrid,
   IQCardOverlay,
+  StreakCalendar,
 } from '@/features/stats';
 import { IQCardData } from '@/features/stats/utils/shareIQ';
 import { useAuth } from '@/features/auth';
@@ -80,6 +81,13 @@ export default function MyIQScreen() {
   const handleCloseIQCard = useCallback(() => {
     setShowIQCard(false);
   }, []);
+
+  /**
+   * Navigate to premium modal for calendar unlock.
+   */
+  const handlePremiumPress = useCallback(() => {
+    router.push('/premium-modal');
+  }, [router]);
 
   /**
    * Get top badge name for IQ card.
@@ -191,6 +199,13 @@ export default function MyIQScreen() {
           <Share2 size={18} color={colors.floodlightWhite} />
           <Text style={styles.shareButtonText}>Share My IQ</Text>
         </Pressable>
+
+        {/* Streak Calendar - positioned high for engagement */}
+        <StreakCalendar
+          isPremium={profile?.is_premium ?? false}
+          onPremiumPress={handlePremiumPress}
+          testID="streak-calendar"
+        />
 
         <ProficiencySection proficiencies={stats.proficiencies} />
 

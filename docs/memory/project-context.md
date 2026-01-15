@@ -184,6 +184,16 @@ Aggregates all attempts to calculate Global IQ (weighted average across modes).
 - **Badges**: Streak milestones, perfect scores, games played
 - **Files**: `src/features/stats/`, `app/(tabs)/stats.tsx`
 
+### Streak Calendar
+Mobile-optimized calendar showing daily completion history on My IQ tab.
+- **Cell intensity**: 0 games (navy), 1-3 (green 50%), 4+ (green 100%)
+- **3D depth**: Uses Solid Layer architecture (1px sunk, 3px filled)
+- **Tooltips**: Tap cell to see date, IQ earned, game mode completion icons
+- **Perfect Week**: Gold left border on weeks with Mon-Sun completions
+- **Flame Icon**: Shows longest streak within each month
+- **Premium Gating**: Free users see 60 days, older months blurred with upsell
+- **Files**: `src/features/stats/components/StreakCalendar/`
+
 ### Score Distribution Graph
 Wordle-style "How You Compare" bar chart in result modals.
 - Per-puzzle distribution via `get_puzzle_score_distribution()` RPC
