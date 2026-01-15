@@ -30,6 +30,12 @@ export interface StreakCalendarProps {
   isPremium: boolean;
   /** Callback when premium upsell should be shown */
   onPremiumPress: () => void;
+  /**
+   * Display variant:
+   * - 'standalone': Wrapped in GlassCard with header (default)
+   * - 'embedded': No card wrapper, no header - for use inside Scout Report
+   */
+  variant?: 'standalone' | 'embedded';
   /** Test ID for testing */
   testID?: string;
 }
@@ -78,8 +84,10 @@ function getCurrentMonthKey(): string {
 export function StreakCalendar({
   isPremium,
   onPremiumPress,
+  variant = 'standalone',
   testID,
 }: StreakCalendarProps) {
+  const isEmbedded = variant === 'embedded';
   const router = useRouter();
   const { data, isLoading, error } = useStreakCalendar();
 
@@ -152,32 +160,40 @@ export function StreakCalendar({
     return data.months;
   }, [data, currentMonthKey]);
 
+  // Wrapper component based on variant
+  const Wrapper = isEmbedded ? View : GlassCard;
+  const wrapperStyle = isEmbedded ? styles.embeddedContainer : styles.container;
+
   // Loading skeleton
   if (isLoading && !data) {
     return (
-      <GlassCard style={styles.container} testID={testID}>
-        <View style={styles.header}>
-          <Calendar size={20} color={colors.pitchGreen} />
-          <Text style={styles.headerTitle}>Activity</Text>
-        </View>
+      <Wrapper style={wrapperStyle} testID={testID}>
+        {!isEmbedded && (
+          <View style={styles.header}>
+            <Calendar size={20} color={colors.pitchGreen} />
+            <Text style={styles.headerTitle}>Activity</Text>
+          </View>
+        )}
         <View style={styles.skeleton}>
           <View style={styles.skeletonHeader} />
           <View style={styles.skeletonGrid} />
         </View>
-      </GlassCard>
+      </Wrapper>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <GlassCard style={styles.container} testID={testID}>
-        <View style={styles.header}>
-          <Calendar size={20} color={colors.pitchGreen} />
-          <Text style={styles.headerTitle}>Activity</Text>
-        </View>
+      <Wrapper style={wrapperStyle} testID={testID}>
+        {!isEmbedded && (
+          <View style={styles.header}>
+            <Calendar size={20} color={colors.pitchGreen} />
+            <Text style={styles.headerTitle}>Activity</Text>
+          </View>
+        )}
         <Text style={styles.errorText}>Unable to load activity data</Text>
-      </GlassCard>
+      </Wrapper>
     );
   }
 
@@ -189,11 +205,13 @@ export function StreakCalendar({
   const hasNextMonth = selectedMonthIndex > 0;
 
   return (
-    <GlassCard style={styles.container} testID={testID}>
-      <View style={styles.header}>
-        <Calendar size={20} color={colors.pitchGreen} />
-        <Text style={styles.headerTitle}>Activity</Text>
-      </View>
+    <Wrapper style={wrapperStyle} testID={testID}>
+      {!isEmbedded && (
+        <View style={styles.header}>
+          <Calendar size={20} color={colors.pitchGreen} />
+          <Text style={styles.headerTitle}>Activity</Text>
+        </View>
+      )}
 
       {currentMonth && (
         <View style={[styles.monthContainer, isLocked && styles.lockedMonth]}>
@@ -234,7 +252,7 @@ export function StreakCalendar({
         onCompleteGames={handleCompleteGames}
         testID="day-detail-sheet"
       />
-    </GlassCard>
+    </Wrapper>
   );
 }
 
@@ -242,6 +260,9 @@ const styles = StyleSheet.create({
   container: {
     marginTop: spacing.lg,
     padding: spacing.md,
+  },
+  embeddedContainer: {
+    // No margin/padding when embedded - parent handles spacing
   },
   header: {
     flexDirection: 'row',

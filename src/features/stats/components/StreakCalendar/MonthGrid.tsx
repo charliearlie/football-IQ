@@ -52,6 +52,8 @@ interface GridCell {
   day: CalendarDay | null;
   /** Whether this cell is in a perfect week */
   isInPerfectWeek: boolean;
+  /** Whether this date is in the future (not yet playable) */
+  isFutureDate: boolean;
 }
 
 /**
@@ -77,7 +79,7 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
 
   // Add leading padding cells
   for (let i = 0; i < startWeekday; i++) {
-    cells.push({ dayNumber: null, day: null, isInPerfectWeek: false });
+    cells.push({ dayNumber: null, day: null, isInPerfectWeek: false, isFutureDate: false });
   }
 
   // Get today's date string for comparison (local timezone)
@@ -109,6 +111,7 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
       dayNumber: dayNum,
       day: dayData,
       isInPerfectWeek,
+      isFutureDate,
     });
   }
 
@@ -117,7 +120,7 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
   if (remainder > 0) {
     const padding = 7 - remainder;
     for (let i = 0; i < padding; i++) {
-      cells.push({ dayNumber: null, day: null, isInPerfectWeek: false });
+      cells.push({ dayNumber: null, day: null, isInPerfectWeek: false, isFutureDate: false });
     }
   }
 
@@ -226,6 +229,7 @@ export function MonthGrid({
                   size={cellSize}
                   isInPerfectWeek={cell.isInPerfectWeek}
                   isToday={isToday(dateStr)}
+                  isFutureDate={cell.isFutureDate}
                   onPress={onDayPress}
                   testID={`day-cell-${globalIndex}`}
                 />

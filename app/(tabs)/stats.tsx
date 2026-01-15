@@ -3,34 +3,34 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { Trophy, Share2 } from 'lucide-react-native';
-import { colors, textStyles, spacing } from '@/theme';
-import { GlassCard } from '@/components';
+import { Trophy } from 'lucide-react-native';
+import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import {
   usePerformanceStats,
-  ProfileHeader,
-  IQScoreDisplay,
-  ProficiencySection,
-  TrophyRoom,
-  StatsGrid,
   IQCardOverlay,
   StreakCalendar,
 } from '@/features/stats';
+import {
+  ElitePlayerCard,
+  TacticalRadarChart,
+  TrophyCase,
+} from '@/features/stats/components/ScoutReport';
 import { IQCardData } from '@/features/stats/utils/shareIQ';
 import { useAuth } from '@/features/auth';
 import { getUserRank } from '@/features/leaderboard';
 import { FullStatsSkeleton } from '@/components/ui/Skeletons';
 
 /**
- * My IQ Screen
+ * Scout Report Screen (formerly My IQ)
  *
- * Comprehensive profile screen showing Football IQ score,
- * proficiency across game modes, badges, and statistics.
- *
- * Fix: Uses SafeAreaView with edges={['top']} instead of manual
- * paddingTop to prevent double spacing issue.
+ * FIFA/EAFC-inspired dashboard showcasing the user's Football Identity.
+ * Features:
+ * - Elite Player Card with dynamic grade and glow effects
+ * - Tactical Radar Chart for proficiency visualization
+ * - Trophy Case with 3D shield badges
+ * - Season Progress calendar
  */
-export default function MyIQScreen() {
+export default function ScoutReportScreen() {
   const router = useRouter();
   const { stats, isLoading, refresh } = usePerformanceStats();
   const { profile, user } = useAuth();
@@ -53,38 +53,25 @@ export default function MyIQScreen() {
     fetchRank();
   }, [user?.id, stats?.globalIQ]);
 
-  // Refresh stats when screen gains focus (e.g., after completing a game)
-  // This ensures IQ and proficiency bars update when navigating back from games
+  // Refresh stats when screen gains focus
   useFocusEffect(
     useCallback(() => {
       refresh();
     }, [refresh])
   );
 
-  /**
-   * Navigate to the leaderboard screen.
-   */
   const handleLeaderboardPress = () => {
     router.push('/leaderboard');
   };
 
-  /**
-   * Open the IQ Card share modal.
-   */
   const handleSharePress = useCallback(() => {
     setShowIQCard(true);
   }, []);
 
-  /**
-   * Close the IQ Card share modal.
-   */
   const handleCloseIQCard = useCallback(() => {
     setShowIQCard(false);
   }, []);
 
-  /**
-   * Navigate to premium modal for calendar unlock.
-   */
   const handlePremiumPress = useCallback(() => {
     router.push('/premium-modal');
   }, [router]);
@@ -94,7 +81,6 @@ export default function MyIQScreen() {
    */
   const getTopBadgeName = (): string | null => {
     if (!stats?.badges || stats.badges.length === 0) return null;
-    // Return the first earned badge name (earnedAt is set when badge is earned)
     const earnedBadge = stats.badges.find(b => b.earnedAt != null);
     return earnedBadge?.name ?? null;
   };
@@ -116,7 +102,7 @@ export default function MyIQScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>My IQ</Text>
+          <Text style={styles.headerTitle}>Scout Report</Text>
         </View>
         <ScrollView
           style={styles.scrollView}
@@ -133,6 +119,9 @@ export default function MyIQScreen() {
   if (!stats || stats.totalPuzzlesSolved === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Scout Report</Text>
+        </View>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -144,16 +133,15 @@ export default function MyIQScreen() {
             />
           }
         >
-          <ProfileHeader />
-          <GlassCard style={styles.emptyState}>
-            <Text style={[textStyles.h2, styles.emptyTitle]}>
-              Ready to Test Your Football IQ?
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>
+              Ready to Build Your Profile?
             </Text>
-            <Text style={[textStyles.body, styles.emptyText]}>
-              Play daily puzzles to build your profile. Your stats will appear here
-              as you complete games.
+            <Text style={styles.emptyText}>
+              Play daily puzzles to unlock your Scout Report. Your Football IQ,
+              tactical profile, and achievements will appear here.
             </Text>
-          </GlassCard>
+          </View>
         </ScrollView>
       </SafeAreaView>
     );
@@ -163,7 +151,7 @@ export default function MyIQScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header with Leaderboard Button */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My IQ</Text>
+        <Text style={styles.headerTitle}>Scout Report</Text>
         <Pressable
           onPress={handleLeaderboardPress}
           style={styles.leaderboardButton}
@@ -185,38 +173,49 @@ export default function MyIQScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <ProfileHeader />
-
-        <IQScoreDisplay score={stats.globalIQ} />
-
-        {/* Share IQ Button */}
-        <Pressable
-          onPress={handleSharePress}
-          style={styles.shareButton}
-          accessibilityLabel="Share My IQ"
-          accessibilityRole="button"
-        >
-          <Share2 size={18} color={colors.floodlightWhite} />
-          <Text style={styles.shareButtonText}>Share My IQ</Text>
-        </Pressable>
-
-        {/* Streak Calendar - positioned high for engagement */}
-        <StreakCalendar
-          isPremium={profile?.is_premium ?? false}
-          onPremiumPress={handlePremiumPress}
-          testID="streak-calendar"
-        />
-
-        <ProficiencySection proficiencies={stats.proficiencies} />
-
-        <TrophyRoom badges={stats.badges} />
-
-        <StatsGrid
-          puzzlesSolved={stats.totalPuzzlesSolved}
-          perfectScores={stats.totalPerfectScores}
-          totalPoints={stats.totalPoints}
+        {/* Elite Player Card - FUT-style header */}
+        <ElitePlayerCard
+          displayName={profile?.display_name ?? 'Football Fan'}
+          memberSince={profile?.created_at ?? null}
+          globalIQ={stats.globalIQ}
           currentStreak={stats.currentStreak}
+          userRank={userRank}
+          onSharePress={handleSharePress}
+          testID="elite-player-card"
         />
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Season Progress Section - moved up for engagement/monetization */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>SEASON PROGRESS</Text>
+          <StreakCalendar
+            isPremium={profile?.is_premium ?? false}
+            onPremiumPress={handlePremiumPress}
+            variant="embedded"
+            testID="streak-calendar"
+          />
+        </View>
+
+        {/* Tactical Profile Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>TACTICAL PROFILE</Text>
+          <TacticalRadarChart
+            proficiencies={stats.proficiencies}
+            testID="tactical-radar"
+          />
+        </View>
+
+        {/* Trophy Case Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>TROPHY CASE</Text>
+          <TrophyCase
+            stats={stats}
+            userRank={userRank}
+            testID="trophy-case"
+          />
+        </View>
       </ScrollView>
 
       {/* IQ Card Share Modal */}
@@ -244,8 +243,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   headerTitle: {
-    ...textStyles.h1,
+    fontFamily: fonts.headline,
+    fontSize: 32,
     color: colors.floodlightWhite,
+    letterSpacing: 1,
   },
   leaderboardButton: {
     width: 44,
@@ -264,36 +265,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing['3xl'] + 60, // Extra padding for ad banner
   },
+  section: {
+    marginBottom: spacing.xl,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.glassBorder,
+    marginVertical: spacing.xl,
+  },
+  sectionHeader: {
+    fontFamily: fonts.headline,
+    fontSize: 14,
+    color: colors.pitchGreen,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: spacing.md,
+  },
   emptyState: {
+    backgroundColor: colors.stadiumNavy,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    borderRadius: borderRadius['2xl'],
     padding: spacing.xl,
     alignItems: 'center',
   },
   emptyTitle: {
+    fontFamily: fonts.headline,
+    fontSize: 24,
+    color: colors.floodlightWhite,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
   emptyText: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
+    fontSize: 16,
+    color: colors.textSecondary,
     textAlign: 'center',
-    opacity: 0.7,
-  },
-  shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
-    backgroundColor: colors.glassBackground,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  shareButtonText: {
-    ...textStyles.body,
-    color: colors.floodlightWhite,
-    fontWeight: '600',
+    lineHeight: 24,
   },
 });

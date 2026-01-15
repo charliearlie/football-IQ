@@ -1,13 +1,35 @@
 /**
  * Stats Feature
  *
- * My IQ profile screen components and utilities for calculating
- * and displaying user performance across all game modes.
+ * Scout Report dashboard (formerly My IQ) components and utilities
+ * for calculating and displaying user performance across all game modes.
+ *
+ * The Scout Report features FIFA/EAFC-inspired visualizations including:
+ * - Elite Player Card with dynamic grades and glow effects
+ * - Tactical Radar Chart for 6-axis proficiency visualization
+ * - Trophy Case with 3D shield badges
+ * - Streak Calendar for season progress tracking
  */
 
 // Types
 export * from './types/stats.types';
 export * from './types/calendar.types';
+
+// Scout Report Components
+export {
+  ElitePlayerCard,
+  PlayerGrade,
+  TacticalRadarChart,
+  ShieldBadge,
+  TrophyCase,
+} from './components/ScoutReport';
+export type {
+  ElitePlayerCardProps,
+  PlayerGradeLevel,
+  TacticalRadarChartProps,
+  ShieldBadgeProps,
+  TrophyCaseProps,
+} from './components/ScoutReport';
 
 // Hooks
 export { usePerformanceStats } from './hooks/usePerformanceStats';

@@ -36,6 +36,8 @@ export interface DayCellProps {
   isInPerfectWeek: boolean;
   /** Whether cell is today */
   isToday: boolean;
+  /** Whether this date is in the future (not yet playable) */
+  isFutureDate?: boolean;
   /** Callback when cell is pressed with position info */
   onPress: (day: CalendarDay, position: CellPosition) => void;
   /** Test ID for testing */
@@ -75,6 +77,7 @@ export function DayCell({
   size,
   isInPerfectWeek,
   isToday,
+  isFutureDate = false,
   onPress,
   testID,
 }: DayCellProps) {
@@ -131,7 +134,8 @@ export function DayCell({
   const intensity = day ? getCellIntensity(day.count) : 'empty';
 
   const handlePressIn = () => {
-    if (day) {
+    // Don't animate press for future dates
+    if (day && !isFutureDate) {
       pressed.value = withSpring(1, SPRING_CONFIG);
     }
   };
@@ -141,16 +145,21 @@ export function DayCell({
   };
 
   const handlePress = () => {
-    if (day) {
+    // Don't respond to presses for future dates
+    if (day && !isFutureDate) {
       triggerSelection();
       // Position not used by bottom sheet - pass dummy values
       onPress(day, { x: 0, y: 0, width: 0, height: 0 });
     }
-    // No action for padding cells (dayNumber === null already returned early)
+    // No action for padding cells or future dates
   };
 
-  // Determine colors based on intensity
+  // Determine colors based on intensity and future state
   const getTopColor = () => {
+    // Future dates get muted/disabled appearance
+    if (isFutureDate) {
+      return '#0D1520'; // Very dark, muted appearance
+    }
     switch (intensity) {
       case 'empty':
         return '#16212B'; // Stadium Navy darker
@@ -162,6 +171,10 @@ export function DayCell({
   };
 
   const getShadowColor = () => {
+    // Future dates get muted shadow
+    if (isFutureDate) {
+      return 'rgba(0, 0, 0, 0.15)';
+    }
     switch (intensity) {
       case 'empty':
         return 'rgba(0, 0, 0, 0.3)';
@@ -195,10 +208,13 @@ export function DayCell({
       ]}
       testID={testID}
       accessibilityRole="button"
+      accessibilityState={{ disabled: isFutureDate }}
       accessibilityLabel={
-        day
-          ? `${day.date}, ${day.count} games played, ${day.totalIQ} IQ earned`
-          : `Day ${dayNumber}, no games played`
+        isFutureDate
+          ? `Day ${dayNumber}, not yet available`
+          : day
+            ? `${day.date}, ${day.count} games played, ${day.totalIQ} IQ earned`
+            : `Day ${dayNumber}, no games played`
       }
     >
       {/* Shadow/Depth Layer - Fixed at bottom */}
@@ -231,13 +247,6 @@ export function DayCell({
               borderWidth: 2,
               borderColor: colors.cardYellow,
             }),
-            // Perfect week subtle indicator (skip if today is pulsing)
-            ...(isInPerfectWeek &&
-              hasCompletions &&
-              !isIncompleteToday && {
-                borderWidth: isToday ? 2 : 1,
-                borderColor: colors.cardYellow,
-              }),
             // Empty cell inset border (skip if today is pulsing)
             ...(intensity === 'empty' &&
               !isIncompleteToday && {
@@ -251,8 +260,9 @@ export function DayCell({
         <Text
           style={[
             styles.dayNumber,
-            intensity === 'empty' && styles.dayNumberEmpty,
-            intensity !== 'empty' && styles.dayNumberFilled,
+            isFutureDate && styles.dayNumberFuture,
+            !isFutureDate && intensity === 'empty' && styles.dayNumberEmpty,
+            !isFutureDate && intensity !== 'empty' && styles.dayNumberFilled,
           ]}
         >
           {dayNumber}
@@ -290,5 +300,8 @@ const styles = StyleSheet.create({
   },
   dayNumberFilled: {
     color: colors.stadiumNavy,
+  },
+  dayNumberFuture: {
+    color: 'rgba(255, 255, 255, 0.15)', // Very muted for disabled future dates
   },
 });
