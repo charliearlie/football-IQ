@@ -4,12 +4,9 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  interpolate,
 } from 'react-native-reanimated';
 import { useHaptics } from '@/hooks/useHaptics';
-import { colors, textStyles, borderRadius, shadowOffset } from '@/theme';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+import { colors, textStyles, borderRadius, depthOffset } from '@/theme';
 
 /**
  * Semantic button variants for consistent styling across the app.
@@ -21,35 +18,35 @@ export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline';
  */
 interface VariantColorConfig {
   backgroundColor: string;
-  borderBottomColor: string;
+  shadowColor: string;
   borderColor?: string;
   textColor: string;
 }
 
 /**
- * Variant color mappings using solid 3D technique.
- * borderBottomColor is a darker shade of backgroundColor for the 3D depth effect.
+ * Variant color mappings using Solid Layer 3D technique.
+ * shadowColor is a darker shade of backgroundColor for the depth effect.
  */
 const VARIANT_COLORS: Record<ButtonVariant, VariantColorConfig> = {
   primary: {
     backgroundColor: colors.pitchGreen,
-    borderBottomColor: colors.grassShadow,
+    shadowColor: colors.grassShadow,
     textColor: colors.stadiumNavy,
   },
   secondary: {
     backgroundColor: colors.stadiumNavy,
-    borderBottomColor: '#0A1628', // Darker navy
+    shadowColor: '#0A1628', // Darker navy
     borderColor: colors.floodlightWhite,
     textColor: colors.floodlightWhite,
   },
   danger: {
     backgroundColor: colors.redCard,
-    borderBottomColor: '#B91C1C', // Darker red
+    shadowColor: '#B91C1C', // Darker red
     textColor: colors.floodlightWhite,
   },
   outline: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glass background
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)', // Slightly visible depth
+    shadowColor: 'rgba(255, 255, 255, 0.2)', // Slightly visible depth
     borderColor: colors.floodlightWhite,
     textColor: colors.floodlightWhite,
   },
@@ -66,7 +63,7 @@ export interface ElevatedButtonProps {
   variant?: ButtonVariant;
   /** Background color (overrides variant) */
   topColor?: string;
-  /** Bottom border color for 3D effect (overrides variant) */
+  /** Shadow/depth color (overrides variant) */
   shadowColor?: string;
   /** Button size variant */
   size?: 'small' | 'medium' | 'large';
@@ -88,23 +85,26 @@ const SPRING_CONFIG = {
   mass: 0.5,
 };
 
+/**
+ * Size configuration for button variants.
+ */
 const SIZE_CONFIG = {
   small: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    depth: shadowOffset.buttonSmall,
+    depth: depthOffset.buttonSmall,
     textStyle: textStyles.caption as TextStyle,
   },
   medium: {
     paddingHorizontal: 24,
     paddingVertical: 14,
-    depth: shadowOffset.button,
+    depth: depthOffset.button,
     textStyle: textStyles.button as TextStyle,
   },
   large: {
     paddingHorizontal: 32,
     paddingVertical: 18,
-    depth: shadowOffset.buttonLarge,
+    depth: depthOffset.buttonLarge,
     textStyle: textStyles.buttonLarge as TextStyle,
   },
 };
@@ -112,9 +112,12 @@ const SIZE_CONFIG = {
 /**
  * ElevatedButton - Duolingo-style 3D Tactile Button
  *
- * Uses the solid borderBottomWidth technique for reliable 3D depth.
- * On press, the button translates down and the border shrinks,
- * simulating being physically pressed into the screen.
+ * Uses the "Solid Layer" architecture for reliable cross-platform 3D depth:
+ * - Bottom layer: Fixed solid color block (the "shadow/depth")
+ * - Top layer: Animated translateY on press (the "face")
+ *
+ * On press, the top face physically covers the bottom layer,
+ * creating a perfect tactile compression effect.
  *
  * @example
  * <ElevatedButton title="Play" onPress={handlePlay} />
@@ -139,21 +142,21 @@ export function ElevatedButton({
 
   const variantColors = VARIANT_COLORS[variant];
   const backgroundColor = topColor ?? variantColors.backgroundColor;
-  const borderBottomColor = shadowColor ?? variantColors.borderBottomColor;
+  const depthColor = shadowColor ?? variantColors.shadowColor;
   const borderColor = variantColors.borderColor ?? backgroundColor;
   const textColor = variantColors.textColor;
 
   const sizeConfig = SIZE_CONFIG[size];
   const depth = sizeConfig.depth;
 
-  // Animate translateY and borderBottomWidth together
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: interpolate(pressed.value, [0, 1], [0, depth]) }],
-    borderBottomWidth: interpolate(pressed.value, [0, 1], [depth, 0]),
+  // Animate only translateY on the top layer
+  const animatedTopStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pressed.value * depth }],
   }));
 
   const handlePressIn = () => {
     if (!disabled) {
+      triggerMedium(); // Fire haptic immediately at press start
       pressed.value = withSpring(1, SPRING_CONFIG);
     }
   };
@@ -164,31 +167,23 @@ export function ElevatedButton({
 
   const handlePress = () => {
     if (!disabled) {
-      triggerMedium();
       onPress();
     }
   };
 
   return (
-    <AnimatedPressable
+    <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={handlePress}
       disabled={disabled}
       style={[
-        styles.button,
+        styles.container,
         {
-          // Keep original colors even when disabled - opacity handles the muted effect
-          backgroundColor: backgroundColor,
-          borderBottomColor: borderBottomColor,
-          borderColor: borderColor,
-          paddingHorizontal: sizeConfig.paddingHorizontal,
-          paddingVertical: sizeConfig.paddingVertical,
-          borderBottomWidth: depth,
+          paddingBottom: depth,
           opacity: disabled ? 0.4 : 1,
         },
         fullWidth && styles.fullWidth,
-        animatedStyle,
         style,
       ]}
       testID={testID}
@@ -196,26 +191,64 @@ export function ElevatedButton({
       accessibilityLabel={title}
       accessibilityState={{ disabled }}
     >
-      <View style={styles.content}>
-        {icon && <View style={styles.iconContainer}>{icon}</View>}
-        <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
-          {title}
-        </Text>
-      </View>
-    </AnimatedPressable>
+      {/* Shadow/Depth Layer - Absolute, fills container minus depth offset */}
+      <View
+        style={[
+          styles.shadowLayer,
+          {
+            top: depth, // Start where the top layer ends when pressed
+            backgroundColor: depthColor,
+            borderColor: depthColor,
+          },
+        ]}
+      />
+
+      {/* Top/Face Layer - Flows naturally, animates translateY */}
+      <Animated.View
+        style={[
+          styles.topLayer,
+          {
+            backgroundColor: backgroundColor,
+            borderColor: borderColor,
+            paddingHorizontal: sizeConfig.paddingHorizontal,
+            paddingVertical: sizeConfig.paddingVertical,
+          },
+          animatedTopStyle,
+        ]}
+      >
+        <View style={styles.content}>
+          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
+            {title}
+          </Text>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
+  container: {
     alignSelf: 'flex-start',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
+    overflow: 'visible', // Critical for Android - prevents layer clipping
   },
   fullWidth: {
     alignSelf: 'stretch',
+  },
+  shadowLayer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    // top is set dynamically based on depth
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+  },
+  topLayer: {
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flexDirection: 'row',

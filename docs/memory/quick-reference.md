@@ -1009,20 +1009,43 @@ src/
 
 ## Design Tokens
 ```
-@/theme/colors      # pitchGreen, stadiumNavy, etc.
+@/theme/colors      # pitchGreen, stadiumNavy, depthColors, getDepthColor()
 @/theme/typography  # fonts, textStyles
-@/theme/spacing     # spacing, borderRadius
+@/theme/spacing     # spacing, borderRadius, depthOffset
+```
+
+## 3D Depth System ("Solid Layer")
+```typescript
+import { depthOffset, depthColors, getDepthColor } from '@/theme';
+
+// Pre-defined depth values
+depthOffset.button      // 8px - standard buttons
+depthOffset.buttonSmall // 5px - small buttons
+depthOffset.buttonLarge // 10px - large buttons
+depthOffset.card        // 2px - cards
+depthOffset.cell        // 3px - filled grid cells
+depthOffset.sunk        // 1px - empty/recessed elements
+
+// Pre-computed shadow colors
+depthColors.pitchGreen  // '#46A302'
+depthColors.cardYellow  // '#D4A500'
+depthColors.redCard     // '#B91C1C'
+
+// Dynamic color darkening (20% lighter by default)
+getDepthColor('#58CC02')       // Returns darker shade
+getDepthColor('#FACC15', 25)   // 25% darker
 ```
 
 ## Core Components
 ```typescript
-// ElevatedButton - Tactile 3D button with haptic feedback
+// ElevatedButton - Solid Layer 3D button with haptic feedback
+// Uses two-layer View architecture: shadow layer (fixed) + top layer (animates translateY)
 <ElevatedButton title="Play" onPress={fn} />                         // Primary (default)
 <ElevatedButton title="Cancel" onPress={fn} variant="secondary" />   // Stadium Navy
 <ElevatedButton title="Give Up" onPress={fn} variant="danger" />     // Red Card
 <ElevatedButton title="Maybe Later" onPress={fn} variant="outline" />// Glass + white border
 <ElevatedButton title="Continue" onPress={fn} fullWidth />           // Stretch to container
-<ElevatedButton title="Submit" onPress={fn} size="large" />          // Large size (6px offset)
+<ElevatedButton title="Submit" onPress={fn} size="large" />          // Large size (10px depth)
 
 // With leading icon (Velvet Rope pattern)
 <ElevatedButton

@@ -5,9 +5,9 @@
  * Import from '@/theme' for all design tokens.
  */
 
-export { colors, type ColorName } from './colors';
+export { colors, depthColors, getDepthColor, type ColorName } from './colors';
 export { fonts, fontWeights, textStyles, type FontFamily } from './typography';
-export { spacing, borderRadius, shadowOffset, layout } from './spacing';
+export { spacing, borderRadius, shadowOffset, depthOffset, layout, type DepthLevel } from './spacing';
 export {
   shadows,
   glows,

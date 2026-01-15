@@ -43,8 +43,9 @@ export const borderRadius = {
 } as const;
 
 /**
- * Shadow offset for 3D button effect
+ * Shadow offset for 3D button effect (legacy naming)
  * Values create prominent tactile depth like Duolingo/Headspace
+ * @deprecated Use depthOffset instead for new components
  */
 export const shadowOffset = {
   /** Small button press depth */
@@ -54,6 +55,37 @@ export const shadowOffset = {
   /** Large button press depth */
   buttonLarge: 10,
 } as const;
+
+/**
+ * Depth offset values for 3D layered UI components.
+ * These define how many pixels the "top face" sits above the "shadow layer".
+ *
+ * The "Solid Layer" architecture uses two absolute-positioned Views:
+ * - Bottom layer: Fixed position, darker color (the "depth/shadow")
+ * - Top layer: Animated translateY on press (the "face")
+ *
+ * @see src/features/tic-tac-toe/components/GridCell.tsx for reference implementation
+ */
+export const depthOffset = {
+  /** No depth - flat appearance */
+  none: 0,
+  /** Minimal depth for sunk/recessed elements (empty grid cells) */
+  sunk: 1,
+  /** Cards and containers */
+  card: 2,
+  /** Grid cells (filled state) */
+  cell: 3,
+  /** Tic-tac-toe cells */
+  tictacCell: 4,
+  /** Small buttons */
+  buttonSmall: 5,
+  /** Standard buttons */
+  button: 8,
+  /** Large buttons */
+  buttonLarge: 10,
+} as const;
+
+export type DepthLevel = keyof typeof depthOffset;
 
 /**
  * Common layout measurements

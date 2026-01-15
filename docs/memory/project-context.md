@@ -278,3 +278,12 @@ tools/
 
 **Typography**: Bebas Neue (headlines), Inter (body)
 **Core Components**: `ElevatedButton` (3D neubrutalist), `GlassCard` (frosted blur)
+
+### Solid Layer 3D Architecture
+All interactive elements use a two-layer View structure for cross-platform 3D depth:
+- **Shadow layer**: Fixed at bottom, solid darker color
+- **Top layer**: Animates `translateY` on press (squash effect)
+
+See `docs/memory/decisions/solid-layer-3d.md` for implementation details.
+
+**Depth values** (`depthOffset`): button=8px, card=2px, gridCell=3px, sunk=1px

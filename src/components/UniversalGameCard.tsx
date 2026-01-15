@@ -7,6 +7,11 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import {
   Briefcase,
   ArrowRightLeft,
@@ -89,6 +94,12 @@ interface GameModeConfig {
   icon: React.ReactNode;
   iconColor: string;
 }
+
+const SPRING_CONFIG = {
+  damping: 15,
+  stiffness: 300,
+  mass: 0.5,
+};
 
 /**
  * Get configuration for each game mode.
@@ -202,9 +213,23 @@ export function UniversalGameCard({
 }: UniversalGameCardProps) {
   const config = getGameModeConfig(gameMode);
   const buttonProps = getButtonProps(status);
+  const scale = useSharedValue(1);
 
   // Determine if this card is premium-locked (premium-only mode + non-premium user)
   const isPremiumLocked = isPremiumOnly && !isPremium;
+
+  // Subtle scale animation on press
+  const handlePressIn = () => {
+    scale.value = withSpring(0.98, SPRING_CONFIG);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, SPRING_CONFIG);
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   // Merge card styles (GlassCard expects ViewStyle, not array)
   const cardStyle = isLocked || isPremiumLocked
@@ -212,61 +237,68 @@ export function UniversalGameCard({
     : styles.card;
 
   return (
-    <GlassCard style={cardStyle} testID={testID}>
-      <Pressable style={styles.content} onPress={onPress}>
-        {/* Left: Icon + Title */}
-        <View style={styles.left}>
-          <View style={styles.iconContainer}>
-            {config.icon}
-            {/* Completion badge - small checkmark in corner */}
-            {status === 'done' && !isLocked && !isPremiumLocked && (
-              <View style={styles.completionBadge}>
-                <Check size={12} color={colors.stadiumNavy} strokeWidth={3} />
-              </View>
-            )}
-            {/* Premium badge - crown for premium-only modes */}
-            {isPremiumOnly && (
-              <View style={styles.premiumBadge} testID={`${testID}-premium-badge`}>
-                <Crown size={10} color={colors.stadiumNavy} strokeWidth={2.5} />
-              </View>
-            )}
+    <Animated.View style={animatedStyle}>
+      <GlassCard style={cardStyle} testID={testID}>
+        <Pressable
+          style={styles.content}
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+        >
+          {/* Left: Icon + Title */}
+          <View style={styles.left}>
+            <View style={styles.iconContainer}>
+              {config.icon}
+              {/* Completion badge - small checkmark in corner */}
+              {status === 'done' && !isLocked && !isPremiumLocked && (
+                <View style={styles.completionBadge}>
+                  <Check size={12} color={colors.stadiumNavy} strokeWidth={3} />
+                </View>
+              )}
+              {/* Premium badge - crown for premium-only modes */}
+              {isPremiumOnly && (
+                <View style={styles.premiumBadge} testID={`${testID}-premium-badge`}>
+                  <Crown size={10} color={colors.stadiumNavy} strokeWidth={2.5} />
+                </View>
+              )}
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.title} numberOfLines={1}>
+                {config.title}
+              </Text>
+              <Text style={styles.subtitle} numberOfLines={1}>
+                {isPremiumLocked ? 'Premium' : config.subtitle}
+              </Text>
+            </View>
           </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.title} numberOfLines={1}>
-              {config.title}
-            </Text>
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {isPremiumLocked ? 'Premium' : config.subtitle}
-            </Text>
-          </View>
-        </View>
 
-        {/* Right: Action Button or Unlock CTA */}
-        <View style={styles.right}>
-          {isLocked || isPremiumLocked ? (
-            // "Velvet Rope" design: Premium unlock button instead of static lock
-            <ElevatedButton
-              title="Unlock"
-              onPress={onPress}
-              size="small"
-              topColor={colors.cardYellow}
-              shadowColor="#D4A500"
-              icon={<Crown size={14} color={colors.stadiumNavy} />}
-              testID={`${testID}-unlock`}
-            />
-          ) : (
-            <ElevatedButton
-              title={buttonProps.title}
-              onPress={onPress}
-              size="small"
-              topColor={buttonProps.topColor}
-              shadowColor={buttonProps.shadowColor}
-              testID={`${testID}-button`}
-            />
-          )}
-        </View>
-      </Pressable>
-    </GlassCard>
+          {/* Right: Action Button or Unlock CTA */}
+          <View style={styles.right}>
+            {isLocked || isPremiumLocked ? (
+              // "Velvet Rope" design: Premium unlock button instead of static lock
+              <ElevatedButton
+                title="Unlock"
+                onPress={onPress}
+                size="small"
+                topColor={colors.cardYellow}
+                shadowColor="#D4A500"
+                icon={<Crown size={14} color={colors.stadiumNavy} />}
+                testID={`${testID}-unlock`}
+              />
+            ) : (
+              <ElevatedButton
+                title={buttonProps.title}
+                onPress={onPress}
+                size="small"
+                topColor={buttonProps.topColor}
+                shadowColor={buttonProps.shadowColor}
+                testID={`${testID}-button`}
+              />
+            )}
+          </View>
+        </Pressable>
+      </GlassCard>
+    </Animated.View>
   );
 }
 
