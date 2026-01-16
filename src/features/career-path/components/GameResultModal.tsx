@@ -2,6 +2,7 @@
  * Career Path Game Result Modal
  *
  * Displays game results using the shared BaseResultModal component.
+ * Includes "View Full Path" button for winners to see their complete career path.
  */
 
 import React from 'react';
@@ -10,8 +11,9 @@ import {
   BaseResultModal,
   AnswerReveal,
 } from '@/components/GameResultModal';
+import { ElevatedButton } from '@/components';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
-import { colors } from '@/theme/colors';
+import { colors, spacing } from '@/theme';
 import { GameScore } from '../types/careerPath.types';
 import { ShareResult } from '../utils/share';
 
@@ -32,6 +34,8 @@ interface GameResultModalProps {
   onShare: () => Promise<ShareResult>;
   /** Callback to enter review mode (optional) */
   onReview?: () => void;
+  /** Callback to view full career path (win only) */
+  onViewPath?: () => void;
   /** Callback to close/dismiss the modal */
   onClose: () => void;
   /** Test ID for testing */
@@ -50,6 +54,7 @@ export function GameResultModal({
   puzzleId,
   onShare,
   onReview,
+  onViewPath,
   onClose,
   testID,
 }: GameResultModalProps) {
@@ -76,6 +81,16 @@ export function GameResultModal({
       testID={testID}
     >
       {!won && <AnswerReveal value={correctAnswer} />}
+      {/* View Full Path button - win only */}
+      {won && onViewPath && (
+        <ElevatedButton
+          title="View Full Path"
+          onPress={onViewPath}
+          variant="secondary"
+          style={{ marginBottom: spacing.md }}
+          testID={testID ? `${testID}-view-path` : undefined}
+        />
+      )}
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="career_path"

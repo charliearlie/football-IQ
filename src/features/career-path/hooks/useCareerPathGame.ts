@@ -40,6 +40,7 @@ function createInitialState(): CareerPathState {
     attemptSaved: false,
     startedAt: new Date().toISOString(),
     attemptId: null,
+    isVictoryRevealing: false,
   };
 }
 
@@ -74,6 +75,7 @@ function careerPathReducer(
         currentGuess: '',
         lastGuessIncorrect: false,
         score: action.payload,
+        isVictoryRevealing: true, // Start victory reveal animation
       };
 
     case 'SET_CURRENT_GUESS':
@@ -108,6 +110,12 @@ function careerPathReducer(
       return {
         ...state,
         attemptId: action.payload,
+      };
+
+    case 'VICTORY_REVEAL_COMPLETE':
+      return {
+        ...state,
+        isVictoryRevealing: false,
       };
 
     case 'RESTORE_PROGRESS': {
@@ -286,6 +294,11 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     dispatch({ type: 'RESET' });
   }, []);
 
+  // Complete the victory reveal animation
+  const completeVictoryReveal = useCallback(() => {
+    dispatch({ type: 'VICTORY_REVEAL_COMPLETE' });
+  }, []);
+
   // Share game result
   const shareResult = useCallback(async (): Promise<ShareResult> => {
     if (!state.score || !puzzle) {
@@ -344,6 +357,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     allCluesRevealed,
     isLastChance,
     canStillGuess,
+    isVictoryRevealing: state.isVictoryRevealing,
 
     // Actions
     revealNext,
@@ -351,6 +365,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     setCurrentGuess,
     resetGame,
     shareResult,
+    completeVictoryReveal,
 
     // Refs
     flatListRef,

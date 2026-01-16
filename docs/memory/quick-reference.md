@@ -103,7 +103,10 @@ interface CareerPathContent {
 }
 
 // Hook usage (internal to CareerPathScreen)
-const { state, careerSteps, revealNext, submitGuess, shareResult } = useCareerPathGame(puzzle);
+const {
+  state, careerSteps, revealNext, submitGuess, shareResult,
+  isVictoryRevealing, completeVictoryReveal
+} = useCareerPathGame(puzzle);
 
 // State values
 state.revealedCount      // Number of steps shown (starts at 1)
@@ -111,6 +114,11 @@ state.gameStatus         // 'playing' | 'won' | 'lost'
 state.score              // GameScore | null (set on game end)
 state.attemptSaved       // Whether saved to local DB
 state.lastGuessIncorrect // Triggers shake animation
+state.isVictoryRevealing // True during victory reveal animation sequence
+
+// Victory reveal: on correct guess, hidden cards animate in sequence (200ms stagger)
+// isVictoryRevealing triggers CareerStepCard forceReveal props
+// completeVictoryReveal() called after animation completes
 
 // Validation (fuzzy matching)
 validateGuess('Messi', 'Lionel Messi')    // { isMatch: true, score: 0.95 }

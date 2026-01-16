@@ -22,9 +22,16 @@ import {
   CompletedGameModal,
 } from '@/features/home';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
-import { PremiumUpsellBanner } from '@/features/ads';
+import { PremiumUpsellBanner, UnlockChoiceModal, useAds } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
 import { useAuth } from '@/features/auth';
+
+/**
+ * Get today's date in YYYY-MM-DD format.
+ */
+function getTodayDate(): string {
+  return new Date().toISOString().split('T')[0];
+}
 
 /**
  * Route map for each game mode.
@@ -45,7 +52,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
  * DEV ONLY: Bypass premium gate for testing on simulator.
  * Set to true to skip premium check in development.
  */
-const DEV_BYPASS_PREMIUM = __DEV__ && true; // Set to false to test real premium gating
+const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premium gating
 
 /**
  * Home Screen - Daily Challenge Dashboard
@@ -61,6 +68,7 @@ export default function HomeScreen() {
   const { profile } = useAuth();
   const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
   const { cards, completedCount, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
+  const { shouldShowAds } = useAds();
 
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
@@ -70,6 +78,9 @@ export default function HomeScreen() {
   const [completedModal, setCompletedModal] = useState<{
     card: DailyPuzzleCard;
   } | null>(null);
+
+  // State for unlock choice modal (premium-only games)
+  const [lockedPuzzle, setLockedPuzzle] = useState<DailyPuzzleCard | null>(null);
 
   // Handle pull-to-refresh
   const handleRefresh = useCallback(async () => {
@@ -103,12 +114,18 @@ export default function HomeScreen() {
   // Navigate to game screen or show completed modal
   const handleCardPress = useCallback(
     (card: DailyPuzzleCard) => {
-      // Premium-only games: show premium modal for non-premium users
+      // Premium-only games: check ad eligibility first
       if (card.isPremiumOnly && !isPremium) {
-        router.push({
-          pathname: '/premium-modal',
-          params: { mode: 'premium_only' },
-        });
+        if (shouldShowAds) {
+          // Show unlock modal with ad option
+          setLockedPuzzle(card);
+        } else {
+          // No ads available, go to premium modal
+          router.push({
+            pathname: '/premium-modal',
+            params: { mode: 'premium_only' },
+          });
+        }
         return;
       }
 
@@ -125,7 +142,7 @@ export default function HomeScreen() {
         router.push(`/${route}/${card.puzzleId}` as any);
       }
     },
-    [router, isPremium]
+    [router, isPremium, shouldShowAds]
   );
 
   // Navigate to daily leaderboard
@@ -223,6 +240,16 @@ export default function HomeScreen() {
           testID="completed-game-modal"
         />
       )}
+
+      {/* Unlock Choice Modal for premium-only games */}
+      <UnlockChoiceModal
+        visible={!!lockedPuzzle}
+        onClose={() => setLockedPuzzle(null)}
+        puzzleId={lockedPuzzle?.puzzleId ?? ''}
+        puzzleDate={getTodayDate()}
+        gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
+        testID="home-unlock-modal"
+      />
     </SafeAreaView>
   );
 }

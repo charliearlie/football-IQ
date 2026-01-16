@@ -104,6 +104,7 @@ Guess player from sequential career steps. Each wrong guess reveals next step as
 **Content**: `{ answer, career_steps: [{ type, text, year, apps?, goals? }] }`
 **Scoring**: `totalSteps - (revealedSteps - 1)` points (0 if lost)
 **Display**: `⬛` hidden, `⬜` revealed, `🟩` winning step, `🟥` lost
+**Victory Reveal**: On correct guess, all hidden steps reveal with staggered animation (200ms each), followed by haptic celebration and 1.5s delay before result modal. "View Full Path" button lets user toggle between modal and full career view.
 **Files**: `src/features/career-path/`
 
 ### Career Path Pro (Premium Only)

@@ -6,12 +6,17 @@
  * the puzzle was published.
  *
  * Used for premium-exclusive game modes like Top Tens.
+ *
+ * Supports ad-unlock flow: if a puzzleId is provided, checks
+ * the local database for valid ad unlocks.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/features/auth';
+import { getValidAdUnlocks } from '@/lib/database';
+import type { UnlockedPuzzle } from '@/types/database';
 import { colors } from '@/theme/colors';
 
 /**
@@ -22,6 +27,8 @@ interface PremiumOnlyGateProps {
   children: React.ReactNode;
   /** Optional custom loading component */
   fallback?: React.ReactNode;
+  /** Optional puzzle ID to check for ad unlocks */
+  puzzleId?: string;
 }
 
 /**
@@ -39,7 +46,7 @@ function DefaultLoadingScreen() {
  * DEV ONLY: Bypass premium gate for testing on simulator.
  * Set to true to skip premium check in development.
  */
-const DEV_BYPASS_PREMIUM = __DEV__ && true; // Set to false to test real premium gating
+const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premium gating
 
 /**
  * PremiumOnlyGate - Route protection for premium-only game modes.
@@ -64,40 +71,69 @@ const DEV_BYPASS_PREMIUM = __DEV__ && true; // Set to false to test real premium
 export function PremiumOnlyGate({
   children,
   fallback,
+  puzzleId,
 }: PremiumOnlyGateProps): React.ReactElement {
   const router = useRouter();
-  const { profile, isLoading } = useAuth();
+  const { profile, isLoading: authLoading } = useAuth();
   const hasNavigatedRef = useRef(false);
+
+  // Load ad unlocks from database
+  const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[] | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getValidAdUnlocks()
+      .then((unlocks) => {
+        if (active) setAdUnlocks(unlocks);
+      })
+      .catch((err) => {
+        console.error('[PremiumOnlyGate] Failed to load unlocks', err);
+        if (active) setAdUnlocks([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
+
+  // Check if this puzzle is ad-unlocked
+  const areAdUnlocksLoaded = adUnlocks !== null;
+  const isAdUnlocked = puzzleId
+    ? (adUnlocks?.some((u) => u.puzzle_id === puzzleId) ?? false)
+    : false;
+
+  // User has access if premium OR ad-unlocked
+  const hasAccess = isPremium || isAdUnlocked;
+  const isLoading = authLoading || !areAdUnlocksLoaded;
 
   // Redirect non-premium users to premium modal
   useEffect(() => {
     if (hasNavigatedRef.current || isLoading) return;
 
-    if (!isPremium) {
+    if (!hasAccess) {
       hasNavigatedRef.current = true;
       router.push({
         pathname: '/premium-modal',
         params: { mode: 'premium_only' },
       });
     }
-  }, [isPremium, isLoading, router]);
+  }, [hasAccess, isLoading, router]);
 
-  // Reset navigation guard when user becomes premium
+  // Reset navigation guard when user gains access
   useEffect(() => {
-    if (isPremium && !isLoading) {
+    if (hasAccess && !isLoading) {
       hasNavigatedRef.current = false;
     }
-  }, [isPremium, isLoading]);
+  }, [hasAccess, isLoading]);
 
-  // Show loading while checking auth or redirecting
-  if (isLoading || !isPremium) {
+  // Show loading while checking auth/unlocks or redirecting
+  if (isLoading || !hasAccess) {
     return <>{fallback ?? <DefaultLoadingScreen />}</>;
   }
 
-  // User is premium - render protected content
+  // User has access - render protected content
   return <>{children}</>;
 }
 

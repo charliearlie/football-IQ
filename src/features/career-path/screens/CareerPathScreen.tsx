@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,20 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  Keyboard,
+  Platform,
+  Pressable,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Easing,
+} from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { useHaptics } from '@/hooks/useHaptics';
 import { useStablePuzzle } from '@/features/puzzles';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
@@ -97,13 +107,133 @@ export function CareerPathScreen({
     setCurrentGuess,
     shareResult,
     flatListRef,
+    isVictoryRevealing,
+    completeVictoryReveal,
   } = useCareerPathGame(puzzle);
+
+  // Haptics for victory celebration
+  const { triggerCompletion } = useHaptics();
+
+  // Modal and view path state
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [viewingFullPath, setViewingFullPath] = useState(false);
+
+  // Keyboard visibility for smooth list padding animation
+  const keyboardVisible = useSharedValue(0);
+
+  // Animation constants
+  const STAGGER_DELAY = 200; // ms between each card reveal
+  const POST_REVEAL_DELAY = 1500; // ms before modal appears
+
+  // Keyboard animation listeners
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      keyboardVisible.value = withTiming(1, {
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+      });
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardVisible.value = withTiming(0, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      });
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardVisible]);
+
+  // Animated style for FlatList content padding
+  const ACTION_ZONE_HEIGHT = 140; // Height of ActionZone + padding
+  const listPaddingStyle = useAnimatedStyle(() => ({
+    paddingBottom: interpolate(keyboardVisible.value, [0, 1], [ACTION_ZONE_HEIGHT, ACTION_ZONE_HEIGHT + 80]),
+  }));
+
+  // Victory reveal orchestration
+  useEffect(() => {
+    if (!isVictoryRevealing) return;
+
+    const hiddenSteps = careerSteps.length - state.revealedCount;
+    const totalAnimationTime = hiddenSteps * STAGGER_DELAY;
+
+    // After staggered animation completes, trigger haptics and complete reveal
+    const completeTimer = setTimeout(() => {
+      triggerCompletion();
+      completeVictoryReveal();
+    }, totalAnimationTime + 300); // Buffer for final animation
+
+    // Delayed modal appearance
+    const modalTimer = setTimeout(() => {
+      setShowResultModal(true);
+    }, totalAnimationTime + POST_REVEAL_DELAY);
+
+    // Scroll to top to show full path
+    const scrollTimer = setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }, totalAnimationTime + 200);
+
+    return () => {
+      clearTimeout(completeTimer);
+      clearTimeout(modalTimer);
+      clearTimeout(scrollTimer);
+    };
+  }, [isVictoryRevealing, careerSteps.length, state.revealedCount, triggerCompletion, completeVictoryReveal, flatListRef]);
+
+  // Show modal immediately for loss (no victory reveal)
+  useEffect(() => {
+    if (state.gameStatus === 'lost') {
+      setShowResultModal(true);
+    }
+  }, [state.gameStatus]);
+
+  // Handlers for view path toggle
+  const handleViewPath = useCallback(() => {
+    setShowResultModal(false);
+    setViewingFullPath(true);
+  }, []);
+
+  const handleBackToHome = useCallback(() => {
+    router.back();
+  }, [router]);
 
   // Fetch saved attempt data for review mode
   const {
     metadata: reviewMetadata,
     isLoading: isReviewLoading,
   } = useReviewMode<CareerPathMetadata>(puzzleId, isReviewMode);
+
+  // renderStep must be defined before early returns to maintain hooks order
+  const renderStep = useCallback(
+    ({ item, index }: { item: CareerStep; index: number }) => {
+      const stepNumber = index + 1;
+      // After winning, all steps should be revealed (prevents revert to locked state)
+      const isRevealed = stepNumber <= state.revealedCount || state.gameStatus === 'won';
+      const isLatest = stepNumber === state.revealedCount && state.gameStatus === 'playing' && !isVictoryRevealing;
+      const isVictoryHiddenStep = isVictoryRevealing && stepNumber > state.revealedCount;
+
+      return (
+        <CareerStepCard
+          step={item}
+          stepNumber={stepNumber}
+          isRevealed={isRevealed}
+          isLatest={isLatest}
+          // Victory reveal props
+          forceReveal={isVictoryHiddenStep}
+          revealDelay={(stepNumber - state.revealedCount - 1) * STAGGER_DELAY}
+          isVictoryReveal={isVictoryHiddenStep}
+          isWinningStep={state.gameStatus === 'won' && stepNumber === state.revealedCount}
+          testID={`step-${stepNumber}`}
+        />
+      );
+    },
+    [state.revealedCount, state.gameStatus, isVictoryRevealing, STAGGER_DELAY]
+  );
 
   // Loading state
   if (isLoading) {
@@ -213,24 +343,12 @@ export function CareerPathScreen({
   const canRevealMore =
     state.revealedCount < totalSteps && state.gameStatus === 'playing';
 
-  const renderStep = ({ item, index }: { item: CareerStep; index: number }) => {
-    const stepNumber = index + 1;
-    const isRevealed = stepNumber <= state.revealedCount;
-    const isLatest = stepNumber === state.revealedCount && state.gameStatus === 'playing';
-
-    return (
-      <CareerStepCard
-        step={item}
-        stepNumber={stepNumber}
-        isRevealed={isRevealed}
-        isLatest={isLatest}
-        testID={`step-${stepNumber}`}
-      />
-    );
-  };
-
-  // Progress indicator for header
-  const progressIndicator = (
+  // Progress indicator for header (hidden when viewing full path)
+  const progressIndicator = viewingFullPath ? (
+    <Pressable onPress={handleBackToHome} hitSlop={8}>
+      <Text style={styles.backLink}>Home</Text>
+    </Pressable>
+  ) : (
     <Text style={[textStyles.body, styles.progress]}>
       Step{' '}
       <Text style={styles.progressHighlight}>{state.revealedCount}</Text>
@@ -239,52 +357,66 @@ export function CareerPathScreen({
     </Text>
   );
 
+  // Modal visibility: show when game over AND showResultModal is true AND not viewing full path AND not during victory reveal
+  const shouldShowModal = state.gameStatus !== 'playing' &&
+    showResultModal &&
+    !viewingFullPath &&
+    !isVictoryRevealing;
+
+  // Dynamic title when viewing full path
+  const displayTitle = viewingFullPath ? `${screenTitle} - Full Path` : screenTitle;
+
   return (
     <GameContainer
-      title={screenTitle}
+      title={displayTitle}
       headerRight={progressIndicator}
       testID="career-path-screen"
     >
-      {/* Career Steps List */}
-      <FlatList
-        ref={flatListRef}
-        data={careerSteps}
-        renderItem={renderStep}
-        keyExtractor={(_, index) => `step-${index}`}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={10}
-        windowSize={5}
-        keyboardDismissMode="on-drag"
-        testID="career-steps-list"
-      />
+      {/* Career Steps List with animated padding for keyboard */}
+      <Animated.View style={[{ flex: 1 }, listPaddingStyle]}>
+        <FlatList
+          ref={flatListRef}
+          data={careerSteps}
+          renderItem={renderStep}
+          keyExtractor={(_, index: number) => `step-${index}`}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+          windowSize={5}
+          keyboardDismissMode="on-drag"
+          testID="career-steps-list"
+        />
+      </Animated.View>
 
       {/* Game Result Modal */}
       {state.score && (
         <GameResultModal
-          visible={isGameOver}
+          visible={shouldShowModal}
           won={state.gameStatus === 'won'}
           score={state.score}
           correctAnswer={answer}
           totalSteps={totalSteps}
           puzzleId={puzzle?.id ?? ''}
           onShare={shareResult}
+          onViewPath={state.gameStatus === 'won' ? handleViewPath : undefined}
           onClose={() => router.back()}
           testID="game-result-modal"
         />
       )}
 
-      {/* Action Zone */}
-      <ActionZone
-        currentGuess={state.currentGuess}
-        onGuessChange={setCurrentGuess}
-        onSubmit={submitGuess}
-        onRevealNext={revealNext}
-        canRevealMore={canRevealMore}
-        shouldShake={state.lastGuessIncorrect}
-        isGameOver={isGameOver}
-        testID="action-zone"
-      />
+      {/* Action Zone - hidden when viewing full path */}
+      {!viewingFullPath && (
+        <ActionZone
+          currentGuess={state.currentGuess}
+          onGuessChange={setCurrentGuess}
+          onSubmit={submitGuess}
+          onRevealNext={revealNext}
+          canRevealMore={canRevealMore}
+          shouldShake={state.lastGuessIncorrect}
+          isGameOver={isGameOver}
+          testID="action-zone"
+        />
+      )}
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="career-path-ad-banner" />
@@ -323,5 +455,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPadding,
     paddingBottom: spacing.xl,
     gap: layout.listGap,
+  },
+  backLink: {
+    ...textStyles.bodySmall,
+    color: colors.pitchGreen,
+    fontWeight: '600',
   },
 });

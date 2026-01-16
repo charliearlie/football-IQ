@@ -35,6 +35,12 @@ export interface CareerStepCardProps {
   isWinningStep?: boolean;
   /** Mark as the missed step when lost in review mode (red border + "MISSED" badge) */
   isMissedStep?: boolean;
+  /** Force reveal this card during victory sequence (overrides isRevealed) */
+  forceReveal?: boolean;
+  /** Delay in ms for staggered reveal animation */
+  revealDelay?: number;
+  /** Style as victory-revealed card (green glow) */
+  isVictoryReveal?: boolean;
 }
 
 /**
@@ -52,8 +58,12 @@ export function CareerStepCard({
   testID,
   isWinningStep = false,
   isMissedStep = false,
+  forceReveal = false,
+  revealDelay = 0,
+  isVictoryReveal = false,
 }: CareerStepCardProps) {
   const animatedProgress = useSharedValue(isRevealed ? 1 : 0);
+  const victoryProgress = useSharedValue(0);
 
   useEffect(() => {
     if (isRevealed) {
@@ -61,6 +71,48 @@ export function CareerStepCard({
       animatedProgress.value = withSpring(1, ENTRANCE_SPRING);
     }
   }, [isRevealed, animatedProgress]);
+
+  // Victory reveal animation - staggered entrance for hidden cards during win
+  useEffect(() => {
+    if (forceReveal && !isRevealed) {
+      // Trigger animation after delay for staggered effect
+      const timer = setTimeout(() => {
+        victoryProgress.value = withSpring(1, {
+          damping: 10,
+          stiffness: 120,
+          mass: 0.8,
+        });
+      }, revealDelay);
+      return () => clearTimeout(timer);
+    }
+  }, [forceReveal, revealDelay, isRevealed, victoryProgress]);
+
+  // Victory reveal animated style with scale bounce
+  const victoryAnimatedStyle = useAnimatedStyle(() => {
+    if (!forceReveal || isRevealed) return {};
+
+    return {
+      opacity: victoryProgress.value,
+      transform: [
+        {
+          translateY: interpolate(
+            victoryProgress.value,
+            [0, 1],
+            [20, 0],
+            Extrapolation.CLAMP
+          ),
+        },
+        {
+          scale: interpolate(
+            victoryProgress.value,
+            [0, 0.5, 1],
+            [0.9, 1.05, 1],
+            Extrapolation.CLAMP
+          ),
+        },
+      ],
+    };
+  });
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: animatedProgress.value,
@@ -84,14 +136,19 @@ export function CareerStepCard({
     ],
   }));
 
-  if (!isRevealed) {
+  // Show locked card if not revealed AND not force-revealing (victory sequence)
+  if (!isRevealed && !forceReveal) {
     return <LockedCard stepNumber={stepNumber} testID={testID} />;
   }
 
+  // Determine which animation style to use
+  const currentAnimatedStyle = forceReveal && !isRevealed ? victoryAnimatedStyle : animatedStyle;
+
   const isLoan = step.type === 'loan';
 
-  // Determine card style based on state (winning > missed > latest > default)
+  // Determine card style based on state (victory > winning > missed > latest > default)
   const getCardStyle = () => {
+    if (isVictoryReveal) return styles.victoryCard;
     if (isWinningStep) return styles.winningCard;
     if (isMissedStep) return styles.missedCard;
     if (isLatest) return styles.latestCard;
@@ -112,7 +169,7 @@ export function CareerStepCard({
   };
 
   return (
-    <Animated.View style={animatedStyle} testID={testID}>
+    <Animated.View style={currentAnimatedStyle} testID={testID}>
       <GlassCard style={getCardStyle()}>
         <View style={styles.content}>
           {/* Step number badge */}
@@ -178,6 +235,13 @@ const styles = StyleSheet.create({
     borderColor: colors.pitchGreen,
     borderWidth: 2,
     ...glows.green,
+  },
+  // Victory reveal card style - shown during victory sequence animation
+  victoryCard: {
+    borderColor: colors.pitchGreen,
+    borderWidth: 2,
+    ...glows.green,
+    shadowOpacity: 0.5,
   },
   stepBadge: {
     width: 32,

@@ -65,6 +65,8 @@ export interface CareerPathState {
   startedAt: string;
   /** Unique ID for the attempt (for resume support) */
   attemptId: string | null;
+  /** True during victory reveal animation sequence (all hidden cards revealing) */
+  isVictoryRevealing: boolean;
 }
 
 /**
@@ -90,4 +92,5 @@ export type CareerPathAction =
   | { type: 'ATTEMPT_SAVED' }
   | { type: 'RESET' }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
-  | { type: 'RESTORE_PROGRESS'; payload: BaseRestorePayload };
+  | { type: 'RESTORE_PROGRESS'; payload: BaseRestorePayload }
+  | { type: 'VICTORY_REVEAL_COMPLETE' };

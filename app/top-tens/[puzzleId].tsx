@@ -24,7 +24,7 @@ export default function TopTensRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumOnlyGate>
+      <PremiumOnlyGate puzzleId={puzzleId}>
         <TopTensScreen puzzleId={puzzleId} isReviewMode={isReviewMode} />
       </PremiumOnlyGate>
     </>

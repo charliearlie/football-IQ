@@ -251,8 +251,8 @@ export function UniversalGameCard({
     ? { ...styles.card, ...styles.lockedCard }
     : styles.card;
 
-  // Check if this is a Career Path Pro card
-  const isProMode = gameMode === 'career_path_pro';
+  // Check if this is a premium-only mode (Career Path Pro, Top Tens)
+  const isProMode = isPremiumOnly;
 
   return (
     <Animated.View style={animatedStyle}>
