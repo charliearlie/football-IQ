@@ -37,6 +37,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   the_grid: 'the-grid',
   topical_quiz: 'topical-quiz',
   top_tens: 'top-tens',
+  starting_xi: 'starting-xi',
 };
 
 /**

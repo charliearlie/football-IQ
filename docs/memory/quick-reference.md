@@ -561,6 +561,95 @@ generateTopTensEmojiGrid(rankSlots, score)
 </PremiumOnlyGate>
 ```
 
+## Starting XI Game
+```typescript
+import {
+  StartingXIScreen,
+  useStartingXIGame,
+  calculateStartingXIScore,
+  calculateScoreFromSlots,
+  generateScoreDisplayString,
+  shareStartingXIResult,
+} from '@/features/starting-xi';
+
+// Puzzle content structure
+interface LineupContent {
+  match_name: string;           // "Liverpool 4-0 Barcelona"
+  competition: string;          // "Champions League SF"
+  match_date: string;
+  formation: FormationName;     // '4-3-3' | '4-2-3-1' | '4-4-2' | '3-5-2' | '3-4-3' | '5-3-2'
+  team: string;
+  players: LineupPlayer[];      // 11 players
+}
+
+interface LineupPlayer {
+  position_key: PositionKey;    // 'GK' | 'RB' | 'RCB' | etc.
+  player_name: string;
+  is_hidden: boolean;
+  override_x?: number;          // 0-100 scale
+  override_y?: number;
+}
+
+// Hook usage (internal to StartingXIScreen)
+const {
+  state,
+  puzzleContent,
+  isGameOver,
+  foundCount,
+  totalHidden,
+  selectSlot,
+  deselectSlot,
+  submitGuess,
+  giveUp,
+  shareResult,
+} = useStartingXIGame(puzzle);
+
+// State values
+state.slots              // Array of 11 PlayerSlotState
+state.gameStatus         // 'idle' | 'playing' | 'complete'
+state.selectedSlot       // SlotIndex (0-10) or null
+state.score              // StartingXIScore | null (set on game end)
+state.lastGuessIncorrect // Triggers shake animation
+
+// Slot state
+interface PlayerSlotState {
+  positionKey: PositionKey;
+  coords: { x: number; y: number };
+  fullName: string;
+  displayName: string;       // Surname only
+  isHidden: boolean;
+  isFound: boolean;
+}
+
+// Position coordinates (y=90 defensive, y=10 attacking)
+const POSITION_MAP = {
+  GK: { x: 50, y: 90 },
+  RB: { x: 85, y: 75 }, RCB: { x: 65, y: 78 }, CB: { x: 50, y: 78 },
+  LCB: { x: 35, y: 78 }, LB: { x: 15, y: 75 },
+  // ... etc
+};
+
+// Formation definitions
+const FORMATIONS = {
+  '4-3-3': ['GK', 'RB', 'RCB', 'LCB', 'LB', 'RCM', 'CM', 'LCM', 'RW', 'ST', 'LW'],
+  '4-2-3-1': ['GK', 'RB', 'RCB', 'LCB', 'LB', 'RCDM', 'LCDM', 'RCAM', 'CAM', 'LCAM', 'ST'],
+  // ... etc
+};
+
+// Scoring: 1 point per hidden player found
+calculateStartingXIScore(7, 10)  // { points: 7, maxPoints: 10, foundCount: 7, totalHidden: 10 }
+calculateScoreFromSlots(slots)   // Calculates from slot array
+
+// Share: opens native sheet or copies to clipboard
+await shareResult();  // Returns ShareResult { success, method }
+
+// Components
+// LineupPitch - Pitch with positioned player markers
+// PlayerMarker - 3D depth marker (Solid Layer architecture)
+// PitchBackground - SVG pitch markings
+// StartingXIResultModal - Completion modal with confetti
+```
+
 ## My IQ Profile Screen
 ```typescript
 import {
@@ -1014,6 +1103,7 @@ const result = await prefetchQuizImages(urls);
 - The Grid: `src/features/the-grid/`
 - Topical Quiz: `src/features/topical-quiz/`
 - Top Tens: `src/features/top-tens/` (premium-only)
+- Starting XI: `src/features/starting-xi/`
 - Archive: `src/features/archive/`
 - My IQ (Stats): `src/features/stats/`
 - Leaderboard: `src/features/leaderboard/`
@@ -1032,6 +1122,7 @@ app/
   goalscorer-recall/    # Goalscorer Recall game routes
   topical-quiz/         # Topical Quiz game routes
   top-tens/             # Top Tens game routes (premium-only)
+  starting-xi/          # Starting XI game routes
   leaderboard/          # Leaderboard screen with Daily/Global toggle
   design-lab.tsx        # Component showcase
 src/
@@ -1053,6 +1144,7 @@ src/
     goalscorer-recall/ # GoalscorerRecallScreen, useGoalscorerRecallGame
     topical-quiz/      # TopicalQuizScreen, useTopicalQuizGame
     top-tens/          # TopTensScreen, useTopTensGame (premium-only)
+    starting-xi/       # StartingXIScreen, useStartingXIGame
     home/
     games/
     archive/
@@ -1161,7 +1253,7 @@ open tools/content-creator.html
 3. Fill form → Review JSON → Push to Supabase
 ```
 
-Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `topical_quiz`, `top_tens`
+Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `topical_quiz`, `top_tens`, `starting_xi`
 
 ## RevenueCat Integration
 ```typescript

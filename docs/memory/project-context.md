@@ -1,13 +1,14 @@
 # Football IQ - Project Context
 
 ## Overview
-Football IQ is a mobile trivia game featuring daily puzzles across 6 game modes:
+Football IQ is a mobile trivia game featuring daily puzzles across 7 game modes:
 1. **Career Path** - Guess player from sequential career clues
 2. **The Grid** - Fill 3x3 matrix with players matching criteria
 3. **Transfer Guess** - Identify player from transfer info
 4. **Goalscorer Recall** - Name scorers from historic match (timed)
 5. **Topical Quiz** - 5 multiple-choice questions
 6. **Top Tens** (Premium) - Name all 10 answers in a ranked list
+7. **Starting XI** - Identify hidden players on a tactical pitch lineup
 
 ## Tech Stack
 | Layer | Technology |
@@ -149,6 +150,16 @@ Guess all 10 items in a ranked list. Correct guesses reveal at rank position.
 **Access**: `PremiumOnlyGate` component wraps screens
 **Files**: `src/features/top-tens/`
 
+### Starting XI
+Identify hidden players in a historic match lineup displayed on a tactical pitch.
+
+**Content**: `{ match_name, competition, match_date, formation, team, players: [{ position_key, player_name, is_hidden, override_x?, override_y? }] }`
+**Formations**: `4-3-3`, `4-2-3-1`, `4-4-2`, `3-5-2`, `3-4-3`, `5-3-2`
+**Position coords**: y=90 (defensive), y=10 (attacking), x=0-100 (left-right)
+**Scoring**: 1 point per hidden player found (0-N where N = hidden count)
+**Display**: Formation-based emoji grid (⬜ hidden, 🟩 found)
+**Files**: `src/features/starting-xi/`
+
 ## Features
 
 ### Daily Loop
@@ -261,6 +272,7 @@ app/
   the-grid/            # The Grid routes
   topical-quiz/        # Topical Quiz routes
   top-tens/            # Top Tens routes (premium)
+  starting-xi/         # Starting XI routes
   premium-modal.tsx    # Native subscription sheet
   leaderboard/         # Leaderboard screen
 

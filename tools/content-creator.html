@@ -105,6 +105,128 @@
     textarea.form-input {
       resize: none;
     }
+
+    /* Starting XI Pitch Preview */
+    .pitch-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 0.65;
+      background: linear-gradient(to bottom, #3d8c40 0%, #4a9f4d 50%, #3d8c40 100%);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    .pitch-markings {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .pitch-center-line {
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      right: 5%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.35);
+    }
+    .pitch-center-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 50%;
+    }
+    .pitch-center-spot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 50%;
+    }
+    .pitch-penalty-area {
+      position: absolute;
+      left: 20%;
+      right: 20%;
+      height: 18%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+    }
+    .pitch-penalty-top {
+      top: 0;
+      border-top: none;
+    }
+    .pitch-penalty-bottom {
+      bottom: 0;
+      border-bottom: none;
+    }
+    .pitch-goal-area {
+      position: absolute;
+      left: 32%;
+      right: 32%;
+      height: 8%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+    }
+    .pitch-goal-top {
+      top: 0;
+      border-top: none;
+    }
+    .pitch-goal-bottom {
+      bottom: 0;
+      border-bottom: none;
+    }
+    .pitch-marker {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      cursor: grab;
+      user-select: none;
+      z-index: 10;
+    }
+    .pitch-marker:active {
+      cursor: grabbing;
+    }
+    .pitch-marker-shadow {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      transform: translateY(3px);
+    }
+    .pitch-marker-top {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .pitch-marker.hidden-player .pitch-marker-top {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #FACC15;
+    }
+    .pitch-marker.revealed-player .pitch-marker-top {
+      background: rgba(88, 204, 2, 0.3);
+      border-color: #58CC02;
+    }
+    .pitch-marker:hover .pitch-marker-top {
+      transform: translateY(-2px);
+    }
+    .pitch-marker.dragging .pitch-marker-top {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
   </style>
 </head>
 <body class="min-h-screen bg-stadiumNavy text-floodlightWhite">
@@ -162,6 +284,7 @@
             <option value="tic_tac_toe">Tic Tac Toe</option>
             <option value="topical_quiz">Topical Quiz</option>
             <option value="top_tens">Top Tens (Premium)</option>
+            <option value="starting_xi">Starting XI</option>
           </select>
         </div>
         <div>
@@ -345,6 +468,71 @@
             <div id="tt-answers" class="space-y-2 mt-2"></div>
           </div>
         </div>
+
+        <!-- Starting XI Form -->
+        <div id="starting-xi-form" class="form-section hidden">
+          <p class="text-sm text-slate-400 mb-4">Create a lineup guessing puzzle. Players identify hidden footballers positioned on a tactical pitch.</p>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Match Name</label>
+              <input type="text" id="sxi-match-name" class="form-input" placeholder="e.g., Liverpool 4-0 Barcelona" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Competition</label>
+              <input type="text" id="sxi-competition" class="form-input" placeholder="e.g., Champions League SF" oninput="updatePreview()">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="form-label">Team</label>
+              <input type="text" id="sxi-team" class="form-input" placeholder="e.g., Liverpool" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="form-label">Match Date</label>
+              <input type="date" id="sxi-match-date" class="form-input" oninput="updatePreview()">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Formation</label>
+            <select id="sxi-formation" class="form-input" onchange="applyFormation(); updatePreview()">
+              <option value="4-3-3">4-3-3</option>
+              <option value="4-2-3-1">4-2-3-1</option>
+              <option value="4-4-2">4-4-2</option>
+              <option value="3-5-2">3-5-2</option>
+              <option value="3-4-3">3-4-3</option>
+              <option value="5-3-2">5-3-2</option>
+            </select>
+          </div>
+
+          <!-- WYSIWYG Pitch Preview -->
+          <div class="mb-4">
+            <label class="form-label">Pitch Preview <span class="text-xs text-slate-500">(drag markers to adjust positions)</span></label>
+            <div id="pitch-preview" class="pitch-container mt-2">
+              <div class="pitch-markings">
+                <!-- Center circle -->
+                <div class="pitch-center-circle"></div>
+                <div class="pitch-center-line"></div>
+                <div class="pitch-center-spot"></div>
+                <!-- Top penalty area -->
+                <div class="pitch-penalty-area pitch-penalty-top"></div>
+                <div class="pitch-goal-area pitch-goal-top"></div>
+                <!-- Bottom penalty area -->
+                <div class="pitch-penalty-area pitch-penalty-bottom"></div>
+                <div class="pitch-goal-area pitch-goal-bottom"></div>
+              </div>
+              <!-- Player markers will be rendered here -->
+            </div>
+          </div>
+
+          <!-- Players List -->
+          <div class="mb-4">
+            <label class="form-label">Players (11 total)</label>
+            <div id="sxi-players" class="space-y-2 mt-2"></div>
+          </div>
+        </div>
       </section>
 
       <!-- Preview Section -->
@@ -377,6 +565,30 @@
     let goals = [];
     let quizQuestions = [];
     let topTensAnswers = [];
+    let startingXIPlayers = [];
+
+    // ============ Starting XI Constants ============
+    const POSITION_MAP = {
+      GK: { x: 50, y: 90 },
+      RB: { x: 85, y: 75 }, RCB: { x: 65, y: 78 }, CB: { x: 50, y: 78 },
+      LCB: { x: 35, y: 78 }, LB: { x: 15, y: 75 },
+      RWB: { x: 88, y: 65 }, LWB: { x: 12, y: 65 },
+      CDM: { x: 50, y: 60 }, RCDM: { x: 60, y: 60 }, LCDM: { x: 40, y: 60 },
+      RCM: { x: 65, y: 50 }, CM: { x: 50, y: 50 }, LCM: { x: 35, y: 50 },
+      RM: { x: 85, y: 50 }, LM: { x: 15, y: 50 },
+      CAM: { x: 50, y: 38 }, RCAM: { x: 60, y: 38 }, LCAM: { x: 40, y: 38 },
+      RW: { x: 82, y: 25 }, LW: { x: 18, y: 25 },
+      ST: { x: 50, y: 18 }, RST: { x: 60, y: 18 }, LST: { x: 40, y: 18 }, CF: { x: 50, y: 25 },
+    };
+
+    const FORMATIONS = {
+      '4-3-3': ['GK', 'RB', 'RCB', 'LCB', 'LB', 'RCM', 'CM', 'LCM', 'RW', 'ST', 'LW'],
+      '4-2-3-1': ['GK', 'RB', 'RCB', 'LCB', 'LB', 'RCDM', 'LCDM', 'RCAM', 'CAM', 'LCAM', 'ST'],
+      '4-4-2': ['GK', 'RB', 'RCB', 'LCB', 'LB', 'RM', 'RCM', 'LCM', 'LM', 'RST', 'LST'],
+      '3-5-2': ['GK', 'RCB', 'CB', 'LCB', 'RWB', 'RCM', 'CDM', 'LCM', 'LWB', 'RST', 'LST'],
+      '3-4-3': ['GK', 'RCB', 'CB', 'LCB', 'RWB', 'RCM', 'LCM', 'LWB', 'RW', 'ST', 'LW'],
+      '5-3-2': ['GK', 'RWB', 'RCB', 'CB', 'LCB', 'LWB', 'RCM', 'CM', 'LCM', 'RST', 'LST'],
+    };
 
     // ============ Initialization ============
     document.addEventListener('DOMContentLoaded', () => {
@@ -388,6 +600,7 @@
       addGoal(); // Start with one goal
       initQuizQuestions(); // Initialize 5 quiz questions
       initTopTensAnswers(); // Initialize 10 answers for Top Tens
+      initStartingXIPlayers(); // Initialize 11 players for Starting XI
       updatePreview();
       updateTicTacToeLabels();
     });
@@ -453,7 +666,8 @@
         'guess_the_goalscorers': 'Goalscorer Recall',
         'tic_tac_toe': 'Tic Tac Toe',
         'topical_quiz': 'Topical Quiz',
-        'top_tens': 'Top Tens'
+        'top_tens': 'Top Tens',
+        'starting_xi': 'Starting XI'
       };
 
       document.getElementById('form-title').textContent = titles[mode];
@@ -470,6 +684,9 @@
         document.getElementById('topical-quiz-form').classList.remove('hidden');
       } else if (mode === 'top_tens') {
         document.getElementById('top-tens-form').classList.remove('hidden');
+      } else if (mode === 'starting_xi') {
+        document.getElementById('starting-xi-form').classList.remove('hidden');
+        renderPitchPreview();
       }
 
       updatePreview();
@@ -746,6 +963,215 @@
       topTensAnswers[index][field] = value;
     }
 
+    // ============ Starting XI Form ============
+    function initStartingXIPlayers() {
+      const formation = document.getElementById('sxi-formation')?.value || '4-3-3';
+      const positions = FORMATIONS[formation];
+      startingXIPlayers = positions.map((posKey, index) => ({
+        id: index,
+        position_key: posKey,
+        player_name: '',
+        is_hidden: index > 0, // GK is revealed by default
+        override_x: null,
+        override_y: null,
+      }));
+      renderStartingXIPlayers();
+      renderPitchPreview();
+    }
+
+    function applyFormation() {
+      const formation = document.getElementById('sxi-formation').value;
+      const positions = FORMATIONS[formation];
+      // Update position keys but preserve player names and hidden state
+      startingXIPlayers = positions.map((posKey, index) => ({
+        ...startingXIPlayers[index] || {},
+        id: index,
+        position_key: posKey,
+        override_x: null, // Reset overrides when formation changes
+        override_y: null,
+      }));
+      renderStartingXIPlayers();
+      renderPitchPreview();
+    }
+
+    function renderStartingXIPlayers() {
+      const container = document.getElementById('sxi-players');
+      if (!container) return;
+
+      container.innerHTML = startingXIPlayers.map((player, index) => `
+        <div class="flex gap-2 items-center bg-slate-900/50 p-2 rounded-lg">
+          <span class="text-xs font-bold text-cardYellow w-10 text-center">${player.position_key}</span>
+          <input type="text" class="form-input flex-1 text-sm" placeholder="Player name"
+            value="${escapeHtml(player.player_name)}"
+            oninput="updateStartingXIPlayer(${index}, 'player_name', this.value); updatePreview()">
+          <label class="flex items-center gap-1 text-xs text-slate-400 whitespace-nowrap">
+            <input type="checkbox" ${player.is_hidden ? 'checked' : ''}
+              onchange="updateStartingXIPlayer(${index}, 'is_hidden', this.checked); renderPitchPreview(); updatePreview()">
+            Hidden
+          </label>
+        </div>
+      `).join('');
+    }
+
+    function updateStartingXIPlayer(index, field, value) {
+      startingXIPlayers[index][field] = value;
+    }
+
+    function renderPitchPreview() {
+      const container = document.getElementById('pitch-preview');
+      if (!container) return;
+
+      // Remove existing markers
+      container.querySelectorAll('.pitch-marker').forEach(m => m.remove());
+
+      startingXIPlayers.forEach((player, index) => {
+        const baseCoords = POSITION_MAP[player.position_key] || { x: 50, y: 50 };
+        const x = player.override_x ?? baseCoords.x;
+        const y = player.override_y ?? baseCoords.y;
+
+        const marker = document.createElement('div');
+        marker.className = `pitch-marker ${player.is_hidden ? 'hidden-player' : 'revealed-player'}`;
+        marker.dataset.index = index;
+        marker.style.left = `calc(${x}% - 22px)`;
+        marker.style.top = `calc(${y}% - 22px)`;
+
+        marker.innerHTML = `
+          <div class="pitch-marker-shadow"></div>
+          <div class="pitch-marker-top">${player.position_key}</div>
+        `;
+
+        // Add drag handlers
+        marker.addEventListener('mousedown', startDrag);
+        marker.addEventListener('touchstart', startDrag, { passive: false });
+
+        container.appendChild(marker);
+      });
+    }
+
+    // Drag state
+    let dragState = {
+      isDragging: false,
+      markerIndex: null,
+      startX: 0,
+      startY: 0,
+      markerStartX: 0,
+      markerStartY: 0,
+    };
+
+    function startDrag(e) {
+      e.preventDefault();
+      const marker = e.currentTarget;
+      const index = parseInt(marker.dataset.index, 10);
+      const container = document.getElementById('pitch-preview');
+      const rect = container.getBoundingClientRect();
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      dragState = {
+        isDragging: true,
+        markerIndex: index,
+        startX: clientX,
+        startY: clientY,
+        markerStartX: parseFloat(marker.style.left) + 22,
+        markerStartY: parseFloat(marker.style.top) + 22,
+        containerRect: rect,
+      };
+
+      marker.classList.add('dragging');
+
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchmove', onDrag, { passive: false });
+      document.addEventListener('touchend', endDrag);
+    }
+
+    function onDrag(e) {
+      if (!dragState.isDragging) return;
+      e.preventDefault();
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const rect = dragState.containerRect;
+      const deltaX = clientX - dragState.startX;
+      const deltaY = clientY - dragState.startY;
+
+      // Calculate new percentage position
+      const deltaXPercent = (deltaX / rect.width) * 100;
+      const deltaYPercent = (deltaY / rect.height) * 100;
+
+      const baseCoords = POSITION_MAP[startingXIPlayers[dragState.markerIndex].position_key];
+      const currentX = startingXIPlayers[dragState.markerIndex].override_x ?? baseCoords.x;
+      const currentY = startingXIPlayers[dragState.markerIndex].override_y ?? baseCoords.y;
+
+      // Calculate new position with delta from start
+      const startPercentX = (dragState.markerStartX / rect.width) * 100;
+      const startPercentY = (dragState.markerStartY / rect.height) * 100;
+
+      let newX = startPercentX + deltaXPercent;
+      let newY = startPercentY + deltaYPercent;
+
+      // Clamp to 5-95% bounds
+      newX = Math.max(5, Math.min(95, newX));
+      newY = Math.max(5, Math.min(95, newY));
+
+      // Update marker position
+      const marker = document.querySelector(`.pitch-marker[data-index="${dragState.markerIndex}"]`);
+      if (marker) {
+        marker.style.left = `calc(${newX}% - 22px)`;
+        marker.style.top = `calc(${newY}% - 22px)`;
+      }
+
+      // Store override
+      startingXIPlayers[dragState.markerIndex].override_x = Math.round(newX * 10) / 10;
+      startingXIPlayers[dragState.markerIndex].override_y = Math.round(newY * 10) / 10;
+    }
+
+    function endDrag(e) {
+      if (!dragState.isDragging) return;
+
+      const marker = document.querySelector(`.pitch-marker[data-index="${dragState.markerIndex}"]`);
+      if (marker) {
+        marker.classList.remove('dragging');
+      }
+
+      dragState.isDragging = false;
+      dragState.markerIndex = null;
+
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', endDrag);
+      document.removeEventListener('touchmove', onDrag);
+      document.removeEventListener('touchend', endDrag);
+
+      updatePreview();
+    }
+
+    function generateStartingXIContent() {
+      return {
+        match_name: document.getElementById('sxi-match-name').value.trim(),
+        competition: document.getElementById('sxi-competition').value.trim(),
+        match_date: document.getElementById('sxi-match-date').value,
+        formation: document.getElementById('sxi-formation').value,
+        team: document.getElementById('sxi-team').value.trim(),
+        players: startingXIPlayers.map(p => {
+          const player = {
+            position_key: p.position_key,
+            player_name: p.player_name.trim(),
+            is_hidden: p.is_hidden,
+          };
+          // Only include overrides if they differ from base position
+          if (p.override_x !== null) {
+            player.override_x = p.override_x;
+          }
+          if (p.override_y !== null) {
+            player.override_y = p.override_y;
+          }
+          return player;
+        }),
+      };
+    }
+
     // ============ JSON Preview ============
     function generateContent() {
       const mode = document.getElementById('game-mode').value;
@@ -869,6 +1295,10 @@
         return content;
       }
 
+      if (mode === 'starting_xi') {
+        return generateStartingXIContent();
+      }
+
       return {};
     }
 
@@ -974,6 +1404,34 @@
           const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
           if (duplicates.length > 0) {
             errors.push(`Duplicate names found: ${[...new Set(duplicates)].join(', ')}`);
+          }
+        }
+      }
+
+      if (mode === 'starting_xi') {
+        if (!content.match_name) errors.push('Match name is required');
+        if (!content.competition) errors.push('Competition is required');
+        if (!content.team) errors.push('Team name is required');
+        if (!content.match_date) errors.push('Match date is required');
+
+        if (!content.players || content.players.length !== 11) {
+          errors.push('Exactly 11 players are required');
+        } else {
+          content.players.forEach((player, i) => {
+            if (!player.player_name) errors.push(`Position ${player.position_key}: Player name is required`);
+          });
+
+          // Check that at least one player is hidden
+          const hiddenCount = content.players.filter(p => p.is_hidden).length;
+          if (hiddenCount === 0) {
+            errors.push('At least one player must be hidden');
+          }
+
+          // Check for duplicate player names
+          const names = content.players.map(p => p.player_name.toLowerCase().trim()).filter(n => n);
+          const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
+          if (duplicates.length > 0) {
+            errors.push(`Duplicate player names found: ${[...new Set(duplicates)].join(', ')}`);
           }
         }
       }
@@ -1098,6 +1556,14 @@
       document.getElementById('tt-title').value = '';
       document.getElementById('tt-category').value = '';
       initTopTensAnswers();
+
+      // Reset Starting XI
+      document.getElementById('sxi-match-name').value = '';
+      document.getElementById('sxi-competition').value = '';
+      document.getElementById('sxi-team').value = '';
+      document.getElementById('sxi-match-date').value = '';
+      document.getElementById('sxi-formation').value = '4-3-3';
+      initStartingXIPlayers();
 
       // Hide validation
       document.getElementById('validation-section').classList.add('hidden');

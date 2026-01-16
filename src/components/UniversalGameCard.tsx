@@ -21,6 +21,7 @@ import {
   Check,
   ListOrdered,
   Crown,
+  Users,
 } from 'lucide-react-native';
 import { GlassCard } from './GlassCard';
 import { ElevatedButton } from './ElevatedButton';
@@ -154,6 +155,13 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
         subtitle: 'Name all 10',
         icon: <ListOrdered color={colors.pitchGreen} size={32} />,
         iconColor: colors.pitchGreen,
+      };
+    case 'starting_xi':
+      return {
+        title: 'Starting XI',
+        subtitle: 'Name the lineup',
+        icon: <Users color={colors.cardYellow} size={32} />,
+        iconColor: colors.cardYellow,
       };
     default:
       return {

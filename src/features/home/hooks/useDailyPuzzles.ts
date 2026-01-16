@@ -52,6 +52,7 @@ const GAME_MODE_ORDER: GameMode[] = [
   'the_grid',
   'topical_quiz',
   'top_tens',
+  'starting_xi',
 ];
 
 /**
