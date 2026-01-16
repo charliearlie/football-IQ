@@ -1,9 +1,9 @@
 /**
- * TacticalRadarChart - 6-axis radar visualization
+ * TacticalRadarChart - 7-axis radar visualization
  *
  * A custom SVG radar chart showing proficiency across all game modes.
  * Features:
- * - 6 axes at 60-degree intervals (hexagonal shape)
+ * - 7 axes at ~51-degree intervals (heptagonal shape)
  * - Animated "grow from center" on mount
  * - Interactive axis labels with highlight on tap
  * - Filled polygon representing actual proficiency values
@@ -30,6 +30,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 /**
  * Radar axis configuration
  * Angles are in degrees, starting from top (270°) going clockwise
+ * 7 axes evenly distributed: 360° / 7 = ~51.43° per axis
  */
 const RADAR_AXES: Array<{
   angle: number;
@@ -38,11 +39,12 @@ const RADAR_AXES: Array<{
   shortLabel: string;
 }> = [
   { angle: 270, label: 'Deduction', gameMode: 'career_path', shortLabel: 'DED' },
-  { angle: 330, label: 'Market Knowledge', gameMode: 'guess_the_transfer', shortLabel: 'MKT' },
-  { angle: 30, label: 'Rapid Recall', gameMode: 'guess_the_goalscorers', shortLabel: 'RCL' },
-  { angle: 90, label: 'Pattern Recognition', gameMode: 'the_grid', shortLabel: 'PAT' },
-  { angle: 150, label: 'Current Affairs', gameMode: 'topical_quiz', shortLabel: 'AFF' },
-  { angle: 210, label: 'Strategic Logic', gameMode: 'tic_tac_toe', shortLabel: 'LOG' },
+  { angle: 321, label: 'Expert Deduction', gameMode: 'career_path_pro', shortLabel: 'PRO' },
+  { angle: 13, label: 'Market Knowledge', gameMode: 'guess_the_transfer', shortLabel: 'MKT' },
+  { angle: 64, label: 'Rapid Recall', gameMode: 'guess_the_goalscorers', shortLabel: 'RCL' },
+  { angle: 116, label: 'Pattern Recognition', gameMode: 'the_grid', shortLabel: 'PAT' },
+  { angle: 167, label: 'Current Affairs', gameMode: 'topical_quiz', shortLabel: 'AFF' },
+  { angle: 219, label: 'Strategic Logic', gameMode: 'tic_tac_toe', shortLabel: 'LOG' },
 ];
 
 /**
@@ -163,7 +165,7 @@ function TacticalRadarChartComponent({ proficiencies, testID }: TacticalRadarCha
     };
   });
 
-  // Build background grid points (hexagon at each percentage level)
+  // Build background grid points (heptagon at each percentage level)
   const gridLevels = [25, 50, 75, 100];
   const buildGridPath = useCallback(
     (percentage: number) => {

@@ -295,7 +295,14 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
         error: new Error('No score to share'),
       };
     }
-    return shareGameResult(state.score, totalSteps, puzzle.puzzle_date);
+    // Use dynamic title based on game mode
+    const title = puzzle.game_mode === 'career_path_pro'
+      ? 'Football IQ - Career Path Pro'
+      : 'Football IQ - Career Path';
+    return shareGameResult(state.score, totalSteps, {
+      puzzleDate: puzzle.puzzle_date,
+      title,
+    });
   }, [state.score, totalSteps, puzzle]);
 
   // Auto-scroll to bottom when new step revealed

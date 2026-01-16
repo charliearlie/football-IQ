@@ -114,6 +114,13 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
         icon: <Briefcase color={colors.cardYellow} size={32} />,
         iconColor: colors.cardYellow,
       };
+    case 'career_path_pro':
+      return {
+        title: 'Career Path Pro',
+        subtitle: 'Premium challenge',
+        icon: <Briefcase color={colors.cardYellow} size={32} />,
+        iconColor: colors.cardYellow,
+      };
     case 'guess_the_transfer':
       return {
         title: 'Transfer Guess',
@@ -244,9 +251,20 @@ export function UniversalGameCard({
     ? { ...styles.card, ...styles.lockedCard }
     : styles.card;
 
+  // Check if this is a Career Path Pro card
+  const isProMode = gameMode === 'career_path_pro';
+
   return (
     <Animated.View style={animatedStyle}>
       <GlassCard style={cardStyle} testID={testID}>
+        {/* PRO Sash - diagonal ribbon for Career Path Pro */}
+        {isProMode && (
+          <View style={styles.proSashContainer} pointerEvents="none">
+            <View style={styles.proSash}>
+              <Text style={styles.proSashText}>PRO</Text>
+            </View>
+          </View>
+        )}
         <Pressable
           style={styles.content}
           onPress={onPress}
@@ -263,8 +281,8 @@ export function UniversalGameCard({
                   <Check size={12} color={colors.stadiumNavy} strokeWidth={3} />
                 </View>
               )}
-              {/* Premium badge - crown for premium-only modes */}
-              {isPremiumOnly && (
+              {/* Premium badge - crown for premium-only modes (except Pro which has sash) */}
+              {isPremiumOnly && !isProMode && (
                 <View style={styles.premiumBadge} testID={`${testID}-premium-badge`}>
                   <Crown size={10} color={colors.stadiumNavy} strokeWidth={2.5} />
                 </View>
@@ -313,11 +331,36 @@ export function UniversalGameCard({
 const styles = StyleSheet.create({
   card: {
     marginBottom: spacing.md,
+    overflow: 'hidden', // Clip the PRO sash
   },
   lockedCard: {
     // "Velvet Rope" design: content stays vibrant, subtle gold border signals premium
     borderWidth: 1,
     borderColor: 'rgba(250, 204, 21, 0.3)',
+  },
+  proSashContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 80,
+    height: 80,
+    overflow: 'hidden',
+    zIndex: 10,
+  },
+  proSash: {
+    position: 'absolute',
+    top: 12,
+    right: -24,
+    backgroundColor: colors.cardYellow,
+    paddingHorizontal: 28,
+    paddingVertical: 3,
+    transform: [{ rotate: '45deg' }],
+  },
+  proSashText: {
+    color: colors.stadiumNavy,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
   content: {
     flexDirection: 'row',

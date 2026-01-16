@@ -14,10 +14,14 @@ function getTodayDate(): string {
  */
 const GAME_MODES: GameMode[] = [
   'career_path',
+  'career_path_pro',
   'tic_tac_toe',
+  'the_grid',
   'guess_the_transfer',
   'guess_the_goalscorers',
   'topical_quiz',
+  'top_tens',
+  'starting_xi',
 ];
 
 /**

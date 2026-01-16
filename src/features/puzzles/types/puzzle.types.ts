@@ -33,6 +33,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
  */
 export type GameMode =
   | 'career_path'
+  | 'career_path_pro'
   | 'tic_tac_toe'
   | 'the_grid'
   | 'guess_the_transfer'

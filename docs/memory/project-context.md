@@ -1,14 +1,15 @@
 # Football IQ - Project Context
 
 ## Overview
-Football IQ is a mobile trivia game featuring daily puzzles across 7 game modes:
+Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 1. **Career Path** - Guess player from sequential career clues
-2. **The Grid** - Fill 3x3 matrix with players matching criteria
-3. **Transfer Guess** - Identify player from transfer info
-4. **Goalscorer Recall** - Name scorers from historic match (timed)
-5. **Topical Quiz** - 5 multiple-choice questions
-6. **Top Tens** (Premium) - Name all 10 answers in a ranked list
-7. **Starting XI** - Identify hidden players on a tactical pitch lineup
+2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
+3. **The Grid** - Fill 3x3 matrix with players matching criteria
+4. **Transfer Guess** - Identify player from transfer info
+5. **Goalscorer Recall** - Name scorers from historic match (timed)
+6. **Topical Quiz** - 5 multiple-choice questions
+7. **Top Tens** (Premium) - Name all 10 answers in a ranked list
+8. **Starting XI** - Identify hidden players on a tactical pitch lineup
 
 ## Tech Stack
 | Layer | Technology |
@@ -104,6 +105,16 @@ Guess player from sequential career steps. Each wrong guess reveals next step as
 **Scoring**: `totalSteps - (revealedSteps - 1)` points (0 if lost)
 **Display**: `⬛` hidden, `⬜` revealed, `🟩` winning step, `🟥` lost
 **Files**: `src/features/career-path/`
+
+### Career Path Pro (Premium Only)
+Premium version of Career Path using the same unified engine. Features harder/more obscure players.
+Uses `PremiumOnlyGate` wrapper - non-premium users cannot access regardless of puzzle date.
+
+**Content**: Same structure as Career Path
+**Scoring**: Same scoring formula as Career Path
+**Display**: Same emoji grid with "Career Path Pro" title
+**Access**: `PremiumOnlyGate` component wraps screens
+**Files**: `app/career-path-pro/`, `src/features/career-path/` (shared engine)
 
 ### Transfer Guess
 Identify player from transfer details. Hints revealed voluntarily (not on wrong guess).
@@ -267,6 +278,7 @@ Visual replay of completed games showing user choices, hints used, and outcomes.
 app/
   (tabs)/              # Bottom tabs: Home, Archive, My IQ, Settings
   career-path/         # Career Path routes
+  career-path-pro/     # Career Path Pro routes (premium, shared engine)
   transfer-guess/      # Transfer Guess routes
   goalscorer-recall/   # Goalscorer Recall routes
   the-grid/            # The Grid routes

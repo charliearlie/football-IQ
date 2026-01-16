@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useStablePuzzle } from '@/features/puzzles';
+import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
@@ -41,7 +42,7 @@ interface CareerPathMetadata {
 interface CareerPathScreenProps {
   /**
    * Optional puzzle ID to load a specific puzzle.
-   * If not provided, loads today's career_path puzzle.
+   * If not provided, loads today's puzzle for the specified gameMode.
    */
   puzzleId?: string;
   /**
@@ -49,6 +50,19 @@ interface CareerPathScreenProps {
    * When true, shows all answers and the user's previous guesses.
    */
   isReviewMode?: boolean;
+  /**
+   * Game mode variant. Defaults to 'career_path'.
+   * Use 'career_path_pro' for premium Career Path Pro mode.
+   */
+  gameMode?: 'career_path' | 'career_path_pro';
+}
+
+/**
+ * Get the screen title based on game mode and review state.
+ */
+function getScreenTitle(gameMode: 'career_path' | 'career_path_pro', isReviewMode: boolean): string {
+  const baseTitle = gameMode === 'career_path_pro' ? 'Career Path Pro' : 'Career Path';
+  return isReviewMode ? `${baseTitle} - Review` : baseTitle;
 }
 
 /**
@@ -63,11 +77,16 @@ interface CareerPathScreenProps {
 export function CareerPathScreen({
   puzzleId,
   isReviewMode = false,
+  gameMode = 'career_path',
 }: CareerPathScreenProps) {
   const router = useRouter();
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
-  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'career_path');
+  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? gameMode);
+
+  // Get dynamic title based on game mode
+  const screenTitle = getScreenTitle(gameMode, false);
+  const reviewTitle = getScreenTitle(gameMode, true);
   const {
     state,
     careerSteps,
@@ -89,7 +108,7 @@ export function CareerPathScreen({
   // Loading state
   if (isLoading) {
     return (
-      <GameContainer title="Career Path" testID="career-path-screen">
+      <GameContainer title={screenTitle} testID="career-path-screen">
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
           <Text style={[textStyles.body, styles.loadingText]}>
@@ -103,11 +122,11 @@ export function CareerPathScreen({
   // No puzzle available
   if (!puzzle || careerSteps.length === 0) {
     return (
-      <GameContainer title="Career Path" testID="career-path-screen">
+      <GameContainer title={screenTitle} testID="career-path-screen">
         <View style={styles.centered}>
           <Text style={textStyles.h2}>No Puzzle Today</Text>
           <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
-            Check back later for today's Career Path challenge
+            Check back later for today's challenge
           </Text>
         </View>
       </GameContainer>
@@ -119,7 +138,7 @@ export function CareerPathScreen({
     // Still loading attempt data
     if (isReviewLoading) {
       return (
-        <GameContainer title="Career Path - Review" testID="career-path-review">
+        <GameContainer title={reviewTitle} testID="career-path-review">
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.pitchGreen} />
             <Text style={[textStyles.body, styles.loadingText]}>
@@ -142,7 +161,7 @@ export function CareerPathScreen({
 
     return (
       <GameContainer
-        title="Career Path - Review"
+        title={reviewTitle}
         testID="career-path-review"
       >
         <ScrollView
@@ -222,7 +241,7 @@ export function CareerPathScreen({
 
   return (
     <GameContainer
-      title="Career Path"
+      title={screenTitle}
       headerRight={progressIndicator}
       testID="career-path-screen"
     >

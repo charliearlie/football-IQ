@@ -125,6 +125,28 @@ calculateScore(10, 3, true)  // { points: 8, maxPoints: 10, won: true }
 await shareResult();  // Returns ShareResult { success, method }
 ```
 
+## Career Path Pro Game (Premium)
+Career Path Pro uses the same unified engine as Career Path but with premium-only access.
+
+```typescript
+// Route: app/career-path-pro/[puzzleId].tsx
+import { CareerPathScreen } from '@/features/career-path';
+import { PremiumOnlyGate } from '@/features/top-tens';
+
+// PremiumOnlyGate blocks ALL non-premium users (not date-based)
+<PremiumOnlyGate>
+  <CareerPathScreen
+    puzzleId={puzzleId}
+    isReviewMode={isReviewMode}
+    gameMode="career_path_pro"  // Enables Pro title styling
+  />
+</PremiumOnlyGate>
+
+// Content structure: Same as Career Path
+// Scoring: Same as Career Path
+// Display: Same emoji grid, "Career Path Pro" title
+```
+
 ## Transfer Guess Game
 ```typescript
 import {
@@ -700,12 +722,15 @@ interface Badge {
 
 // IQ Weights (sum to 1.0)
 const IQ_WEIGHTS = {
-  career_path: 0.25,
-  guess_the_transfer: 0.25,
-  guess_the_goalscorers: 0.20,
-  tic_tac_toe: 0.05,       // Legacy
-  the_grid: 0.10,          // Replaced Tic Tac Toe
-  topical_quiz: 0.15,
+  career_path: 0.15,           // Flagship mode
+  career_path_pro: 0.10,       // Premium flagship
+  guess_the_transfer: 0.15,    // Flagship mode
+  guess_the_goalscorers: 0.12,
+  tic_tac_toe: 0.05,           // Legacy
+  the_grid: 0.10,
+  topical_quiz: 0.10,
+  top_tens: 0.13,              // Premium mode
+  starting_xi: 0.10,
 };
 
 // Normalize a single attempt's score to 0-100
@@ -1096,7 +1121,8 @@ const result = await prefetchQuizImages(urls);
 - RLS Tests: `tests/supabase_rls_test.sql`
 - Auth Feature: `src/features/auth/`
 - Puzzle Feature: `src/features/puzzles/`
-- Career Path: `src/features/career-path/`
+- Career Path: `src/features/career-path/` (shared engine for standard + pro)
+- Career Path Pro Routes: `app/career-path-pro/` (premium-only, uses shared engine)
 - Transfer Guess: `src/features/transfer-guess/`
 - Goalscorer Recall: `src/features/goalscorer-recall/`
 - Tic Tac Toe: `src/features/tic-tac-toe/` (legacy)
@@ -1116,6 +1142,7 @@ app/
   _layout.tsx           # Root layout (fonts, DB init, AuthProvider)
   (tabs)/_layout.tsx    # Tab navigator
   career-path/          # Career Path game routes
+  career-path-pro/      # Career Path Pro game routes (premium-only, shared engine)
   tic-tac-toe/          # Tic Tac Toe game routes (legacy)
   the-grid/             # The Grid game routes
   transfer-guess/       # Transfer Guess game routes
@@ -1253,7 +1280,7 @@ open tools/content-creator.html
 3. Fill form → Review JSON → Push to Supabase
 ```
 
-Supported game modes: `career_path`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `topical_quiz`, `top_tens`, `starting_xi`
+Supported game modes: `career_path`, `career_path_pro`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `topical_quiz`, `top_tens`, `starting_xi`
 
 ## RevenueCat Integration
 ```typescript

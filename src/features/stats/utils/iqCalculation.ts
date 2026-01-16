@@ -44,7 +44,8 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
   }
 
   switch (gameMode) {
-    case 'career_path': {
+    case 'career_path':
+    case 'career_path_pro': {
       // Games save: won, totalSteps, revealedCount
       // Score = totalSteps - (revealedCount - 1) if won, else 0
       const won = data.won === true;
@@ -100,6 +101,22 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
       return Math.round((correctCount / 5) * 100);
     }
 
+    case 'top_tens': {
+      // Games save: foundCount (0-10)
+      // 10 found = 100%, each found = 10%
+      const foundCount = getMetadataNumber(data, 'foundCount');
+      return Math.round((foundCount / 10) * 100);
+    }
+
+    case 'starting_xi': {
+      // Games save: foundCount, totalHidden
+      // Score = foundCount / totalHidden * 100
+      const foundCount = getMetadataNumber(data, 'foundCount');
+      const totalHidden = getMetadataNumber(data, 'totalHidden');
+      if (totalHidden === 0) return 0;
+      return Math.round((foundCount / totalHidden) * 100);
+    }
+
     default:
       return 0;
   }
@@ -124,7 +141,8 @@ export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
   if (!data) return false;
 
   switch (gameMode) {
-    case 'career_path': {
+    case 'career_path':
+    case 'career_path_pro': {
       // Perfect = won on first clue (revealedCount = 1)
       const won = data.won === true;
       const revealedCount = getMetadataNumber(data, 'revealedCount');
@@ -161,6 +179,19 @@ export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
       // Perfect = all 5 questions correct
       const correctCount = getMetadataNumber(data, 'correctCount');
       return correctCount === 5;
+    }
+
+    case 'top_tens': {
+      // Perfect = all 10 answers found
+      const foundCount = getMetadataNumber(data, 'foundCount');
+      return foundCount === 10;
+    }
+
+    case 'starting_xi': {
+      // Perfect = found all hidden players
+      const foundCount = getMetadataNumber(data, 'foundCount');
+      const totalHidden = getMetadataNumber(data, 'totalHidden');
+      return totalHidden > 0 && foundCount === totalHidden;
     }
 
     default:

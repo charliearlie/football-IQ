@@ -47,6 +47,7 @@ function getTodayDate(): string {
  */
 const GAME_MODE_ORDER: GameMode[] = [
   'career_path',
+  'career_path_pro',
   'guess_the_transfer',
   'guess_the_goalscorers',
   'the_grid',
@@ -59,7 +60,7 @@ const GAME_MODE_ORDER: GameMode[] = [
  * Game modes that require premium subscription.
  * These are shown as locked for free users.
  */
-const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['top_tens']);
+const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens']);
 
 /**
  * Hook to get today's puzzles with their completion status.
@@ -159,6 +160,20 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
         };
         // Insert at correct position
         validCards.splice(quizIndex, 0, placeholderCard);
+      }
+
+      // If career_path_pro has no puzzle, add a placeholder (premium-only)
+      if (!puzzleMap.has('career_path_pro')) {
+        const proIndex = GAME_MODE_ORDER.indexOf('career_path_pro');
+        const placeholderCard: DailyPuzzleCard = {
+          puzzleId: 'coming-soon-career-pro',
+          gameMode: 'career_path_pro',
+          status: 'play', // Will be handled specially in the component
+          difficulty: null,
+          isPremiumOnly: true,
+        };
+        // Insert at correct position
+        validCards.splice(proIndex, 0, placeholderCard);
       }
 
       // If top_tens has no puzzle, add a placeholder (premium-only)

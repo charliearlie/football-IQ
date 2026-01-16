@@ -279,6 +279,7 @@
           <label class="form-label">Game Mode</label>
           <select id="game-mode" class="form-input" onchange="switchGameMode()">
             <option value="career_path">Career Path</option>
+            <option value="career_path_pro">Career Path Pro (Premium)</option>
             <option value="guess_the_transfer">Transfer Guess</option>
             <option value="guess_the_goalscorers">Goalscorer Recall</option>
             <option value="tic_tac_toe">Tic Tac Toe</option>
@@ -662,6 +663,7 @@
 
       const titles = {
         'career_path': 'Career Path',
+        'career_path_pro': 'Career Path Pro',
         'guess_the_transfer': 'Transfer Guess',
         'guess_the_goalscorers': 'Goalscorer Recall',
         'tic_tac_toe': 'Tic Tac Toe',
@@ -672,7 +674,7 @@
 
       document.getElementById('form-title').textContent = titles[mode];
 
-      if (mode === 'career_path') {
+      if (mode === 'career_path' || mode === 'career_path_pro') {
         document.getElementById('career-path-form').classList.remove('hidden');
       } else if (mode === 'guess_the_transfer') {
         document.getElementById('transfer-guess-form').classList.remove('hidden');
@@ -1176,7 +1178,7 @@
     function generateContent() {
       const mode = document.getElementById('game-mode').value;
 
-      if (mode === 'career_path') {
+      if (mode === 'career_path' || mode === 'career_path_pro') {
         return {
           answer: document.getElementById('cp-answer').value.trim(),
           career_steps: careerSteps.map(s => {
@@ -1318,7 +1320,7 @@
         errors.push('Puzzle date is required');
       }
 
-      if (mode === 'career_path') {
+      if (mode === 'career_path' || mode === 'career_path_pro') {
         if (!content.answer) errors.push('Answer (player name) is required');
         if (content.career_steps.length < 3) errors.push('At least 3 career steps required');
         content.career_steps.forEach((step, i) => {

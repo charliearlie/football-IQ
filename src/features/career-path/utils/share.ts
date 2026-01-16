@@ -23,6 +23,16 @@ export interface ShareResult {
 }
 
 /**
+ * Options for sharing game results.
+ */
+export interface ShareOptions {
+  /** Puzzle date in YYYY-MM-DD format */
+  puzzleDate: string;
+  /** Custom title for share text (default: "Football IQ - Career Path") */
+  title?: string;
+}
+
+/**
  * Share game results.
  *
  * Behavior by platform:
@@ -31,23 +41,35 @@ export interface ShareResult {
  *
  * @param score - Game score data
  * @param totalSteps - Total puzzle steps
- * @param puzzleDate - Date of the puzzle (YYYY-MM-DD)
+ * @param options - Share options including puzzleDate and optional title
  * @returns ShareResult with success status and method used
  *
  * @example
- * const result = await shareGameResult(score, 10, '2025-01-15');
+ * const result = await shareGameResult(score, 10, { puzzleDate: '2025-01-15' });
  * if (result.success && result.method === 'clipboard') {
  *   showToast('Copied to clipboard!');
  * }
+ *
+ * // With custom title for Career Path Pro:
+ * await shareGameResult(score, 10, {
+ *   puzzleDate: '2025-01-15',
+ *   title: 'Football IQ - Career Path Pro'
+ * });
  */
 export async function shareGameResult(
   score: GameScore,
   totalSteps: number,
-  puzzleDate: string
+  options: ShareOptions | string // Support legacy string puzzleDate for backwards compatibility
 ): Promise<ShareResult> {
+  // Handle legacy call signature (just puzzleDate string)
+  const { puzzleDate, title } = typeof options === 'string'
+    ? { puzzleDate: options, title: undefined }
+    : options;
+
   const shareText = generateScoreDisplay(score, totalSteps, {
     includeDate: true,
     puzzleDate,
+    title,
   });
 
   try {

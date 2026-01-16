@@ -23,11 +23,14 @@ export const GAME_MODE_DISPLAY: Record<
   { displayName: string; skillName: string }
 > = {
   career_path: { displayName: 'Career Path', skillName: 'Deduction' },
+  career_path_pro: { displayName: 'Career Path Pro', skillName: 'Expert Deduction' },
   guess_the_transfer: { displayName: 'Transfer Guess', skillName: 'Market Knowledge' },
   guess_the_goalscorers: { displayName: 'Goalscorer Recall', skillName: 'Rapid Recall' },
   tic_tac_toe: { displayName: 'Tic Tac Toe', skillName: 'Strategic Logic' },
   the_grid: { displayName: 'The Grid', skillName: 'Pattern Recognition' },
   topical_quiz: { displayName: 'Topical Quiz', skillName: 'Current Affairs' },
+  top_tens: { displayName: 'Top Tens', skillName: 'Deep Knowledge' },
+  starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },
 };
 
 /**
@@ -36,12 +39,15 @@ export const GAME_MODE_DISPLAY: Record<
  * Total: 100%
  */
 export const IQ_WEIGHTS: Record<GameMode, number> = {
-  career_path: 0.25, // 25%
-  guess_the_transfer: 0.25, // 25%
-  guess_the_goalscorers: 0.2, // 20%
+  career_path: 0.15, // 15% - flagship mode
+  career_path_pro: 0.10, // 10% - premium flagship
+  guess_the_transfer: 0.15, // 15% - flagship mode
+  guess_the_goalscorers: 0.12, // 12%
   tic_tac_toe: 0.05, // 5% (legacy)
-  the_grid: 0.1, // 10%
-  topical_quiz: 0.15, // 15%
+  the_grid: 0.10, // 10%
+  topical_quiz: 0.10, // 10%
+  top_tens: 0.13, // 13% - premium mode
+  starting_xi: 0.10, // 10%
 };
 
 /**

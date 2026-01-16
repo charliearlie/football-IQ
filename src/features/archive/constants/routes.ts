@@ -12,6 +12,7 @@ import { GameMode } from '@/features/puzzles/types/puzzle.types';
  */
 export const GAME_MODE_ROUTES: Record<GameMode, string> = {
   career_path: 'career-path',
+  career_path_pro: 'career-path-pro',
   guess_the_transfer: 'transfer-guess',
   guess_the_goalscorers: 'goalscorer-recall',
   tic_tac_toe: 'tic-tac-toe',

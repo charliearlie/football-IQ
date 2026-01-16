@@ -24,7 +24,7 @@ export { calculateScore } from './utils/scoring';
 export type { GameScore } from './utils/scoring';
 export { generateScoreDisplay, generateEmojiGrid } from './utils/scoreDisplay';
 export { shareGameResult, copyToClipboard } from './utils/share';
-export type { ShareResult } from './utils/share';
+export type { ShareResult, ShareOptions } from './utils/share';
 
 // Types
 export type {

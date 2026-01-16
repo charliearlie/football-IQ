@@ -6,10 +6,14 @@ import { GameMode, ParsedLocalPuzzle, UsePuzzleResult } from '../types/puzzle.ty
 /** Valid game modes for type checking */
 const GAME_MODES: GameMode[] = [
   'career_path',
+  'career_path_pro',
   'tic_tac_toe',
+  'the_grid',
   'guess_the_transfer',
   'guess_the_goalscorers',
   'topical_quiz',
+  'top_tens',
+  'starting_xi',
 ];
 
 /** Check if a string is a valid game mode */
