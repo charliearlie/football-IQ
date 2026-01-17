@@ -318,16 +318,8 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
     });
   }, [state.score, totalSteps, puzzle]);
 
-  // Auto-scroll to bottom when new step revealed
-  useEffect(() => {
-    if (flatListRef.current && state.revealedCount > 1) {
-      // Small delay to allow animation to start
-      const timer = setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [state.revealedCount]);
+  // NOTE: Auto-scroll removed to prevent input from jumping when user types.
+  // The timeline is compact enough that users can see their guesses without auto-scroll.
 
   // Clear shake animation after delay
   useEffect(() => {

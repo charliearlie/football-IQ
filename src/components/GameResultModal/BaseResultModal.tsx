@@ -55,6 +55,10 @@ export interface BaseResultModalProps {
 
   /** Whether to show confetti (default: true for win) */
   showConfetti?: boolean;
+  /** Hide the default button container (for custom button layouts in children) */
+  hideDefaultButtons?: boolean;
+  /** Hide the close X button (when using custom Home button) */
+  hideCloseButton?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -108,6 +112,8 @@ export function BaseResultModal({
   onClose,
   closeLabel = 'Done',
   showConfetti,
+  hideDefaultButtons = false,
+  hideCloseButton = false,
   testID,
 }: BaseResultModalProps) {
   const { triggerNotification } = useHaptics();
@@ -153,7 +159,7 @@ export function BaseResultModal({
           style={[styles.modal, { borderColor }]}
         >
           {/* Close X button */}
-          {onClose && (
+          {onClose && !hideCloseButton && (
             <Pressable
               style={styles.closeButton}
               onPress={onClose}
@@ -178,31 +184,33 @@ export function BaseResultModal({
           {/* Message (if provided) */}
           {message && <Text style={styles.message}>{message}</Text>}
 
-          {/* Action Buttons */}
-          <View style={styles.buttonContainer}>
-            {onShare && (
-              <ElevatedButton
-                title={buttonTitle}
-                onPress={handleShare}
-                size="small"
-                style={onReview ? styles.buttonHalf : styles.buttonFull}
-                topColor={buttonColors.topColor}
-                shadowColor={buttonColors.shadowColor}
-                testID="share-button"
-              />
-            )}
-            {onReview && (
-              <ElevatedButton
-                title="Review"
-                onPress={onReview}
-                size="small"
-                style={onShare ? styles.buttonHalf : styles.buttonFull}
-                topColor={colors.cardYellow}
-                shadowColor="#B8960F"
-                testID="review-button"
-              />
-            )}
-          </View>
+          {/* Action Buttons (unless custom layout in children) */}
+          {!hideDefaultButtons && (
+            <View style={styles.buttonContainer}>
+              {onShare && (
+                <ElevatedButton
+                  title={buttonTitle}
+                  onPress={handleShare}
+                  size="small"
+                  style={onReview ? styles.buttonHalf : styles.buttonFull}
+                  topColor={buttonColors.topColor}
+                  shadowColor={buttonColors.shadowColor}
+                  testID="share-button"
+                />
+              )}
+              {onReview && (
+                <ElevatedButton
+                  title="Review"
+                  onPress={onReview}
+                  size="small"
+                  style={onShare ? styles.buttonHalf : styles.buttonFull}
+                  topColor={colors.cardYellow}
+                  shadowColor="#B8960F"
+                  testID="review-button"
+                />
+              )}
+            </View>
+          )}
         </Animated.View>
       </View>
     </Modal>

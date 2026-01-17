@@ -1,18 +1,22 @@
 /**
  * Career Path Game Result Modal
  *
- * Displays game results using the shared BaseResultModal component.
- * Includes "View Full Path" button for winners to see their complete career path.
+ * Displays game results with a premium button layout:
+ * - Share icon button (centered)
+ * - Score distribution
+ * - "View career" + "Home" action buttons
  */
 
-import React from 'react';
-import { Trophy, XCircle } from 'lucide-react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Trophy, XCircle, Share2 } from 'lucide-react-native';
 import {
   BaseResultModal,
   AnswerReveal,
 } from '@/components/GameResultModal';
-import { ElevatedButton } from '@/components';
+import { ElevatedButton, IconButton } from '@/components';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
+import { useHaptics } from '@/hooks/useHaptics';
 import { colors, spacing } from '@/theme';
 import { GameScore } from '../types/careerPath.types';
 import { ShareResult } from '../utils/share';
@@ -43,7 +47,7 @@ interface GameResultModalProps {
 }
 
 /**
- * Career Path game result modal with win/loss display.
+ * Career Path game result modal with premium button layout.
  */
 export function GameResultModal({
   visible,
@@ -53,11 +57,36 @@ export function GameResultModal({
   totalSteps,
   puzzleId,
   onShare,
-  onReview,
   onViewPath,
   onClose,
   testID,
 }: GameResultModalProps) {
+  const { triggerSelection, triggerNotification } = useHaptics();
+  const [shareLabel, setShareLabel] = useState<string | undefined>(undefined);
+
+  // Handle share with feedback
+  const handleShare = useCallback(async () => {
+    triggerSelection();
+    try {
+      const result = await onShare();
+      if (result.success) {
+        triggerNotification('success');
+        // Show appropriate label based on share method
+        const label = Platform.OS === 'web' || result.method === 'clipboard'
+          ? 'Copied!'
+          : 'Shared!';
+        setShareLabel(label);
+        // Reset after 2 seconds
+        setTimeout(() => setShareLabel(undefined), 2000);
+      }
+    } catch {
+      // Silently fail - user cancelled or error
+    }
+  }, [onShare, triggerSelection, triggerNotification]);
+
+  // Determine if we show two buttons or just one
+  const showViewCareer = won && onViewPath;
+
   return (
     <BaseResultModal
       visible={visible}
@@ -75,22 +104,26 @@ export function GameResultModal({
           ? `Solved with ${score.stepsRevealed} clue${score.stepsRevealed > 1 ? 's' : ''} revealed!`
           : 'Better luck tomorrow!'
       }
-      onShare={onShare}
-      onReview={onReview}
-      onClose={onClose}
+      hideDefaultButtons
+      hideCloseButton
       testID={testID}
     >
+      {/* Answer reveal for loss */}
       {!won && <AnswerReveal value={correctAnswer} />}
-      {/* View Full Path button - win only */}
-      {won && onViewPath && (
-        <ElevatedButton
-          title="View Full Path"
-          onPress={onViewPath}
-          variant="secondary"
-          style={{ marginBottom: spacing.md }}
-          testID={testID ? `${testID}-view-path` : undefined}
+
+      {/* Share icon button - centered */}
+      <View style={styles.shareContainer}>
+        <IconButton
+          icon={<Share2 size={20} color={colors.stadiumNavy} />}
+          onPress={handleShare}
+          label={shareLabel}
+          variant="primary"
+          size="medium"
+          testID={testID ? `${testID}-share` : 'share-icon-button'}
         />
-      )}
+      </View>
+
+      {/* Score distribution */}
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="career_path"
@@ -98,6 +131,46 @@ export function GameResultModal({
         maxSteps={totalSteps}
         testID={testID ? `${testID}-distribution` : undefined}
       />
+
+      {/* Action buttons row */}
+      <View style={styles.buttonRow}>
+        {showViewCareer && (
+          <ElevatedButton
+            title="View career"
+            onPress={onViewPath}
+            variant="secondary"
+            size="small"
+            style={styles.buttonHalf}
+            testID={testID ? `${testID}-view-path` : undefined}
+          />
+        )}
+        <ElevatedButton
+          title="Home"
+          onPress={onClose}
+          variant="primary"
+          size="small"
+          style={showViewCareer ? styles.buttonHalf : styles.buttonFull}
+          testID={testID ? `${testID}-home` : undefined}
+        />
+      </View>
     </BaseResultModal>
   );
 }
+
+const styles = StyleSheet.create({
+  shareContainer: {
+    marginBottom: spacing.md,
+    alignItems: 'center',
+  },
+  buttonRow: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  buttonHalf: {
+    flex: 1,
+  },
+  buttonFull: {
+    flex: 1,
+  },
+});
