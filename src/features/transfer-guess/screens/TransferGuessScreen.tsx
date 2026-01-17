@@ -1,10 +1,12 @@
-import { useCallback } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useStablePuzzle } from '@/features/puzzles';
@@ -18,8 +20,9 @@ import {
   ReviewModeBanner,
 } from '@/components';
 import { useTransferGuessGame } from '../hooks/useTransferGuessGame';
-import { TransferCard } from '../components/TransferCard';
-import { HintsSection } from '../components/HintsSection';
+import { MarketMovementHeader } from '../components/MarketMovementHeader';
+import { DossierGrid } from '../components/DossierGrid';
+import { TransferGameOverZone } from '../components/TransferGameOverZone';
 import { TransferActionZone } from '../components/TransferActionZone';
 import { TransferResultModal } from '../components/TransferResultModal';
 import { AdBanner } from '@/features/ads';
@@ -62,6 +65,10 @@ export function TransferGuessScreen({
   isReviewMode = false,
 }: TransferGuessScreenProps) {
   const router = useRouter();
+
+  // State for controlling the result modal visibility (must be before early returns)
+  const [showResultModal, setShowResultModal] = useState(false);
+
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_transfer');
@@ -139,13 +146,13 @@ export function TransferGuessScreen({
         >
           <ReviewModeBanner testID="review-banner" />
 
-          {/* Transfer Card */}
-          <TransferCard
+          {/* Market Movement Header */}
+          <MarketMovementHeader
             fromClub={transferContent.from_club}
             toClub={transferContent.to_club}
             year={transferContent.year}
             fee={transferContent.fee}
-            testID="review-transfer-card"
+            testID="review-market-header"
           />
 
           {/* Answer section - above hints for immediate visibility */}
@@ -156,11 +163,11 @@ export function TransferGuessScreen({
           />
 
           {/* Show hints as they were revealed during gameplay */}
-          <HintsSection
+          <DossierGrid
             hints={hints as [string, string, string]}
             hintsRevealed={reviewMetadata?.hintsRevealed ?? 0}
             isReviewMode={true}
-            testID="review-hints-section"
+            testID="review-dossier-grid"
           />
 
           {/* User's incorrect guesses */}
@@ -181,39 +188,61 @@ export function TransferGuessScreen({
     );
   }
 
+  // Handler to show the score breakdown modal
+  const handleSeeScore = () => {
+    setShowResultModal(true);
+  };
+
   return (
     <GameContainer title="Guess the Transfer" testID="transfer-guess-screen">
-      {/* Scrollable Content */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {/* Transfer Card */}
-        <TransferCard
-          fromClub={transferContent.from_club}
-          toClub={transferContent.to_club}
-          year={transferContent.year}
-          fee={transferContent.fee}
-          testID="transfer-card"
-        />
+        {/* Scrollable Content */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Market Movement Header (always visible) */}
+          <MarketMovementHeader
+            fromClub={transferContent.from_club}
+            toClub={transferContent.to_club}
+            year={transferContent.year}
+            fee={transferContent.fee}
+            testID="market-header"
+          />
 
-        {/* Hints Section */}
-        <HintsSection
-          hints={hints as [string, string, string]}
-          hintsRevealed={state.hintsRevealed}
-          testID="hints-section"
-        />
+          {/* Intel Dossier Grid OR Game Over Zone */}
+          {isGameOver ? (
+            <TransferGameOverZone
+              answer={answer}
+              won={state.gameStatus === 'won'}
+              onShare={shareResult}
+              onSeeScore={handleSeeScore}
+              testID="game-over-zone"
+            />
+          ) : (
+            <DossierGrid
+              hints={hints as [string, string, string]}
+              hintsRevealed={state.hintsRevealed}
+              testID="dossier-grid"
+            />
+          )}
 
-        {/* Spacer for action zone */}
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
+          {/* Spacer for action zone */}
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-      {/* Game Result Modal */}
+      {/* Game Result Modal (shown on demand after game over) */}
       {state.score && (
         <TransferResultModal
-          visible={isGameOver}
+          visible={showResultModal}
           won={state.gameStatus === 'won'}
           score={state.score}
           correctAnswer={answer}
@@ -224,20 +253,22 @@ export function TransferGuessScreen({
         />
       )}
 
-      {/* Action Zone */}
-      <TransferActionZone
-        currentGuess={state.currentGuess}
-        onGuessChange={setCurrentGuess}
-        onSubmit={submitGuess}
-        onRevealHint={revealHint}
-        onGiveUp={giveUp}
-        canRevealHint={canRevealHint}
-        guessesRemaining={guessesRemaining}
-        shouldShake={state.lastGuessIncorrect}
-        isGameOver={isGameOver}
-        incorrectGuesses={state.guesses.length}
-        testID="action-zone"
-      />
+      {/* Action Zone (hidden when game is over) */}
+      {!isGameOver && (
+        <TransferActionZone
+          currentGuess={state.currentGuess}
+          onGuessChange={setCurrentGuess}
+          onSubmit={submitGuess}
+          onRevealHint={revealHint}
+          onGiveUp={giveUp}
+          canRevealHint={canRevealHint}
+          guessesRemaining={guessesRemaining}
+          shouldShake={state.lastGuessIncorrect}
+          isGameOver={isGameOver}
+          incorrectGuesses={state.guesses.length}
+          testID="action-zone"
+        />
+      )}
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="transfer-guess-ad-banner" />
@@ -260,11 +291,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: spacing.lg,
+    flexGrow: 1,
   },
   reviewContent: {
     paddingHorizontal: layout.screenPadding,

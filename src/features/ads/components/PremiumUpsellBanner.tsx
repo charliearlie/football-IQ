@@ -54,7 +54,7 @@ export function PremiumUpsellBanner({ testID }: Omit<PremiumUpsellBannerProps, '
             pressed && styles.pressed,
           ]}
           testID={testID}
-          accessibilityLabel="Go Premium - Unlock all historical puzzles"
+          accessibilityLabel="Go Pro - Unlock all historical puzzles"
           accessibilityRole="button"
         >
           <GlassCard style={styles.card}>
@@ -66,7 +66,7 @@ export function PremiumUpsellBanner({ testID }: Omit<PremiumUpsellBannerProps, '
 
               {/* Text Content */}
               <View style={styles.textContainer}>
-                <Text style={styles.title}>Go Premium</Text>
+                <Text style={styles.title}>Go Pro</Text>
                 <Text style={styles.subtitle}>
                   Unlock 1,000+ Historical Puzzles
                 </Text>

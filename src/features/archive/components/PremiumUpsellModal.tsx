@@ -251,8 +251,8 @@ export function PremiumUpsellModal({
    * Get title based on mode and state.
    */
   const getTitle = () => {
-    if (state === 'success') return 'WELCOME TO PREMIUM!';
-    if (mode === 'blocked') return 'PREMIUM CONTENT';
+    if (state === 'success') return 'WELCOME TO PRO!';
+    if (mode === 'blocked') return 'PRO CONTENT';
     return 'UNLOCK ARCHIVE';
   };
 
@@ -261,7 +261,7 @@ export function PremiumUpsellModal({
    */
   const getSubtitle = () => {
     if (state === 'success') return 'You now have full access to everything!';
-    if (mode === 'blocked') return 'This puzzle requires premium access';
+    if (mode === 'blocked') return 'This puzzle requires Pro access';
     return 'Get unlimited access to all past puzzles';
   };
 

@@ -43,7 +43,7 @@ export function LockedMonthOverlay({
       onPress={handlePress}
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel="Unlock your full Football legacy. Tap to go premium."
+      accessibilityLabel="Unlock your full Football legacy. Tap to go Pro."
     >
       <BlurComponent
         style={styles.blur}
@@ -62,7 +62,7 @@ export function LockedMonthOverlay({
           </Text>
 
           <View style={styles.ctaButton}>
-            <Text style={styles.ctaText}>Go Premium</Text>
+            <Text style={styles.ctaText}>Go Pro</Text>
           </View>
         </View>
       </BlurComponent>

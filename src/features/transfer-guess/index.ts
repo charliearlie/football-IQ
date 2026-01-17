@@ -9,9 +9,10 @@
 export { TransferGuessScreen } from './screens/TransferGuessScreen';
 
 // Components
-export { TransferCard } from './components/TransferCard';
-export { HintSlot } from './components/HintSlot';
-export { HintsSection } from './components/HintsSection';
+export { MarketMovementHeader } from './components/MarketMovementHeader';
+export { DossierSlot } from './components/DossierSlot';
+export { DossierGrid } from './components/DossierGrid';
+export { TransferGameOverZone } from './components/TransferGameOverZone';
 export { TransferActionZone } from './components/TransferActionZone';
 export { TransferResultModal } from './components/TransferResultModal';
 

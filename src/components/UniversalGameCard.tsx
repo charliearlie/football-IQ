@@ -6,27 +6,36 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
 import {
-  Briefcase,
-  ArrowRightLeft,
-  Target,
   Grid3X3,
   HelpCircle,
   Check,
-  ListOrdered,
   Crown,
-  Users,
 } from 'lucide-react-native';
 import { GlassCard } from './GlassCard';
 import { ElevatedButton } from './ElevatedButton';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+
+/**
+ * Custom puzzle icons mapping.
+ * Maps game modes to their custom PNG icons.
+ */
+const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
+  career_path: require('../../assets/images/puzzles/career-path.png'),
+  career_path_pro: require('../../assets/images/puzzles/career-path.png'),
+  guess_the_transfer: require('../../assets/images/puzzles/guess-the-transfer.png'),
+  guess_the_goalscorers: require('../../assets/images/puzzles/goalscorer-recall.png'),
+  topical_quiz: require('../../assets/images/puzzles/quiz.png'),
+  starting_xi: require('../../assets/images/puzzles/starting-xi.png'),
+  top_tens: require('../../assets/images/puzzles/top-tens.png'),
+};
 
 /**
  * Card variants for different contexts.
@@ -106,79 +115,90 @@ const SPRING_CONFIG = {
  * Get configuration for each game mode.
  */
 function getGameModeConfig(gameMode: GameMode): GameModeConfig {
+  // Check if we have a custom icon for this game mode
+  const customIcon = PUZZLE_ICONS[gameMode];
+  const iconElement = customIcon ? (
+    <Image source={customIcon} style={iconImageStyle} resizeMode="contain" />
+  ) : null;
+
   switch (gameMode) {
     case 'career_path':
       return {
         title: 'Career Path',
         subtitle: 'Guess the player',
-        icon: <Briefcase color={colors.cardYellow} size={32} />,
+        icon: iconElement!,
         iconColor: colors.cardYellow,
       };
     case 'career_path_pro':
       return {
         title: 'Career Path Pro',
-        subtitle: 'Premium challenge',
-        icon: <Briefcase color={colors.cardYellow} size={32} />,
+        subtitle: 'Pro challenge',
+        icon: iconElement!,
         iconColor: colors.cardYellow,
       };
     case 'guess_the_transfer':
       return {
         title: 'Transfer Guess',
         subtitle: 'Name the player',
-        icon: <ArrowRightLeft color={colors.pitchGreen} size={32} />,
+        icon: iconElement!,
         iconColor: colors.pitchGreen,
       };
     case 'guess_the_goalscorers':
       return {
         title: 'Goalscorer Recall',
         subtitle: 'Remember the match',
-        icon: <Target color={colors.redCard} size={32} />,
+        icon: iconElement!,
         iconColor: colors.redCard,
       };
     case 'tic_tac_toe':
       return {
         title: 'Tic Tac Toe',
         subtitle: 'Beat the AI',
-        icon: <Grid3X3 color={colors.floodlightWhite} size={32} />,
+        icon: <Grid3X3 color={colors.floodlightWhite} size={28} />,
         iconColor: colors.floodlightWhite,
       };
     case 'the_grid':
       return {
         title: 'The Grid',
         subtitle: 'Fill the matrix',
-        icon: <Grid3X3 color={colors.pitchGreen} size={32} />,
+        icon: <Grid3X3 color={colors.pitchGreen} size={28} />,
         iconColor: colors.pitchGreen,
       };
     case 'topical_quiz':
       return {
         title: 'Quiz',
         subtitle: '5 questions',
-        icon: <HelpCircle color={colors.cardYellow} size={32} />,
+        icon: iconElement!,
         iconColor: colors.cardYellow,
       };
     case 'top_tens':
       return {
         title: 'Top Tens',
         subtitle: 'Name all 10',
-        icon: <ListOrdered color={colors.pitchGreen} size={32} />,
+        icon: iconElement!,
         iconColor: colors.pitchGreen,
       };
     case 'starting_xi':
       return {
         title: 'Starting XI',
         subtitle: 'Name the lineup',
-        icon: <Users color={colors.cardYellow} size={32} />,
+        icon: iconElement!,
         iconColor: colors.cardYellow,
       };
     default:
       return {
         title: 'Unknown',
         subtitle: '',
-        icon: <HelpCircle color={colors.textSecondary} size={32} />,
+        icon: <HelpCircle color={colors.textSecondary} size={28} />,
         iconColor: colors.textSecondary,
       };
   }
 }
+
+/**
+ * Style for custom puzzle icon images.
+ */
+const iconImageStyle = { width: 32, height: 32 };
 
 /**
  * Get button properties based on status.
@@ -257,7 +277,7 @@ export function UniversalGameCard({
   return (
     <Animated.View style={animatedStyle}>
       <GlassCard style={cardStyle} testID={testID}>
-        {/* PRO Sash - diagonal ribbon for Career Path Pro */}
+        {/* Pro Sash - diagonal ribbon for pro-only modes */}
         {isProMode && (
           <View style={styles.proSashContainer} pointerEvents="none">
             <View style={styles.proSash}>
@@ -293,7 +313,7 @@ export function UniversalGameCard({
                 {config.title}
               </Text>
               <Text style={styles.subtitle} numberOfLines={1}>
-                {isPremiumLocked ? 'Premium' : config.subtitle}
+                {isPremiumLocked ? 'Pro' : config.subtitle}
               </Text>
             </View>
           </View>
@@ -377,9 +397,16 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 48,
     height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
+    // Green accent borders (left + bottom) for 3D elevated effect
+    borderLeftWidth: 3,
+    borderBottomWidth: 3,
+    borderLeftColor: colors.pitchGreen,
+    borderBottomColor: colors.pitchGreen,
   },
   completionBadge: {
     position: 'absolute',

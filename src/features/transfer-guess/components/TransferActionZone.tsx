@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, TextInput, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -65,10 +65,14 @@ export function TransferActionZone({
   incorrectGuesses,
   testID,
 }: TransferActionZoneProps) {
+  const inputRef = useRef<TextInput>(null);
   const shakeX = useSharedValue(0);
 
   useEffect(() => {
     if (shouldShake) {
+      // Blur input to dismiss keyboard so player can see hints
+      inputRef.current?.blur();
+
       shakeX.value = withSequence(
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),
@@ -105,6 +109,7 @@ export function TransferActionZone({
       <View style={styles.inputRow}>
         <Animated.View style={[styles.inputContainer, shakeStyle]}>
           <TextInput
+            ref={inputRef}
             style={styles.input}
             value={currentGuess}
             onChangeText={onGuessChange}

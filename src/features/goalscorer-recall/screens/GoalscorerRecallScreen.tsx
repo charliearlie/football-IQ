@@ -35,6 +35,7 @@ import {
 } from '@/components';
 import { useGoalscorerRecallGame } from '../hooks/useGoalscorerRecallGame';
 import { MatchHeader } from '../components/MatchHeader';
+import { CompactMatchHeader } from '../components/CompactMatchHeader';
 import { Scoreboard } from '../components/Scoreboard';
 import { TimerDisplay } from '../components/TimerDisplay';
 import { RecallActionZone } from '../components/RecallActionZone';
@@ -119,12 +120,26 @@ export function GoalscorerRecallScreen({
     };
   }, [keyboardVisible]);
 
-  // Animated style for collapsible match header
+  // Animated style for full match header (fades out when keyboard opens)
   const matchHeaderAnimatedStyle = useAnimatedStyle(() => ({
     height: interpolate(keyboardVisible.value, [0, 1], [MATCH_HEADER_HEIGHT, 0]),
-    opacity: interpolate(keyboardVisible.value, [0, 0.3], [1, 0]),
+    opacity: interpolate(keyboardVisible.value, [0, 0.5], [1, 0]),
     overflow: 'hidden' as const,
     marginBottom: interpolate(keyboardVisible.value, [0, 1], [spacing.sm, 0]),
+  }));
+
+  // Animated style for compact match header (fades in when keyboard opens)
+  const compactHeaderAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(keyboardVisible.value, [0.5, 1], [0, 1]),
+    height: interpolate(keyboardVisible.value, [0, 0.5, 1], [0, 0, 44]),
+    overflow: 'hidden' as const,
+    marginBottom: interpolate(keyboardVisible.value, [0, 1], [0, spacing.sm]),
+  }));
+
+  // Animated style to shrink timer when keyboard opens
+  const timerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: interpolate(keyboardVisible.value, [0, 1], [1, 0.7]) }],
+    marginVertical: interpolate(keyboardVisible.value, [0, 1], [0, -spacing.md]),
   }));
 
   const {
@@ -299,10 +314,10 @@ export function GoalscorerRecallScreen({
     <GameContainer
       title="Goalscorer Recall"
       collapsible
-      keyboardAvoiding={false}
+      keyboardAvoiding
       testID="goalscorer-recall-screen"
     >
-      {/* Match Header - Collapses when keyboard is visible */}
+      {/* Full Match Header - Fades out when keyboard is visible */}
       <Animated.View style={[styles.matchHeaderContainer, matchHeaderAnimatedStyle]}>
         <MatchHeader
           homeTeam={content.home_team}
@@ -314,11 +329,23 @@ export function GoalscorerRecallScreen({
         />
       </Animated.View>
 
-      {/* Timer */}
-      <TimerDisplay
-        timeRemaining={timeRemaining}
-        isRunning={isPlaying}
-      />
+      {/* Compact Match Header - Fades in when keyboard is visible */}
+      <Animated.View style={[styles.compactHeaderContainer, compactHeaderAnimatedStyle]}>
+        <CompactMatchHeader
+          homeTeam={content.home_team}
+          awayTeam={content.away_team}
+          homeScore={content.home_score}
+          awayScore={content.away_score}
+        />
+      </Animated.View>
+
+      {/* Timer - shrinks when keyboard is visible */}
+      <Animated.View style={timerAnimatedStyle}>
+        <TimerDisplay
+          timeRemaining={timeRemaining}
+          isRunning={isPlaying}
+        />
+      </Animated.View>
 
       {/* Progress indicator */}
       <Text style={styles.progressText}>
@@ -410,6 +437,10 @@ const styles = StyleSheet.create({
   matchHeaderContainer: {
     paddingHorizontal: layout.screenPadding,
     // marginBottom is animated based on keyboard visibility
+  },
+  compactHeaderContainer: {
+    paddingHorizontal: layout.screenPadding,
+    // height and marginBottom are animated based on keyboard visibility
   },
   scoreboardContainer: {
     flex: 1,

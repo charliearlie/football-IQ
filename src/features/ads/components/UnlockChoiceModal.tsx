@@ -298,7 +298,7 @@ function IdleContent({
         <View style={styles.optionHeader}>
           <Crown size={24} color={colors.cardYellow} />
           <View style={styles.optionInfo}>
-            <Text style={styles.optionTitle}>Go Premium</Text>
+            <Text style={styles.optionTitle}>Go Pro</Text>
             <Text style={styles.optionSubtitle}>
               Unlimited access to all puzzles
             </Text>
