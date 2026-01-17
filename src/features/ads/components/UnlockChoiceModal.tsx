@@ -57,6 +57,7 @@ export function UnlockChoiceModal({
   puzzleId,
   puzzleDate,
   gameMode,
+  onUnlockSuccess,
   testID,
 }: UnlockChoiceModalProps) {
   const router = useRouter();
@@ -156,9 +157,11 @@ export function UnlockChoiceModal({
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch { /* ignore */ }
-        
+
         if (isMountedRef.current) {
           setState('ad_success');
+          // Notify parent to refresh data so unlocked puzzle shows correct state
+          onUnlockSuccess?.();
         }
       } else {
         // User closed ad without completing
@@ -174,7 +177,7 @@ export function UnlockChoiceModal({
         setState('ad_error');
       }
     }
-  }, [isRewardedAdReady, loadRewardedAd, showRewardedAd, grantAdUnlock, puzzleId]);
+  }, [isRewardedAdReady, loadRewardedAd, showRewardedAd, grantAdUnlock, puzzleId, onUnlockSuccess]);
 
   /**
    * Handle retry after ad error.

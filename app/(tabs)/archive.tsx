@@ -36,8 +36,15 @@ const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens'
  */
 export default function ArchiveScreen() {
   const router = useRouter();
-  // Accept filterDate param from calendar navigation (for deep linking)
-  const { filterDate } = useLocalSearchParams<{ filterDate?: string }>();
+  // Accept params from calendar navigation and unlock redirects (from PremiumGate/PremiumOnlyGate)
+  const { filterDate, showUnlock, unlockPuzzleId, unlockDate, unlockGameMode } =
+    useLocalSearchParams<{
+      filterDate?: string;
+      showUnlock?: string;
+      unlockPuzzleId?: string;
+      unlockDate?: string;
+      unlockGameMode?: string;
+    }>();
   const [filter, setFilter] = useState<GameModeFilterType>('all');
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
   const [completedPuzzle, setCompletedPuzzle] = useState<ArchivePuzzle | null>(null);
@@ -109,6 +116,28 @@ export default function ArchiveScreen() {
     }, [refresh])
   );
 
+  // Handle unlock params from deep-link gate redirects (PremiumGate, PremiumOnlyGate)
+  // When a gate blocks access, it redirects here with unlock context to show UnlockChoiceModal
+  useEffect(() => {
+    if (showUnlock === 'true' && unlockPuzzleId) {
+      console.log('[Archive] Showing unlock modal from redirect params:', {
+        unlockPuzzleId,
+        unlockDate,
+        unlockGameMode,
+      });
+      // Create a minimal puzzle object for the modal
+      const puzzleToUnlock: ArchivePuzzle = {
+        id: unlockPuzzleId,
+        gameMode: (unlockGameMode as GameMode) || 'career_path',
+        puzzleDate: unlockDate || '',
+        difficulty: null,
+        isLocked: true,
+        status: 'play',
+      };
+      setLockedPuzzle(puzzleToUnlock);
+    }
+  }, [showUnlock, unlockPuzzleId, unlockDate, unlockGameMode]);
+
   /**
    * Use gated navigation hook for premium access control.
    * This centralizes the navigation/paywall logic.
@@ -160,8 +189,9 @@ export default function ArchiveScreen() {
 
       // Premium-only game modes: check access BEFORE navigating
       // This prevents the game route's PremiumOnlyGate from showing /premium-modal directly
+      // Access = isPremium OR isAdUnlocked (permanently unlocked via ad)
       const isPremiumOnly = PREMIUM_ONLY_MODES.has(puzzle.gameMode);
-      if (isPremiumOnly && !isPremium) {
+      if (isPremiumOnly && !isPremium && !puzzle.isAdUnlocked) {
         // Non-premium user trying to access premium-only game
         // Show UnlockChoiceModal which offers both ad unlock and premium options
         console.log('[Archive] Premium-only game, showing unlock modal:', puzzle.gameMode);
@@ -231,6 +261,7 @@ export default function ArchiveScreen() {
         puzzleId={lockedPuzzle?.id ?? ''}
         puzzleDate={lockedPuzzle?.puzzleDate ?? ''}
         gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
+        onUnlockSuccess={refresh}
         testID="unlock-choice-modal"
       />
 

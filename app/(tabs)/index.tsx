@@ -22,7 +22,7 @@ import {
   CompletedGameModal,
 } from '@/features/home';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
-import { PremiumUpsellBanner, UnlockChoiceModal, useAds } from '@/features/ads';
+import { PremiumUpsellBanner, UnlockChoiceModal } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
 import { useAuth } from '@/features/auth';
 
@@ -68,7 +68,6 @@ export default function HomeScreen() {
   const { profile } = useAuth();
   const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
   const { cards, completedCount, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
-  const { shouldShowAds } = useAds();
 
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
@@ -114,18 +113,10 @@ export default function HomeScreen() {
   // Navigate to game screen or show completed modal
   const handleCardPress = useCallback(
     (card: DailyPuzzleCard) => {
-      // Premium-only games: check ad eligibility first
-      if (card.isPremiumOnly && !isPremium) {
-        if (shouldShowAds) {
-          // Show unlock modal with ad option
-          setLockedPuzzle(card);
-        } else {
-          // No ads available, go to premium modal
-          router.push({
-            pathname: '/premium-modal',
-            params: { mode: 'premium_only' },
-          });
-        }
+      // Premium-only games: show UnlockChoiceModal if user doesn't have access
+      // Access = isPremium OR isAdUnlocked (permanently unlocked via ad)
+      if (card.isPremiumOnly && !isPremium && !card.isAdUnlocked) {
+        setLockedPuzzle(card);
         return;
       }
 
@@ -142,7 +133,7 @@ export default function HomeScreen() {
         router.push(`/${route}/${card.puzzleId}` as any);
       }
     },
-    [router, isPremium, shouldShowAds]
+    [router, isPremium]
   );
 
   // Navigate to daily leaderboard
@@ -215,6 +206,7 @@ export default function HomeScreen() {
                 onPress={() => handleCardPress(card)}
                 isPremiumOnly={card.isPremiumOnly}
                 isPremium={isPremium}
+                isAdUnlocked={card.isAdUnlocked}
                 testID={`daily-card-${card.gameMode}`}
               />
             ))
@@ -248,6 +240,7 @@ export default function HomeScreen() {
         puzzleId={lockedPuzzle?.puzzleId ?? ''}
         puzzleDate={getTodayDate()}
         gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
+        onUnlockSuccess={refreshPuzzles}
         testID="home-unlock-modal"
       />
     </SafeAreaView>

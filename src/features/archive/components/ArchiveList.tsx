@@ -161,6 +161,7 @@ export const ArchiveList = forwardRef<
           variant="archive"
           isLocked={item.isLocked}
           isPremiumOnly={isPremiumOnly}
+          isAdUnlocked={item.isAdUnlocked}
           testID={`${testID}-puzzle-${item.id}`}
         />
       );

@@ -27,7 +27,7 @@ export default function GoalscorerRecallRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate} gameMode="guess_the_goalscorers">
         <GoalscorerRecallScreen puzzleId={puzzleId} isReviewMode={isReviewMode} />
       </PremiumGate>
     </>

@@ -111,6 +111,7 @@ export function useArchivePuzzles(
         scoreDisplay,
         score,
         attempt: attemptData,
+        isAdUnlocked: allUnlocks.some(u => u.puzzle_id === entry.id),
       };
     },
     [isPremium]

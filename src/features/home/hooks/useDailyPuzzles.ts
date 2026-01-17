@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzleContext } from '@/features/puzzles';
-import { getAttemptByPuzzleId } from '@/lib/database';
+import { getAttemptByPuzzleId, getValidAdUnlocks } from '@/lib/database';
 import { GameMode, ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
-import { ParsedLocalAttempt } from '@/types/database';
+import { ParsedLocalAttempt, UnlockedPuzzle } from '@/types/database';
 
 /**
  * Card status for Home Screen display.
@@ -23,6 +23,8 @@ export interface DailyPuzzleCard {
   attempt?: ParsedLocalAttempt;
   /** Whether this game mode is premium-only (locked for free users) */
   isPremiumOnly?: boolean;
+  /** Whether this puzzle has been permanently unlocked via ad */
+  isAdUnlocked?: boolean;
 }
 
 /**
@@ -92,8 +94,9 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
   const { puzzles, syncStatus, refreshLocalPuzzles, syncPuzzles } = usePuzzleContext();
   const [cards, setCards] = useState<DailyPuzzleCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[]>([]);
 
-  const loadCards = useCallback(async () => {
+  const loadCards = useCallback(async (currentAdUnlocks: UnlockedPuzzle[]) => {
     try {
       const today = getTodayDate();
 
@@ -136,6 +139,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           difficulty: puzzle.difficulty,
           attempt: attempt ?? undefined,
           isPremiumOnly: PREMIUM_ONLY_MODES.has(gameMode),
+          isAdUnlocked: currentAdUnlocks.some((u) => u.puzzle_id === puzzle.id),
         };
       });
 
@@ -198,26 +202,42 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
     }
   }, [puzzles]);
 
+  /**
+   * Load cards with fresh ad unlocks from database.
+   * This is the primary loading function that fetches everything needed.
+   */
+  const loadCardsWithFreshUnlocks = useCallback(async () => {
+    try {
+      const freshUnlocks = await getValidAdUnlocks();
+      setAdUnlocks(freshUnlocks);
+      await loadCards(freshUnlocks);
+    } catch (error) {
+      console.error('Failed to load ad unlocks:', error);
+      // Still try to load cards with empty unlocks
+      await loadCards([]);
+    }
+  }, [loadCards]);
+
   const refresh = useCallback(async () => {
     setIsLoading(true);
     await syncPuzzles();
     await refreshLocalPuzzles();
-    await loadCards();
-  }, [syncPuzzles, refreshLocalPuzzles, loadCards]);
+    await loadCardsWithFreshUnlocks();
+  }, [syncPuzzles, refreshLocalPuzzles, loadCardsWithFreshUnlocks]);
 
   // Load cards when puzzles change
   useEffect(() => {
     if (syncStatus !== 'syncing') {
-      loadCards();
+      loadCardsWithFreshUnlocks();
     }
-  }, [puzzles, syncStatus, loadCards]);
+  }, [puzzles, syncStatus, loadCardsWithFreshUnlocks]);
 
-  // Reload cards when screen gains focus (e.g., after completing a game)
-  // This ensures attempt status is refreshed from SQLite when navigating back
+  // Reload cards when screen gains focus (e.g., after completing a game or unlocking via ad)
+  // This ensures both attempt status AND ad unlocks are refreshed from SQLite when navigating back
   useFocusEffect(
     useCallback(() => {
-      loadCards();
-    }, [loadCards])
+      loadCardsWithFreshUnlocks();
+    }, [loadCardsWithFreshUnlocks])
   );
 
   // Count completed cards

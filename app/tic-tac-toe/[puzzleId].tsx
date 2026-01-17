@@ -27,7 +27,7 @@ export default function TicTacToeRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate} gameMode="tic_tac_toe">
         <TicTacToeScreen puzzleId={puzzleId} isReviewMode={isReviewMode} />
       </PremiumGate>
     </>

@@ -84,6 +84,8 @@ export interface UnlockChoiceModalProps {
   puzzleDate: string;
   /** Game mode for navigation after unlock */
   gameMode: GameMode;
+  /** Callback when unlock succeeds (for parent to refresh data) */
+  onUnlockSuccess?: () => void;
   /** Test ID for testing */
   testID?: string;
 }

@@ -90,6 +90,12 @@ export interface UniversalGameCardProps {
   isPremium?: boolean;
 
   /**
+   * Whether this puzzle has been permanently unlocked via ad.
+   * If true, premium-only mode shows as unlocked.
+   */
+  isAdUnlocked?: boolean;
+
+  /**
    * Test ID for testing.
    */
   testID?: string;
@@ -244,14 +250,15 @@ export function UniversalGameCard({
   isLocked = false,
   isPremiumOnly = false,
   isPremium = false,
+  isAdUnlocked = false,
   testID,
 }: UniversalGameCardProps) {
   const config = getGameModeConfig(gameMode);
   const buttonProps = getButtonProps(status);
   const scale = useSharedValue(1);
 
-  // Determine if this card is premium-locked (premium-only mode + non-premium user)
-  const isPremiumLocked = isPremiumOnly && !isPremium;
+  // Determine if this card is premium-locked (premium-only mode + non-premium user + not ad-unlocked)
+  const isPremiumLocked = isPremiumOnly && !isPremium && !isAdUnlocked;
 
   // Subtle scale animation on press
   const handlePressIn = () => {

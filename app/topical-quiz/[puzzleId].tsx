@@ -27,7 +27,7 @@ export default function TopicalQuizRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate} gameMode="topical_quiz">
         <TopicalQuizScreen puzzleId={puzzleId} isReviewMode={isReviewMode} />
       </PremiumGate>
     </>

@@ -12,7 +12,7 @@ export default function CareerPathProIndexRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumOnlyGate>
+      <PremiumOnlyGate gameMode="career_path_pro">
         <CareerPathScreen gameMode="career_path_pro" />
       </PremiumOnlyGate>
     </>

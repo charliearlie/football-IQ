@@ -24,7 +24,7 @@ export default function StartingXIRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate} gameMode="starting_xi">
         <StartingXIScreen puzzleId={puzzleId} />
       </PremiumGate>
     </>

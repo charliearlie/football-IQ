@@ -11,7 +11,7 @@ export default function TopTensIndexRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumOnlyGate>
+      <PremiumOnlyGate gameMode="top_tens">
         <TopTensScreen />
       </PremiumOnlyGate>
     </>

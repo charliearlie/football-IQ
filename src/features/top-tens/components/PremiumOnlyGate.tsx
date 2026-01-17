@@ -29,6 +29,8 @@ interface PremiumOnlyGateProps {
   fallback?: React.ReactNode;
   /** Optional puzzle ID to check for ad unlocks */
   puzzleId?: string;
+  /** Game mode for redirect to archive with unlock context */
+  gameMode: string;
 }
 
 /**
@@ -52,7 +54,7 @@ const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premiu
  * PremiumOnlyGate - Route protection for premium-only game modes.
  *
  * Blocks all non-premium users from accessing the content, redirecting
- * them to the premium modal with a "premium_only" mode indicator.
+ * them to the archive screen with unlock context (showing UnlockChoiceModal).
  *
  * In development mode, set DEV_BYPASS_PREMIUM to true to skip the check.
  *
@@ -61,7 +63,7 @@ const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premiu
  * // app/top-tens/index.tsx
  * export default function TopTensIndexRoute() {
  *   return (
- *     <PremiumOnlyGate>
+ *     <PremiumOnlyGate gameMode="top_tens">
  *       <TopTensScreen />
  *     </PremiumOnlyGate>
  *   );
@@ -72,6 +74,7 @@ export function PremiumOnlyGate({
   children,
   fallback,
   puzzleId,
+  gameMode,
 }: PremiumOnlyGateProps): React.ReactElement {
   const router = useRouter();
   const { profile, isLoading: authLoading } = useAuth();
@@ -108,18 +111,24 @@ export function PremiumOnlyGate({
   const hasAccess = isPremium || isAdUnlocked;
   const isLoading = authLoading || !areAdUnlocksLoaded;
 
-  // Redirect non-premium users to premium modal
+  // Redirect non-premium users to archive with unlock context
   useEffect(() => {
     if (hasNavigatedRef.current || isLoading) return;
 
     if (!hasAccess) {
       hasNavigatedRef.current = true;
-      router.push({
-        pathname: '/premium-modal',
-        params: { mode: 'premium_only' },
+      console.log('[PremiumOnlyGate] Blocking: Premium-only game', { gameMode, puzzleId });
+      // Redirect to archive with unlock context - archive will show UnlockChoiceModal
+      router.replace({
+        pathname: '/(tabs)/archive',
+        params: {
+          showUnlock: 'true',
+          unlockPuzzleId: puzzleId || '',
+          unlockGameMode: gameMode,
+        },
       });
     }
-  }, [hasAccess, isLoading, router]);
+  }, [hasAccess, isLoading, router, gameMode, puzzleId]);
 
   // Reset navigation guard when user gains access
   useEffect(() => {

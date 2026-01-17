@@ -23,6 +23,8 @@ export interface ArchivePuzzle {
   difficulty: string | null;
   /** Whether the puzzle is locked (premium only, >7 days old for free users) */
   isLocked: boolean;
+  /** Whether this puzzle has been permanently unlocked via ad */
+  isAdUnlocked?: boolean;
   /** Play status based on attempt data */
   status: 'play' | 'resume' | 'done';
   /** Score display emoji grid if completed */

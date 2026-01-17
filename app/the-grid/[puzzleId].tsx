@@ -24,7 +24,7 @@ export default function TheGridRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate}>
+      <PremiumGate puzzleId={puzzleId} puzzleDate={puzzleDate} gameMode="the_grid">
         <TheGridScreen puzzleId={puzzleId} />
       </PremiumGate>
     </>

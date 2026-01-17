@@ -21,7 +21,8 @@ import { colors } from '@/theme/colors';
 
 interface PremiumGateProps {
   puzzleId: string;
-  puzzleDate?: string; // NEW: Passed from navigation params for sync check
+  puzzleDate?: string; // Passed from navigation params for sync check
+  gameMode?: string; // Game mode for redirect to archive with unlock context
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
@@ -37,6 +38,7 @@ function DefaultLoadingScreen() {
 export function PremiumGate({
   puzzleId,
   puzzleDate: initialPuzzleDate,
+  gameMode,
   children,
   fallback,
 }: PremiumGateProps): React.ReactElement {
@@ -138,17 +140,23 @@ export function PremiumGate({
     // Only block if puzzle is explicitly locked (we have date and it's outside free window)
     // Do NOT block if puzzle is missing - assume it's accessible
     if (isLocked) {
-       console.log('[PremiumGate] Blocking: Locked puzzle', { puzzleDate, isPremium });
+       console.log('[PremiumGate] Blocking: Locked puzzle', { puzzleDate, isPremium, gameMode });
        hasNavigatedRef.current = true;
-       router.push({
-         pathname: '/premium-modal',
-         params: { puzzleDate: puzzleDate!, mode: 'blocked' }
+       // Redirect to archive with unlock context - archive will show UnlockChoiceModal
+       router.replace({
+         pathname: '/(tabs)/archive',
+         params: {
+           showUnlock: 'true',
+           unlockPuzzleId: puzzleId,
+           unlockDate: puzzleDate!,
+           unlockGameMode: gameMode || '',
+         }
        });
     } else if (isMissing) {
        // Log but don't block - allow access to missing puzzles
        console.warn('[PremiumGate] Missing puzzle date, allowing access (fail-open)');
     }
-  }, [isLoading, isMissing, isLocked, router, puzzleDate, isPremium]);
+  }, [isLoading, isMissing, isLocked, router, puzzleDate, puzzleId, gameMode, isPremium]);
 
   // Render
   if (canAccessFast) {

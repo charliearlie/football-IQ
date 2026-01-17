@@ -32,6 +32,10 @@ interface DailyStackCardProps {
    */
   isPremium?: boolean;
   /**
+   * Whether this puzzle has been permanently unlocked via ad.
+   */
+  isAdUnlocked?: boolean;
+  /**
    * Test ID for testing.
    */
   testID?: string;
@@ -52,6 +56,7 @@ export function DailyStackCard({
   onPress,
   isPremiumOnly,
   isPremium,
+  isAdUnlocked,
   testID,
 }: DailyStackCardProps) {
   return (
@@ -62,6 +67,7 @@ export function DailyStackCard({
       variant="daily"
       isPremiumOnly={isPremiumOnly}
       isPremium={isPremium}
+      isAdUnlocked={isAdUnlocked}
       testID={testID}
     />
   );

@@ -25,7 +25,7 @@ export default function CareerPathProRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <PremiumOnlyGate puzzleId={puzzleId}>
+      <PremiumOnlyGate puzzleId={puzzleId} gameMode="career_path_pro">
         <CareerPathScreen
           puzzleId={puzzleId}
           isReviewMode={isReviewMode}

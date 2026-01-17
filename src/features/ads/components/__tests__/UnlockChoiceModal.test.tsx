@@ -70,8 +70,8 @@ describe('UnlockChoiceModal', () => {
     const { getByText, getByTestId } = render(<UnlockChoiceModal {...defaultProps} />);
 
     expect(getByText('UNLOCK PUZZLE')).toBeTruthy();
-    expect(getByText('Go Premium')).toBeTruthy();
-    expect(getByText('Watch Ad')).toBeTruthy();
+    expect(getByText('See Plans')).toBeTruthy(); // Premium option button
+    expect(getByText('Watch Ad')).toBeTruthy(); // Watch ad option title
     expect(getByTestId('unlock-modal-watch-ad-button')).not.toBeDisabled();
   });
 
