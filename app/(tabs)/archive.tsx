@@ -12,9 +12,17 @@ import {
   ArchiveSection,
   GameModeFilterType,
   GAME_MODE_ROUTES,
+  GameMode,
 } from '@/features/archive';
 import { useAds, UnlockChoiceModal, PremiumUpsellBanner } from '@/features/ads';
 import { CompletedGameModal } from '@/features/home';
+import { useAuth } from '@/features/auth';
+
+/**
+ * Premium-only game modes that require subscription or ad unlock.
+ * These games cannot be accessed for free regardless of puzzle date.
+ */
+const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens']);
 
 /**
  * Archive Screen
@@ -37,6 +45,10 @@ export default function ArchiveScreen() {
   // Ref for scrolling to specific date
   const listRef = useRef<SectionList<ArchivePuzzle, ArchiveSection>>(null);
   const hasScrolledToDate = useRef(false);
+
+  // Get user premium status
+  const { profile } = useAuth();
+  const isPremium = profile?.is_premium ?? false;
 
   // Check if user should see ads (non-premium users)
   const { shouldShowAds } = useAds();
@@ -101,8 +113,13 @@ export default function ArchiveScreen() {
    * Use gated navigation hook for premium access control.
    * This centralizes the navigation/paywall logic.
    *
-   * For ad-eligible users: show UnlockChoiceModal (ad or premium)
-   * For others: navigate to native premium modal
+   * ALWAYS show UnlockChoiceModal for locked puzzles - it provides:
+   * - "Go Pro" option (always available)
+   * - "Watch Ad" option (shows loading state, handles unavailable ads gracefully)
+   *
+   * We no longer route directly to /premium-modal as that caused issues:
+   * - Navigation state conflicts when returning to archive
+   * - Endless loading spinner after closing modal
    */
   const { navigateToPuzzle } = useGatedNavigation({
     onShowPaywall: (puzzle) => {
@@ -118,22 +135,20 @@ export default function ArchiveScreen() {
         return;
       }
 
-      if (shouldShowAds) {
-        // Show choice modal for ad-eligible users
-        setLockedPuzzle(puzzle);
-      } else {
-        // Navigate to native premium modal for others
-        router.push({
-          pathname: '/premium-modal',
-          params: { puzzleDate: puzzle.puzzleDate, mode: 'blocked' },
-        });
-      }
+      // Always show UnlockChoiceModal for locked puzzles
+      // The modal handles both ad-eligible and non-ad-eligible users gracefully
+      setLockedPuzzle(puzzle);
     },
   });
 
   /**
    * Handle puzzle press - show result modal for completed games,
-   * otherwise use gated navigation.
+   * check premium-only access, otherwise use gated navigation.
+   *
+   * This mirrors the home screen's handleCardPress logic:
+   * 1. Check if completed → show results modal
+   * 2. Check if premium-only game mode → show unlock modal (NOT route to game)
+   * 3. Otherwise → use gated navigation (handles time-locked puzzles)
    */
   const handlePuzzlePress = useCallback(
     (puzzle: ArchivePuzzle) => {
@@ -142,10 +157,22 @@ export default function ArchiveScreen() {
         setCompletedPuzzle(puzzle);
         return;
       }
-      // Navigate (or show paywall) for play/resume
+
+      // Premium-only game modes: check access BEFORE navigating
+      // This prevents the game route's PremiumOnlyGate from showing /premium-modal directly
+      const isPremiumOnly = PREMIUM_ONLY_MODES.has(puzzle.gameMode);
+      if (isPremiumOnly && !isPremium) {
+        // Non-premium user trying to access premium-only game
+        // Show UnlockChoiceModal which offers both ad unlock and premium options
+        console.log('[Archive] Premium-only game, showing unlock modal:', puzzle.gameMode);
+        setLockedPuzzle(puzzle);
+        return;
+      }
+
+      // Navigate (or show paywall for time-locked puzzles)
       navigateToPuzzle(puzzle);
     },
-    [navigateToPuzzle]
+    [navigateToPuzzle, isPremium]
   );
 
   /**
