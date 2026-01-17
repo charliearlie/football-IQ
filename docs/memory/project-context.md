@@ -96,6 +96,16 @@ function isPuzzleLocked(puzzleDate, isPremium, puzzleId?, adUnlocks?, hasComplet
 ### Progressive Save
 All game modes save progress to SQLite on app background, restore on return. Uses `AppState` listener + `RESTORE_PROGRESS` action in game hooks.
 
+### Time Integrity System
+Prevents clock manipulation to access future/past puzzles:
+- **Server time sources**: worldtimeapi.org (primary), Supabase RPC (fallback)
+- **Drift detection**: Compares Unix timestamps (timezone-agnostic), threshold ±5 minutes
+- **Local dates**: Puzzles use user's local timezone (Wordle-style midnight rollover)
+- **Blocking overlay**: Non-dismissible "Time Out of Sync" screen when tampered
+- **Midnight refresh**: Auto-syncs puzzles at user's local midnight
+- **Offline fallback**: Uses cached time; detects backward clock manipulation
+- **Files**: `src/lib/time.ts`, `src/features/integrity/`
+
 ## Game Modes
 
 ### Career Path
@@ -252,6 +262,16 @@ Visual replay of completed games showing user choices, hints used, and outcomes.
 |------|-----|---------|
 | Banner | `ca-app-pub-9426782115883407/8614691809` | `ca-app-pub-9426782115883407/4156572045` |
 | Rewarded | `ca-app-pub-9426782115883407/6782735388` | `ca-app-pub-9426782115883407/1028873493` |
+
+### Sentry Error Monitoring
+- **Organization**: `football-iq`
+- **Project**: `football-iq-mobile`
+- **Region**: `de.sentry.io`
+- **DSN**: Environment variable `EXPO_PUBLIC_SENTRY_DSN`
+- **Initialization**: `app/_layout.tsx` (disabled in `__DEV__`)
+- **Error Boundary**: `Sentry.ErrorBoundary` wraps root navigation with `SentryErrorFallback` component
+- **Source Maps**: Not yet configured (future: Xcode Build Phase with `sentry-cli`)
+- **Files**: `src/components/SentryErrorFallback.tsx`
 
 ## App Configuration
 

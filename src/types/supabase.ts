@@ -331,6 +331,10 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_server_time: {
+        Args: Record<string, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

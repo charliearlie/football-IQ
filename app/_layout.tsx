@@ -1,3 +1,6 @@
+// Sentry must be imported first for proper instrumentation
+import * as Sentry from '@sentry/react-native';
+
 import { useEffect, useState } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { initDatabase } from '@/lib/database';
@@ -19,7 +22,17 @@ import {
 import { PuzzleProvider } from '@/features/puzzles';
 import { AdProvider } from '@/features/ads';
 import { QuizPrefetchProvider } from '@/features/topical-quiz';
+import { IntegrityGuardProvider } from '@/features/integrity';
 import { getRevenueCatApiKey } from '@/config/revenueCat';
+import { SentryErrorFallback } from '@/components';
+
+// Initialize Sentry error monitoring
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !__DEV__,
+  tracesSampleRate: 1.0,
+  debug: __DEV__,
+});
 
 // Conditionally import MobileAds only on native platforms
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,21 +68,23 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <PuzzleProvider>
-      <QuizPrefetchProvider>
-        <AdProvider>
-          {children}
-          <FirstRunModal
-            visible={needsDisplayName ?? false}
-            onSubmit={async (displayName) => {
-              const { error } = await updateDisplayName(displayName);
-              if (error) throw error;
-            }}
-            testID="first-run-modal"
-          />
-        </AdProvider>
-      </QuizPrefetchProvider>
-    </PuzzleProvider>
+    <IntegrityGuardProvider>
+      <PuzzleProvider>
+        <QuizPrefetchProvider>
+          <AdProvider>
+            {children}
+            <FirstRunModal
+              visible={needsDisplayName ?? false}
+              onSubmit={async (displayName) => {
+                const { error } = await updateDisplayName(displayName);
+                if (error) throw error;
+              }}
+              testID="first-run-modal"
+            />
+          </AdProvider>
+        </QuizPrefetchProvider>
+      </PuzzleProvider>
+    </IntegrityGuardProvider>
   );
 }
 
@@ -165,35 +180,37 @@ export default function RootLayout() {
       <SubscriptionSyncProvider>
         <GestureHandlerRootView style={styles.container}>
           <AuthGate>
-            <View style={styles.container}>
-              <Stack
-                screenOptions={{
-                  headerStyle: { backgroundColor: colors.stadiumNavy },
-                  headerTintColor: colors.floodlightWhite,
-                  headerTitleStyle: { fontFamily: fonts.headline },
-                  contentStyle: { backgroundColor: colors.stadiumNavy },
-                }}
-              >
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="premium-modal"
-                  options={{
-                    presentation: 'formSheet',
-                    headerShown: false,
-                    gestureEnabled: true,
+            <Sentry.ErrorBoundary fallback={<SentryErrorFallback />}>
+              <View style={styles.container}>
+                <Stack
+                  screenOptions={{
+                    headerStyle: { backgroundColor: colors.stadiumNavy },
+                    headerTintColor: colors.floodlightWhite,
+                    headerTitleStyle: { fontFamily: fonts.headline },
+                    contentStyle: { backgroundColor: colors.stadiumNavy },
                   }}
-                />
-                <Stack.Screen
-                  name="design-lab"
-                  options={{
-                    title: 'Design Lab',
-                    presentation: 'modal',
-                  }}
-                />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="light" />
-            </View>
+                >
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="premium-modal"
+                    options={{
+                      presentation: 'formSheet',
+                      headerShown: false,
+                      gestureEnabled: true,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="design-lab"
+                    options={{
+                      title: 'Design Lab',
+                      presentation: 'modal',
+                    }}
+                  />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+                <StatusBar style="light" />
+              </View>
+            </Sentry.ErrorBoundary>
           </AuthGate>
         </GestureHandlerRootView>
       </SubscriptionSyncProvider>

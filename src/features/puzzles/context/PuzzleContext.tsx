@@ -10,6 +10,7 @@ import React, {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/features/auth';
 import { getAllPuzzles } from '@/lib/database';
+import { onMidnight } from '@/lib/time';
 import { syncPuzzlesFromSupabase } from '../services/puzzleSyncService';
 import { syncAttemptsToSupabase } from '../services/attemptSyncService';
 import { syncCatalogFromSupabase } from '@/features/archive/services/catalogSyncService';
@@ -162,6 +163,17 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
       syncedForUserRef.current = null;
     }
   }, [userId]);
+
+  // Subscribe to midnight events for automatic puzzle refresh
+  // This ensures users see new daily puzzles at midnight without app restart
+  useEffect(() => {
+    const unsubscribe = onMidnight(() => {
+      console.log('[PuzzleContext] Midnight reached, refreshing puzzles');
+      syncPuzzles();
+    });
+
+    return unsubscribe;
+  }, [syncPuzzles]);
 
   const value = useMemo<PuzzleContextValue>(
     () => ({

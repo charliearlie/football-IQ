@@ -42,6 +42,50 @@ const { profile, isPremium, needsDisplayName } = useProfile(userId);
 <FirstRunModal>      # Display name prompt
 ```
 
+## Time Integrity (Anti-Tampering)
+```typescript
+import {
+  initTimeSystem,
+  syncServerTime,
+  getAuthorizedDate,
+  getAuthorizedDateUnsafe,
+  isTimeTampered,
+  onMidnight,
+} from '@/lib/time';
+
+// Initialize on app startup (called by IntegrityGuardProvider)
+await initTimeSystem();
+
+// Get safe date for puzzle filtering (throws if tampered)
+const today = getAuthorizedDate();  // "2024-01-17" (local timezone)
+
+// Get date even in tampered state (for display only)
+const today = getAuthorizedDateUnsafe();
+
+// Check tampering status
+if (isTimeTampered()) {
+  // TimeTamperedOverlay is shown automatically
+}
+
+// Subscribe to midnight for puzzle refresh
+const unsubscribe = onMidnight(() => {
+  syncPuzzles();  // Refresh at user's local midnight
+});
+```
+
+```typescript
+import { IntegrityGuardProvider, useIntegrity } from '@/features/integrity';
+
+// Provider wraps PuzzleProvider in _layout.tsx
+<IntegrityGuardProvider>
+  <PuzzleProvider>...</PuzzleProvider>
+</IntegrityGuardProvider>
+
+// Access integrity state
+const { status, authorizedDate, recheckTime } = useIntegrity();
+// status: 'initializing' | 'verified' | 'offline' | 'tampered'
+```
+
 ## Local SQLite Database
 ```
 puzzles           - Cached puzzles (offline play)
@@ -1423,3 +1467,40 @@ const unlocks = await getValidAdUnlocks();  // All unlocked puzzles
 006_create_leaderboard_rpcs
 007_premium_puzzle_access
 ```
+
+## Sentry Error Monitoring
+```typescript
+import * as Sentry from '@sentry/react-native';
+
+// Initialized in app/_layout.tsx (before React imports)
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !__DEV__,
+  tracesSampleRate: 1.0,
+});
+
+// Capture errors manually
+Sentry.captureException(error);
+Sentry.captureMessage('Something happened');
+
+// Add context
+Sentry.setUser({ id: userId, email: userEmail });
+Sentry.setTag('game_mode', 'career_path');
+Sentry.setContext('puzzle', { id: puzzleId, date: puzzleDate });
+
+// Error Boundary (wraps root Stack in _layout.tsx)
+<Sentry.ErrorBoundary fallback={<SentryErrorFallback />}>
+  {children}
+</Sentry.ErrorBoundary>
+```
+
+**Configuration:**
+- Organization: `football-iq`
+- Project: `football-iq-mobile`
+- Region: `de.sentry.io`
+- Plugin: `@sentry/react-native/expo` in app.json
+
+**Files:**
+- Init: `app/_layout.tsx`
+- Fallback: `src/components/SentryErrorFallback.tsx`
+- Config: `app.json` (plugins array)

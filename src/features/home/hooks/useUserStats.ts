@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { getAllCompletedAttemptsWithDates } from '@/lib/database';
+import { getAuthorizedDateUnsafe } from '@/lib/time';
 
 /**
  * User statistics including streak information.
@@ -23,19 +24,22 @@ export interface UseUserStatsResult {
 }
 
 /**
- * Get today's date in YYYY-MM-DD format.
+ * Get today's date in YYYY-MM-DD format (local timezone).
+ * Uses the time integrity system for authorized date.
  */
 function getTodayDate(): string {
-  return new Date().toISOString().split('T')[0];
+  return getAuthorizedDateUnsafe();
 }
 
 /**
- * Get yesterday's date in YYYY-MM-DD format.
+ * Get yesterday's date in YYYY-MM-DD format (local timezone).
  */
 function getYesterdayDate(): string {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split('T')[0];
+  const today = getTodayDate();
+  // Parse today's date and subtract one day
+  const [year, month, day] = today.split('-').map(Number);
+  const yesterday = new Date(year, month - 1, day - 1);
+  return yesterday.toLocaleDateString('en-CA'); // YYYY-MM-DD local
 }
 
 /**

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzleContext } from '@/features/puzzles';
 import { getAttemptByPuzzleId, getValidAdUnlocks } from '@/lib/database';
+import { getAuthorizedDateUnsafe } from '@/lib/time';
 import { GameMode, ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { ParsedLocalAttempt, UnlockedPuzzle } from '@/types/database';
 
@@ -38,10 +39,11 @@ export interface UseDailyPuzzlesResult {
 }
 
 /**
- * Get today's date in YYYY-MM-DD format.
+ * Get today's date in YYYY-MM-DD format (local timezone).
+ * Uses the time integrity system for authorized date.
  */
 function getTodayDate(): string {
-  return new Date().toISOString().split('T')[0];
+  return getAuthorizedDateUnsafe();
 }
 
 /**

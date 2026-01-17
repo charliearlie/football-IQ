@@ -37,3 +37,7 @@ export {
   SuccessParticleBurst,
   type SuccessParticleBurstProps,
 } from './SuccessParticleBurst';
+
+// Error handling
+export { SentryErrorFallback } from './SentryErrorFallback';
+export { TimeTamperedOverlay } from './TimeTamperedOverlay';

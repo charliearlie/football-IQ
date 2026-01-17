@@ -7,6 +7,7 @@
 
 import { ArchivePuzzle, ArchiveSection, DayGroup } from '../types/archive.types';
 import { UnlockedPuzzle } from '@/types/database';
+import { getAuthorizedDateUnsafe } from '@/lib/time';
 
 /**
  * Month names for display formatting.
@@ -135,6 +136,7 @@ export function formatPuzzleDate(dateString: string): string {
 
 /**
  * Check if a puzzle date is within the free access window (last 7 days).
+ * Uses the time integrity system for the authorized "today" date.
  *
  * @param puzzleDate - Puzzle date in YYYY-MM-DD format
  * @returns true if the puzzle is within the 7-day window
@@ -145,7 +147,9 @@ export function isWithinFreeWindow(puzzleDate: string): boolean {
   const date = new Date(puzzleDate + 'T12:00:00');
   date.setHours(0, 0, 0, 0);
 
-  const today = new Date();
+  // Use authorized date from time integrity system (local timezone)
+  const todayStr = getAuthorizedDateUnsafe();
+  const today = new Date(todayStr + 'T12:00:00');
   today.setHours(0, 0, 0, 0);
 
   // 7-day window = today + 6 previous days (7 total)
