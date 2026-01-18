@@ -1284,6 +1284,19 @@ getDepthColor('#FACC15', 25)   // 25% darker
 // Override variant colors (backward compatible)
 <ElevatedButton title="Custom" topColor="#FACC15" shadowColor="#D4A500" />
 
+// Haptic feedback control (default: 'medium')
+<ElevatedButton title="Play" hapticType="light" />    // Light selection feedback
+<ElevatedButton title="View" hapticType="none" />     // No haptic (quiet actions)
+<ElevatedButton title="Unlock" hapticType="medium" /> // Medium impact (default)
+
+// Custom border color (for outline effects)
+<ElevatedButton
+  title="Result"
+  topColor={colors.stadiumNavy}
+  shadowColor="#0A1628"
+  borderColorOverride={colors.cardYellow}  // Gold outline effect
+/>
+
 // GlassCard - Frosted glass container with optional shadow
 <GlassCard>{children}</GlassCard>                    // With shadow (default)
 <GlassCard showShadow={false}>{children}</GlassCard> // Without shadow

@@ -75,8 +75,7 @@ export function TimelineStepRow({
   // Track if this was previously revealed (for animation triggering)
   const wasRevealed = useRef(isRevealed);
 
-  // Animation shared values
-  const lineHeight = useSharedValue(isRevealed ? config.stepHeight : 0);
+  // Animation shared values (line removed - handled by TimelineAxis)
   const nodeScale = useSharedValue(isRevealed ? 1 : 0);
   const nodeOpacity = useSharedValue(isRevealed ? 1 : 0);
   const pulseScale = useSharedValue(1);
@@ -85,19 +84,10 @@ export function TimelineStepRow({
   const victoryProgress = useSharedValue(0);
   const errorFlashOpacity = useSharedValue(0);
 
-  // Line drawing animation when newly revealed
+  // Node and club info animation when newly revealed
   useEffect(() => {
     if ((isRevealed || forceReveal) && !wasRevealed.current) {
       const delay = forceReveal ? revealDelay : 0;
-
-      // Draw line from top
-      lineHeight.value = withDelay(
-        delay,
-        withTiming(config.stepHeight, {
-          duration: TIMELINE_ANIMATIONS.lineDrawDuration,
-          easing: Easing.out(Easing.cubic),
-        })
-      );
 
       // Node appears with scale pop
       nodeScale.value = withDelay(
@@ -121,7 +111,7 @@ export function TimelineStepRow({
 
       wasRevealed.current = true;
     }
-  }, [isRevealed, forceReveal, revealDelay, lineHeight, nodeScale, nodeOpacity, clubSlideX, clubOpacity]);
+  }, [isRevealed, forceReveal, revealDelay, nodeScale, nodeOpacity, clubSlideX, clubOpacity]);
 
   // Victory reveal animation
   useEffect(() => {
@@ -172,10 +162,6 @@ export function TimelineStepRow({
   }, [shouldShake, isLatest, errorFlashOpacity]);
 
   // Animated styles
-  const lineStyle = useAnimatedStyle(() => ({
-    height: lineHeight.value,
-  }));
-
   const nodeStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: nodeScale.value * pulseScale.value },
@@ -221,13 +207,6 @@ export function TimelineStepRow({
     return 'transparent'; // Locked: hollow
   };
 
-  // Get line color based on state
-  const getLineColor = () => {
-    if (isMissedStep) return colors.redCard;
-    if (isWinningStep || isVictoryReveal) return colors.pitchGreen;
-    return colors.stadiumNavy;
-  };
-
   // Get glow style for winning/missed states
   const getGlowStyle = () => {
     if (isWinningStep || isVictoryReveal) return glows.green;
@@ -244,19 +223,8 @@ export function TimelineStepRow({
       ]}
       testID={testID}
     >
-      {/* Timeline Axis */}
+      {/* Timeline Axis - Node only (line handled by TimelineAxis) */}
       <View style={styles.axisContainer}>
-        {/* Line segment above node */}
-        {!isFirstStep && (
-          <Animated.View
-            style={[
-              styles.lineAbove,
-              { backgroundColor: getLineColor() },
-              lineStyle,
-            ]}
-          />
-        )}
-
         {/* Node */}
         <Animated.View
           style={[
@@ -276,16 +244,6 @@ export function TimelineStepRow({
             ]}
           />
         </Animated.View>
-
-        {/* Line segment below node (continues to next) */}
-        {!isLastStep && (
-          <View
-            style={[
-              styles.lineBelow,
-              { backgroundColor: showAsRevealed ? colors.stadiumNavy : colors.stadiumNavy },
-            ]}
-          />
-        )}
       </View>
 
       {/* Year Column */}
@@ -340,25 +298,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  // Timeline Axis
+  // Timeline Axis - node only (continuous line handled by TimelineAxis component)
   axisContainer: {
     width: config.axisWidth,
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  lineAbove: {
-    position: 'absolute',
-    top: 0,
-    width: config.lineWidth,
-    backgroundColor: colors.stadiumNavy,
-  },
-  lineBelow: {
-    position: 'absolute',
-    bottom: 0,
-    width: config.lineWidth,
-    height: '50%',
-    backgroundColor: colors.stadiumNavy,
   },
   node: {
     width: config.nodeSize,

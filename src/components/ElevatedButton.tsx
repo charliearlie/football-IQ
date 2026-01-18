@@ -65,12 +65,16 @@ export interface ElevatedButtonProps {
   topColor?: string;
   /** Shadow/depth color (overrides variant) */
   shadowColor?: string;
+  /** Border color (overrides variant border color) */
+  borderColorOverride?: string;
   /** Button size variant */
   size?: 'small' | 'medium' | 'large';
   /** Disable the button */
   disabled?: boolean;
   /** Stretch button to fill parent width */
   fullWidth?: boolean;
+  /** Haptic feedback type: 'light' for selection, 'medium' for impact, 'none' to disable */
+  hapticType?: 'light' | 'medium' | 'none';
   /** Additional container styles */
   style?: ViewStyle;
   /** Custom text styles (overrides size config) */
@@ -93,7 +97,7 @@ const SIZE_CONFIG = {
     paddingHorizontal: 16,
     paddingVertical: 10,
     depth: depthOffset.buttonSmall,
-    textStyle: textStyles.caption as TextStyle,
+    textStyle: textStyles.buttonSmall as TextStyle,
   },
   medium: {
     paddingHorizontal: 24,
@@ -130,20 +134,22 @@ export function ElevatedButton({
   variant = 'primary',
   topColor,
   shadowColor,
+  borderColorOverride,
   size = 'medium',
   disabled = false,
   fullWidth = false,
+  hapticType = 'medium',
   style,
   textStyle,
   testID,
 }: ElevatedButtonProps) {
   const pressed = useSharedValue(0);
-  const { triggerMedium } = useHaptics();
+  const { triggerMedium, triggerLight } = useHaptics();
 
   const variantColors = VARIANT_COLORS[variant];
   const backgroundColor = topColor ?? variantColors.backgroundColor;
   const depthColor = shadowColor ?? variantColors.shadowColor;
-  const borderColor = variantColors.borderColor ?? backgroundColor;
+  const borderColor = borderColorOverride ?? variantColors.borderColor ?? backgroundColor;
   const textColor = variantColors.textColor;
 
   const sizeConfig = SIZE_CONFIG[size];
@@ -156,7 +162,13 @@ export function ElevatedButton({
 
   const handlePressIn = () => {
     if (!disabled) {
-      triggerMedium(); // Fire haptic immediately at press start
+      // Fire haptic immediately at press start based on hapticType
+      if (hapticType === 'medium') {
+        triggerMedium();
+      } else if (hapticType === 'light') {
+        triggerLight();
+      }
+      // 'none' - no haptic feedback
       pressed.value = withSpring(1, SPRING_CONFIG);
     }
   };

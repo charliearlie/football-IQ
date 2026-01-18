@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   ScrollView,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -22,6 +24,7 @@ import {
 } from '@/components';
 import { useCareerPathGame } from '../hooks/useCareerPathGame';
 import { TimelineStepRow } from '../components/TimelineStepRow';
+import { TimelineAxis } from '../components/TimelineAxis';
 import { ActionZone } from '../components/ActionZone';
 import { GameOverActionZone } from '../components/GameOverActionZone';
 import { GameResultModal } from '../components/GameResultModal';
@@ -161,6 +164,17 @@ export function CareerPathScreen({
     router.back();
   }, [router]);
 
+  // Focus-snap: scroll to center latest revealed step when input focuses
+  const handleInputFocus = useCallback(() => {
+    if (flatListRef.current && state.revealedCount > 0) {
+      flatListRef.current.scrollToIndex({
+        index: state.revealedCount - 1, // Latest revealed (0-indexed)
+        animated: true,
+        viewPosition: 0.5, // Center in viewport
+      });
+    }
+  }, [state.revealedCount]);
+
   // Fetch saved attempt data for review mode
   const {
     metadata: reviewMetadata,
@@ -262,36 +276,36 @@ export function CareerPathScreen({
         >
           <ReviewModeBanner testID="review-banner" />
 
-          {/* All career steps revealed with winning/missed highlighting */}
-          {careerSteps.map((step, index) => (
-            <TimelineStepRow
-              key={index}
-              step={step}
-              stepNumber={index + 1}
-              isRevealed={true}
-              isLatest={false}
-              isFirstStep={index === 0}
-              isLastStep={index === careerSteps.length - 1}
-              isWinningStep={index === winningStepIndex}
-              isMissedStep={index === missedStepIndex}
-              testID={`review-step-${index + 1}`}
-            />
-          ))}
+            {/* All career steps revealed with winning/missed highlighting */}
+            {careerSteps.map((step, index) => (
+              <TimelineStepRow
+                key={index}
+                step={step}
+                stepNumber={index + 1}
+                isRevealed={true}
+                isLatest={false}
+                isFirstStep={index === 0}
+                isLastStep={index === careerSteps.length - 1}
+                isWinningStep={index === winningStepIndex}
+                isMissedStep={index === missedStepIndex}
+                testID={`review-step-${index + 1}`}
+              />
+            ))}
 
-          {/* Answer section */}
-          <ReviewAnswerSection
-            answer={answer}
-            won={reviewMetadata?.won ?? false}
-            testID="review-answer-section"
-          />
-
-          {/* User's incorrect guesses */}
-          {reviewMetadata?.guesses && reviewMetadata.guesses.length > 0 && (
-            <ReviewGuessesSection
-              guesses={reviewMetadata.guesses}
-              testID="review-guesses-section"
+            {/* Answer section */}
+            <ReviewAnswerSection
+              answer={answer}
+              won={reviewMetadata?.won ?? false}
+              testID="review-answer-section"
             />
-          )}
+
+            {/* User's incorrect guesses */}
+            {reviewMetadata?.guesses && reviewMetadata.guesses.length > 0 && (
+              <ReviewGuessesSection
+                guesses={reviewMetadata.guesses}
+                testID="review-guesses-section"
+              />
+            )}
         </ScrollView>
 
         {/* Close Review button */}
@@ -336,66 +350,91 @@ export function CareerPathScreen({
       headerRight={progressIndicator}
       testID="career-path-screen"
     >
-      {/* Career Steps List */}
-      <FlatList
-        ref={flatListRef}
-        data={careerSteps}
-        renderItem={renderStep}
-        keyExtractor={(_, index: number) => `step-${index}`}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={10}
-        windowSize={5}
-        keyboardDismissMode="on-drag"
-        testID="career-steps-list"
-      />
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        {/* Timeline Container - holds axis line and career steps */}
+        <View style={styles.timelineContainer}>
+          {/* Continuous Timeline Axis - absolute positioned behind nodes */}
+          <TimelineAxis
+            totalSteps={careerSteps.length}
+            revealedCount={state.revealedCount}
+            isVictoryRevealing={isVictoryRevealing}
+            testID="timeline-axis"
+          />
 
-      {/* Game Result Modal */}
-      {state.score && (
-        <GameResultModal
-          visible={shouldShowModal}
-          won={state.gameStatus === 'won'}
-          score={state.score}
-          correctAnswer={answer}
-          totalSteps={totalSteps}
-          puzzleId={puzzle?.id ?? ''}
-          onShare={shareResult}
-          onViewPath={state.gameStatus === 'won' ? handleViewPath : undefined}
-          onClose={() => router.back()}
-          testID="game-result-modal"
-        />
-      )}
+          {/* Career Steps List */}
+          <FlatList
+            ref={flatListRef}
+            data={careerSteps}
+            renderItem={renderStep}
+            keyExtractor={(_, index: number) => `step-${index}`}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={10}
+            windowSize={5}
+            keyboardDismissMode="on-drag"
+            testID="career-steps-list"
+          />
+        </View>
 
-      {/* Action Zone - show GameOverActionZone when game ends, hidden when viewing full path */}
-      {!viewingFullPath && (
-        isGameOver ? (
-          <GameOverActionZone
-            answer={answer}
+        {/* Game Result Modal */}
+        {state.score && (
+          <GameResultModal
+            visible={shouldShowModal}
             won={state.gameStatus === 'won'}
-            onSeeScore={() => setShowResultModal(true)}
-            testID="game-over-zone"
+            score={state.score}
+            correctAnswer={answer}
+            totalSteps={totalSteps}
+            puzzleId={puzzle?.id ?? ''}
+            onShare={shareResult}
+            onViewPath={state.gameStatus === 'won' ? handleViewPath : undefined}
+            onClose={() => router.back()}
+            testID="game-result-modal"
           />
-        ) : (
-          <ActionZone
-            currentGuess={state.currentGuess}
-            onGuessChange={setCurrentGuess}
-            onSubmit={submitGuess}
-            onRevealNext={revealNext}
-            canRevealMore={canRevealMore}
-            shouldShake={state.lastGuessIncorrect}
-            isGameOver={isGameOver}
-            testID="action-zone"
-          />
-        )
-      )}
+        )}
 
-      {/* Banner Ad (non-premium only) */}
-      <AdBanner testID="career-path-ad-banner" />
+        {/* Action Zone - show GameOverActionZone when game ends, hidden when viewing full path */}
+        {!viewingFullPath && (
+          isGameOver ? (
+            <GameOverActionZone
+              answer={answer}
+              won={state.gameStatus === 'won'}
+              onSeeScore={() => setShowResultModal(true)}
+              testID="game-over-zone"
+            />
+          ) : (
+            <ActionZone
+              currentGuess={state.currentGuess}
+              onGuessChange={setCurrentGuess}
+              onSubmit={submitGuess}
+              onRevealNext={revealNext}
+              canRevealMore={canRevealMore}
+              shouldShake={state.lastGuessIncorrect}
+              isGameOver={isGameOver}
+              onFocus={handleInputFocus}
+              testID="action-zone"
+            />
+          )
+        )}
+
+        {/* Banner Ad (non-premium only) */}
+        <AdBanner testID="career-path-ad-banner" />
+      </KeyboardAvoidingView>
     </GameContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
+  timelineContainer: {
+    flex: 1,
+    position: 'relative',
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',

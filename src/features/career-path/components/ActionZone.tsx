@@ -33,6 +33,8 @@ export interface ActionZoneProps {
   shouldShake: boolean;
   /** Whether the game is over */
   isGameOver: boolean;
+  /** Callback when input gains focus (for scroll-to-latest behavior) */
+  onFocus?: () => void;
   /** Test ID for testing */
   testID?: string;
 }
@@ -54,6 +56,7 @@ export function ActionZone({
   canRevealMore,
   shouldShake,
   isGameOver,
+  onFocus,
   testID,
 }: ActionZoneProps) {
   const shakeX = useSharedValue(0);
@@ -97,6 +100,7 @@ export function ActionZone({
             autoCorrect={false}
             returnKeyType="done"
             onSubmitEditing={handleSubmit}
+            onFocus={onFocus}
             testID={`${testID}-input`}
           />
           <ErrorFlashOverlay

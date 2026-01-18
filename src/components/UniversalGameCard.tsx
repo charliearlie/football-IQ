@@ -5,12 +5,18 @@
  * and Archive screen. Provides consistent layout and interaction patterns.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  cancelAnimation,
+  Easing,
 } from 'react-native-reanimated';
 import {
   Grid3X3,
@@ -19,7 +25,7 @@ import {
   Crown,
 } from 'lucide-react-native';
 import { GlassCard } from './GlassCard';
-import { ElevatedButton } from './ElevatedButton';
+import { ElevatedButton, ButtonVariant } from './ElevatedButton';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
@@ -207,15 +213,30 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
 const iconImageStyle = { width: 32, height: 32 };
 
 /**
+ * Button props returned by getButtonProps.
+ */
+interface ButtonProps {
+  title: string;
+  variant?: ButtonVariant;
+  topColor?: string;
+  shadowColor?: string;
+  borderColor?: string;
+}
+
+/**
  * Get button properties based on status.
  */
-function getButtonProps(status: CardStatus) {
+function getButtonProps(status: CardStatus): ButtonProps {
   switch (status) {
     case 'done':
+      // Muted navy background, border matches background (invisible)
+      // Secondary variant provides white text
       return {
         title: 'Result',
-        topColor: colors.cardYellow,
-        shadowColor: '#D4A500',
+        variant: 'secondary',
+        topColor: '#1E293B',      // Slightly lighter than stadiumNavy
+        shadowColor: '#0A1628',   // Dark navy depth
+        borderColor: '#1E293B',   // Match background to hide border
       };
     case 'resume':
       return {
@@ -230,6 +251,18 @@ function getButtonProps(status: CardStatus) {
         shadowColor: colors.grassShadow,
       };
   }
+}
+
+/**
+ * Get haptic feedback type based on button state.
+ * - Play: light (selection feedback)
+ * - Unlock: medium (impact feedback)
+ * - Result: none (quiet, just viewing)
+ */
+function getHapticType(status: CardStatus, isLocked: boolean, isPremiumLocked: boolean): 'light' | 'medium' | 'none' {
+  if (isLocked || isPremiumLocked) return 'medium'; // Unlock
+  if (status === 'done') return 'none'; // Result - quiet
+  return 'light'; // Play/Resume - light selection
 }
 
 /**
@@ -259,6 +292,56 @@ export function UniversalGameCard({
 
   // Determine if this card is premium-locked (premium-only mode + non-premium user + not ad-unlocked)
   const isPremiumLocked = isPremiumOnly && !isPremium && !isAdUnlocked;
+
+  // Get haptic type based on button state
+  const hapticType = getHapticType(status, isLocked, isPremiumLocked);
+
+  // Pulse animation for Play button (unplayed games only)
+  const playPulse = useSharedValue(1);
+  const shouldPulse = status === 'play' && !isLocked && !isPremiumLocked;
+
+  useEffect(() => {
+    if (shouldPulse) {
+      playPulse.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1, // infinite
+        true // reverse
+      );
+    } else {
+      cancelAnimation(playPulse);
+      playPulse.value = withTiming(1, { duration: 200 });
+    }
+  }, [shouldPulse, playPulse]);
+
+  const playButtonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: playPulse.value }],
+  }));
+
+  // Glint animation for Unlock button (sweeping white line)
+  const glintX = useSharedValue(-50);
+  const shouldGlint = isLocked || isPremiumLocked;
+
+  useEffect(() => {
+    if (shouldGlint) {
+      glintX.value = withRepeat(
+        withSequence(
+          withDelay(3000, withTiming(120, { duration: 600, easing: Easing.out(Easing.quad) })),
+          withTiming(-50, { duration: 0 }) // reset instantly
+        ),
+        -1
+      );
+    } else {
+      cancelAnimation(glintX);
+      glintX.value = -50;
+    }
+  }, [shouldGlint, glintX]);
+
+  const glintAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: glintX.value }, { rotate: '25deg' }],
+  }));
 
   // Subtle scale animation on press
   const handlePressIn = () => {
@@ -328,23 +411,50 @@ export function UniversalGameCard({
           {/* Right: Action Button or Unlock CTA */}
           <View style={styles.right}>
             {isLocked || isPremiumLocked ? (
-              // "Velvet Rope" design: Premium unlock button instead of static lock
-              <ElevatedButton
-                title="Unlock"
-                onPress={onPress}
-                size="small"
-                topColor={colors.cardYellow}
-                shadowColor="#D4A500"
-                icon={<Crown size={14} color={colors.stadiumNavy} />}
-                testID={`${testID}-unlock`}
-              />
+              // "Velvet Rope" design: Premium unlock button with glint effect
+              <View style={styles.unlockButtonContainer}>
+                <ElevatedButton
+                  title="Unlock"
+                  onPress={onPress}
+                  size="small"
+                  topColor={colors.cardYellow}
+                  shadowColor="#D4A500"
+                  hapticType={hapticType}
+                  icon={<Crown size={14} color={colors.stadiumNavy} />}
+                  testID={`${testID}-unlock`}
+                />
+                {/* Glint overlay */}
+                <Animated.View
+                  style={[styles.glint, glintAnimatedStyle]}
+                  pointerEvents="none"
+                />
+              </View>
+            ) : shouldPulse ? (
+              // Play button with pulse animation
+              <Animated.View style={playButtonAnimatedStyle}>
+                <ElevatedButton
+                  title={buttonProps.title}
+                  variant={buttonProps.variant}
+                  onPress={onPress}
+                  size="small"
+                  topColor={buttonProps.topColor}
+                  shadowColor={buttonProps.shadowColor}
+                  borderColorOverride={buttonProps.borderColor}
+                  hapticType={hapticType}
+                  testID={`${testID}-button`}
+                />
+              </Animated.View>
             ) : (
+              // Resume/Result button (no pulse)
               <ElevatedButton
                 title={buttonProps.title}
+                variant={buttonProps.variant}
                 onPress={onPress}
                 size="small"
                 topColor={buttonProps.topColor}
                 shadowColor={buttonProps.shadowColor}
+                borderColorOverride={buttonProps.borderColor}
+                hapticType={hapticType}
                 testID={`${testID}-button`}
               />
             )}
@@ -455,5 +565,17 @@ const styles = StyleSheet.create({
   right: {
     marginLeft: spacing.md,
     flexShrink: 0, // Don't shrink the button area
+  },
+  unlockButtonContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: borderRadius.xl,
+  },
+  glint: {
+    position: 'absolute',
+    top: -20,
+    width: 3,
+    height: '200%',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
 });

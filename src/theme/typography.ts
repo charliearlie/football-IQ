@@ -94,25 +94,33 @@ export const textStyles: Record<string, TextStyle> = {
     color: colors.textSecondary,
   },
 
-  // Button text
+  // Button text - Bebas Neue for athletic/sporty feel
   button: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.semiBold,
+    fontFamily: fonts.headline,
     fontSize: 18,
     lineHeight: 20,
     color: colors.stadiumNavy,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
 
   // Large button text
   buttonLarge: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.semiBold,
+    fontFamily: fonts.headline,
     fontSize: 18,
     lineHeight: 24,
     color: colors.stadiumNavy,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+  },
+
+  // Small button text
+  buttonSmall: {
+    fontFamily: fonts.headline,
+    fontSize: 14,
+    lineHeight: 16,
+    color: colors.stadiumNavy,
+    textTransform: 'uppercase',
+    letterSpacing: 0.25,
   },
 } as const;

@@ -10,6 +10,7 @@ export { CareerPathScreen } from './screens/CareerPathScreen';
 
 // Components
 export { TimelineStepRow } from './components/TimelineStepRow';
+export { TimelineAxis } from './components/TimelineAxis';
 export { CareerStepCard } from './components/CareerStepCard'; // Legacy - kept for reference
 export { LockedCard } from './components/LockedCard'; // Legacy - kept for reference
 export { ActionZone } from './components/ActionZone';

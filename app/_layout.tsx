@@ -23,7 +23,7 @@ import { PuzzleProvider } from '@/features/puzzles';
 import { AdProvider } from '@/features/ads';
 import { QuizPrefetchProvider } from '@/features/topical-quiz';
 import { IntegrityGuardProvider } from '@/features/integrity';
-import { NotificationWrapper } from '@/features/notifications';
+import { NotificationWrapper, initializeNotifications } from '@/features/notifications';
 import { getRevenueCatApiKey } from '@/config/revenueCat';
 import { SentryErrorFallback } from '@/components';
 
@@ -109,6 +109,15 @@ export default function RootLayout() {
         // Continue in degraded mode - app can still work with network
         setDbReady(true);
       });
+  }, []);
+
+  // Initialize notification system (sets up notification handler)
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      initializeNotifications().catch((error) => {
+        console.error('[Notifications] Initialization failed:', error);
+      });
+    }
   }, []);
 
   // Initialize RevenueCat SDK

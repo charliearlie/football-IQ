@@ -15,7 +15,13 @@ import * as StoreReview from 'expo-store-review';
 import Constants from 'expo-constants';
 import { colors, textStyles, spacing } from '@/theme';
 import { deleteAttemptsByGameMode } from '@/lib/database';
-import { scheduleNotification, getMorningMessage, getStreakSaverMessage } from '@/features/notifications';
+import {
+  scheduleNotification,
+  getMorningMessage,
+  getStreakSaverMessage,
+  getPermissionStatus,
+  requestPermissions,
+} from '@/features/notifications';
 import { SettingsRow } from '../components/SettingsRow';
 import { SettingsSection } from '../components/SettingsSection';
 import { LegalModal } from '../components/LegalModal';
@@ -89,6 +95,19 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
    */
   const handleTestNotification = useCallback(async (type: 'morning' | 'streak') => {
     try {
+      // Check and request permission if needed
+      let status = await getPermissionStatus();
+      if (status !== 'granted') {
+        status = await requestPermissions();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Notifications Disabled',
+            'Please enable notifications in your device settings to test this feature.'
+          );
+          return;
+        }
+      }
+
       const triggerDate = new Date(Date.now() + 5000); // 5 seconds from now
 
       if (type === 'morning') {
