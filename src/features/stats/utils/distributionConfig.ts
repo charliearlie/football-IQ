@@ -25,6 +25,7 @@ export function getMaxScoreForMode(_gameMode: GameMode): number {
 export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): number {
   switch (gameMode) {
     case 'career_path':
+    case 'career_path_pro':
       // Career Path: each club is one bucket
       // Bucket size = 100 / number of clubs
       return maxSteps ? Math.floor(100 / maxSteps) : 10;
@@ -47,7 +48,7 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
  * Get number of bars for skeleton loader.
  */
 export function getBarCountForMode(gameMode: GameMode, maxSteps?: number): number {
-  if (gameMode === 'career_path' && maxSteps) {
+  if ((gameMode === 'career_path' || gameMode === 'career_path_pro') && maxSteps) {
     return maxSteps; // One bar per club
   }
   if (gameMode === 'guess_the_goalscorers' && maxSteps) {
@@ -71,7 +72,8 @@ export function getScoreLabelsForMode(
   maxSteps?: number
 ): string[] | undefined {
   switch (gameMode) {
-    case 'career_path': {
+    case 'career_path':
+    case 'career_path_pro': {
       // Career Path: one label per club (1 club, 2 clubs, etc.)
       const steps = maxSteps || 10;
       const labels: string[] = [];
@@ -142,6 +144,7 @@ export function normalizeScoreForMode(
       // 0-5 points -> 0-100
       return rawScore * 20;
     case 'career_path':
+    case 'career_path_pro':
       // points/maxPoints * 100
       if (maxScore && maxScore > 0) {
         return Math.round((rawScore / maxScore) * 100);

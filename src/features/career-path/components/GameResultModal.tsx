@@ -20,6 +20,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { colors, spacing } from '@/theme';
 import { GameScore } from '../types/careerPath.types';
 import { ShareResult } from '../utils/share';
+import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 interface GameResultModalProps {
   /** Whether the modal is visible */
@@ -34,6 +35,8 @@ interface GameResultModalProps {
   totalSteps: number;
   /** Puzzle ID for score distribution */
   puzzleId: string;
+  /** Game mode for score distribution labels */
+  gameMode?: GameMode;
   /** Callback to share result */
   onShare: () => Promise<ShareResult>;
   /** Callback to enter review mode (optional) */
@@ -56,6 +59,7 @@ export function GameResultModal({
   correctAnswer,
   totalSteps,
   puzzleId,
+  gameMode = 'career_path',
   onShare,
   onViewPath,
   onClose,
@@ -126,7 +130,7 @@ export function GameResultModal({
       {/* Score distribution */}
       <ScoreDistributionContainer
         puzzleId={puzzleId}
-        gameMode="career_path"
+        gameMode={gameMode}
         userScore={totalSteps - score.stepsRevealed + 1}
         maxSteps={totalSteps}
         testID={testID ? `${testID}-distribution` : undefined}

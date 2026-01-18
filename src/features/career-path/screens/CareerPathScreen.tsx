@@ -389,6 +389,7 @@ export function CareerPathScreen({
             correctAnswer={answer}
             totalSteps={totalSteps}
             puzzleId={puzzle?.id ?? ''}
+            gameMode={gameMode}
             onShare={shareResult}
             onViewPath={state.gameStatus === 'won' ? handleViewPath : undefined}
             onClose={() => router.back()}

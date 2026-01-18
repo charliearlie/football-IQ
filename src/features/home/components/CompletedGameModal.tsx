@@ -6,10 +6,12 @@
  * Uses BaseResultModal with stored attempt data.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import {
   Trophy,
   XCircle,
+  Share2,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import {
@@ -17,9 +19,10 @@ import {
   ScoreDisplay,
   ResultType,
 } from '@/components/GameResultModal/BaseResultModal';
+import { ElevatedButton, IconButton } from '@/components';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { normalizeScoreForMode } from '@/features/stats/utils/distributionConfig';
-import { colors } from '@/theme';
+import { colors, spacing } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { ParsedLocalAttempt } from '@/types/database';
 
@@ -82,6 +85,8 @@ function getGameModeName(gameMode: GameMode): string {
   switch (gameMode) {
     case 'career_path':
       return 'Career Path';
+    case 'career_path_pro':
+      return 'Career Path Pro';
     case 'guess_the_transfer':
       return 'Transfer Guess';
     case 'guess_the_goalscorers':
@@ -130,7 +135,7 @@ export function CompletedGameModal({
 
   // For Career Path, use stepsRevealed as the score and pass totalSteps
   // For other modes, normalize score to 0-100
-  const isCareerPath = gameMode === 'career_path';
+  const isCareerPath = gameMode === 'career_path' || gameMode === 'career_path_pro';
   const totalSteps = metadata.totalSteps;
   const stepsRevealed = metadata.revealedCount;
   const userScore = isCareerPath && stepsRevealed && totalSteps
@@ -142,10 +147,15 @@ export function CompletedGameModal({
   const resultType: ResultType = 'complete';
   const title = 'YOUR RESULT';
 
+  // Share label state for feedback
+  const [shareLabel, setShareLabel] = useState<string | undefined>(undefined);
+
   // Handle share - copy the full score_display to clipboard
   const handleShare = async () => {
     if (attempt.score_display) {
       await Clipboard.setStringAsync(attempt.score_display);
+      setShareLabel('Copied!');
+      setTimeout(() => setShareLabel(undefined), 2000);
       return { success: true as const, method: 'clipboard' as const };
     }
     return { success: false as const };
@@ -157,17 +167,29 @@ export function CompletedGameModal({
       resultType={resultType}
       icon={getResultIcon(gameMode, won)}
       title={title}
-      onShare={handleShare}
-      onReview={onReview}
       onClose={onClose}
-      closeLabel="Close"
       showConfetti={false} // Don't celebrate again
+      hideDefaultButtons // Use custom button layout
       testID={testID}
     >
       {/* Career Path and Goalscorer Recall scores are shown via distribution graph */}
-      {gameMode !== 'career_path' && gameMode !== 'guess_the_goalscorers' && (
+      {gameMode !== 'career_path' && gameMode !== 'career_path_pro' && gameMode !== 'guess_the_goalscorers' && (
         <ScoreDisplay label={gameName} value={score} />
       )}
+
+      {/* Share icon button - centered */}
+      <View style={styles.shareContainer}>
+        <IconButton
+          icon={<Share2 size={20} color={colors.stadiumNavy} />}
+          onPress={handleShare}
+          label={shareLabel}
+          variant="primary"
+          size="medium"
+          testID="share-icon-button"
+        />
+      </View>
+
+      {/* Score distribution */}
       <ScoreDistributionContainer
         puzzleId={attempt.puzzle_id}
         gameMode={gameMode}
@@ -175,6 +197,46 @@ export function CompletedGameModal({
         maxSteps={totalSteps}
         testID={testID ? `${testID}-distribution` : undefined}
       />
+
+      {/* Action buttons row */}
+      <View style={styles.buttonRow}>
+        {onReview && (
+          <ElevatedButton
+            title="Review"
+            onPress={onReview}
+            variant="secondary"
+            size="small"
+            style={styles.buttonHalf}
+            testID="review-button"
+          />
+        )}
+        <ElevatedButton
+          title="Close"
+          onPress={onClose}
+          variant="primary"
+          size="small"
+          style={onReview ? styles.buttonHalf : styles.buttonFull}
+          testID="close-button"
+        />
+      </View>
     </BaseResultModal>
   );
 }
+
+const styles = StyleSheet.create({
+  shareContainer: {
+    marginBottom: spacing.md,
+    alignItems: 'center',
+  },
+  buttonRow: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  buttonHalf: {
+    flex: 1,
+  },
+  buttonFull: {
+    flex: 1,
+  },
+});

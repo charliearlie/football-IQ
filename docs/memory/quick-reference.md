@@ -813,6 +813,8 @@ import {
 } from '@/features/stats';
 
 // In result modals - container handles data fetching
+// IMPORTANT: Container performs optimistic merging - user's score is
+// automatically included in the distribution even before Supabase sync completes
 <ScoreDistributionContainer
   puzzleId={puzzle.id}
   gameMode="top_tens"
@@ -845,6 +847,12 @@ normalizeScoreForMode('the_grid', 9, 9)                 // 100 (9/9*100)
 const result = await getPuzzleScoreDistribution(puzzleId);
 // result.distribution = [{ score: 100, count: 5, percentage: 10 }, ...]
 // result.totalAttempts = 50
+
+// Optimistic Merge (handled automatically by ScoreDistributionContainer):
+// - User's score is added to distribution immediately, before Supabase sync
+// - Percentages are recalculated to include user's attempt (totalAttempts + 1)
+// - User's bucket is highlighted in Pitch Green (#58CC02) with glow effect
+// - Footer shows "Based on N global attempts" (includes user's attempt)
 ```
 
 ## Streak Calendar

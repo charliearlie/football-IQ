@@ -72,8 +72,9 @@ export function useStablePuzzle(
       } else {
         setLoadState('context_checked');
       }
-    } else if (fetchedPuzzle && !stablePuzzle) {
+    } else if (fetchedPuzzle && !stablePuzzle && loadState !== 'resolved') {
       // Late arrival from context (e.g. background sync)
+      // Only process if we haven't already resolved to prevent race conditions
       setStablePuzzle(fetchedPuzzle);
       setLoadState('resolved');
     }

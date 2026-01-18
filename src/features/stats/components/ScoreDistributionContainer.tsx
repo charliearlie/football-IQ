@@ -83,6 +83,55 @@ function transformGoalscorerDistribution(
   }));
 }
 
+/**
+ * Optimistically merge user's score into distribution.
+ *
+ * The API may not yet include the user's just-completed attempt due to sync delay.
+ * This function adjusts all percentages to reflect totalAttempts + 1,
+ * ensuring the user's score is immediately visible in the chart.
+ *
+ * Math:
+ * - old_count = old_percentage * old_total / 100
+ * - new_percentage = old_count / new_total * 100
+ * - For user's bucket: add 1 to count before calculating new percentage
+ */
+function mergeUserAttemptOptimistically(
+  distribution: DistributionEntry[],
+  totalAttempts: number,
+  userBucket: number,
+  bucketSize: number = 10
+): { distribution: DistributionEntry[]; totalAttempts: number } {
+  const newTotal = totalAttempts + 1;
+
+  // Recalculate all percentages for new total
+  const merged = distribution.map((entry) => {
+    // new_percentage = old_percentage * old_total / new_total
+    const newPercentage = totalAttempts > 0
+      ? (entry.percentage * totalAttempts) / newTotal
+      : 0;
+    return { ...entry, percentage: newPercentage };
+  });
+
+  // Find user's bucket (floor to bucket boundary)
+  const userBucketKey = Math.floor(userBucket / bucketSize) * bucketSize;
+
+  // Find or create user's bucket and add their attempt
+  const userEntry = merged.find((e) => e.score === userBucketKey);
+  if (userEntry) {
+    // Add 1 attempt: increment percentage by (100 / new_total)
+    userEntry.percentage += (100 / newTotal);
+  } else {
+    // Create new bucket with 1 attempt
+    merged.push({
+      score: userBucketKey,
+      count: 1,
+      percentage: 100 / newTotal,
+    });
+  }
+
+  return { distribution: merged, totalAttempts: newTotal };
+}
+
 export interface ScoreDistributionContainerProps {
   /** Puzzle ID to fetch distribution for */
   puzzleId: string;
@@ -153,15 +202,24 @@ export function ScoreDistributionContainer({
   // Check if this is the first player (no prior attempts)
   const isFirstPlayer = distribution.length === 0 && totalAttempts === 0;
 
-  // For Career Path, transform distribution and scores to club counts
-  if (gameMode === 'career_path' && maxSteps) {
-    const transformedDistribution = transformCareerPathDistribution(distribution, maxSteps);
-    // userScore for Career Path should be stepsRevealed (passed as userScore)
+  // For Career Path and Career Path Pro, transform distribution and scores to club counts
+  if ((gameMode === 'career_path' || gameMode === 'career_path_pro') && maxSteps) {
+    // userScore is in points (1 to maxSteps), convert to normalized for bucket matching
+    // normalized = (points / maxSteps) * 100
+    const normalizedUserScore = (userScore / maxSteps) * 100;
+
+    // Optimistically merge user's attempt into distribution (API uses buckets of 10)
+    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+      mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
+
+    // Transform merged distribution to points-based display
+    const transformedDistribution = transformCareerPathDistribution(mergedDistribution, maxSteps);
+
     // We use club count directly, with maxScore = maxSteps, minScore = 1, and bucketSize = 1
     return (
       <ScoreDistributionGraph
         distribution={transformedDistribution}
-        totalAttempts={isFirstPlayer ? 1 : totalAttempts}
+        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
         userScore={userScore}
         maxScore={maxSteps}
         minScore={1}
@@ -175,12 +233,21 @@ export function ScoreDistributionContainer({
 
   // For Goalscorer Recall, transform distribution to scorer counts (dynamic scale)
   if (gameMode === 'guess_the_goalscorers' && maxSteps) {
-    const transformedDistribution = transformGoalscorerDistribution(distribution, maxSteps);
     // userScore is raw scorer count (0 to totalScorers)
+    // Convert to normalized for bucket matching: (scorersFound / totalScorers) * 100
+    const normalizedUserScore = (userScore / maxSteps) * 100;
+
+    // Optimistically merge user's attempt into distribution (API uses buckets of 10)
+    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+      mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
+
+    // Transform merged distribution to scorer-count-based display
+    const transformedDistribution = transformGoalscorerDistribution(mergedDistribution, maxSteps);
+
     return (
       <ScoreDistributionGraph
         distribution={transformedDistribution}
-        totalAttempts={isFirstPlayer ? 1 : totalAttempts}
+        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
         userScore={userScore}
         maxScore={maxSteps}
         minScore={0}
@@ -192,13 +259,21 @@ export function ScoreDistributionContainer({
     );
   }
 
+  // For all other game modes (normalized 0-100 scores)
+  // userScore is already normalized for these modes
+  const bucketSize = getBucketSizeForMode(gameMode, maxSteps);
+
+  // Optimistically merge user's attempt into distribution
+  const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+    mergeUserAttemptOptimistically(distribution, totalAttempts, userScore, bucketSize);
+
   return (
     <ScoreDistributionGraph
-      distribution={distribution}
-      totalAttempts={isFirstPlayer ? 1 : totalAttempts}
+      distribution={mergedDistribution}
+      totalAttempts={isFirstPlayer ? 1 : mergedTotal}
       userScore={userScore}
       maxScore={getMaxScoreForMode(gameMode)}
-      bucketSize={getBucketSizeForMode(gameMode, maxSteps)}
+      bucketSize={bucketSize}
       scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
       isFirstPlayer={isFirstPlayer}
       testID={testID}

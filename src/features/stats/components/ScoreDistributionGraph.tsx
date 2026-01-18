@@ -115,9 +115,9 @@ export function ScoreDistributionGraph({
       <View style={styles.chartContainer}>
         {buckets.map((bucket, index) => {
           const isUserScore = bucket.score === userBucket;
-          // Scale bar width relative to max percentage
-          const barWidth =
-            maxPercentage > 0 ? (bucket.percentage / maxPercentage) * 100 : 0;
+          // Use absolute percentage for bar width (25% = 25% width)
+          // Minimum 3% width for non-zero values to ensure visibility
+          const barWidth = bucket.percentage > 0 ? Math.max(bucket.percentage, 3) : 0;
 
           // Get label - use custom if provided, otherwise default
           const label = scoreLabels?.[index] ?? getDefaultLabel(bucket.score);
@@ -140,7 +140,7 @@ export function ScoreDistributionGraph({
                   style={[
                     styles.bar,
                     {
-                      width: `${Math.max(barWidth, bucket.percentage > 0 ? 3 : 0)}%`,
+                      width: `${barWidth}%`,
                       backgroundColor: isUserScore
                         ? colors.pitchGreen
                         : colors.glassBackground,
