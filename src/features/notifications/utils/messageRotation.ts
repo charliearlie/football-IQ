@@ -11,23 +11,26 @@ import type { MorningMessage } from '../types';
 /**
  * Morning "Daily Kick-off" notification messages.
  * Rotated daily based on day-of-year.
+ *
+ * Note: Only reference guaranteed daily games (Career Path, Transfer Guess)
+ * or use generic messages. Other games rotate so can't be mentioned specifically.
  */
 const MORNING_MESSAGES: MorningMessage[] = [
   {
     title: 'Daily Kick-off!',
-    body: "Your new puzzles are ready. Time to test your football IQ!",
+    body: 'Your new daily games are ready!',
   },
   {
-    title: 'Match Day!',
-    body: 'Fresh challenges await. Can you keep your streak alive?',
+    title: 'Career Path awaits!',
+    body: "Can you guess today's mystery player?",
   },
   {
-    title: 'Starting XI Ready',
-    body: "Today's puzzles are on the pitch. Show us what you've got!",
+    title: 'New Transfer to guess!',
+    body: 'A new transfer puzzle is ready. Who made the move?',
   },
   {
     title: 'Game On!',
-    body: 'New puzzles just dropped. Your streak is counting on you!',
+    body: 'Fresh daily challenges are waiting for you!',
   },
 ];
 

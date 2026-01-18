@@ -12,6 +12,18 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   multiRemove: jest.fn(() => Promise.resolve()),
 }));
 
+// Mock @sentry/react-native
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  setUser: jest.fn(),
+  setTag: jest.fn(),
+  setContext: jest.fn(),
+  wrap: jest.fn((component) => component),
+}));
+
 // Mock Supabase client
 const mockSupabaseAuth = {
   getSession: jest.fn(),
@@ -259,6 +271,31 @@ jest.mock('moti/skeleton', () => {
     },
   };
 });
+
+// Mock expo-notifications
+const mockNotifications = {
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+  getPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: 'undetermined' })
+  ),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('notification-id')),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
+  cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  AndroidNotificationPriority: { DEFAULT: 0, HIGH: 1 },
+  AndroidImportance: { DEFAULT: 3, HIGH: 4 },
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+};
+
+jest.mock('expo-notifications', () => mockNotifications);
+
+export { mockNotifications };
 
 // Suppress specific console warnings in tests
 const originalWarn = console.warn;
