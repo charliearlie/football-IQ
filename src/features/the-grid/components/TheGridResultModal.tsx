@@ -12,7 +12,7 @@ import { Trophy, Star, X } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { GlassCard } from '@/components/GlassCard';
 import { ElevatedButton } from '@/components/ElevatedButton';
-import { Confetti } from '@/features/career-path/components/Confetti';
+import { Confetti } from '@/components/Confetti';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { TheGridScore, FilledCell } from '../types/theGrid.types';

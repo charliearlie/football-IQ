@@ -36,7 +36,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
-import { Confetti } from '@/features/career-path/components/Confetti';
+import { Confetti } from '@/components/Confetti';
 import { useAuth, useSubscriptionSync } from '@/features/auth';
 import { processPackagesWithOffers, type OfferInfo } from '@/features/subscription';
 import { colors } from '@/theme/colors';

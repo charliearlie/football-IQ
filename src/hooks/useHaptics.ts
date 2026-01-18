@@ -104,6 +104,19 @@ export function useHaptics() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [isHapticsSupported]);
 
+  /**
+   * Perfect Day celebration - Triumphant flourish for completing all daily puzzles
+   * Uses: Success -> Success -> Heavy (escalating celebration)
+   */
+  const triggerPerfectDay = useCallback(async () => {
+    if (!isHapticsSupported) return;
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  }, [isHapticsSupported]);
+
   return {
     // Primitives (keep for backward compatibility)
     triggerLight,
@@ -116,5 +129,6 @@ export function useHaptics() {
     triggerError,
     triggerCompletion,
     triggerIncomplete,
+    triggerPerfectDay,
   };
 }

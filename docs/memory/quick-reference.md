@@ -1504,3 +1504,88 @@ Sentry.setContext('puzzle', { id: puzzleId, date: puzzleDate });
 - Init: `app/_layout.tsx`
 - Fallback: `src/components/SentryErrorFallback.tsx`
 - Config: `app.json` (plugins array)
+
+## Local Notifications
+```typescript
+import {
+  NotificationWrapper,
+  useNotifications,
+  initializeNotifications,
+  scheduleNotification,
+  cancelNotification,
+  getMorningMessage,
+  getStreakSaverMessage,
+  getMorningTriggerTime,
+  getEveningTriggerTime,
+} from '@/features/notifications';
+
+// Context usage (inside NotificationWrapper)
+const {
+  permissionStatus,        // 'undetermined' | 'granted' | 'denied'
+  hasAskedPermission,      // true after first permission request
+  showPermissionModal,     // true when permission modal should show
+  requestNotificationPermission,  // Trigger system permission dialog
+  dismissPermissionModal,  // Close modal without granting
+  isPerfectDayCelebrating, // true when Perfect Day modal showing
+  dismissPerfectDayCelebration,   // Close celebration modal
+} = useNotifications();
+
+// Provider usage (in app/_layout.tsx, inside PuzzleProvider)
+<PuzzleProvider>
+  <NotificationWrapper>
+    {/* App content */}
+    {/* NotificationPermissionModal + PerfectDayCelebration rendered automatically */}
+  </NotificationWrapper>
+</PuzzleProvider>
+
+// Notification service (low-level)
+await initializeNotifications();  // Set handler, create channel
+const status = await requestPermissions();  // Request system permissions
+
+await scheduleNotification({
+  id: 'daily_kickoff',
+  title: 'Daily Kick-off!',
+  body: 'Your new puzzles are ready.',
+  triggerDate: getMorningTriggerTime(),  // 08:30 local
+  priority: 'default',
+});
+
+await cancelNotification('streak_saver');
+
+// Message rotation (rotates by day-of-year)
+const morning = getMorningMessage();
+// { title: "Daily Kick-off!", body: "Your new puzzles are ready..." }
+
+const streakSaver = getStreakSaverMessage(5);
+// { title: "⚠️ STREAK AT RISK!", body: "Your 5 day streak ends in 4 hours!" }
+
+// Schedule calculation (integrates with True-Time for drift adjustment)
+getMorningTriggerTime();   // Date for 08:30 local (or null if in past)
+getEveningTriggerTime();   // Date for 20:00 local (or null if in past)
+```
+
+**Notification IDs (stable):**
+- `daily_kickoff` - Morning reminder at 08:30
+- `streak_saver` - Evening alert at 20:00
+
+**Scheduling Logic:**
+- Morning: Scheduled if `gamesPlayedToday === 0`
+- Evening: Scheduled if `currentStreak > 0 AND gamesPlayedToday === 0`
+- Both cancelled when user plays a game
+- Rescheduled at midnight via `onMidnight()` subscription
+
+**Permission Flow:**
+- Triggered after `totalGamesPlayed === 1` (first puzzle completion)
+- Custom modal shown before system dialog for higher acceptance
+- `hasAskedPermission` prevents re-prompting declined users
+
+**Perfect Day Detection:**
+- Triggered when `completedCount === totalPuzzles && totalPuzzles > 0`
+- Only fires once per date (tracked in AsyncStorage)
+- Includes confetti animation and unique haptic pattern
+
+**Files:**
+- Context: `src/features/notifications/context/NotificationContext.tsx`
+- Service: `src/features/notifications/services/notificationService.ts`
+- Components: `src/features/notifications/components/`
+- Types: `src/features/notifications/types.ts`

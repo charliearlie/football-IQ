@@ -14,6 +14,8 @@ Sentry is configured and active in production builds. Errors are automatically c
 | Project | `football-iq-mobile` |
 | Region | `de.sentry.io` |
 | DSN | `EXPO_PUBLIC_SENTRY_DSN` in `.env` |
+| Source Maps | Disabled (`uploadSourceMaps: false`) |
+| Native Symbols | Disabled (`uploadNativeSymbols: false`) |
 
 ### Files
 
@@ -33,6 +35,16 @@ Sentry is configured and active in production builds. Errors are automatically c
 ## Source Map Uploads (Future Setup)
 
 Source maps allow Sentry to show readable stack traces instead of minified code. This requires uploading source maps during each release build.
+
+**Currently disabled** in `app.json` to avoid requiring auth token:
+```json
+{
+  "uploadSourceMaps": false,
+  "uploadNativeSymbols": false
+}
+```
+
+To enable, set both to `true` and configure auth token (see below).
 
 ### Option A: Manual Upload via sentry-cli
 

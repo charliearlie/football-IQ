@@ -134,7 +134,7 @@ function ConfettiPiece({
   );
 }
 
-interface ConfettiProps {
+export interface ConfettiProps {
   /** Whether to show confetti */
   active: boolean;
   /** Test ID for testing */

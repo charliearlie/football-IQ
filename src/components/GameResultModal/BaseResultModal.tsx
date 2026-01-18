@@ -17,7 +17,7 @@ import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
-import { Confetti } from '@/features/career-path/components/Confetti';
+import { Confetti } from '@/components/Confetti';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';

@@ -15,7 +15,7 @@ export { LockedCard } from './components/LockedCard'; // Legacy - kept for refer
 export { ActionZone } from './components/ActionZone';
 export { GameOverActionZone } from './components/GameOverActionZone';
 export { GameResultModal } from './components/GameResultModal';
-export { Confetti } from './components/Confetti';
+export { Confetti } from '@/components/Confetti';
 
 // Constants
 export { getTimelineConfig, getDeviceSize, TIMELINE_ANIMATIONS, LAYOUT } from './constants/timeline';

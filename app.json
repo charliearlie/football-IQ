@@ -23,7 +23,11 @@
         "foregroundImage": "./assets/images/footballiq-icon.png",
         "backgroundColor": "#0F172A"
       },
-      "package": "com.charliearlie.footballiq.app"
+      "package": "com.charliearlie.footballiq.app",
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -95,11 +99,14 @@
         }
       ],
       "expo-tracking-transparency",
+      "expo-notifications",
       [
         "@sentry/react-native/expo",
         {
           "organization": "football-iq",
-          "project": "football-iq-mobile"
+          "project": "football-iq-mobile",
+          "uploadSourceMaps": false,
+          "uploadNativeSymbols": false
         }
       ]
     ],

@@ -10,11 +10,12 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, FileText, Star, Trash2 } from 'lucide-react-native';
+import { Shield, FileText, Star, Trash2, Bell } from 'lucide-react-native';
 import * as StoreReview from 'expo-store-review';
 import Constants from 'expo-constants';
 import { colors, textStyles, spacing } from '@/theme';
 import { deleteAttemptsByGameMode } from '@/lib/database';
+import { scheduleNotification, getMorningMessage, getStreakSaverMessage } from '@/features/notifications';
 import { SettingsRow } from '../components/SettingsRow';
 import { SettingsSection } from '../components/SettingsSection';
 import { LegalModal } from '../components/LegalModal';
@@ -81,6 +82,40 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         },
       ]
     );
+  }, []);
+
+  /**
+   * Send a test notification (5 seconds from now)
+   */
+  const handleTestNotification = useCallback(async (type: 'morning' | 'streak') => {
+    try {
+      const triggerDate = new Date(Date.now() + 5000); // 5 seconds from now
+
+      if (type === 'morning') {
+        const { title, body } = getMorningMessage();
+        await scheduleNotification({
+          id: 'test_morning',
+          title,
+          body,
+          triggerDate,
+          priority: 'default',
+        });
+        Alert.alert('Test Scheduled', `Morning notification will appear in 5 seconds.\n\nTitle: "${title}"`);
+      } else {
+        const { title, body } = getStreakSaverMessage(7);
+        await scheduleNotification({
+          id: 'test_streak',
+          title,
+          body,
+          triggerDate,
+          priority: 'high',
+        });
+        Alert.alert('Test Scheduled', `Streak saver notification will appear in 5 seconds.\n\nTitle: "${title}"`);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to schedule test notification. Make sure notifications are enabled.');
+      console.error('Test notification error:', error);
+    }
   }, []);
 
   /**
@@ -177,6 +212,18 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Developer Section (hidden until activated) */}
         {devModeEnabled && (
           <SettingsSection title="Developer">
+            <SettingsRow
+              icon={<Bell size={20} color={colors.pitchGreen} strokeWidth={2} />}
+              label="Test Morning Notification"
+              onPress={() => handleTestNotification('morning')}
+              testID={testID ? `${testID}-test-morning-notif` : undefined}
+            />
+            <SettingsRow
+              icon={<Bell size={20} color={colors.cardYellow} strokeWidth={2} />}
+              label="Test Streak Saver Notification"
+              onPress={() => handleTestNotification('streak')}
+              testID={testID ? `${testID}-test-streak-notif` : undefined}
+            />
             <SettingsRow
               icon={<Trash2 size={20} color={colors.redCard} strokeWidth={2} />}
               label="Clear Goalscorer Recall Data"

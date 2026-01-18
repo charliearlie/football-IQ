@@ -23,6 +23,7 @@ import { PuzzleProvider } from '@/features/puzzles';
 import { AdProvider } from '@/features/ads';
 import { QuizPrefetchProvider } from '@/features/topical-quiz';
 import { IntegrityGuardProvider } from '@/features/integrity';
+import { NotificationWrapper } from '@/features/notifications';
 import { getRevenueCatApiKey } from '@/config/revenueCat';
 import { SentryErrorFallback } from '@/components';
 
@@ -72,15 +73,17 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       <PuzzleProvider>
         <QuizPrefetchProvider>
           <AdProvider>
-            {children}
-            <FirstRunModal
-              visible={needsDisplayName ?? false}
-              onSubmit={async (displayName) => {
-                const { error } = await updateDisplayName(displayName);
-                if (error) throw error;
-              }}
-              testID="first-run-modal"
-            />
+            <NotificationWrapper>
+              {children}
+              <FirstRunModal
+                visible={needsDisplayName ?? false}
+                onSubmit={async (displayName) => {
+                  const { error } = await updateDisplayName(displayName);
+                  if (error) throw error;
+                }}
+                testID="first-run-modal"
+              />
+            </NotificationWrapper>
           </AdProvider>
         </QuizPrefetchProvider>
       </PuzzleProvider>

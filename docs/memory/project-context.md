@@ -237,6 +237,15 @@ Wordle-style "How You Compare" bar chart in result modals.
 Fourth tab with Privacy Policy, Terms, Rate App, and secret dev menu (7 taps on version).
 - **Files**: `src/features/settings/`, `app/(tabs)/settings.tsx`
 
+### Local Notifications
+Push-style local notifications to maximize DAU and protect streaks.
+- **Daily Kick-off** (08:30): Morning reminder if user hasn't played, rotating messages
+- **Streak Saver** (20:00): Evening alert if `streak > 0 AND gamesPlayedToday === 0`
+- **Perfect Day**: Full-screen confetti celebration when all daily puzzles completed
+- **Scheduling**: Uses True-Time system (`getTimeDriftMs()`) for accurate timing
+- **Permission Flow**: Custom modal shown after first puzzle completion
+- **Files**: `src/features/notifications/`
+
 ### Review Mode
 Visual replay of completed games showing user choices, hints used, and outcomes.
 - Career Path: Green winning step / red missed step
