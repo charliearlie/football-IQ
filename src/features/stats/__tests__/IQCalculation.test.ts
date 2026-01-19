@@ -106,20 +106,20 @@ describe('normalizeScore', () => {
     });
   });
 
-  describe('tic_tac_toe', () => {
+  describe('the_grid', () => {
     it('normalizes win to 100', () => {
       const metadata = { result: 'win' };
-      expect(normalizeScore('tic_tac_toe', metadata)).toBe(100);
+      expect(normalizeScore('the_grid', metadata)).toBe(100);
     });
 
     it('normalizes draw to 50', () => {
       const metadata = { result: 'draw' };
-      expect(normalizeScore('tic_tac_toe', metadata)).toBe(50);
+      expect(normalizeScore('the_grid', metadata)).toBe(50);
     });
 
     it('normalizes loss to 0', () => {
       const metadata = { result: 'loss' };
-      expect(normalizeScore('tic_tac_toe', metadata)).toBe(0);
+      expect(normalizeScore('the_grid', metadata)).toBe(0);
     });
   });
 
@@ -164,12 +164,12 @@ describe('isPerfectScore', () => {
 
   it('returns true for tic_tac_toe win', () => {
     const metadata = { result: 'win' };
-    expect(isPerfectScore('tic_tac_toe', metadata)).toBe(true);
+    expect(isPerfectScore('the_grid', metadata)).toBe(true);
   });
 
   it('returns false for tic_tac_toe draw', () => {
     const metadata = { result: 'draw' };
-    expect(isPerfectScore('tic_tac_toe', metadata)).toBe(false);
+    expect(isPerfectScore('the_grid', metadata)).toBe(false);
   });
 
   it('returns true for perfect quiz (5/5)', () => {
@@ -220,7 +220,7 @@ describe('calculateProficiency', () => {
       { metadata: { result: 'draw' } },  // 50%
       { metadata: { result: 'loss' } },  // 0%
     ];
-    const result = calculateProficiency('tic_tac_toe', attempts as any);
+    const result = calculateProficiency('the_grid', attempts as any);
     // Average: (100 + 50 + 0) / 3 = 50
     expect(result.percentage).toBe(50);
   });
@@ -232,7 +232,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'career_path', displayName: 'Deduction', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
@@ -244,7 +244,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'career_path', displayName: 'Deduction', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
     ];
@@ -256,7 +256,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 5, perfectScores: 2 },                // 80 * 0.25 = 20
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 3, perfectScores: 0 },  // 60 * 0.25 = 15
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 70, gamesPlayed: 4, perfectScores: 1 },   // 70 * 0.20 = 14
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 50, gamesPlayed: 2, perfectScores: 1 },          // 50 * 0.05 = 2.5
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 50, gamesPlayed: 2, perfectScores: 1 },          // 50 * 0.05 = 2.5
       { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 90, gamesPlayed: 3, perfectScores: 2 },         // 90 * 0.10 = 9
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 40, gamesPlayed: 1, perfectScores: 0 },         // 40 * 0.15 = 6
     ];
@@ -269,7 +269,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'career_path', displayName: 'Deduction', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
@@ -283,7 +283,7 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 1, perfectScores: 0 },           // 0.25
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 1, perfectScores: 0 }, // 0.25
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },   // not played
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },          // not played
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },          // not played
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },         // not played
     ];
     // Weights for played: 0.25 + 0.25 = 0.50
@@ -300,7 +300,7 @@ describe('calculateBadges', () => {
       { gameMode: 'career_path', displayName: 'Deduction', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
-      { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
     const badges = calculateBadges(proficiencies, 0, 0);

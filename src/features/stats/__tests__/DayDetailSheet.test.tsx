@@ -44,7 +44,7 @@ describe('DayDetailSheet', () => {
     gameModes: [
       { gameMode: 'career_path', completed: true, iqEarned: 100 },
       { gameMode: 'guess_the_transfer', completed: true, iqEarned: 100 },
-      { gameMode: 'tic_tac_toe', completed: true, iqEarned: 50 },
+      { gameMode: 'the_grid', completed: true, iqEarned: 50 },
       { gameMode: 'topical_quiz', completed: false, iqEarned: 0 },
       { gameMode: 'the_grid', completed: false, iqEarned: 0 },
       { gameMode: 'top_tens', completed: false, iqEarned: 0 },
@@ -172,7 +172,7 @@ describe('DayDetailSheet', () => {
       day.gameModes = [
         { gameMode: 'career_path', completed: true, iqEarned: 100 },
         { gameMode: 'guess_the_transfer', completed: true, iqEarned: 100 },
-        { gameMode: 'tic_tac_toe', completed: true, iqEarned: 50 },
+        { gameMode: 'the_grid', completed: true, iqEarned: 50 },
         { gameMode: 'topical_quiz', completed: true, iqEarned: 50 },
         { gameMode: 'the_grid', completed: true, iqEarned: 50 },
         { gameMode: 'top_tens', completed: false, iqEarned: 0 },
@@ -215,7 +215,7 @@ describe('DayDetailSheet', () => {
         gameModes: [
           { gameMode: 'career_path', completed: true, iqEarned: 100 },
           { gameMode: 'guess_the_transfer', completed: true, iqEarned: 100 },
-          { gameMode: 'tic_tac_toe', completed: true, iqEarned: 100 },
+          { gameMode: 'the_grid', completed: true, iqEarned: 100 },
           { gameMode: 'topical_quiz', completed: true, iqEarned: 100 },
           { gameMode: 'the_grid', completed: true, iqEarned: 100 },
           { gameMode: 'top_tens', completed: true, iqEarned: 100 },
@@ -306,7 +306,7 @@ describe('DayDetailSheet', () => {
         gameModes: [
           { gameMode: 'career_path', completed: true, iqEarned: 100 },
           { gameMode: 'guess_the_transfer', completed: true, iqEarned: 100 },
-          { gameMode: 'tic_tac_toe', completed: false, iqEarned: 0 },
+          { gameMode: 'the_grid', completed: false, iqEarned: 0 },
           { gameMode: 'topical_quiz', completed: false, iqEarned: 0 },
         ],
       };
@@ -331,7 +331,7 @@ describe('DayDetailSheet', () => {
         gameModes: [
           { gameMode: 'career_path', completed: true, iqEarned: 100 },
           { gameMode: 'guess_the_transfer', completed: true, iqEarned: 100 },
-          { gameMode: 'tic_tac_toe', completed: true, iqEarned: 100 },
+          { gameMode: 'the_grid', completed: true, iqEarned: 100 },
           { gameMode: 'topical_quiz', completed: true, iqEarned: 100 },
           { gameMode: 'the_grid', completed: true, iqEarned: 100 },
           { gameMode: 'top_tens', completed: false, iqEarned: 0 },

@@ -236,15 +236,15 @@ describe('Leaderboard Ranking', () => {
     });
 
     it('normalizes tic_tac_toe win to 100', () => {
-      expect(normalizeModeScore('tic_tac_toe', { result: 'win' })).toBe(100);
+      expect(normalizeModeScore('the_grid', { result: 'win' })).toBe(100);
     });
 
     it('normalizes tic_tac_toe draw to 50', () => {
-      expect(normalizeModeScore('tic_tac_toe', { result: 'draw' })).toBe(50);
+      expect(normalizeModeScore('the_grid', { result: 'draw' })).toBe(50);
     });
 
     it('normalizes tic_tac_toe loss to 0', () => {
-      expect(normalizeModeScore('tic_tac_toe', { result: 'loss' })).toBe(0);
+      expect(normalizeModeScore('the_grid', { result: 'loss' })).toBe(0);
     });
 
     it('normalizes topical_quiz score correctly', () => {
@@ -268,7 +268,7 @@ describe('Leaderboard Ranking', () => {
         { gameMode: 'career_path' as GameMode, metadata: { points: 10, maxPoints: 10 } },
         { gameMode: 'guess_the_transfer' as GameMode, metadata: { points: 10 } },
         { gameMode: 'guess_the_goalscorers' as GameMode, metadata: { percentage: 100 } },
-        { gameMode: 'tic_tac_toe' as GameMode, metadata: { result: 'win' } },
+        { gameMode: 'the_grid' as GameMode, metadata: { result: 'win' } },
         { gameMode: 'topical_quiz' as GameMode, metadata: { points: 10 } },
       ];
 

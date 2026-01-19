@@ -148,25 +148,10 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
       const resolvedCards = await Promise.all(cardPromises);
 
       // Filter out null cards (no puzzle for that mode)
-      // but keep topical_quiz as "coming soon" placeholder
       const validCards = resolvedCards.filter((card): card is DailyPuzzleCard => {
         if (card !== null) return true;
         return false;
       });
-
-      // If topical_quiz has no puzzle, add a placeholder
-      if (!puzzleMap.has('topical_quiz')) {
-        // Find where to insert (maintain order)
-        const quizIndex = GAME_MODE_ORDER.indexOf('topical_quiz');
-        const placeholderCard: DailyPuzzleCard = {
-          puzzleId: 'coming-soon-quiz',
-          gameMode: 'topical_quiz',
-          status: 'play', // Will be handled specially in the component
-          difficulty: null,
-        };
-        // Insert at correct position
-        validCards.splice(quizIndex, 0, placeholderCard);
-      }
 
       // If career_path_pro has no puzzle, add a placeholder (premium-only)
       if (!puzzleMap.has('career_path_pro')) {

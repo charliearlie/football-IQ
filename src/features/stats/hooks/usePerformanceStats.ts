@@ -36,7 +36,6 @@ const ALL_GAME_MODES: GameMode[] = [
   'career_path_pro',
   'guess_the_transfer',
   'guess_the_goalscorers',
-  'tic_tac_toe',
   'the_grid',
   'topical_quiz',
   'top_tens',

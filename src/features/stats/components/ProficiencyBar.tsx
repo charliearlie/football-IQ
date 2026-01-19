@@ -41,10 +41,12 @@ function getGameModeIcon(gameMode: GameMode): LucideIcon {
       return ArrowRightLeft;
     case 'guess_the_goalscorers':
       return Target;
-    case 'tic_tac_toe':
+    case 'the_grid':
       return Grid3X3;
     case 'topical_quiz':
       return HelpCircle;
+    default:
+      return Briefcase;
   }
 }
 

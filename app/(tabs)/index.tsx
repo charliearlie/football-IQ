@@ -41,7 +41,6 @@ const ROUTE_MAP: Record<GameMode, string> = {
   career_path_pro: 'career-path-pro',
   guess_the_transfer: 'transfer-guess',
   guess_the_goalscorers: 'goalscorer-recall',
-  tic_tac_toe: 'tic-tac-toe',
   the_grid: 'the-grid',
   topical_quiz: 'topical-quiz',
   top_tens: 'top-tens',

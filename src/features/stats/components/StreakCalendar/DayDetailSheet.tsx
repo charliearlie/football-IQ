@@ -96,7 +96,6 @@ function GameModeIcon({
         return <DollarSign size={iconSize} color={iconColor} />;
       case 'guess_the_goalscorers':
         return <Timer size={iconSize} color={iconColor} />;
-      case 'tic_tac_toe':
       case 'the_grid':
         return <Grid3X3 size={iconSize} color={iconColor} />;
       case 'topical_quiz':

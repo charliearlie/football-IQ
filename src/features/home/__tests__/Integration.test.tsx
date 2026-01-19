@@ -77,18 +77,6 @@ describe('DailyStackCard', () => {
       expect(getByText('Remember the match')).toBeTruthy();
     });
 
-    it('shows correct title for tic_tac_toe', () => {
-      const { getByText } = render(
-        <DailyStackCard
-          gameMode="tic_tac_toe"
-          status="play"
-          onPress={mockOnPress}
-        />
-      );
-
-      expect(getByText('Tic Tac Toe')).toBeTruthy();
-      expect(getByText('Beat the AI')).toBeTruthy();
-    });
   });
 
   describe('Resume state', () => {

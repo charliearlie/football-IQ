@@ -91,8 +91,6 @@ function getGameModeName(gameMode: GameMode): string {
       return 'Transfer Guess';
     case 'guess_the_goalscorers':
       return 'Goalscorer Recall';
-    case 'tic_tac_toe':
-      return 'Tic Tac Toe';
     case 'the_grid':
       return 'The Grid';
     case 'topical_quiz':

@@ -36,7 +36,7 @@ function createEmptyProficiencies(
     { gameMode: 'career_path', displayName: 'Deduction' },
     { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge' },
     { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall' },
-    { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic' },
+    { gameMode: 'the_grid', displayName: 'Strategic Logic' },
     { gameMode: 'topical_quiz', displayName: 'Current Affairs' },
   ];
 
@@ -164,25 +164,25 @@ describe('IQ Data Pipeline', () => {
       });
     });
 
-    describe('tic_tac_toe', () => {
+    describe('the_grid', () => {
       it('returns 100 for win', () => {
         const metadata = { result: 'win' };
-        expect(normalizeScore('tic_tac_toe', metadata)).toBe(100);
+        expect(normalizeScore('the_grid', metadata)).toBe(100);
       });
 
       it('returns 50 for draw', () => {
         const metadata = { result: 'draw' };
-        expect(normalizeScore('tic_tac_toe', metadata)).toBe(50);
+        expect(normalizeScore('the_grid', metadata)).toBe(50);
       });
 
       it('returns 0 for loss', () => {
         const metadata = { result: 'loss' };
-        expect(normalizeScore('tic_tac_toe', metadata)).toBe(0);
+        expect(normalizeScore('the_grid', metadata)).toBe(0);
       });
 
       it('returns 0 for invalid result', () => {
         const metadata = { result: 'invalid' };
-        expect(normalizeScore('tic_tac_toe', metadata)).toBe(0);
+        expect(normalizeScore('the_grid', metadata)).toBe(0);
       });
     });
   });
@@ -225,12 +225,12 @@ describe('IQ Data Pipeline', () => {
 
     it('detects tic_tac_toe win as perfect', () => {
       const metadata = { result: 'win' };
-      expect(isPerfectScore('tic_tac_toe', metadata)).toBe(true);
+      expect(isPerfectScore('the_grid', metadata)).toBe(true);
     });
 
     it('detects tic_tac_toe draw as not perfect', () => {
       const metadata = { result: 'draw' };
-      expect(isPerfectScore('tic_tac_toe', metadata)).toBe(false);
+      expect(isPerfectScore('the_grid', metadata)).toBe(false);
     });
   });
 
@@ -347,7 +347,7 @@ describe('IQ Data Pipeline', () => {
         { gameMode: 'career_path', displayName: 'Deduction', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
         { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
         { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
-        { gameMode: 'tic_tac_toe', displayName: 'Strategic Logic', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
+        { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
         { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       ];
 

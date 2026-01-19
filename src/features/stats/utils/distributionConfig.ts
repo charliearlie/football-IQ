@@ -159,10 +159,6 @@ export function normalizeScoreForMode(
     case 'the_grid':
       // Already 0-100
       return rawScore;
-    case 'tic_tac_toe':
-      // Legacy: win=100, draw=50, loss=0
-      // This is handled by score.points directly
-      return rawScore;
     default:
       return rawScore;
   }

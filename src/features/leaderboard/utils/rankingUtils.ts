@@ -57,16 +57,6 @@ export function normalizeModeScore(
       return Math.round(percentage);
     }
 
-    case 'tic_tac_toe': {
-      // Tic Tac Toe: Win=100, Draw=50, Loss=0
-      const result = data.result;
-      if (isGameResult(result)) {
-        if (result === 'win') return 100;
-        if (result === 'draw') return 50;
-      }
-      return 0;
-    }
-
     case 'the_grid': {
       // The Grid: cellsFilled (0-9) → 0-100
       const cellsFilled = getMetadataNumber(data, 'cellsFilled');

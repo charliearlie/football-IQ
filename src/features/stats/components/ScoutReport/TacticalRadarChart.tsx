@@ -39,12 +39,11 @@ const RADAR_AXES: Array<{
   shortLabel: string;
 }> = [
   { angle: 270, label: 'Deduction', gameMode: 'career_path', shortLabel: 'DED' },
-  { angle: 321, label: 'Expert Deduction', gameMode: 'career_path_pro', shortLabel: 'PRO' },
-  { angle: 13, label: 'Market Knowledge', gameMode: 'guess_the_transfer', shortLabel: 'MKT' },
-  { angle: 64, label: 'Rapid Recall', gameMode: 'guess_the_goalscorers', shortLabel: 'RCL' },
-  { angle: 116, label: 'Pattern Recognition', gameMode: 'the_grid', shortLabel: 'PAT' },
-  { angle: 167, label: 'Current Affairs', gameMode: 'topical_quiz', shortLabel: 'AFF' },
-  { angle: 219, label: 'Strategic Logic', gameMode: 'tic_tac_toe', shortLabel: 'LOG' },
+  { angle: 315, label: 'Expert Deduction', gameMode: 'career_path_pro', shortLabel: 'PRO' },
+  { angle: 0, label: 'Market Knowledge', gameMode: 'guess_the_transfer', shortLabel: 'MKT' },
+  { angle: 45, label: 'Rapid Recall', gameMode: 'guess_the_goalscorers', shortLabel: 'RCL' },
+  { angle: 90, label: 'Pattern Recognition', gameMode: 'the_grid', shortLabel: 'PAT' },
+  { angle: 135, label: 'Current Affairs', gameMode: 'topical_quiz', shortLabel: 'AFF' },
 ];
 
 /**

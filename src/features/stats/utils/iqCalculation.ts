@@ -10,7 +10,6 @@ import { ParsedLocalAttempt } from '@/types/database';
 import {
   asMetadataObject,
   getMetadataNumber,
-  isGameResult,
 } from '@/types/gameMetadata';
 import {
   GameProficiency,
@@ -27,7 +26,6 @@ import {
  * - career_path: won, totalSteps, revealedCount
  * - guess_the_transfer: won, hintsRevealed, guesses (array)
  * - guess_the_goalscorers: scorersFound, totalScorers
- * - tic_tac_toe: result ('win'|'draw'|'loss')
  * - topical_quiz: correctCount (0-5)
  *
  * @param gameMode - The game mode identifier
@@ -76,17 +74,6 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
       return Math.round((scorersFound / totalScorers) * 100);
     }
 
-    case 'tic_tac_toe': {
-      // Games save: result ('win'|'draw'|'loss')
-      // Win=100, Draw=50, Loss=0
-      const result = data.result;
-      if (isGameResult(result)) {
-        if (result === 'win') return 100;
-        if (result === 'draw') return 50;
-      }
-      return 0;
-    }
-
     case 'the_grid': {
       // Games save: cellsFilled (0-9)
       // 9 cells = 100%, proportional otherwise
@@ -129,7 +116,6 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
  * - career_path: won=true AND revealedCount=1 (guessed on first clue)
  * - guess_the_transfer: won=true AND hintsRevealed=0 AND no wrong guesses
  * - guess_the_goalscorers: scorersFound === totalScorers
- * - tic_tac_toe: result === 'win'
  * - topical_quiz: correctCount === 5
  *
  * @param gameMode - The game mode identifier
@@ -162,11 +148,6 @@ export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
       const scorersFound = getMetadataNumber(data, 'scorersFound');
       const totalScorers = getMetadataNumber(data, 'totalScorers');
       return totalScorers > 0 && scorersFound === totalScorers;
-    }
-
-    case 'tic_tac_toe': {
-      // Perfect = win
-      return data.result === 'win';
     }
 
     case 'the_grid': {
@@ -338,12 +319,6 @@ export function calculateBadges(
 
       case 'perfect_goalscorer': {
         const p = proficiencyMap.get('guess_the_goalscorers');
-        if (p && p.perfectScores > 0) earnedAt = now;
-        break;
-      }
-
-      case 'perfect_tictactoe': {
-        const p = proficiencyMap.get('tic_tac_toe');
         if (p && p.perfectScores > 0) earnedAt = now;
         break;
       }

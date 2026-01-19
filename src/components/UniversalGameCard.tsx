@@ -162,13 +162,6 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
         icon: iconElement!,
         iconColor: colors.redCard,
       };
-    case 'tic_tac_toe':
-      return {
-        title: 'Tic Tac Toe',
-        subtitle: 'Beat the AI',
-        icon: <Grid3X3 color={colors.floodlightWhite} size={28} />,
-        iconColor: colors.floodlightWhite,
-      };
     case 'the_grid':
       return {
         title: 'The Grid',
