@@ -298,9 +298,11 @@ timer.stop();
 timer.reset();
 timer.setTo(35);  // Set to specific value (for resume)
 
-// Scoring: percentage + time bonus if all found
-calculateGoalscorerScore(3, 5, 30, true)
-// { percentage: 60, timeBonus: 60, won: true }
+// Scoring: 1pt per scorer + 3pt bonus for finding all
+calculateGoalscorerScore(5, 5, true, 30)  // All found
+// { points: 8, scorersFound: 5, totalScorers: 5, allFound: true, won: true }
+calculateGoalscorerScore(3, 5, false, 0)  // Partial
+// { points: 3, scorersFound: 3, totalScorers: 5, allFound: false, won: false }
 
 // Emoji grid: ⏱️42s | ✅✅✅❌❌
 generateGoalscorerEmojiGrid(goals, 42);
@@ -619,11 +621,13 @@ state.score              // TopTensScore | null (set on game end)
 state.lastGuessIncorrect // Triggers shake animation
 state.lastGuessDuplicate // Triggers duplicate feedback
 
-// Scoring: 1 point per answer found, max 10
-calculateTopTensScore(7, 3, false)  // { points: 7, maxPoints: 10, won: false }
-calculateTopTensScore(10, 2, true)  // { points: 10, maxPoints: 10, won: true }
+// Scoring: Progressive tiers (1,1,2,2,3,3,4,4,5,8), max 30
+// Score progression: 1 → 2 → 4 → 6 → 9 → 12 → 16 → 20 → 25 → 30
+calculateTopTensScore(7, 3, false)  // { points: 16, maxPoints: 30, won: false }
+calculateTopTensScore(10, 2, true)  // { points: 30, maxPoints: 30, won: true }
+calculateTopTensScore(5, 0, false)  // { points: 9, maxPoints: 30, won: false }
 
-// Format: "7/10"
+// Format: "16/30"
 formatTopTensScore(score)
 
 // Emoji grid: ✅✅✅✅✅✅✅❌❌❌
@@ -710,8 +714,9 @@ const FORMATIONS = {
   // ... etc
 };
 
-// Scoring: 1 point per hidden player found
-calculateStartingXIScore(7, 10)  // { points: 7, maxPoints: 10, foundCount: 7, totalHidden: 10 }
+// Scoring: 1 point per hidden player + 3pt Perfect XI bonus (max 5 hidden, max 8 pts)
+calculateStartingXIScore(5, 5)   // { points: 8, maxPoints: 8, foundCount: 5, totalHidden: 5 } (perfect!)
+calculateStartingXIScore(3, 5)   // { points: 3, maxPoints: 8, foundCount: 3, totalHidden: 5 }
 calculateScoreFromSlots(slots)   // Calculates from slot array
 
 // Share: opens native sheet or copies to clipboard

@@ -1,8 +1,8 @@
 /**
  * Tests for Goalscorer Recall scoring utilities.
  *
- * Scoring: 0-5 points based on completion percentage.
- * Finding all scorers = 5 points (regardless of total count).
+ * Scoring: 1 point per scorer found + 3 point bonus for finding all.
+ * Example: 6 scorers, found 6/6 = 6 + 3 = 9 points
  */
 
 import {
@@ -12,44 +12,40 @@ import {
 } from '../utils/scoring';
 
 describe('calculateGoalscorerScore', () => {
-  describe('points calculation', () => {
-    it('awards 5 points when all 5 scorers found', () => {
+  describe('points calculation with +3 bonus', () => {
+    it('awards 8 points when all 5 scorers found (5 + 3 bonus)', () => {
       const score = calculateGoalscorerScore(5, 5, true, 30);
-      expect(score.points).toBe(5);
+      expect(score.points).toBe(8);
     });
 
-    it('awards 3 points for 3 of 5 found', () => {
+    it('awards 9 points when all 6 scorers found (6 + 3 bonus)', () => {
+      const score = calculateGoalscorerScore(6, 6, true, 30);
+      expect(score.points).toBe(9);
+    });
+
+    it('awards 6 points when all 3 scorers found (3 + 3 bonus)', () => {
+      const score = calculateGoalscorerScore(3, 3, true, 30);
+      expect(score.points).toBe(6);
+    });
+
+    it('awards 4 points when all 1 scorer found (1 + 3 bonus)', () => {
+      const score = calculateGoalscorerScore(1, 1, true, 45);
+      expect(score.points).toBe(4);
+    });
+
+    it('awards 3 points for 3 of 5 found (no bonus)', () => {
       const score = calculateGoalscorerScore(3, 5, false, 0);
       expect(score.points).toBe(3);
+    });
+
+    it('awards 2 points for 2 of 3 found (no bonus)', () => {
+      const score = calculateGoalscorerScore(2, 3, false, 0);
+      expect(score.points).toBe(2);
     });
 
     it('awards 0 points for none found', () => {
       const score = calculateGoalscorerScore(0, 4, false, 0);
       expect(score.points).toBe(0);
-    });
-
-    it('caps points at 5 even if more scorers exist', () => {
-      // Edge case: game with 7 goals
-      const score = calculateGoalscorerScore(7, 7, true, 30);
-      expect(score.points).toBe(5);
-    });
-
-    it('awards 5 points when all found (any total)', () => {
-      // 1/1 = 100% = 5 points
-      const score = calculateGoalscorerScore(1, 1, true, 45);
-      expect(score.points).toBe(5);
-    });
-
-    it('awards 5 points for 3/3 scorers (100%)', () => {
-      // This was the bug: 3/3 should be 5 points, not 3
-      const score = calculateGoalscorerScore(3, 3, true, 30);
-      expect(score.points).toBe(5);
-    });
-
-    it('scales partial completion proportionally', () => {
-      // 2/3 = 66.7% = round(3.33) = 3 points
-      const score = calculateGoalscorerScore(2, 3, false, 0);
-      expect(score.points).toBe(3);
     });
   });
 
@@ -73,14 +69,16 @@ describe('calculateGoalscorerScore', () => {
 
     it('is lost when all found but time already expired', () => {
       // Edge case: player finds last one exactly as timer hits 0
+      // Still gets bonus points, but won=false
       const score = calculateGoalscorerScore(5, 5, true, 0);
       expect(score.won).toBe(false);
       expect(score.allFound).toBe(true);
+      expect(score.points).toBe(8); // 5 + 3 bonus
     });
   });
 
   describe('score object completeness', () => {
-    it('returns all required fields', () => {
+    it('returns all required fields for partial completion', () => {
       const score = calculateGoalscorerScore(3, 5, false, 0);
 
       expect(score).toEqual({
@@ -92,11 +90,11 @@ describe('calculateGoalscorerScore', () => {
       });
     });
 
-    it('handles perfect game (4/4 = 100% = 5 points)', () => {
+    it('returns all required fields for perfect game with bonus', () => {
       const score = calculateGoalscorerScore(4, 4, true, 42);
 
       expect(score).toEqual({
-        points: 5,
+        points: 7, // 4 + 3 bonus
         scorersFound: 4,
         totalScorers: 4,
         allFound: true,
@@ -108,14 +106,14 @@ describe('calculateGoalscorerScore', () => {
   describe('edge cases', () => {
     it('handles zero total scorers gracefully', () => {
       const score = calculateGoalscorerScore(0, 0, true, 60);
-      expect(score.points).toBe(5);
+      expect(score.points).toBe(0);
       expect(score.won).toBe(true);
     });
   });
 });
 
 describe('formatGoalscorerScore', () => {
-  it('formats as X/Y', () => {
+  it('formats as X/Y (scorers found, not points)', () => {
     const score = calculateGoalscorerScore(3, 5, false, 0);
     expect(formatGoalscorerScore(score)).toBe('3/5');
   });
@@ -137,30 +135,30 @@ describe('getScoreMessage', () => {
     expect(getScoreMessage(score)).toBe('All scorers found!');
   });
 
-  it('returns all found message for 5 points (even if not won)', () => {
+  it('returns all found message when allFound (even if not won)', () => {
     const score = calculateGoalscorerScore(5, 5, true, 0);
     expect(getScoreMessage(score)).toBe('All scorers found!');
   });
 
-  it('returns great memory for 4 points', () => {
+  it('returns great memory for 80%+ completion', () => {
     const score = calculateGoalscorerScore(4, 5, false, 0);
     expect(getScoreMessage(score)).toBe('Great memory! So close!');
   });
 
-  it('returns good effort for 2-3 points', () => {
+  it('returns good effort for 50-79% completion', () => {
     const score = calculateGoalscorerScore(3, 5, false, 0);
     expect(getScoreMessage(score)).toBe('Good effort! Keep practicing!');
 
-    const score2 = calculateGoalscorerScore(2, 5, false, 0);
+    const score2 = calculateGoalscorerScore(2, 4, false, 0);
     expect(getScoreMessage(score2)).toBe('Good effort! Keep practicing!');
   });
 
-  it('returns nice try for 1 point', () => {
+  it('returns nice try for <50% with some found', () => {
     const score = calculateGoalscorerScore(1, 5, false, 0);
     expect(getScoreMessage(score)).toBe('Nice try! Every scorer counts!');
   });
 
-  it('returns better luck for 0 points', () => {
+  it('returns better luck for 0 found', () => {
     const score = calculateGoalscorerScore(0, 5, false, 0);
     expect(getScoreMessage(score)).toBe('Better luck next time!');
   });

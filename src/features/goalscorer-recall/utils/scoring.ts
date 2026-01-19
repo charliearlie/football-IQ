@@ -1,16 +1,22 @@
 /**
  * Scoring utilities for Goalscorer Recall game mode.
  *
- * Scoring system: Raw count of scorers found
- * - Points = number of scorers found (e.g., 3 found = 3 points)
- * - Max points varies per puzzle based on total scorers
+ * Scoring system: 1 point per scorer + 3 point bonus for finding all
+ * - Points = scorersFound + (allFound ? 3 : 0)
+ * - Example: 6 scorers, found 6/6 = 6 + 3 = 9 points
+ * - Example: 5 scorers, found 3/5 = 3 points (no bonus)
  * - Win condition: All unique scorers found before timer expires
  */
 
 import { GoalscorerRecallScore } from '../types/goalscorerRecall.types';
 
+/** Bonus points for finding all scorers */
+const ALL_FOUND_BONUS = 3;
+
 /**
  * Calculate the final score for a goalscorer recall game.
+ *
+ * Formula: points = scorersFound + (allFound ? 3 : 0)
  *
  * @param scorersFound - Number of unique scorers correctly identified
  * @param totalScorers - Total number of unique scorers (excluding own goals)
@@ -19,17 +25,17 @@ import { GoalscorerRecallScore } from '../types/goalscorerRecall.types';
  * @returns Complete score object
  *
  * @example
- * // All found with time remaining (5-scorer game)
+ * // All found with time remaining (5-scorer game) - gets +3 bonus
  * calculateGoalscorerScore(5, 5, true, 30)
- * // { points: 5, scorersFound: 5, totalScorers: 5, allFound: true, won: true }
+ * // { points: 8, scorersFound: 5, totalScorers: 5, allFound: true, won: true }
  *
  * @example
- * // All found in a 3-scorer game
- * calculateGoalscorerScore(3, 3, true, 30)
- * // { points: 3, scorersFound: 3, totalScorers: 3, allFound: true, won: true }
+ * // All found in a 6-scorer game - gets +3 bonus
+ * calculateGoalscorerScore(6, 6, true, 30)
+ * // { points: 9, scorersFound: 6, totalScorers: 6, allFound: true, won: true }
  *
  * @example
- * // Partial completion (time ran out)
+ * // Partial completion (time ran out) - no bonus
  * calculateGoalscorerScore(3, 5, false, 0)
  * // { points: 3, scorersFound: 3, totalScorers: 5, allFound: false, won: false }
  */
@@ -50,8 +56,8 @@ export function calculateGoalscorerScore(
     };
   }
 
-  // Points = scorers found (raw count)
-  const points = scorersFound;
+  // Points = scorers found + bonus for finding all
+  const points = scorersFound + (allFound ? ALL_FOUND_BONUS : 0);
 
   // Win requires finding all scorers before time expires
   const won = allFound && timeRemaining > 0;

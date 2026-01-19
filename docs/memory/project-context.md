@@ -139,7 +139,7 @@ Identify player from transfer details. Hints revealed voluntarily (not on wrong 
 Name all goalscorers from a match within 60 seconds. Own goals auto-revealed.
 
 **Content**: `{ home_team, away_team, scores, competition, match_date, goals: [{ scorer, minute, team, isOwnGoal? }] }`
-**Scoring**: `(foundScorers / totalScorers) × 100` + time bonus if all found
+**Scoring**: 1pt per scorer + 3pt bonus for finding all (e.g., 6/6 = 9pts)
 **Display**: `⏱️Xs | ✅✅❌❌` (time + goals)
 **Files**: `src/features/goalscorer-recall/`
 
@@ -167,7 +167,7 @@ Fill 3x3 matrix with players matching row (Y-axis) and column (X-axis) criteria.
 Guess all 10 items in a ranked list. Correct guesses reveal at rank position.
 
 **Content**: `{ title, category?, answers: [{ name, aliases?, info? }] }`
-**Scoring**: 1 point per answer found (0-10)
+**Scoring**: Progressive tiers (1,1,2,2,3,3,4,4,5,8) max 30pts, 10th = Jackpot!
 **Display**: `✅✅✅❌❌❌❌❌❌❌` (one per rank)
 **Access**: `PremiumOnlyGate` component wraps screens
 **Files**: `src/features/top-tens/`
@@ -178,7 +178,7 @@ Identify hidden players in a historic match lineup displayed on a tactical pitch
 **Content**: `{ match_name, competition, match_date, formation, team, players: [{ position_key, player_name, is_hidden, override_x?, override_y? }] }`
 **Formations**: `4-3-3`, `4-2-3-1`, `4-4-2`, `3-5-2`, `3-4-3`, `5-3-2`
 **Position coords**: y=90 (defensive), y=10 (attacking), x=0-100 (left-right)
-**Scoring**: 1 point per hidden player found (0-N where N = hidden count)
+**Scoring**: 1pt per hidden player + 3pt Perfect XI bonus (max 5 hidden, max 8pts)
 **Display**: Formation-based emoji grid (⬜ hidden, 🟩 found)
 **Files**: `src/features/starting-xi/`
 

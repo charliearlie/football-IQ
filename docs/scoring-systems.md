@@ -90,12 +90,12 @@ score = scorersFound + (foundAll ? 3 : 0)
 
 **Type:** Fixed
 **Game Mode ID:** `starting_xi`
-**Max Points:** 14
+**Max Points:** 8
 
 ### Rules
-- Some players in the lineup are hidden
+- Up to 5 players in the lineup are hidden
 - Tap a position to guess the player
-- Find all 11 for a Perfect XI bonus
+- Find all hidden players for a Perfect XI bonus
 
 ### Scoring Formula
 
@@ -106,11 +106,11 @@ score = playersFound + (foundAll ? 3 : 0)
 | Component | Points |
 |-----------|--------|
 | Per player found | 1 |
-| Perfect XI bonus (all 11) | +3 |
+| Perfect XI bonus (all hidden found) | +3 |
 
-**Example:**
-- Found 8/11: **8 points**
-- Found 11/11: **11 + 3 = 14 points**
+**Example:** (5 hidden players)
+- Found 3/5: **3 points**
+- Found 5/5: **5 + 3 = 8 points**
 
 ---
 
