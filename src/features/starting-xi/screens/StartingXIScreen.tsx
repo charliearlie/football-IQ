@@ -21,7 +21,7 @@ import { GlassCard } from '@/components/GlassCard';
 import { SuccessParticleBurst } from '@/components/SuccessParticleBurst';
 import { ShareResult } from '@/components/GameResultModal';
 import { colors, fonts, spacing } from '@/theme';
-import { usePuzzle } from '@/features/puzzles';
+import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { ReviewModeBanner } from '@/components/ReviewMode';
 import { AdBanner } from '@/features/ads';
 import { useStartingXIGame } from '../hooks/useStartingXIGame';
@@ -52,6 +52,10 @@ export function StartingXIScreen({
   const router = useRouter();
   const params = useLocalSearchParams<{ puzzleId?: string }>();
   const puzzleId = propPuzzleId || params.puzzleId;
+
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('starting_xi');
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Get puzzle - either by ID or today's puzzle
   const { puzzle, isLoading } = usePuzzle(puzzleId || 'starting_xi');
@@ -152,6 +156,28 @@ export function StartingXIScreen({
     return `Who plays ${slot.positionKey}?`;
   };
 
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer title="Starting XI" testID="starting-xi-screen">
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
+  // First-time user intro screen
+  if (shouldShowIntro) {
+    return (
+      <GameIntroScreen
+        gameMode="starting_xi"
+        onStart={completeIntro}
+        testID="starting-xi-intro"
+      />
+    );
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -186,6 +212,7 @@ export function StartingXIScreen({
     <GameContainer
       title="Starting XI"
       headerRight={headerRight}
+      onHelpPress={() => setShowHelpModal(true)}
       testID="starting-xi-screen"
     >
       <ScrollView
@@ -287,6 +314,14 @@ export function StartingXIScreen({
           onComplete={handleParticleBurstComplete}
         />
       )}
+
+      {/* Help Modal */}
+      <GameIntroModal
+        gameMode="starting_xi"
+        visible={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        testID="starting-xi-help-modal"
+      />
     </GameContainer>
   );
 }

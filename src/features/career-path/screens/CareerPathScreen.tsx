@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useStablePuzzle } from '@/features/puzzles';
+import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
@@ -85,6 +85,11 @@ export function CareerPathScreen({
   gameMode = 'career_path',
 }: CareerPathScreenProps) {
   const router = useRouter();
+
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding(gameMode);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? gameMode);
@@ -210,6 +215,28 @@ export function CareerPathScreen({
     },
     [state.revealedCount, state.gameStatus, state.lastGuessIncorrect, isVictoryRevealing, careerSteps.length, STAGGER_DELAY]
   );
+
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer title={screenTitle} testID="career-path-screen">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
+  // First-time user intro screen
+  if (shouldShowIntro) {
+    return (
+      <GameIntroScreen
+        gameMode={gameMode}
+        onStart={completeIntro}
+        testID="career-path-intro"
+      />
+    );
+  }
 
   // Loading state
   if (isLoading) {
@@ -348,6 +375,7 @@ export function CareerPathScreen({
     <GameContainer
       title={displayTitle}
       headerRight={progressIndicator}
+      onHelpPress={() => setShowHelpModal(true)}
       testID="career-path-screen"
     >
       <KeyboardAvoidingView
@@ -423,6 +451,14 @@ export function CareerPathScreen({
 
         {/* Banner Ad (non-premium only) */}
         <AdBanner testID="career-path-ad-banner" />
+
+        {/* Help Modal */}
+        <GameIntroModal
+          gameMode={gameMode}
+          visible={showHelpModal}
+          onClose={() => setShowHelpModal(false)}
+          testID="career-path-help-modal"
+        />
       </KeyboardAvoidingView>
     </GameContainer>
   );

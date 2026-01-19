@@ -19,7 +19,7 @@ import {
   FirstRunModal,
   SubscriptionSyncProvider,
 } from '@/features/auth';
-import { PuzzleProvider } from '@/features/puzzles';
+import { PuzzleProvider, OnboardingProvider } from '@/features/puzzles';
 import { AdProvider } from '@/features/ads';
 import { QuizPrefetchProvider } from '@/features/topical-quiz';
 import { IntegrityGuardProvider } from '@/features/integrity';
@@ -71,21 +71,23 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return (
     <IntegrityGuardProvider>
       <PuzzleProvider>
-        <QuizPrefetchProvider>
-          <AdProvider>
-            <NotificationWrapper>
-              {children}
-              <FirstRunModal
-                visible={needsDisplayName ?? false}
-                onSubmit={async (displayName) => {
-                  const { error } = await updateDisplayName(displayName);
-                  if (error) throw error;
-                }}
-                testID="first-run-modal"
-              />
-            </NotificationWrapper>
-          </AdProvider>
-        </QuizPrefetchProvider>
+        <OnboardingProvider>
+          <QuizPrefetchProvider>
+            <AdProvider>
+              <NotificationWrapper>
+                {children}
+                <FirstRunModal
+                  visible={needsDisplayName ?? false}
+                  onSubmit={async (displayName) => {
+                    const { error } = await updateDisplayName(displayName);
+                    if (error) throw error;
+                  }}
+                  testID="first-run-modal"
+                />
+              </NotificationWrapper>
+            </AdProvider>
+          </QuizPrefetchProvider>
+        </OnboardingProvider>
       </PuzzleProvider>
     </IntegrityGuardProvider>
   );

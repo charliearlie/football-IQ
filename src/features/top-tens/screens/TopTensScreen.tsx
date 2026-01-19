@@ -7,10 +7,10 @@
  * Premium-only game mode.
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStablePuzzle } from '@/features/puzzles';
+import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
@@ -56,6 +56,11 @@ export function TopTensScreen({
   isReviewMode = false,
 }: TopTensScreenProps) {
   const router = useRouter();
+
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('top_tens');
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'top_tens');
   const {
     state,
@@ -89,6 +94,28 @@ export function TopTensScreen({
   const handleClose = useCallback(() => {
     router.back();
   }, [router]);
+
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer title="Top Tens" testID="top-tens-screen">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
+  // First-time user intro screen
+  if (shouldShowIntro) {
+    return (
+      <GameIntroScreen
+        gameMode="top_tens"
+        onStart={completeIntro}
+        testID="top-tens-intro"
+      />
+    );
+  }
 
   // Loading state
   if (isLoading) {
@@ -196,6 +223,7 @@ export function TopTensScreen({
   return (
     <GameContainer
       title="Top Tens"
+      onHelpPress={() => setShowHelpModal(true)}
       testID="top-tens-screen"
     >
       {/* Puzzle title */}
@@ -245,6 +273,14 @@ export function TopTensScreen({
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="top-tens-ad-banner" />
+
+      {/* Help Modal */}
+      <GameIntroModal
+        gameMode="top_tens"
+        visible={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        testID="top-tens-help-modal"
+      />
     </GameContainer>
   );
 }

@@ -25,7 +25,7 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import { useStablePuzzle } from '@/features/puzzles';
+import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
@@ -80,6 +80,11 @@ export function GoalscorerRecallScreen({
   isReviewMode = false,
 }: GoalscorerRecallScreenProps) {
   const router = useRouter();
+
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('guess_the_goalscorers');
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_goalscorers');
@@ -176,6 +181,22 @@ export function GoalscorerRecallScreen({
     }
   }, [state.lastGuessCorrect]);
 
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer
+        title="Goalscorer Recall"
+        collapsible
+        keyboardAvoiding={false}
+        testID="goalscorer-recall-screen"
+      >
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -215,6 +236,20 @@ export function GoalscorerRecallScreen({
   }
 
   const content = puzzle.content as GoalscorerRecallContent;
+
+  // First-time user intro screen (show while game is idle, after puzzle loads)
+  if (shouldShowIntro && state.gameStatus === 'idle') {
+    return (
+      <GameIntroScreen
+        gameMode="guess_the_goalscorers"
+        onStart={async () => {
+          await completeIntro();
+          startGame();
+        }}
+        testID="goalscorer-recall-intro"
+      />
+    );
+  }
 
   // Review mode: Show all scorers with found/missed status
   if (isReviewMode) {
@@ -315,6 +350,7 @@ export function GoalscorerRecallScreen({
       title="Goalscorer Recall"
       collapsible
       keyboardAvoiding
+      onHelpPress={() => setShowHelpModal(true)}
       testID="goalscorer-recall-screen"
     >
       {/* Full Match Header - Fades out when keyboard is visible */}
@@ -405,6 +441,14 @@ export function GoalscorerRecallScreen({
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="goalscorer-recall-ad-banner" />
+
+      {/* Help Modal */}
+      <GameIntroModal
+        gameMode="guess_the_goalscorers"
+        visible={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        testID="goalscorer-recall-help-modal"
+      />
     </GameContainer>
   );
 }

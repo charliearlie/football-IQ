@@ -43,6 +43,8 @@ export interface GameContainerProps {
   showBackButton?: boolean;
   /** Custom back handler (defaults to router.back()) */
   onBack?: () => void;
+  /** Help button handler - shows help icon in header when provided */
+  onHelpPress?: () => void;
   /** Enable KeyboardAvoidingView behavior (default: true) */
   keyboardAvoiding?: boolean;
   /** Content to render in the container */
@@ -59,6 +61,7 @@ export function GameContainer({
   collapsible = false,
   showBackButton = true,
   onBack,
+  onHelpPress,
   keyboardAvoiding = true,
   children,
   style,
@@ -130,6 +133,7 @@ export function GameContainer({
         rightContent={headerRight}
         showBackButton={showBackButton}
         onBack={handleBack}
+        onHelpPress={onHelpPress}
         testID={testID ? `${testID}` : undefined}
       />
     );

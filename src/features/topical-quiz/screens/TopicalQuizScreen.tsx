@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStablePuzzle } from '@/features/puzzles';
+import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout, borderRadius, fonts } from '@/theme';
 import { GameContainer, ReviewModeActionZone, ReviewModeBanner } from '@/components';
@@ -57,6 +57,11 @@ export function TopicalQuizScreen({
   isReviewMode = false,
 }: TopicalQuizScreenProps) {
   const router = useRouter();
+
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('topical_quiz');
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'topical_quiz');
@@ -102,6 +107,28 @@ export function TopicalQuizScreen({
       return 'disabled';
     }) as OptionButtonState[];
   }, [currentQuestion, state.answers, state.currentQuestionIndex]);
+
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer title="Quiz" keyboardAvoiding={false} testID="topical-quiz-screen">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
+  // First-time user intro screen
+  if (shouldShowIntro) {
+    return (
+      <GameIntroScreen
+        gameMode="topical_quiz"
+        onStart={completeIntro}
+        testID="topical-quiz-intro"
+      />
+    );
+  }
 
   // Loading state - only show if puzzle is loading AND images aren't prefetched
   if (isLoading && !isPrefetched) {
@@ -255,6 +282,7 @@ export function TopicalQuizScreen({
     <GameContainer
       title="Quiz"
       headerRight={progressBar}
+      onHelpPress={() => setShowHelpModal(true)}
       keyboardAvoiding={false}
       testID="topical-quiz-screen"
     >
@@ -303,6 +331,14 @@ export function TopicalQuizScreen({
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="topical-quiz-ad-banner" />
+
+      {/* Help Modal */}
+      <GameIntroModal
+        gameMode="topical_quiz"
+        visible={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        testID="topical-quiz-help-modal"
+      />
     </GameContainer>
   );
 }

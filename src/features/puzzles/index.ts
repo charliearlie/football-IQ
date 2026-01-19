@@ -7,10 +7,19 @@
 
 // Context and Provider
 export { PuzzleProvider, usePuzzleContext } from './context/PuzzleContext';
+export { OnboardingProvider, useOnboardingContext } from './context/OnboardingContext';
 
 // Hooks
 export { usePuzzle } from './hooks/usePuzzle';
 export { useStablePuzzle } from './hooks/useStablePuzzle';
+export { useOnboarding } from './hooks/useOnboarding';
+
+// Components
+export { GameIntroScreen, GameIntroModal } from './components/GameIntroScreen';
+
+// Rules
+export { RULES_MAP, getGameRules, getGameDisplayTitle, getAllGameModes } from './constants/rules';
+export type { GameRules, ScoringConfig, ScoringTier, RuleBullet } from './constants/rules';
 
 // Services (for direct use if needed)
 export { syncPuzzlesFromSupabase } from './services/puzzleSyncService';
@@ -27,3 +36,9 @@ export type {
   SupabasePuzzle,
   SupabaseAttempt,
 } from './types/puzzle.types';
+
+export type {
+  OnboardingContextValue,
+  OnboardingState,
+  UseOnboardingResult,
+} from './types/onboarding.types';

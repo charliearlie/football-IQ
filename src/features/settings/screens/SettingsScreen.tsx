@@ -10,7 +10,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, FileText, Star, Trash2, Bell } from 'lucide-react-native';
+import { Shield, FileText, Star, Trash2, Bell, RotateCcw } from 'lucide-react-native';
 import * as StoreReview from 'expo-store-review';
 import Constants from 'expo-constants';
 import { colors, textStyles, spacing } from '@/theme';
@@ -22,6 +22,7 @@ import {
   getPermissionStatus,
   requestPermissions,
 } from '@/features/notifications';
+import { useOnboardingContext } from '@/features/puzzles';
 import { SettingsRow } from '../components/SettingsRow';
 import { SettingsSection } from '../components/SettingsSection';
 import { LegalModal } from '../components/LegalModal';
@@ -41,6 +42,9 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   const [devModeEnabled, setDevModeEnabled] = useState(false);
   const tapCountRef = useRef(0);
   const lastTapTimeRef = useRef(0);
+
+  // Onboarding context for resetting intro screens
+  const { resetAllIntros } = useOnboardingContext();
 
   // Get app version from expo config
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
@@ -136,6 +140,31 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
       console.error('Test notification error:', error);
     }
   }, []);
+
+  /**
+   * Reset all onboarding intro screens
+   */
+  const handleResetAllIntros = useCallback(async () => {
+    Alert.alert(
+      'Reset Intros',
+      'Reset all game intro screens? You will see the "Pre-Match Briefing" again for each game.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          onPress: async () => {
+            try {
+              await resetAllIntros();
+              Alert.alert('Success', 'All intro screens have been reset. You will see them again when entering each game.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to reset intro screens.');
+              console.error('Failed to reset intros:', error);
+            }
+          },
+        },
+      ]
+    );
+  }, [resetAllIntros]);
 
   /**
    * Handle Privacy Policy row press
@@ -242,6 +271,12 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
               label="Test Streak Saver Notification"
               onPress={() => handleTestNotification('streak')}
               testID={testID ? `${testID}-test-streak-notif` : undefined}
+            />
+            <SettingsRow
+              icon={<RotateCcw size={20} color={colors.pitchGreen} strokeWidth={2} />}
+              label="Reset All Game Intros"
+              onPress={handleResetAllIntros}
+              testID={testID ? `${testID}-reset-intros` : undefined}
             />
             <SettingsRow
               icon={<Trash2 size={20} color={colors.redCard} strokeWidth={2} />}

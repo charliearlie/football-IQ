@@ -17,7 +17,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/theme';
-import { usePuzzle } from '@/features/puzzles';
+import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
+import { GameContainer } from '@/components/GameContainer';
 import { ReviewModeBanner } from '@/components/ReviewMode';
 import { PlayerSearchOverlay } from '@/components/PlayerSearchOverlay';
 import { AdBanner } from '@/features/ads';
@@ -41,6 +42,10 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
   const router = useRouter();
   const params = useLocalSearchParams<{ puzzleId?: string }>();
   const puzzleId = propPuzzleId || params.puzzleId;
+
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('the_grid');
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Get puzzle - either by ID or today's puzzle
   const { puzzle, isLoading } = usePuzzle(puzzleId || 'the_grid');
@@ -99,6 +104,28 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     }
   };
 
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer title="The Grid" testID="the-grid-screen">
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
+  // First-time user intro screen
+  if (shouldShowIntro) {
+    return (
+      <GameIntroScreen
+        gameMode="the_grid"
+        onStart={completeIntro}
+        testID="the-grid-intro"
+      />
+    );
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -123,28 +150,33 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
   const displayCells = isReviewMode && reviewCells ? reviewCells : state.cells;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    <GameContainer
+      title="The Grid"
+      onHelpPress={() => setShowHelpModal(true)}
+      testID="the-grid-screen"
     >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* Review mode banner */}
-        {isReviewMode && <ReviewModeBanner />}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardDismissMode="on-drag"
+        >
+          {/* Review mode banner */}
+          {isReviewMode && <ReviewModeBanner />}
 
-        {/* Instructions */}
-        <View style={styles.instructionsContainer}>
-          <Text style={styles.instructionsTitle}>THE GRID</Text>
-          <Text style={styles.instructionsText}>
-            {isReviewMode
-              ? 'Review your completed game'
-              : 'Fill the grid with players who match both criteria'}
-          </Text>
-        </View>
+          {/* Instructions */}
+          <View style={styles.instructionsContainer}>
+            <Text style={styles.instructionsTitle}>THE GRID</Text>
+            <Text style={styles.instructionsText}>
+              {isReviewMode
+                ? 'Review your completed game'
+                : 'Fill the grid with players who match both criteria'}
+            </Text>
+          </View>
 
         {/* The Grid Board */}
         <View style={styles.boardContainer}>
@@ -206,9 +238,18 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
         testID="player-search-overlay"
       />
 
-      {/* Ad Banner (non-premium users) */}
-      <AdBanner testID="the-grid-ad-banner" />
-    </KeyboardAvoidingView>
+        {/* Ad Banner (non-premium users) */}
+        <AdBanner testID="the-grid-ad-banner" />
+
+        {/* Help Modal */}
+        <GameIntroModal
+          gameMode="the_grid"
+          visible={showHelpModal}
+          onClose={() => setShowHelpModal(false)}
+          testID="the-grid-help-modal"
+        />
+      </KeyboardAvoidingView>
+    </GameContainer>
   );
 }
 

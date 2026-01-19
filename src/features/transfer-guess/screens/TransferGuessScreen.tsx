@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStablePuzzle } from '@/features/puzzles';
+import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
@@ -66,6 +66,10 @@ export function TransferGuessScreen({
 }: TransferGuessScreenProps) {
   const router = useRouter();
 
+  // Onboarding state - show intro for first-time users
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('guess_the_transfer');
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   // State for controlling the result modal visibility (must be before early returns)
   const [showResultModal, setShowResultModal] = useState(false);
 
@@ -92,6 +96,28 @@ export function TransferGuessScreen({
     metadata: reviewMetadata,
     isLoading: isReviewLoading,
   } = useReviewMode<TransferGuessMetadata>(puzzleId, isReviewMode);
+
+  // Onboarding loading state (prevent flash)
+  if (!isOnboardingReady) {
+    return (
+      <GameContainer title="Guess the Transfer" testID="transfer-guess-screen">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.pitchGreen} />
+        </View>
+      </GameContainer>
+    );
+  }
+
+  // First-time user intro screen
+  if (shouldShowIntro) {
+    return (
+      <GameIntroScreen
+        gameMode="guess_the_transfer"
+        onStart={completeIntro}
+        testID="transfer-guess-intro"
+      />
+    );
+  }
 
   // Loading state
   if (isLoading) {
@@ -194,7 +220,11 @@ export function TransferGuessScreen({
   };
 
   return (
-    <GameContainer title="Guess the Transfer" testID="transfer-guess-screen">
+    <GameContainer
+      title="Guess the Transfer"
+      onHelpPress={() => setShowHelpModal(true)}
+      testID="transfer-guess-screen"
+    >
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -272,6 +302,14 @@ export function TransferGuessScreen({
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="transfer-guess-ad-banner" />
+
+      {/* Help Modal */}
+      <GameIntroModal
+        gameMode="guess_the_transfer"
+        visible={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        testID="transfer-guess-help-modal"
+      />
     </GameContainer>
   );
 }
