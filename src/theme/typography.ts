@@ -123,4 +123,14 @@ export const textStyles: Record<string, TextStyle> = {
     textTransform: 'uppercase',
     letterSpacing: 0.25,
   },
+
+  // Tiny button text (for compact cards)
+  buttonTiny: {
+    fontFamily: fonts.headline,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.stadiumNavy,
+    textTransform: 'uppercase',
+    letterSpacing: 0.25,
+  },
 } as const;

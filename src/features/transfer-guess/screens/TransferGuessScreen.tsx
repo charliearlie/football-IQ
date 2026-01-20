@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -97,8 +97,19 @@ export function TransferGuessScreen({
     isLoading: isReviewLoading,
   } = useReviewMode<TransferGuessMetadata>(puzzleId, isReviewMode);
 
-  // Onboarding loading state (prevent flash)
-  if (!isOnboardingReady) {
+  // Debounce loading state to prevent flicker from async hydration timing
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+  useEffect(() => {
+    if (isOnboardingReady && !isLoading) {
+      // Small delay to debounce rapid state changes during hydration
+      const timer = setTimeout(() => setInitialLoadComplete(true), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnboardingReady, isLoading]);
+
+  // Show loading until initial load is stable
+  if (!initialLoadComplete) {
     return (
       <GameContainer title="Guess the Transfer" testID="transfer-guess-screen">
         <View style={styles.centered}>
@@ -108,7 +119,7 @@ export function TransferGuessScreen({
     );
   }
 
-  // First-time user intro screen
+  // First-time user intro screen (only check after both are ready)
   if (shouldShowIntro) {
     return (
       <GameIntroScreen
@@ -116,20 +127,6 @@ export function TransferGuessScreen({
         onStart={completeIntro}
         testID="transfer-guess-intro"
       />
-    );
-  }
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <GameContainer title="Guess the Transfer" testID="transfer-guess-screen">
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pitchGreen} />
-          <Text style={[textStyles.body, styles.loadingText]}>
-            Loading puzzle...
-          </Text>
-        </View>
-      </GameContainer>
     );
   }
 

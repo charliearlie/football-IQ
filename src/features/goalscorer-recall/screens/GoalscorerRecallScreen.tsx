@@ -39,7 +39,6 @@ import { CompactMatchHeader } from '../components/CompactMatchHeader';
 import { Scoreboard } from '../components/Scoreboard';
 import { TimerDisplay } from '../components/TimerDisplay';
 import { RecallActionZone } from '../components/RecallActionZone';
-import { StartOverlay } from '../components/StartOverlay';
 import { GoalFlash } from '../components/GoalFlash';
 import { RecallResultModal } from '../components/RecallResultModal';
 import { RecallComparisonView } from '../components/RecallComparisonView';
@@ -333,7 +332,6 @@ export function GoalscorerRecallScreen({
     );
   }
   const isPlaying = state.gameStatus === 'playing';
-  const isIdle = state.gameStatus === 'idle';
   const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'lost';
 
   const matchInfo = {
@@ -412,14 +410,6 @@ export function GoalscorerRecallScreen({
           onGiveUp={giveUp}
           isPlaying={isPlaying}
           showError={state.lastGuessIncorrect}
-        />
-      )}
-
-      {/* Start Overlay */}
-      {isIdle && (
-        <StartOverlay
-          totalScorers={totalScorers}
-          onStart={startGame}
         />
       )}
 

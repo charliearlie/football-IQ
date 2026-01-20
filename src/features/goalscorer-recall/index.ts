@@ -33,6 +33,5 @@ export { Scoreboard } from './components/Scoreboard';
 export { GoalSlot } from './components/GoalSlot';
 export { TimerDisplay } from './components/TimerDisplay';
 export { RecallActionZone } from './components/RecallActionZone';
-export { StartOverlay } from './components/StartOverlay';
 export { GoalFlash } from './components/GoalFlash';
 export { RecallResultModal } from './components/RecallResultModal';

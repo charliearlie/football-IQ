@@ -77,6 +77,8 @@ export const depthOffset = {
   cell: 3,
   /** Tic-tac-toe cells */
   tictacCell: 4,
+  /** Tiny buttons (for compact cards) */
+  buttonTiny: 3,
   /** Small buttons */
   buttonSmall: 5,
   /** Standard buttons */

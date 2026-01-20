@@ -158,8 +158,20 @@ export default function RootLayout() {
         // Request ATT permission on iOS BEFORE initializing ads
         // This ensures ad personalization status is known before ad requests
         if (Platform.OS === 'ios') {
-          const { status } = await requestTrackingPermissionsAsync();
-          console.log('[ATT] Tracking permission status:', status);
+          // Wrap ATT request with timeout - response should be instant after user taps,
+          // but if promise hangs (known issue when denying), continue after 3s
+          const attPromise = requestTrackingPermissionsAsync();
+          const timeoutPromise = new Promise<{ status: string }>((_, reject) =>
+            setTimeout(() => reject(new Error('ATT request timed out')), 3000)
+          );
+
+          try {
+            const { status } = await Promise.race([attPromise, timeoutPromise]);
+            console.log('[ATT] Tracking permission status:', status);
+          } catch (attError) {
+            console.warn('[ATT] Request failed or timed out:', attError);
+            // Continue without ATT - ads will work in non-personalized mode
+          }
         }
 
         await MobileAds().initialize();

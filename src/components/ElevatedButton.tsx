@@ -68,7 +68,7 @@ export interface ElevatedButtonProps {
   /** Border color (overrides variant border color) */
   borderColorOverride?: string;
   /** Button size variant */
-  size?: 'small' | 'medium' | 'large';
+  size?: 'tiny' | 'small' | 'medium' | 'large';
   /** Disable the button */
   disabled?: boolean;
   /** Stretch button to fill parent width */
@@ -93,6 +93,12 @@ const SPRING_CONFIG = {
  * Size configuration for button variants.
  */
 const SIZE_CONFIG = {
+  tiny: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    depth: depthOffset.buttonTiny,
+    textStyle: textStyles.buttonTiny as TextStyle,
+  },
   small: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -230,9 +236,11 @@ export function ElevatedButton({
       >
         <View style={styles.content}>
           {icon && <View style={styles.iconContainer}>{icon}</View>}
-          <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
-            {title}
-          </Text>
+          {title ? (
+            <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
+              {title}
+            </Text>
+          ) : null}
         </View>
       </Animated.View>
     </Pressable>

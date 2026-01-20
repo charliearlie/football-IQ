@@ -1,19 +1,20 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, SectionList, InteractionManager } from 'react-native';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   useArchivePuzzles,
   useGatedNavigation,
-  ArchiveList,
-  GameModeFilter,
   ArchivePuzzle,
-  ArchiveSection,
-  GameModeFilterType,
+  ArchiveFilterState,
+  ArchiveDateGroup,
   GAME_MODE_ROUTES,
   GameMode,
 } from '@/features/archive';
+import { ArchiveCalendar } from '@/features/archive/components/ArchiveCalendar';
+import { AdvancedFilterBar } from '@/features/archive/components/AdvancedFilterBar';
+import { applyFilters, groupByDate } from '@/features/archive/utils/calendarTransformers';
 import { useAds, UnlockChoiceModal, PremiumUpsellBanner } from '@/features/ads';
 import { CompletedGameModal } from '@/features/home';
 import { useAuth } from '@/features/auth';
@@ -25,33 +26,39 @@ import { useAuth } from '@/features/auth';
 const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens']);
 
 /**
- * Archive Screen
+ * Default filter state.
+ */
+const DEFAULT_FILTERS: ArchiveFilterState = {
+  status: 'all',
+  gameMode: null,
+  dateRange: { start: null, end: null },
+};
+
+/**
+ * Archive Screen - Match Calendar
  *
- * Browse historical puzzles with:
- * - Game mode filter (horizontal scroll)
- * - Month-grouped puzzle list
- * - Premium gating (locked puzzles for >7 days)
- * - Pull-to-refresh
- * - Infinite scroll pagination
+ * High-density accordion-style archive browser with:
+ * - Date-grouped accordion rows (7-10 visible without scrolling)
+ * - At-a-glance completion icons
+ * - Advanced filtering (Status, Game Mode)
+ * - Premium ghosting (grayscale + lock instead of blur)
+ * - Pull-to-refresh and pagination
  */
 export default function ArchiveScreen() {
   const router = useRouter();
-  // Accept params from calendar navigation and unlock redirects (from PremiumGate/PremiumOnlyGate)
-  const { filterDate, showUnlock, unlockPuzzleId, unlockDate, unlockGameMode } =
+  // Accept params from calendar navigation and unlock redirects
+  const { showUnlock, unlockPuzzleId, unlockDate, unlockGameMode } =
     useLocalSearchParams<{
-      filterDate?: string;
       showUnlock?: string;
       unlockPuzzleId?: string;
       unlockDate?: string;
       unlockGameMode?: string;
     }>();
-  const [filter, setFilter] = useState<GameModeFilterType>('all');
+
+  // Filter state for advanced filtering
+  const [filters, setFilters] = useState<ArchiveFilterState>(DEFAULT_FILTERS);
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
   const [completedPuzzle, setCompletedPuzzle] = useState<ArchivePuzzle | null>(null);
-
-  // Ref for scrolling to specific date
-  const listRef = useRef<SectionList<ArchivePuzzle, ArchiveSection>>(null);
-  const hasScrolledToDate = useRef(false);
 
   // Get user premium status
   const { profile } = useAuth();
@@ -60,55 +67,29 @@ export default function ArchiveScreen() {
   // Check if user should see ads (non-premium users)
   const { shouldShowAds } = useAds();
 
+  // Load archive data with 'all' filter (we filter client-side for more flexibility)
   const {
-    sections,
+    dateGroups: rawDateGroups,
     isLoading,
     isRefreshing,
     hasMore,
     loadMore,
     refresh,
-  } = useArchivePuzzles(filter);
+  } = useArchivePuzzles('all');
 
-  // Scroll to target date when coming from calendar
-  useEffect(() => {
-    if (!filterDate || hasScrolledToDate.current || sections.length === 0 || isLoading) return;
+  // Apply client-side filtering to the date groups
+  const filteredDateGroups = useMemo((): ArchiveDateGroup[] => {
+    // Flatten all puzzles from date groups
+    const allPuzzles = rawDateGroups.flatMap((group) => group.puzzles);
 
-    // Find section index for the filter date's month (YYYY-MM)
-    const targetMonth = filterDate.substring(0, 7);
-    const sectionIndex = sections.findIndex((section) => {
-      const firstPuzzle = section.data[0];
-      return firstPuzzle?.puzzleDate.startsWith(targetMonth);
-    });
+    // Apply filters
+    const filteredPuzzles = applyFilters(allPuzzles, filters);
 
-    if (sectionIndex >= 0 && listRef.current) {
-      // Use InteractionManager to wait for animations/layout to complete
-      // This is more reliable than arbitrary setTimeout
-      const scrollTask = InteractionManager.runAfterInteractions(() => {
-        // Verify listRef still exists and sections haven't changed
-        if (listRef.current && sections.length > sectionIndex) {
-          listRef.current.scrollToLocation({
-            sectionIndex,
-            itemIndex: 0,
-            viewOffset: 0,
-            animated: true,
-          });
-        }
-      });
-      hasScrolledToDate.current = true;
-
-      // Cleanup if effect re-runs before interaction completes
-      return () => scrollTask.cancel();
-    }
-  }, [filterDate, sections, isLoading]);
-
-  // Reset scroll flag when filterDate changes
-  useEffect(() => {
-    hasScrolledToDate.current = false;
-  }, [filterDate]);
+    // Re-group by date
+    return groupByDate(filteredPuzzles);
+  }, [rawDateGroups, filters]);
 
   // NUCLEAR OPTION: Refresh archive list when screen comes into focus
-  // This ensures unlocked puzzles show correct state after returning from game
-  // No state synchronization - just fresh data from database
   useFocusEffect(
     useCallback(() => {
       console.log('[Archive] Screen focused, refreshing list');
@@ -116,8 +97,7 @@ export default function ArchiveScreen() {
     }, [refresh])
   );
 
-  // Handle unlock params from deep-link gate redirects (PremiumGate, PremiumOnlyGate)
-  // When a gate blocks access, it redirects here with unlock context to show UnlockChoiceModal
+  // Handle unlock params from deep-link gate redirects
   useEffect(() => {
     if (showUnlock === 'true' && unlockPuzzleId) {
       console.log('[Archive] Showing unlock modal from redirect params:', {
@@ -125,7 +105,6 @@ export default function ArchiveScreen() {
         unlockDate,
         unlockGameMode,
       });
-      // Create a minimal puzzle object for the modal
       const puzzleToUnlock: ArchivePuzzle = {
         id: unlockPuzzleId,
         gameMode: (unlockGameMode as GameMode) || 'career_path',
@@ -140,15 +119,6 @@ export default function ArchiveScreen() {
 
   /**
    * Use gated navigation hook for premium access control.
-   * This centralizes the navigation/paywall logic.
-   *
-   * ALWAYS show UnlockChoiceModal for locked puzzles - it provides:
-   * - "Go Pro" option (always available)
-   * - "Watch Ad" option (shows loading state, handles unavailable ads gracefully)
-   *
-   * We no longer route directly to /premium-modal as that caused issues:
-   * - Navigation state conflicts when returning to archive
-   * - Endless loading spinner after closing modal
    */
   const { navigateToPuzzle } = useGatedNavigation({
     onShowPaywall: (puzzle) => {
@@ -158,14 +128,11 @@ export default function ArchiveScreen() {
         isLocked: puzzle.isLocked,
       });
 
-      // Defensive check: only show modal if puzzle is actually locked
       if (!puzzle.isLocked) {
         console.warn('[Archive] onShowPaywall called for unlocked puzzle, ignoring');
         return;
       }
 
-      // Always show UnlockChoiceModal for locked puzzles
-      // The modal handles both ad-eligible and non-ad-eligible users gracefully
       setLockedPuzzle(puzzle);
     },
   });
@@ -173,11 +140,6 @@ export default function ArchiveScreen() {
   /**
    * Handle puzzle press - show result modal for completed games,
    * check premium-only access, otherwise use gated navigation.
-   *
-   * This mirrors the home screen's handleCardPress logic:
-   * 1. Check if completed → show results modal
-   * 2. Check if premium-only game mode → show unlock modal (NOT route to game)
-   * 3. Otherwise → use gated navigation (handles time-locked puzzles)
    */
   const handlePuzzlePress = useCallback(
     (puzzle: ArchivePuzzle) => {
@@ -188,12 +150,8 @@ export default function ArchiveScreen() {
       }
 
       // Premium-only game modes: check access BEFORE navigating
-      // This prevents the game route's PremiumOnlyGate from showing /premium-modal directly
-      // Access = isPremium OR isAdUnlocked (permanently unlocked via ad)
       const isPremiumOnly = PREMIUM_ONLY_MODES.has(puzzle.gameMode);
       if (isPremiumOnly && !isPremium && !puzzle.isAdUnlocked) {
-        // Non-premium user trying to access premium-only game
-        // Show UnlockChoiceModal which offers both ad unlock and premium options
         console.log('[Archive] Premium-only game, showing unlock modal:', puzzle.gameMode);
         setLockedPuzzle(puzzle);
         return;
@@ -229,32 +187,26 @@ export default function ArchiveScreen() {
       {/* Premium Upsell Banner (non-premium only) */}
       <PremiumUpsellBanner testID="archive-premium-upsell" />
 
-      {/* Archive List with Filter */}
-      <ArchiveList
-        ref={listRef}
-        sections={sections}
+      {/* Match Calendar with Advanced Filter */}
+      <ArchiveCalendar
+        dateGroups={filteredDateGroups}
         onPuzzlePress={handlePuzzlePress}
-        onLockedPress={handlePuzzlePress}
         onEndReached={loadMore}
         onRefresh={refresh}
         refreshing={isRefreshing}
         isLoading={isLoading}
         hasMore={hasMore}
         ListHeaderComponent={
-          <View style={styles.filterContainer}>
-            <GameModeFilter
-              selected={filter}
-              onSelect={setFilter}
-              testID="archive-filter"
-            />
-          </View>
+          <AdvancedFilterBar
+            filters={filters}
+            onFiltersChange={setFilters}
+            testID="archive-filter"
+          />
         }
-        testID="archive-list"
+        testID="archive-calendar"
       />
 
-      {/* Unlock Choice Modal - shows ad option for non-premium users
-          IMPORTANT: Keep component always mounted to let Modal animate out properly.
-          Conditional render causes Modal to unmount mid-animation, leaving overlay stuck. */}
+      {/* Unlock Choice Modal */}
       <UnlockChoiceModal
         visible={!!lockedPuzzle}
         onClose={handleCloseModal}
@@ -265,7 +217,7 @@ export default function ArchiveScreen() {
         testID="unlock-choice-modal"
       />
 
-      {/* Completed Game Modal - shows result for done games */}
+      {/* Completed Game Modal */}
       {completedPuzzle && completedPuzzle.attempt && (
         <CompletedGameModal
           visible={true}
@@ -296,9 +248,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
-  },
-  filterContainer: {
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.sm,
   },
 });

@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maths Fun Worksheet</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Fredoka:wght@400;600&display=swap");
+
+      :root {
+        --primary: #4a90e2;
+        --secondary: #ff6b6b;
+        --accent: #feca57;
+        --success: #1dd1a1;
+        --dark: #2d3436;
+        --light: #f7f9fc;
+      }
+
+      body {
+        font-family: "Comic Neue", "Comic Sans MS", sans-serif;
+        background-color: var(--light);
+        color: var(--dark);
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 60px; /* Increased main padding for screen view */
+        line-height: 1.5;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px dashed var(--primary);
+        padding-bottom: 20px;
+      }
+
+      h1 {
+        font-family: "Fredoka", sans-serif;
+        color: var(--primary);
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .student-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.2em;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+
+      .section {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 2px solid #e0e0e0;
+        page-break-inside: avoid;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .section-number {
+        background: var(--primary);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-family: "Fredoka", sans-serif;
+        margin-right: 15px;
+        font-size: 1.1em;
+      }
+
+      h2 {
+        font-family: "Fredoka", sans-serif;
+        color: var(--dark);
+        margin: 0;
+        font-size: 1.4em;
+      }
+
+      .story {
+        font-style: italic;
+        color: #636e72;
+        margin-bottom: 15px;
+        font-size: 1em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-family: "Fredoka", sans-serif;
+        table-layout: fixed; /* Ensures equal width columns */
+      }
+
+      th {
+        background-color: var(--primary);
+        color: white;
+        padding: 5px; /* Smaller padding to fit more cols */
+        border: 2px solid var(--primary);
+        font-size: 0.8em;
+        font-weight: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      td {
+        border: 2px solid #dfe6e9;
+        padding: 8px;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        color: var(--dark);
+      }
+
+      /* Specific colors for different sections */
+      .section:nth-of-type(1) .section-number,
+      .section:nth-of-type(1) th {
+        background-color: var(--secondary);
+        border-color: var(--secondary);
+      }
+      .section:nth-of-type(2) .section-number,
+      .section:nth-of-type(2) th {
+        background-color: var(--success);
+        border-color: var(--success);
+      }
+      .section:nth-of-type(3) .section-number,
+      .section:nth-of-type(3) th {
+        background-color: var(--accent);
+        color: var(--dark);
+        border-color: var(--accent);
+      }
+      .section:nth-of-type(4) .section-number,
+      .section:nth-of-type(4) th {
+        background-color: var(--primary);
+        border-color: var(--primary);
+      }
+
+      .questions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .question-item {
+        margin-bottom: 5px;
+      }
+
+      .question-label {
+        display: block;
+        margin-bottom: 2px;
+        font-weight: bold;
+        font-size: 0.95em;
+      }
+
+      .answer-box {
+        border-bottom: 2px solid #b2bec3;
+        height: 25px;
+        width: 100%;
+        display: inline-block;
+      }
+
+      .legend {
+        margin-top: 30px;
+        border: 3px solid var(--dark);
+        border-radius: 15px;
+        padding: 15px;
+        background-color: #fff;
+        page-break-before: avoid;
+      }
+
+      .legend h3 {
+        text-align: center;
+        margin-top: 0;
+        font-family: "Fredoka", sans-serif;
+        text-decoration: underline;
+        font-size: 1.2em;
+      }
+
+      .legend-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        font-size: 0.9em;
+      }
+
+      .legend-item strong {
+        color: var(--secondary);
+        font-size: 1.1em;
+      }
+
+      @media print {
+        body {
+          padding: 0 40px; /* Added 40px padding to Left/Right for printing */
+          background-color: white;
+          max-width: 100%;
+        }
+        .section {
+          box-shadow: none;
+          border: 1px solid #ccc;
+          break-inside: avoid;
+          margin-bottom: 15px;
+          padding: 15px;
+        }
+        header {
+          margin-top: 0;
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+        }
+        h1 {
+          font-size: 2em;
+        }
+        .legend {
+          margin-top: 10px;
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Averages!</h1>
+      <div class="student-info">
+        <span>Name: __________________________</span>
+        <span>Date: ________________</span>
+      </div>
+    </header>
+
+    <!-- Section 1: 11 Items -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>iPad Screen Time</h2>
+      </div>
+      <p class="story">
+        A teacher asked <strong>11 students</strong> how many hours they spent
+        on their iPads. Some spent a little time, and some spent a LOT!
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Harry</th>
+            <th>Oliver</th>
+            <th>Jack</th>
+            <th>Charlie</th>
+            <th>Jacob</th>
+            <th>Thomas</th>
+            <th>George</th>
+            <th>Oscar</th>
+            <th>James</th>
+            <th>Leo</th>
+            <th>Noah</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>4</td>
+            <td>10</td>
+            <td>6</td>
+            <td>9</td>
+            <td>6</td>
+            <td>5</td>
+            <td>10</td>
+            <td>6</td>
+            <td>7</td>
+            <td>8</td>
+            <td>6</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="questions">
+        <div class="question-item">
+          <span class="question-label"
+            >1. What is the
+            <span style="color: var(--secondary)">MEAN</span> hours spent on
+            iPads?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >2. What is the
+            <span style="color: var(--secondary)">MEDIAN</span> number of
+            hours?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >3. What is the
+            <span style="color: var(--secondary)">MODE</span> for this
+            data?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >4. What is the
+            <span style="color: var(--secondary)">RANGE</span> of hours
+            played?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: 12 Items -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Dandy's World Collection</h2>
+      </div>
+      <p class="story">
+        <strong>12 friends</strong> are playing <strong>Dandy's World</strong>.
+        They are comparing how many different "Toons" they have unlocked
+        (between 2 and 14).
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Amelia</th>
+            <th>Olivia</th>
+            <th>Isla</th>
+            <th>Emily</th>
+            <th>Poppy</th>
+            <th>Ava</th>
+            <th>Jess</th>
+            <th>Sophie</th>
+            <th>Grace</th>
+            <th>Mia</th>
+            <th>Ruby</th>
+            <th>Evie</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>12</td>
+            <td>4</td>
+            <td>8</td>
+            <td>14</td>
+            <td>8</td>
+            <td>2</td>
+            <td>10</td>
+            <td>6</td>
+            <td>8</td>
+            <td>8</td>
+            <td>7</td>
+            <td>9</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="questions">
+        <div class="question-item">
+          <span class="question-label"
+            >1. What is the
+            <span style="color: var(--success)">MEAN</span> number of toons
+            unlocked?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >2. What is the
+            <span style="color: var(--success)">MEDIAN</span> score for the
+            group?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >3. What is the
+            <span style="color: var(--success)">MODE</span> (most common)
+            number?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >4. What is the
+            <span style="color: var(--success)">RANGE</span> between the highest
+            and lowest?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: 9 Items -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Summer in London</h2>
+      </div>
+      <p class="story">
+        It's getting hotter! We measured the temperature in London for
+        <strong>9 days</strong> in July to decide when to have a picnic.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Day 1</th>
+            <th>Day 2</th>
+            <th>Day 3</th>
+            <th>Day 4</th>
+            <th>Day 5</th>
+            <th>Day 6</th>
+            <th>Day 7</th>
+            <th>Day 8</th>
+            <th>Day 9</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>22</td>
+            <td>17</td>
+            <td>24</td>
+            <td>29</td>
+            <td>22</td>
+            <td>25</td>
+            <td>19</td>
+            <td>27</td>
+            <td>22</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="questions">
+        <div class="question-item">
+          <span class="question-label"
+            >1. What is the
+            <span style="color: #f39c12">MEAN</span> temperature?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >2. What is the
+            <span style="color: #f39c12">MEDIAN</span> temperature?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >3. What is the
+            <span style="color: #f39c12">MODE</span> temperature?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >4. What is the <span style="color: #f39c12">RANGE</span> in
+            temperature?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: 10 Items -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Pro Darts Championship</h2>
+      </div>
+      <p class="story">
+        A professional darts player is practicing for the big final. Here are
+        the scores for their last <strong>10 throws</strong> at the board.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+            <th>7</th>
+            <th>8</th>
+            <th>9</th>
+            <th>10</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>12</td>
+            <td>60</td>
+            <td>35</td>
+            <td>20</td>
+            <td>45</td>
+            <td>20</td>
+            <td>58</td>
+            <td>20</td>
+            <td>50</td>
+            <td>40</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="questions">
+        <div class="question-item">
+          <span class="question-label"
+            >1. What is the
+            <span style="color: var(--primary)">MEAN</span> score per
+            throw?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >2. What is the
+            <span style="color: var(--primary)">MEDIAN</span> score?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >3. What is the
+            <span style="color: var(--primary)">MODE</span> score?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+        <div class="question-item">
+          <span class="question-label"
+            >4. What is the <span style="color: var(--primary)">RANGE</span> of
+            the scores?</span
+          >
+          <div class="answer-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <h3>💡 Cheat Sheet: How to work it out!</h3>
+      <div class="legend-grid">
+        <div class="legend-item">
+          <strong>MEAN (The Average)</strong><br />
+          Add all the numbers up, then divide by how many numbers there are.
+        </div>
+        <div class="legend-item">
+          <strong>MEDIAN (The Middle)</strong><br />
+          Put the numbers in order from smallest to largest. Find the one in the
+          middle.
+        </div>
+        <div class="legend-item">
+          <strong>MODE (The Most)</strong><br />
+          The number that appears the most times.
+        </div>
+        <div class="legend-item">
+          <strong>RANGE (The Difference)</strong><br />
+          Take the biggest number and subtract the smallest number.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

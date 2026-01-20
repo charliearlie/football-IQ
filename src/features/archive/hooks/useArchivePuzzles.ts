@@ -20,11 +20,13 @@ import { LocalCatalogEntry, ParsedLocalAttempt, UnlockedPuzzle } from '@/types/d
 import {
   ArchivePuzzle,
   ArchiveSection,
+  ArchiveDateGroup,
   GameModeFilter,
   UseArchivePuzzlesResult,
   GameMode,
 } from '../types/archive.types';
 import { groupByMonth, isPuzzleLocked } from '../utils/dateGrouping';
+import { groupByDate } from '../utils/calendarTransformers';
 import { syncCatalogFromSupabase } from '../services/catalogSyncService';
 
 /** Number of items to load per page */
@@ -44,6 +46,7 @@ export function useArchivePuzzles(
 
   const [puzzles, setPuzzles] = useState<ArchivePuzzle[]>([]);
   const [sections, setSections] = useState<ArchiveSection[]>([]);
+  const [dateGroups, setDateGroups] = useState<ArchiveDateGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -164,11 +167,13 @@ export function useArchivePuzzles(
           if (__DEV__) console.log(`[Archive:loadPage] RESET: Setting ${transformed.length} puzzles`);
           setPuzzles(transformed);
           setSections(groupByMonth(transformed));
+          setDateGroups(groupByDate(transformed));
         } else {
           setPuzzles((prev) => {
             if (__DEV__) console.log(`[Archive:loadPage] APPEND: prev=${prev.length}, adding=${transformed.length}`);
             const updated = [...prev, ...transformed];
             setSections(groupByMonth(updated));
+            setDateGroups(groupByDate(updated));
             return updated;
           });
         }
@@ -292,6 +297,7 @@ export function useArchivePuzzles(
 
   return {
     sections,
+    dateGroups,
     isLoading,
     isRefreshing,
     hasMore,
