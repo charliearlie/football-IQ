@@ -328,7 +328,41 @@ src/
 
 tools/
   content-creator.html # Admin puzzle creation tool
+
+web/                   # CMS (Command Centre)
+  app/                 # Next.js 15 App Router
+  components/          # shadcn/ui components
+  hooks/               # Data fetching hooks
+  lib/                 # Supabase clients
 ```
+
+## Command Centre (CMS)
+
+A Next.js 15 web application for managing puzzle content.
+
+**Location**: `/web` directory (excluded from mobile build)
+
+**Features**:
+- Master Calendar view showing 8 game modes per day
+- Green/Red dot indicators for puzzle status
+- Quick View sidebar for puzzle details
+- Supabase Auth with protected routes
+
+**Tech Stack**: Next.js 15, Tailwind CSS, shadcn/ui, Supabase SSR
+
+**Running the CMS**:
+```bash
+cd web
+npm install
+cp .env.local.example .env.local  # Fill in Supabase keys
+npm run dev
+```
+
+**Key Files**:
+- `web/app/(dashboard)/calendar/page.tsx` - Master Calendar
+- `web/hooks/use-puzzles.ts` - Data fetching
+- `web/components/calendar/` - Calendar components
+- `web/lib/supabase/server.ts` - Admin client (bypasses RLS)
 
 ## Design System ("Digital Pitch")
 

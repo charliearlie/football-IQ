@@ -1,0 +1,68 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import { GameModeDot } from "./game-mode-dot";
+import type { CalendarDay } from "@/hooks/use-calendar-data";
+import type { GameMode } from "@/lib/constants";
+
+interface DayCellProps {
+  day: CalendarDay;
+  isSelected: boolean;
+  onSelect: (date: string) => void;
+}
+
+export function DayCell({ day, isSelected, onSelect }: DayCellProps) {
+  const handleClick = () => {
+    if (day.isCurrentMonth) {
+      onSelect(day.date);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={!day.isCurrentMonth}
+      className={cn(
+        "relative min-h-[80px] p-2 text-left border border-white/5 transition-all",
+        day.isCurrentMonth
+          ? "hover:bg-white/5 cursor-pointer"
+          : "opacity-30 cursor-default",
+        day.isToday && "bg-pitch-green/10 border-pitch-green/30",
+        isSelected && "ring-2 ring-pitch-green bg-pitch-green/5",
+        !day.isCurrentMonth && "bg-white/[0.02]"
+      )}
+    >
+      {/* Day number */}
+      <div
+        className={cn(
+          "text-sm font-medium mb-1.5",
+          day.isToday && "text-pitch-green font-bold",
+          !day.isCurrentMonth && "text-muted-foreground"
+        )}
+      >
+        {day.dayNumber}
+      </div>
+
+      {/* Game mode dots - 2x4 grid */}
+      {day.isCurrentMonth && (
+        <div className="grid grid-cols-4 gap-1">
+          {day.gameModes.map((gm) => (
+            <GameModeDot
+              key={gm.mode}
+              mode={gm.mode as GameMode}
+              hasContent={gm.hasContent}
+              status={gm.status}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Status indicator for fully populated days */}
+      {day.isCurrentMonth && day.totalPopulated === 8 && (
+        <div className="absolute top-1 right-1">
+          <div className="w-2 h-2 rounded-full bg-pitch-green animate-pulse" />
+        </div>
+      )}
+    </button>
+  );
+}

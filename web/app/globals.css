@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 9%;
+    --foreground: 210 40% 98%;
+
+    --card: 0 0% 100% / 0.05;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 99 98% 40%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 210 40% 98% / 0.6;
+
+    --accent: 48 96% 53%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 0 0% 100% / 0.1;
+    --input: 0 0% 100% / 0.1;
+    --ring: 99 98% 40%;
+
+    --radius: 8px;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  /* Scrollbar styling for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+@layer components {
+  /* Glass card effect matching mobile app */
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-[10px] border border-white/10 rounded-xl;
+  }
+
+  /* Dense data table styling */
+  .data-row {
+    @apply border-b border-white/5 hover:bg-white/5 transition-colors;
+  }
+
+  /* Status indicator dots */
+  .status-dot {
+    @apply w-2.5 h-2.5 rounded-full;
+  }
+
+  .status-dot-success {
+    @apply bg-pitch-green shadow-[0_0_6px_rgba(88,204,2,0.5)];
+  }
+
+  .status-dot-empty {
+    @apply bg-red-card/60;
+  }
+
+  .status-dot-draft {
+    @apply bg-card-yellow;
+  }
+}
+
+@layer utilities {
+  /* Text gradient for headings */
+  .text-gradient {
+    @apply bg-gradient-to-r from-pitch-green to-card-yellow bg-clip-text text-transparent;
+  }
+
+  /* Glow effect for primary elements */
+  .glow-green {
+    box-shadow: 0 0 20px rgba(88, 204, 2, 0.3);
+  }
+
+  /* Focus ring styling */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-pitch-green focus:ring-offset-2 focus:ring-offset-stadium-navy;
+  }
+}

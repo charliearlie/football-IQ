@@ -61,3 +61,8 @@ android/
 
 # Temporary files
 *.log
+
+# CMS (web directory)
+/web/.next/
+/web/node_modules/
+/web/.env.local

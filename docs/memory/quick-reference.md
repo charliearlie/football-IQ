@@ -1615,3 +1615,73 @@ getEveningTriggerTime();   // Date for 20:00 local (or null if in past)
 - Service: `src/features/notifications/services/notificationService.ts`
 - Components: `src/features/notifications/components/`
 - Types: `src/features/notifications/types.ts`
+
+## Command Centre (CMS)
+
+### Quick Start
+```bash
+cd web
+npm install
+cp .env.local.example .env.local  # Fill in Supabase keys
+npm run dev
+# Open http://localhost:3000
+```
+
+### Environment Variables
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://pgqtkmfjdyjthzlcectg.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<same as mobile>
+SUPABASE_SERVICE_ROLE_KEY=<server-only, bypasses RLS>
+```
+
+### Key Hooks
+```typescript
+import { useMonthPuzzles } from '@/hooks/use-puzzles';
+import { useCalendarData } from '@/hooks/use-calendar-data';
+
+// Fetch puzzles for a month
+const { puzzles, isLoading, error } = useMonthPuzzles(new Date());
+
+// Transform to calendar grid format
+const { weeks, stats } = useCalendarData(puzzles, currentMonth);
+```
+
+### Calendar Data Structure
+```typescript
+interface CalendarDay {
+  date: string;           // YYYY-MM-DD
+  dayNumber: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  gameModes: GameModeStatus[];  // 8 modes with status
+  totalPopulated: number;       // 0-8
+  totalMissing: number;         // 0-8
+}
+
+interface CalendarStats {
+  totalDays: number;
+  fullyPopulatedDays: number;
+  partiallyPopulatedDays: number;
+  emptyDays: number;
+  upcomingGaps: number;  // Days in next 7 days with missing content
+}
+```
+
+### Routes
+```
+/login              - Supabase Auth login
+/dashboard          - Redirects to /dashboard/calendar
+/dashboard/calendar - Master Calendar view
+```
+
+### Files
+```
+web/
+  app/(auth)/login/page.tsx      - Login page
+  app/(dashboard)/calendar/      - Calendar view
+  components/calendar/           - Calendar components
+  components/puzzle/             - Puzzle preview components
+  hooks/use-puzzles.ts           - Data fetching
+  hooks/use-calendar-data.ts     - Calendar transformation
+  lib/supabase/server.ts         - Admin client (service role)
+```

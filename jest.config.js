@@ -12,6 +12,7 @@ module.exports = {
     '/node_modules/',
     '/android/',
     '/ios/',
+    '/web/',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
