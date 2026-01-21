@@ -9,13 +9,29 @@ import { MonthHeader } from "@/components/calendar/month-header";
 import { Legend } from "@/components/calendar/legend";
 import { StatsBar } from "@/components/calendar/stats-bar";
 import { QuickViewSheet } from "@/components/puzzle/quick-view-sheet";
+import { PuzzleEditorModal } from "@/components/puzzle/puzzle-editor-modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { GameMode } from "@/lib/constants";
+import type { DailyPuzzle } from "@/types/supabase";
+
+interface EditorState {
+  isOpen: boolean;
+  gameMode: GameMode | null;
+  puzzle: DailyPuzzle | null;
+  puzzleDate: string | null;
+}
 
 export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [editorState, setEditorState] = useState<EditorState>({
+    isOpen: false,
+    gameMode: null,
+    puzzle: null,
+    puzzleDate: null,
+  });
 
-  const { puzzles, isLoading, error } = useMonthPuzzles(currentMonth);
+  const { puzzles, isLoading, error, mutate } = useMonthPuzzles(currentMonth);
   const calendarData = useCalendarData(puzzles, currentMonth);
 
   const handlePreviousMonth = useCallback(() => {
@@ -40,6 +56,34 @@ export default function CalendarPage() {
   const handleCloseSheet = useCallback(() => {
     setSelectedDate(null);
   }, []);
+
+  const handleEditPuzzle = useCallback(
+    (gameMode: GameMode, puzzle?: DailyPuzzle) => {
+      setEditorState({
+        isOpen: true,
+        gameMode,
+        puzzle: puzzle || null,
+        puzzleDate: selectedDate,
+      });
+    },
+    [selectedDate]
+  );
+
+  const handleCloseEditor = useCallback(() => {
+    setEditorState({
+      isOpen: false,
+      gameMode: null,
+      puzzle: null,
+      puzzleDate: null,
+    });
+  }, []);
+
+  const handleSaveSuccess = useCallback(() => {
+    // Revalidate the puzzles data
+    mutate();
+    // Close the editor
+    handleCloseEditor();
+  }, [mutate, handleCloseEditor]);
 
   // Find selected day data
   const selectedDay = selectedDate
@@ -113,7 +157,20 @@ export default function CalendarPage() {
         day={selectedDay}
         puzzles={selectedDatePuzzles}
         isLoading={isLoading}
+        onEditPuzzle={handleEditPuzzle}
       />
+
+      {/* Puzzle editor modal */}
+      {editorState.gameMode && editorState.puzzleDate && (
+        <PuzzleEditorModal
+          isOpen={editorState.isOpen}
+          onClose={handleCloseEditor}
+          gameMode={editorState.gameMode}
+          puzzle={editorState.puzzle}
+          puzzleDate={editorState.puzzleDate}
+          onSaveSuccess={handleSaveSuccess}
+        />
+      )}
     </div>
   );
 }

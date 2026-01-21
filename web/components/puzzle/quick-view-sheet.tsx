@@ -9,6 +9,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,7 +19,7 @@ import {
   type GameMode,
 } from "@/lib/constants";
 import type { CalendarDay } from "@/hooks/use-calendar-data";
-import { Crown, ChevronDown, ChevronRight } from "lucide-react";
+import { Crown, ChevronDown, ChevronRight, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import type { DailyPuzzle } from "@/types/supabase";
 
@@ -28,6 +29,7 @@ interface QuickViewSheetProps {
   day: CalendarDay | null;
   puzzles: DailyPuzzle[];
   isLoading?: boolean;
+  onEditPuzzle?: (gameMode: GameMode, puzzle?: DailyPuzzle) => void;
 }
 
 export function QuickViewSheet({
@@ -36,6 +38,7 @@ export function QuickViewSheet({
   day,
   puzzles,
   isLoading,
+  onEditPuzzle,
 }: QuickViewSheetProps) {
   const [expandedPuzzle, setExpandedPuzzle] = useState<string | null>(null);
 
@@ -78,57 +81,72 @@ export function QuickViewSheet({
                     key={mode}
                     className="glass-card overflow-hidden"
                   >
-                    <button
-                      onClick={() => {
-                        if (puzzle) {
-                          setExpandedPuzzle(isExpanded ? null : puzzle.id);
-                        }
-                      }}
-                      className="w-full p-3 text-left hover:bg-white/5 transition-colors"
-                      disabled={!puzzle}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {puzzle ? (
-                            isExpanded ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )
+                    <div className="flex items-center justify-between p-3 hover:bg-white/5 transition-colors">
+                      {/* Left side: clickable expand area (only if puzzle exists) */}
+                      <button
+                        onClick={() => {
+                          if (puzzle) {
+                            setExpandedPuzzle(isExpanded ? null : puzzle.id);
+                          }
+                        }}
+                        className="flex-1 flex items-center gap-2 text-left"
+                        disabled={!puzzle}
+                      >
+                        {puzzle ? (
+                          isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           ) : (
-                            <div className="w-4" />
-                          )}
-                          <span className="font-medium text-floodlight">
-                            {GAME_MODE_DISPLAY_NAMES[mode as GameMode]}
-                          </span>
-                          {isPremium && (
-                            <Crown className="h-3.5 w-3.5 text-card-yellow" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {puzzle?.difficulty && (
-                            <Badge variant="outline" className="text-xs">
-                              {puzzle.difficulty}
-                            </Badge>
-                          )}
-                          <Badge
-                            variant={
-                              puzzle
-                                ? puzzle.status === "draft"
-                                  ? "warning"
-                                  : "success"
-                                : "destructive"
-                            }
-                          >
-                            {puzzle
-                              ? puzzle.status === "draft"
-                                ? "Draft"
-                                : "Live"
-                              : "Empty"}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )
+                        ) : (
+                          <div className="w-4" />
+                        )}
+                        <span className="font-medium text-floodlight">
+                          {GAME_MODE_DISPLAY_NAMES[mode as GameMode]}
+                        </span>
+                        {isPremium && (
+                          <Crown className="h-3.5 w-3.5 text-card-yellow" />
+                        )}
+                      </button>
+
+                      {/* Right side: badges + edit button (sibling, not nested) */}
+                      <div className="flex items-center gap-2">
+                        {puzzle?.difficulty && (
+                          <Badge variant="outline" className="text-xs">
+                            {puzzle.difficulty}
                           </Badge>
-                        </div>
+                        )}
+                        <Badge
+                          variant={
+                            puzzle
+                              ? puzzle.status === "draft"
+                                ? "warning"
+                                : "success"
+                              : "destructive"
+                          }
+                        >
+                          {puzzle
+                            ? puzzle.status === "draft"
+                              ? "Draft"
+                              : "Live"
+                            : "Empty"}
+                        </Badge>
+                        {onEditPuzzle && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 ml-1"
+                            onClick={() => onEditPuzzle(mode as GameMode, puzzle || undefined)}
+                          >
+                            {puzzle ? (
+                              <Pencil className="h-3.5 w-3.5" />
+                            ) : (
+                              <Plus className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        )}
                       </div>
-                    </button>
+                    </div>
 
                     {/* Expanded content */}
                     {puzzle && isExpanded && (

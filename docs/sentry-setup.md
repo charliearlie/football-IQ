@@ -36,7 +36,9 @@ Sentry is configured and active in production builds. Errors are automatically c
 
 Source maps allow Sentry to show readable stack traces instead of minified code. This requires uploading source maps during each release build.
 
-**Currently disabled** in `app.json` to avoid requiring auth token:
+**Currently disabled** via two mechanisms:
+
+1. **app.json** plugin config:
 ```json
 {
   "uploadSourceMaps": false,
@@ -44,7 +46,12 @@ Source maps allow Sentry to show readable stack traces instead of minified code.
 }
 ```
 
-To enable, set both to `true` and configure auth token (see below).
+2. **ios/.xcode.env.local** environment variable:
+```bash
+export SENTRY_DISABLE_AUTO_UPLOAD=true
+```
+
+To enable source maps, remove both of these and configure auth token (see below).
 
 ### Option A: Manual Upload via sentry-cli
 
