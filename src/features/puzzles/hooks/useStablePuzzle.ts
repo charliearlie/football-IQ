@@ -76,6 +76,22 @@ export function useStablePuzzle(
       // Only process if we haven't already resolved to prevent race conditions
       setStablePuzzle(fetchedPuzzle);
       setLoadState('resolved');
+    } else if (fetchedPuzzle && stablePuzzle && loadState === 'resolved') {
+      // Check if puzzle was UPDATED (not just synced) - this happens when
+      // light sync detects a CMS edit and refreshes the puzzle content.
+      // We detect this by comparing updated_at timestamps.
+      const fetchedUpdatedAt = fetchedPuzzle.updated_at;
+      const stableUpdatedAt = stablePuzzle.updated_at;
+
+      if (fetchedUpdatedAt && fetchedUpdatedAt !== stableUpdatedAt) {
+        console.log(
+          '[useStablePuzzle] Puzzle content updated, refreshing:',
+          stableUpdatedAt,
+          '->',
+          fetchedUpdatedAt
+        );
+        setStablePuzzle(fetchedPuzzle);
+      }
     }
   }, [contextLoading, loadState, fetchedPuzzle, stablePuzzle]);
 

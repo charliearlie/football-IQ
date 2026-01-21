@@ -28,7 +28,7 @@ const mockPuzzles: DailyPuzzle[] = [
     content: { answer: "Test", career_steps: [] },
     status: "live",
     difficulty: "medium",
-    source: "cms",
+    source: "manual",
     triggered_by: null,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
@@ -40,7 +40,7 @@ const mockPuzzles: DailyPuzzle[] = [
     content: { xAxis: [], yAxis: [], valid_answers: {} },
     status: "draft",
     difficulty: "hard",
-    source: "cms",
+    source: "manual",
     triggered_by: null,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
@@ -52,7 +52,7 @@ const mockPuzzles: DailyPuzzle[] = [
     content: { answer: "Pro Test", career_steps: [] },
     status: "live",
     difficulty: null,
-    source: "cms",
+    source: "manual",
     triggered_by: "admin",
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
@@ -184,7 +184,7 @@ describe("QuickViewSheet", () => {
       if (expandButton) {
         await user.click(expandButton);
         expect(screen.getByText("Source:")).toBeInTheDocument();
-        expect(screen.getByText("cms")).toBeInTheDocument();
+        expect(screen.getByText("manual")).toBeInTheDocument();
       }
     });
 

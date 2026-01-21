@@ -21,6 +21,7 @@ const mockQueryBuilder = {
   delete: vi.fn().mockReturnThis(),
   eq: vi.fn().mockReturnThis(),
   single: vi.fn(),
+  maybeSingle: vi.fn(),
 };
 
 const mockSupabaseClient = {
@@ -86,8 +87,8 @@ describe("createPuzzle", () => {
   });
 
   it("checks for existing puzzle before creating", async () => {
-    // Mock that no existing puzzle found
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null });
+    // Mock that no existing puzzle found (maybeSingle returns null)
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
     // Mock successful insert
     mockQueryBuilder.single.mockResolvedValueOnce({
       data: { id: "new-id", ...validCreateInput },
@@ -103,7 +104,7 @@ describe("createPuzzle", () => {
   });
 
   it("returns error if puzzle already exists", async () => {
-    mockQueryBuilder.single.mockResolvedValueOnce({
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({
       data: { id: "existing-id" },
       error: null,
     });
@@ -116,7 +117,7 @@ describe("createPuzzle", () => {
 
   it("creates puzzle successfully", async () => {
     const newPuzzle = { id: "new-id", ...validCreateInput };
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null }); // No existing
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null }); // No existing
     mockQueryBuilder.single.mockResolvedValueOnce({ data: newPuzzle, error: null }); // Insert success
 
     const result = await createPuzzle(validCreateInput);
@@ -127,7 +128,7 @@ describe("createPuzzle", () => {
   });
 
   it("returns error on Supabase insert failure", async () => {
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null }); // No existing
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null }); // No existing
     mockQueryBuilder.single.mockResolvedValueOnce({
       data: null,
       error: { message: "Database error" },
@@ -141,14 +142,14 @@ describe("createPuzzle", () => {
 
   it("sets source to cms by default", async () => {
     const inputWithoutSource = { ...validCreateInput, source: undefined };
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null });
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
     mockQueryBuilder.single.mockResolvedValueOnce({ data: { id: "new-id" }, error: null });
 
     await createPuzzle(inputWithoutSource);
 
     expect(mockQueryBuilder.insert).toHaveBeenCalled();
     const insertCall = (mockQueryBuilder.insert as Mock).mock.calls[0][0];
-    expect(insertCall.source).toBe("cms");
+    expect(insertCall.source).toBe("manual");
     expect(insertCall.triggered_by).toBe("manual");
   });
 });
@@ -312,7 +313,7 @@ describe("upsertPuzzle", () => {
 
   it("creates new puzzle if none exists", async () => {
     const newPuzzle = { id: "new-id", ...validCreateInput };
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null }); // No existing
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null }); // No existing
     mockQueryBuilder.single.mockResolvedValueOnce({ data: newPuzzle, error: null }); // Insert success
 
     const result = await upsertPuzzle(validCreateInput);
@@ -326,14 +327,10 @@ describe("upsertPuzzle", () => {
     const existingPuzzle = { id: "existing-id" };
     const updatedPuzzle = { id: "existing-id", ...validCreateInput, status: "draft" };
 
-    mockQueryBuilder.single.mockResolvedValueOnce({
-      data: existingPuzzle,
-      error: null,
-    }); // Existing found
-    mockQueryBuilder.single.mockResolvedValueOnce({
-      data: updatedPuzzle,
-      error: null,
-    }); // Update success
+    // First maybeSingle call is for lookup, second is for update result
+    mockQueryBuilder.maybeSingle
+      .mockResolvedValueOnce({ data: existingPuzzle, error: null }) // Existing found
+      .mockResolvedValueOnce({ data: updatedPuzzle, error: null }); // Update success
 
     const result = await upsertPuzzle(validCreateInput);
 
@@ -343,7 +340,7 @@ describe("upsertPuzzle", () => {
   });
 
   it("revalidates path on success", async () => {
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null });
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
     mockQueryBuilder.single.mockResolvedValueOnce({
       data: { id: "new-id" },
       error: null,
@@ -355,7 +352,7 @@ describe("upsertPuzzle", () => {
   });
 
   it("returns error on Supabase failure", async () => {
-    mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: null }); // No existing
+    mockQueryBuilder.maybeSingle.mockResolvedValueOnce({ data: null, error: null }); // No existing
     mockQueryBuilder.single.mockResolvedValueOnce({
       data: null,
       error: { message: "Insert failed" },

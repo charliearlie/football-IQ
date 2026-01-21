@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -34,16 +34,22 @@ let db: SQLite.SQLiteDatabase | null = null;
  * @returns The initialized database instance
  */
 export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
-  if (db) return db;
+  console.log('[Database] initDatabase called');
+  if (db) {
+    console.log('[Database] Already initialized, returning existing instance');
+    return db;
+  }
 
   // expo-sqlite doesn't work on web
   if (Platform.OS === 'web') {
-    console.warn('SQLite not available on web platform');
+    console.warn('[Database] SQLite not available on web platform');
     return null;
   }
 
+  console.log('[Database] Opening database...');
   db = await SQLite.openDatabaseAsync(DATABASE_NAME);
   await runMigrations(db);
+  console.log('[Database] Initialization complete');
   return db;
 }
 
@@ -67,6 +73,8 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     'PRAGMA user_version'
   );
   const currentVersion = versionResult?.user_version ?? 0;
+
+  console.log(`[Database] Current schema version: ${currentVersion}, target: ${SCHEMA_VERSION}`);
 
   if (currentVersion < 1) {
     await database.execAsync(`
@@ -166,19 +174,31 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 
   // Migration v5: Add updated_at column to puzzles table for staleness detection
   // Enables version-aware sync to detect CMS edits and refresh stale cached puzzles
+  // NOTE: We intentionally leave updated_at as NULL - light sync handles NULL by
+  // treating all such puzzles as potentially stale, triggering a refresh.
   if (currentVersion < 5) {
     await database.execAsync(`
       ALTER TABLE puzzles ADD COLUMN updated_at TEXT;
-
-      -- Backfill existing rows with synced_at as default
-      UPDATE puzzles SET updated_at = synced_at WHERE updated_at IS NULL;
-
       PRAGMA user_version = 5;
     `);
   }
 
+  // Migration v6: Reset updated_at to NULL to fix bad v5 migration
+  // The original v5 incorrectly set updated_at = synced_at, but synced_at is a
+  // LOCAL timestamp (when app synced), not the server's updated_at. This caused
+  // staleness detection to fail when users synced AFTER a CMS edit.
+  // Setting to NULL forces light sync to re-check all puzzles against the server.
+  if (currentVersion < 6) {
+    console.log('[Database] Running migration v6: Resetting updated_at to NULL');
+    await database.execAsync(`
+      UPDATE puzzles SET updated_at = NULL;
+      PRAGMA user_version = 6;
+    `);
+    console.log('[Database] Migration v6 complete');
+  }
+
   // Future migrations would go here:
-  // if (currentVersion < 6) { ... }
+  // if (currentVersion < 7) { ... }
 }
 
 // ============ PUZZLE OPERATIONS ============

@@ -178,7 +178,7 @@ export function PuzzleEditorModal({
           content,
           status,
           difficulty,
-          source: "cms",
+          source: "manual",
         });
 
         if (!result.success) {
@@ -236,7 +236,21 @@ export function PuzzleEditorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[95vw] w-[1400px] h-[90vh] p-0 bg-stadium-navy border-white/10">
+      <DialogContent
+        className="max-w-[95vw] w-[1400px] h-[90vh] p-0 bg-stadium-navy border-white/10"
+        hideCloseButton
+        onOpenAutoFocus={(e) => {
+          // Prevent default focus behavior and let the form handle focus naturally
+          e.preventDefault();
+          // Focus the first input in the form after a brief delay
+          setTimeout(() => {
+            const firstInput = document.querySelector<HTMLInputElement>(
+              '[role="dialog"] input, [role="dialog"] textarea, [role="dialog"] select'
+            );
+            firstInput?.focus();
+          }, 0);
+        }}
+      >
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-4">

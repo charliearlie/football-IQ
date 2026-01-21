@@ -54,13 +54,13 @@ export async function createPuzzle(
     // Get admin client (bypasses RLS)
     const supabase = await createAdminClient();
 
-    // Check if puzzle already exists for this date and mode
+    // Check if puzzle already exists for this date and mode (use maybeSingle to avoid error when no rows found)
     const { data: existing } = await supabase
       .from("daily_puzzles")
       .select("id")
       .eq("puzzle_date", input.puzzle_date)
       .eq("game_mode", input.game_mode)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return {
@@ -76,7 +76,7 @@ export async function createPuzzle(
       content: validation.data as Json,
       status: input.status,
       difficulty: input.difficulty || null,
-      source: input.source || "cms",
+      source: input.source || "manual",
       triggered_by: "manual",
     };
 
@@ -260,13 +260,18 @@ export async function upsertPuzzle(
 
     const supabase = await createAdminClient();
 
-    // Check if puzzle exists
-    const { data: existing } = await supabase
+    // Check if puzzle exists (use maybeSingle to avoid error when no rows found)
+    const { data: existing, error: lookupError } = await supabase
       .from("daily_puzzles")
       .select("id")
       .eq("puzzle_date", input.puzzle_date)
       .eq("game_mode", input.game_mode)
-      .single();
+      .maybeSingle();
+
+    if (lookupError) {
+      console.error("Puzzle lookup error:", lookupError);
+    }
+    console.log("Upsert lookup:", { puzzle_date: input.puzzle_date, game_mode: input.game_mode, existing });
 
     let result;
 
@@ -276,7 +281,7 @@ export async function upsertPuzzle(
         content: validation.data as Json,
         status: input.status,
         difficulty: input.difficulty || null,
-        source: input.source || "cms",
+        source: input.source || "manual",
         updated_at: new Date().toISOString(),
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -285,7 +290,12 @@ export async function upsertPuzzle(
         .update(updateData)
         .eq("id", (existing as { id: string }).id)
         .select()
-        .single();
+        .maybeSingle();
+
+      if (!result.data && !result.error) {
+        // Update returned 0 rows - this shouldn't happen since we just found the record
+        result.error = { message: "Update failed - record not found" };
+      }
     } else {
       // Insert new
       const insertData: TablesInsert<"daily_puzzles"> = {
@@ -294,7 +304,7 @@ export async function upsertPuzzle(
         content: validation.data as Json,
         status: input.status,
         difficulty: input.difficulty || null,
-        source: input.source || "cms",
+        source: input.source || "manual",
         triggered_by: "manual",
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

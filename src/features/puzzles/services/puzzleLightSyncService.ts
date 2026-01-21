@@ -73,8 +73,11 @@ function getDateRange(isPremium: boolean): { startDate: string; endDate: string 
 export async function performLightSync(
   isPremium: boolean
 ): Promise<LightSyncResult> {
+  console.log('[LightSync] Starting light sync, isPremium:', isPremium);
+
   try {
     const { startDate, endDate } = getDateRange(isPremium);
+    console.log('[LightSync] Date range:', startDate, 'to', endDate);
 
     // Phase 1: Get local puzzle timestamps
     const localTimestamps = await getPuzzleTimestampsForDateRange(
@@ -82,8 +85,11 @@ export async function performLightSync(
       endDate
     );
 
+    console.log('[LightSync] Local puzzles found:', localTimestamps.length);
+
     if (localTimestamps.length === 0) {
       // No local puzzles to check - nothing is stale
+      console.log('[LightSync] No local puzzles to check');
       return { stalePuzzleIds: [], checkedCount: 0, updatedCount: 0 };
     }
 
@@ -91,6 +97,14 @@ export async function performLightSync(
     const localMap = new Map<string, string | null>();
     for (const p of localTimestamps) {
       localMap.set(p.id, p.updated_at);
+    }
+
+    // Log local timestamps for debugging
+    if (__DEV__) {
+      console.log('[LightSync] Local timestamps:');
+      for (const p of localTimestamps) {
+        console.log(`  ${p.id}: ${p.updated_at ?? 'NULL'}`);
+      }
     }
 
     // Phase 2: Fetch server timestamps for the same date range
@@ -109,13 +123,24 @@ export async function performLightSync(
       return { stalePuzzleIds: [], checkedCount: 0, updatedCount: 0 };
     }
 
+    console.log('[LightSync] Server puzzles found:', serverTimestamps?.length ?? 0);
+
     if (!serverTimestamps || serverTimestamps.length === 0) {
       // Server returned no puzzles (possibly RLS filtered)
+      console.log('[LightSync] No server puzzles returned (RLS filtered?)');
       return {
         stalePuzzleIds: [],
         checkedCount: localTimestamps.length,
         updatedCount: 0,
       };
+    }
+
+    // Log server timestamps for debugging
+    if (__DEV__) {
+      console.log('[LightSync] Server timestamps:');
+      for (const p of serverTimestamps) {
+        console.log(`  ${p.id}: ${p.updated_at ?? 'NULL'}`);
+      }
     }
 
     // Find stale puzzles by comparing timestamps
@@ -129,18 +154,27 @@ export async function performLightSync(
       // 2. Server's updated_at is newer than local (or local updated_at is null)
       if (localMap.has(serverPuzzle.id)) {
         const serverUpdatedAt = serverPuzzle.updated_at;
-
-        if (
+        const isStale =
           !localUpdatedAt ||
-          (serverUpdatedAt && serverUpdatedAt > localUpdatedAt)
-        ) {
+          (serverUpdatedAt && serverUpdatedAt > localUpdatedAt);
+
+        if (__DEV__) {
+          console.log(
+            `[LightSync] Comparing ${serverPuzzle.id}: local=${localUpdatedAt ?? 'NULL'}, server=${serverUpdatedAt ?? 'NULL'}, stale=${isStale}`
+          );
+        }
+
+        if (isStale) {
           stalePuzzleIds.push(serverPuzzle.id);
         }
       }
     }
 
+    console.log('[LightSync] Stale puzzles detected:', stalePuzzleIds.length);
+
     if (stalePuzzleIds.length === 0) {
       // All local puzzles are fresh
+      console.log('[LightSync] All puzzles are fresh');
       return {
         stalePuzzleIds: [],
         checkedCount: localTimestamps.length,

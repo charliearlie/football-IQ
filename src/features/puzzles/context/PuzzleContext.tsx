@@ -70,6 +70,14 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   const refreshLocalPuzzles = useCallback(async (): Promise<void> => {
     try {
       const localPuzzles = await getAllPuzzles();
+      console.log('[PuzzleContext] Loaded', localPuzzles.length, 'puzzles from SQLite');
+      if (__DEV__ && localPuzzles.length > 0) {
+        // Log the career_path puzzle specifically for debugging
+        const careerPath = localPuzzles.find(p => p.game_mode === 'career_path');
+        if (careerPath) {
+          console.log('[PuzzleContext] career_path puzzle:', careerPath.id, 'updated_at:', careerPath.updated_at);
+        }
+      }
       setPuzzles(localPuzzles);
     } catch (err) {
       console.error('Failed to load local puzzles:', err);
@@ -81,6 +89,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
    * Sync puzzles from Supabase to local SQLite.
    */
   const syncPuzzles = useCallback(async (): Promise<SyncResult> => {
+    console.log('[PuzzleContext] syncPuzzles starting, userId:', userId, 'isPremium:', isPremium);
     setSyncStatus('syncing');
     setError(null);
 
@@ -90,6 +99,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
         isPremium,
         lastSyncedAt,
       });
+      console.log('[PuzzleContext] syncPuzzles result:', result.success, 'count:', result.syncedCount);
 
       if (result.success) {
         setSyncStatus('success');
@@ -194,15 +204,19 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   // Load puzzles from SQLite on mount and mark as hydrated
   useEffect(() => {
     async function hydrate() {
+      console.log('[PuzzleContext] Hydrating from SQLite...');
       await refreshLocalPuzzles();
       setHasHydrated(true);
+      console.log('[PuzzleContext] Hydration complete');
     }
     hydrate();
   }, [refreshLocalPuzzles]);
 
   // Auto-sync when user becomes available (or changes)
   useEffect(() => {
+    console.log('[PuzzleContext] User check - userId:', userId, 'syncedForUser:', syncedForUserRef.current);
     if (userId && syncedForUserRef.current !== userId) {
+      console.log('[PuzzleContext] Triggering initial puzzle sync');
       syncedForUserRef.current = userId;
       syncPuzzles();
     }
