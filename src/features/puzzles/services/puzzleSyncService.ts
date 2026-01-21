@@ -84,6 +84,7 @@ export function transformSupabasePuzzleToLocal(puzzle: SupabasePuzzle): LocalPuz
     content: JSON.stringify(puzzle.content),
     difficulty: puzzle.difficulty,
     synced_at: new Date().toISOString(),
+    updated_at: puzzle.updated_at, // Preserve server timestamp for staleness detection
   };
 }
 

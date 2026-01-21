@@ -88,21 +88,24 @@ const { status, authorizedDate, recheckTime } = useIntegrity();
 
 ## Local SQLite Database
 ```
-puzzles           - Cached puzzles (offline play)
+puzzles           - Cached puzzles (offline play, includes updated_at for staleness)
 attempts          - User attempts (synced flag)
 sync_queue        - Pending sync to Supabase
 unlocked_puzzles  - Ad-unlocked puzzles (permanent)
 ```
 
 ```typescript
-import { initDatabase, savePuzzle, saveAttempt } from '@/lib/database';
+import { initDatabase, savePuzzle, saveAttempt, getPuzzleTimestampsForDateRange } from '@/lib/database';
 
 // Initialize in _layout.tsx (already done)
 await initDatabase();
 
-// Save/retrieve puzzles
-await savePuzzle({ id, game_mode, puzzle_date, content, difficulty, synced_at });
+// Save/retrieve puzzles (updated_at tracks server timestamp for staleness detection)
+await savePuzzle({ id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at });
 const puzzle = await getPuzzle(id);
+
+// Get timestamps for light sync (staleness check)
+const timestamps = await getPuzzleTimestampsForDateRange('2024-01-01', '2024-01-07');
 
 // Save/retrieve attempts
 await saveAttempt({ id, puzzle_id, completed: 1, score, synced: 0 });
@@ -112,15 +115,29 @@ const unsynced = await getUnsyncedAttempts();
 ## Puzzle Sync
 ```typescript
 import { PuzzleProvider, usePuzzleContext, usePuzzle } from '@/features/puzzles';
+import { performLightSync } from '@/features/puzzles/services/puzzleLightSyncService';
 
 // Get puzzle state and sync actions
-const { puzzles, syncStatus, syncPuzzles, syncAttempts } = usePuzzleContext();
+const {
+  puzzles,
+  syncStatus,
+  syncPuzzles,
+  syncAttempts,
+  showUpdateToast,        // True when stale puzzles were refreshed
+  updatedPuzzleCount,     // Number of puzzles updated
+  dismissUpdateToast,     // Dismiss the update toast
+} = usePuzzleContext();
 
 // Get today's puzzle for a game mode
 const { puzzle, isLoading, refetch } = usePuzzle('career_path');
 
 // Sync status values: 'idle' | 'syncing' | 'success' | 'error'
 // Use syncStatus to show "Downloading Puzzles..." vs "Ready to Play"
+
+// Light sync (automatically triggered on app foreground, 30s cooldown)
+// Compares local updated_at vs server to detect CMS edits
+const result = await performLightSync(isPremium);
+// result: { stalePuzzleIds: string[], checkedCount: number, updatedCount: number }
 ```
 
 ## Career Path Game

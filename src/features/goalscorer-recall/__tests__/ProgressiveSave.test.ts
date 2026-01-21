@@ -41,6 +41,7 @@ const createMockPuzzle = (): ParsedLocalPuzzle => ({
   puzzle_date: '2024-01-15',
   difficulty: 'medium',
   synced_at: new Date().toISOString(),
+  updated_at: null,
   content: {
     home_team: 'Arsenal',
     away_team: 'Liverpool',

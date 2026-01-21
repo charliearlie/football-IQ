@@ -44,3 +44,6 @@ export { Confetti, type ConfettiProps } from './Confetti';
 // Error handling
 export { SentryErrorFallback } from './SentryErrorFallback';
 export { TimeTamperedOverlay } from './TimeTamperedOverlay';
+
+// Toast notifications
+export { PuzzleUpdateToast } from './PuzzleUpdateToast';

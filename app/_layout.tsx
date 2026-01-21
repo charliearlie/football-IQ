@@ -19,7 +19,8 @@ import {
   FirstRunModal,
   SubscriptionSyncProvider,
 } from '@/features/auth';
-import { PuzzleProvider, OnboardingProvider } from '@/features/puzzles';
+import { PuzzleProvider, OnboardingProvider, usePuzzleContext } from '@/features/puzzles';
+import { PuzzleUpdateToast } from '@/components/PuzzleUpdateToast';
 import { AdProvider } from '@/features/ads';
 import { QuizPrefetchProvider } from '@/features/topical-quiz';
 import { IntegrityGuardProvider } from '@/features/integrity';
@@ -52,6 +53,23 @@ if (Platform.OS === 'ios' || Platform.OS === 'android') {
 SplashScreen.preventAutoHideAsync();
 
 /**
+ * PuzzleToastRenderer - Renders the puzzle update toast notification
+ * Must be inside PuzzleProvider to access context.
+ */
+function PuzzleToastRenderer() {
+  const { showUpdateToast, updatedPuzzleCount, dismissUpdateToast } =
+    usePuzzleContext();
+
+  return (
+    <PuzzleUpdateToast
+      visible={showUpdateToast}
+      count={updatedPuzzleCount}
+      onDismiss={dismissUpdateToast}
+    />
+  );
+}
+
+/**
  * AuthGate - Blocks navigation until auth is initialized
  *
  * Shows loading screen while auth state is being established,
@@ -76,6 +94,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
             <AdProvider>
               <NotificationWrapper>
                 {children}
+                <PuzzleToastRenderer />
                 <FirstRunModal
                   visible={needsDisplayName ?? false}
                   onSubmit={async (displayName) => {

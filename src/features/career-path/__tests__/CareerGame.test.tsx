@@ -22,6 +22,7 @@ const mockPuzzle: ParsedLocalPuzzle = {
   },
   difficulty: 'medium',
   synced_at: null,
+  updated_at: null,
 };
 
 // Mock usePuzzle hook

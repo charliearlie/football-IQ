@@ -51,6 +51,7 @@ function createMockPuzzle(goals: Goal[]): ParsedLocalPuzzle {
     content,
     difficulty: null,
     synced_at: null,
+    updated_at: null,
   };
 }
 

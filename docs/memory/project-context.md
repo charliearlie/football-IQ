@@ -36,7 +36,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 
 ### SQLite Tables (Local)
 ```sql
-puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at)
+puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at)
 attempts (id, puzzle_id, completed, score, score_display, metadata, started_at, completed_at, synced)
 sync_queue (id, table_name, record_id, action, payload, created_at)
 unlocked_puzzles (puzzle_id, unlocked_at)  -- Ad unlocks (permanent)
@@ -46,7 +46,7 @@ player_database (id, external_id, name, search_name, clubs, nationalities, is_ac
 
 ### Migrations
 **Supabase:** 001-009 + 012 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert)
-**SQLite:** v1-v4 (base schema, catalog, unlocks, player database)
+**SQLite:** v1-v5 (base schema, catalog, unlocks, player database, puzzle updated_at)
 
 ## Authentication
 
@@ -89,9 +89,11 @@ function isPuzzleLocked(puzzleDate, isPremium, puzzleId?, adUnlocks?, hasComplet
 
 ### Sync Engine
 - **Puzzle sync**: Supabase → SQLite on app launch (RLS filters by tier)
+- **Light sync**: On app foreground, compares `updated_at` timestamps to detect CMS edits
 - **Attempt sync**: SQLite → Supabase via `safe_upsert_attempt()` RPC
 - **Completion protection**: Once `completed=true`, stale syncs cannot overwrite
-- **Key files**: `src/features/puzzles/context/PuzzleContext.tsx`, `services/attemptSyncService.ts`
+- **Staleness detection**: Per-puzzle `updated_at` comparison (30s cooldown)
+- **Key files**: `src/features/puzzles/context/PuzzleContext.tsx`, `services/puzzleLightSyncService.ts`
 
 ### Progressive Save
 All game modes save progress to SQLite on app background, restore on return. Uses `AppState` listener + `RESTORE_PROGRESS` action in game hooks.

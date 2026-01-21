@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/features/auth';
 import { getAllPuzzles } from '@/lib/database';
@@ -14,6 +15,7 @@ import { onMidnight } from '@/lib/time';
 import { syncPuzzlesFromSupabase } from '../services/puzzleSyncService';
 import { syncAttemptsToSupabase } from '../services/attemptSyncService';
 import { syncCatalogFromSupabase } from '@/features/archive/services/catalogSyncService';
+import { performLightSync } from '../services/puzzleLightSyncService';
 import {
   PuzzleContextValue,
   SyncStatus,
@@ -45,6 +47,10 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   const [error, setError] = useState<Error | null>(null);
   const [hasHydrated, setHasHydrated] = useState(false);
 
+  // Toast state for puzzle update notifications
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [updatedPuzzleCount, setUpdatedPuzzleCount] = useState(0);
+
   // Get auth context for user info
   const { user, profile } = useAuth();
   const userId = user?.id ?? null;
@@ -52,6 +58,11 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
 
   // Track which user we've synced for to prevent re-syncing on callback recreation
   const syncedForUserRef = useRef<string | null>(null);
+
+  // Light sync cooldown and AppState tracking
+  const lastLightSyncAtRef = useRef<number>(0);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const LIGHT_SYNC_COOLDOWN_MS = 30000; // 30 seconds
 
   /**
    * Refresh puzzles from local SQLite database.
@@ -131,6 +142,46 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     }
   }, [userId]);
 
+  /**
+   * Perform a light sync to detect stale puzzles.
+   * Uses cooldown to prevent rapid-fire checks on quick foreground/background cycles.
+   */
+  const doLightSync = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastLightSyncAtRef.current < LIGHT_SYNC_COOLDOWN_MS) {
+      console.log('[PuzzleContext] Light sync skipped (cooldown)');
+      return;
+    }
+
+    lastLightSyncAtRef.current = now;
+
+    try {
+      const result = await performLightSync(isPremium);
+
+      if (result.updatedCount > 0) {
+        console.log(
+          `[PuzzleContext] Light sync found ${result.updatedCount} stale puzzle(s)`
+        );
+
+        // Refresh local state to reflect updated puzzles
+        await refreshLocalPuzzles();
+
+        // Show toast notification
+        setUpdatedPuzzleCount(result.updatedCount);
+        setShowUpdateToast(true);
+      }
+    } catch (err) {
+      console.error('[PuzzleContext] Light sync failed:', err);
+    }
+  }, [isPremium, refreshLocalPuzzles]);
+
+  /**
+   * Dismiss the puzzle update toast.
+   */
+  const dismissUpdateToast = useCallback(() => {
+    setShowUpdateToast(false);
+  }, []);
+
   // Load lastSyncedAt from AsyncStorage on mount
   useEffect(() => {
     AsyncStorage.getItem(LAST_SYNC_KEY).then((value) => {
@@ -175,6 +226,26 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     return unsubscribe;
   }, [syncPuzzles]);
 
+  // Re-check for stale puzzles when app returns to foreground
+  // This catches CMS edits made while the app was backgrounded
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      'change',
+      async (nextState: AppStateStatus) => {
+        // Only trigger when transitioning TO active state
+        if (nextState === 'active' && appStateRef.current !== 'active') {
+          console.log(
+            '[PuzzleContext] App returned to foreground, checking for updates'
+          );
+          doLightSync();
+        }
+        appStateRef.current = nextState;
+      }
+    );
+
+    return () => subscription.remove();
+  }, [doLightSync]);
+
   const value = useMemo<PuzzleContextValue>(
     () => ({
       puzzles,
@@ -185,6 +256,9 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
       syncPuzzles,
       syncAttempts,
       refreshLocalPuzzles,
+      showUpdateToast,
+      updatedPuzzleCount,
+      dismissUpdateToast,
     }),
     [
       puzzles,
@@ -195,6 +269,9 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
       syncPuzzles,
       syncAttempts,
       refreshLocalPuzzles,
+      showUpdateToast,
+      updatedPuzzleCount,
+      dismissUpdateToast,
     ]
   );
 

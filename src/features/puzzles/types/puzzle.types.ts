@@ -84,6 +84,12 @@ export interface PuzzleContextValue extends PuzzleState {
   syncAttempts: () => Promise<SyncResult>;
   /** Refresh puzzle list from local SQLite */
   refreshLocalPuzzles: () => Promise<void>;
+  /** Whether to show the puzzle update toast */
+  showUpdateToast: boolean;
+  /** Number of puzzles that were updated (for toast message) */
+  updatedPuzzleCount: number;
+  /** Dismiss the puzzle update toast */
+  dismissUpdateToast: () => void;
 }
 
 /**

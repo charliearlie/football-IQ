@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -164,8 +164,21 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     `);
   }
 
+  // Migration v5: Add updated_at column to puzzles table for staleness detection
+  // Enables version-aware sync to detect CMS edits and refresh stale cached puzzles
+  if (currentVersion < 5) {
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN updated_at TEXT;
+
+      -- Backfill existing rows with synced_at as default
+      UPDATE puzzles SET updated_at = synced_at WHERE updated_at IS NULL;
+
+      PRAGMA user_version = 5;
+    `);
+  }
+
   // Future migrations would go here:
-  // if (currentVersion < 5) { ... }
+  // if (currentVersion < 6) { ... }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -177,8 +190,8 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 export async function savePuzzle(puzzle: LocalPuzzle): Promise<void> {
   const database = getDatabase();
   await database.runAsync(
-    `INSERT OR REPLACE INTO puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at)
-     VALUES ($id, $game_mode, $puzzle_date, $content, $difficulty, $synced_at)`,
+    `INSERT OR REPLACE INTO puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at)
+     VALUES ($id, $game_mode, $puzzle_date, $content, $difficulty, $synced_at, $updated_at)`,
     {
       $id: puzzle.id,
       $game_mode: puzzle.game_mode,
@@ -186,6 +199,7 @@ export async function savePuzzle(puzzle: LocalPuzzle): Promise<void> {
       $content: puzzle.content,
       $difficulty: puzzle.difficulty,
       $synced_at: puzzle.synced_at,
+      $updated_at: puzzle.updated_at,
     }
   );
 }
@@ -231,6 +245,23 @@ export async function getAllPuzzles(): Promise<ParsedLocalPuzzle[]> {
     'SELECT * FROM puzzles ORDER BY puzzle_date DESC'
   );
   return rows.map(parsePuzzle);
+}
+
+/**
+ * Lightweight timestamp query for staleness detection.
+ * Returns only id and updated_at for puzzles in the given date range.
+ * Used by light sync to minimize memory usage during foreground checks.
+ */
+export async function getPuzzleTimestampsForDateRange(
+  startDate: string,
+  endDate: string
+): Promise<{ id: string; updated_at: string | null }[]> {
+  const database = getDatabase();
+  return database.getAllAsync<{ id: string; updated_at: string | null }>(
+    `SELECT id, updated_at FROM puzzles
+     WHERE puzzle_date >= $startDate AND puzzle_date <= $endDate`,
+    { $startDate: startDate, $endDate: endDate }
+  );
 }
 
 // ============ ATTEMPT OPERATIONS ============
@@ -313,6 +344,23 @@ export async function getAttemptByPuzzleId(
     { $puzzleId: puzzleId }
   );
   return row ? parseAttempt(row) : null;
+}
+
+/**
+ * Delete all attempts for a specific puzzle.
+ * Used when a puzzle is updated (stale puzzle refresh) to clear
+ * any existing progress so the user can play the updated puzzle fresh.
+ *
+ * @param puzzleId - The puzzle ID to delete attempts for
+ * @returns Number of deleted attempts
+ */
+export async function deleteAttemptsByPuzzleId(puzzleId: string): Promise<number> {
+  const database = getDatabase();
+  const result = await database.runAsync(
+    'DELETE FROM attempts WHERE puzzle_id = $puzzleId',
+    { $puzzleId: puzzleId }
+  );
+  return result.changes;
 }
 
 /**

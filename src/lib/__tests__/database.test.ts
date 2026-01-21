@@ -122,6 +122,7 @@ describe('database', () => {
         content: JSON.stringify({ clues: ['Clue 1', 'Clue 2'] }),
         difficulty: 'medium',
         synced_at: new Date().toISOString(),
+        updated_at: null,
       };
 
       // Act
@@ -143,6 +144,7 @@ describe('database', () => {
         content: '{"clues":["Clue 1","Clue 2"]}',
         difficulty: 'medium',
         synced_at: null,
+        updated_at: null,
       };
       mockDb.getFirstAsync.mockResolvedValueOnce(mockRow);
 
@@ -175,6 +177,7 @@ describe('database', () => {
         content: '{"grid":[]}',
         difficulty: 'hard',
         synced_at: null,
+        updated_at: null,
       };
       mockDb.getFirstAsync.mockResolvedValueOnce(mockRow);
 

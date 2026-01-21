@@ -24,6 +24,8 @@ export type { GameRules, ScoringConfig, ScoringTier, RuleBullet } from './consta
 // Services (for direct use if needed)
 export { syncPuzzlesFromSupabase } from './services/puzzleSyncService';
 export { syncAttemptsToSupabase } from './services/attemptSyncService';
+export { performLightSync } from './services/puzzleLightSyncService';
+export type { LightSyncResult } from './services/puzzleLightSyncService';
 
 // Types
 export type {

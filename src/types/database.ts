@@ -17,6 +17,7 @@ export interface LocalPuzzle {
   content: string; // JSON stringified puzzle content
   difficulty: string | null;
   synced_at: string | null;
+  updated_at: string | null; // Server's updated_at timestamp for staleness detection
 }
 
 /**
