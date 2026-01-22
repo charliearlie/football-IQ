@@ -13,9 +13,23 @@ import { StatsBar } from "@/components/calendar/stats-bar";
 import { QuickViewSheet } from "@/components/puzzle/quick-view-sheet";
 import { PuzzleEditorModal } from "@/components/puzzle/puzzle-editor-modal";
 import { BacklogSheet } from "@/components/puzzle/backlog-sheet";
+import { AdhocPuzzleModal } from "@/components/puzzle/adhoc-puzzle-modal";
+import {
+  ConflictResolutionModal,
+  type ConflictResolution,
+} from "@/components/puzzle/conflict-resolution-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { findNextGap } from "@/lib/scheduler";
-import { initializeWeek, assignPuzzleDate } from "./actions";
+import type { ConflictInfo, AvailableSlot } from "@/lib/displacement";
+import {
+  initializeWeek,
+  assignPuzzleDate,
+  toggleBonusPuzzle,
+  checkSlotConflict,
+  displacePuzzle,
+  swapPuzzleDates,
+  assignPuzzleDateWithConflictHandling,
+} from "./actions";
 import type { GameMode } from "@/lib/constants";
 import type { DailyPuzzle } from "@/types/supabase";
 
@@ -24,6 +38,15 @@ interface EditorState {
   gameMode: GameMode | null;
   puzzle: DailyPuzzle | null;
   puzzleDate: string | null;
+}
+
+interface ConflictState {
+  isOpen: boolean;
+  conflict: ConflictInfo | null;
+  incomingPuzzleId: string | null;
+  incomingPuzzleTitle: string;
+  nextAvailableSlot: AvailableSlot | null;
+  targetDate: string | null;
 }
 
 export default function CalendarPage() {
@@ -39,6 +62,20 @@ export default function CalendarPage() {
   // Backlog state
   const [backlogOpen, setBacklogOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+
+  // Ad-hoc creation modal state
+  const [adhocModalOpen, setAdhocModalOpen] = useState(false);
+
+  // Conflict resolution state
+  const [conflictState, setConflictState] = useState<ConflictState>({
+    isOpen: false,
+    conflict: null,
+    incomingPuzzleId: null,
+    incomingPuzzleTitle: "",
+    nextAvailableSlot: null,
+    targetDate: null,
+  });
+  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
 
   const { puzzles, isLoading, error, mutate } = useMonthPuzzles(currentMonth);
   const calendarData = useCalendarData(puzzles, currentMonth);
@@ -136,6 +173,22 @@ export default function CalendarPage() {
     setBacklogOpen((prev) => !prev);
   }, []);
 
+  // Open ad-hoc creation modal
+  const handleCreateAdhoc = useCallback(() => {
+    setAdhocModalOpen(true);
+  }, []);
+
+  // Handle ad-hoc modal confirm - opens editor with selected date and mode
+  const handleAdhocConfirm = useCallback((date: string, gameMode: GameMode) => {
+    setAdhocModalOpen(false);
+    setEditorState({
+      isOpen: true,
+      gameMode,
+      puzzle: null,
+      puzzleDate: date,
+    });
+  }, []);
+
   // Initialize week with draft placeholders
   const handleInitializeWeek = useCallback(async () => {
     // Get the Monday of the current month view and format as string
@@ -167,10 +220,186 @@ export default function CalendarPage() {
     }
   }, [currentMonth, mutate]);
 
-  // Assign backlog puzzle to a date
+  // Helper to get puzzle title from content
+  const getPuzzleTitle = useCallback((puzzle: DailyPuzzle): string => {
+    const c = puzzle.content as Record<string, unknown>;
+    switch (puzzle.game_mode) {
+      case "career_path":
+      case "career_path_pro":
+        return (c.answer as string) || "Untitled Career Path";
+      case "guess_the_transfer":
+        return (c.answer as string) || "Untitled Transfer";
+      case "guess_the_goalscorers":
+        return `${c.home_team || "?"} vs ${c.away_team || "?"}`;
+      case "topical_quiz":
+        return "Topical Quiz";
+      case "top_tens":
+        return (c.title as string) || "Untitled Top Tens";
+      case "starting_xi":
+        return (c.match_name as string) || "Untitled Starting XI";
+      case "the_grid":
+        return "The Grid";
+      default:
+        return "Untitled Puzzle";
+    }
+  }, []);
+
+  // Toggle bonus status on a puzzle
+  const handleToggleBonus = useCallback(
+    async (puzzleId: string, isBonus: boolean) => {
+      try {
+        const result = await toggleBonusPuzzle(puzzleId, isBonus);
+
+        if (!result.success) {
+          toast.error(result.error || "Failed to update bonus status");
+          return;
+        }
+
+        toast.success(isBonus ? "Marked as bonus content" : "Removed bonus status");
+        mutate();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to update bonus status");
+      }
+    },
+    [mutate]
+  );
+
+  // Handle conflict resolution
+  const handleConflictResolution = useCallback(
+    async (resolution: ConflictResolution) => {
+      if (!conflictState.conflict || !conflictState.incomingPuzzleId || !conflictState.targetDate) {
+        setConflictState((prev) => ({ ...prev, isOpen: false }));
+        return;
+      }
+
+      setIsResolvingConflict(true);
+
+      try {
+        switch (resolution.type) {
+          case "cancel":
+            setConflictState((prev) => ({ ...prev, isOpen: false }));
+            break;
+
+          case "add_as_bonus": {
+            // Assign with forceAsBonus flag
+            const result = await assignPuzzleDateWithConflictHandling(
+              conflictState.incomingPuzzleId,
+              conflictState.targetDate,
+              { forceAsBonus: true }
+            );
+
+            if (!result.success) {
+              toast.error(result.error || "Failed to assign as bonus");
+              return;
+            }
+
+            toast.success("Puzzle added as bonus content");
+            mutate();
+            backlogData.mutate();
+            setConflictState((prev) => ({ ...prev, isOpen: false }));
+            break;
+          }
+
+          case "displace": {
+            // First displace the existing puzzle
+            const displaceResult = await displacePuzzle(
+              conflictState.conflict.existingPuzzleId,
+              resolution.targetDate
+            );
+
+            if (!displaceResult.success) {
+              toast.error(displaceResult.error || "Failed to displace puzzle");
+              return;
+            }
+
+            // Then assign the incoming puzzle
+            const assignResult = await assignPuzzleDate(
+              conflictState.incomingPuzzleId,
+              conflictState.targetDate
+            );
+
+            if (!assignResult.success) {
+              toast.error(assignResult.error || "Failed to assign puzzle");
+              return;
+            }
+
+            const moveCount = displaceResult.data?.moves.length || 0;
+            toast.success(
+              moveCount > 1
+                ? `Displaced ${moveCount} puzzle${moveCount > 1 ? "s" : ""} and assigned new puzzle`
+                : "Displaced existing puzzle and assigned new puzzle"
+            );
+            mutate();
+            backlogData.mutate();
+            setConflictState((prev) => ({ ...prev, isOpen: false }));
+            break;
+          }
+
+          case "swap": {
+            // Find the incoming puzzle to get its current date (should be null for backlog)
+            const incomingPuzzle = backlogData.puzzles.find(
+              (p) => p.id === conflictState.incomingPuzzleId
+            );
+
+            if (!incomingPuzzle) {
+              toast.error("Could not find incoming puzzle");
+              return;
+            }
+
+            // For backlog puzzles (no date), we can't really swap
+            // Instead, assign the backlog puzzle and move existing to backlog
+            // This is a special case - just use displacement instead
+            toast.info("For backlog puzzles, use 'Displace' instead of 'Swap'");
+            return;
+          }
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to resolve conflict");
+      } finally {
+        setIsResolvingConflict(false);
+      }
+    },
+    [conflictState, mutate, backlogData]
+  );
+
+  // Assign backlog puzzle to a date (with conflict detection)
   const handleAssignPuzzle = useCallback(
     async (puzzleId: string, targetDate: string) => {
       try {
+        // Find the puzzle to get its game mode and title
+        const puzzle = backlogData.puzzles.find((p) => p.id === puzzleId);
+        if (!puzzle) {
+          toast.error("Puzzle not found");
+          return;
+        }
+
+        // Check for conflict first
+        const conflictResult = await checkSlotConflict(
+          puzzle.game_mode as GameMode,
+          targetDate
+        );
+
+        if (!conflictResult.success) {
+          toast.error(conflictResult.error || "Failed to check for conflicts");
+          return;
+        }
+
+        const { conflict, nextSlot } = conflictResult.data!;
+
+        if (conflict) {
+          // Show conflict resolution modal
+          setConflictState({
+            isOpen: true,
+            conflict,
+            incomingPuzzleId: puzzleId,
+            incomingPuzzleTitle: getPuzzleTitle(puzzle),
+            nextAvailableSlot: nextSlot,
+            targetDate,
+          });
+          return;
+        }
+
+        // No conflict - proceed with assignment
         const result = await assignPuzzleDate(puzzleId, targetDate);
 
         if (!result.success) {
@@ -187,7 +416,7 @@ export default function CalendarPage() {
         toast.error(err instanceof Error ? err.message : "Failed to assign puzzle");
       }
     },
-    [mutate, backlogData]
+    [mutate, backlogData, getPuzzleTitle]
   );
 
   // Edit a backlog puzzle
@@ -231,6 +460,7 @@ export default function CalendarPage() {
         onToday={handleToday}
         onInitializeWeek={handleInitializeWeek}
         onToggleBacklog={handleToggleBacklog}
+        onCreateAdhoc={handleCreateAdhoc}
         backlogCount={backlogData.count}
         isInitializing={isInitializing}
       />
@@ -277,6 +507,7 @@ export default function CalendarPage() {
         puzzles={selectedDatePuzzles}
         isLoading={isLoading}
         onEditPuzzle={handleEditPuzzle}
+        onToggleBonus={handleToggleBonus}
       />
 
       {/* Puzzle editor modal */}
@@ -302,6 +533,26 @@ export default function CalendarPage() {
         selectedDate={selectedDate}
         onAssign={handleAssignPuzzle}
         onEdit={handleEditBacklogPuzzle}
+      />
+
+      {/* Conflict resolution modal */}
+      {conflictState.conflict && conflictState.targetDate && (
+        <ConflictResolutionModal
+          isOpen={conflictState.isOpen}
+          onClose={() => setConflictState((prev) => ({ ...prev, isOpen: false }))}
+          conflict={conflictState.conflict}
+          incomingPuzzleTitle={conflictState.incomingPuzzleTitle}
+          nextAvailableSlot={conflictState.nextAvailableSlot}
+          onResolve={handleConflictResolution}
+          isResolving={isResolvingConflict}
+        />
+      )}
+
+      {/* Ad-hoc puzzle creation modal */}
+      <AdhocPuzzleModal
+        isOpen={adhocModalOpen}
+        onClose={() => setAdhocModalOpen(false)}
+        onConfirm={handleAdhocConfirm}
       />
     </div>
   );

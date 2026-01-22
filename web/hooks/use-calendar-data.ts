@@ -24,9 +24,14 @@ import {
 export interface GameModeStatus {
   mode: GameMode;
   hasContent: boolean;
+  isBonus?: boolean;
   puzzleId?: string;
   status?: string | null;
   difficulty?: string | null;
+  /** Whether this mode is required by the weekly schedule for this day */
+  isScheduled: boolean;
+  /** Whether this is extra content (not in schedule, or marked as bonus) */
+  isExtra: boolean;
 }
 
 export interface CalendarDay {
@@ -37,6 +42,8 @@ export interface CalendarDay {
   isPast: boolean;
   isFuture: boolean;
   gameModes: GameModeStatus[];
+  /** Modes to display in day cell (scheduled + extras only) */
+  displayModes: GameModeStatus[];
   totalPopulated: number;
   totalMissing: number;
   // Schedule-aware fields
@@ -100,25 +107,47 @@ export function useCalendarData(puzzles: DailyPuzzle[], month: Date): CalendarDa
       const dateStr = format(day, "yyyy-MM-dd");
       const puzzlesForDay = puzzleMap.get(dateStr);
 
+      // Get required modes for this specific day
+      const requiredModes = getRequirementsForDate(day);
+      const requiredModeNames = new Set(requiredModes.map((r) => r.gameMode));
+
+      // Build game mode statuses with schedule awareness
       const gameModes: GameModeStatus[] = GAME_MODES.map((mode) => {
         const puzzle = puzzlesForDay?.get(mode);
+        const isScheduled = requiredModeNames.has(mode);
+        const hasContent = !!puzzle;
+        const isBonus = puzzle?.is_bonus ?? false;
+
         return {
           mode,
-          hasContent: !!puzzle,
+          hasContent,
+          isBonus,
           puzzleId: puzzle?.id,
           status: puzzle?.status,
           difficulty: puzzle?.difficulty,
+          isScheduled,
+          // Extra = has content but either not scheduled OR marked as bonus
+          isExtra: hasContent && (!isScheduled || isBonus),
         };
       });
+
+      // Build displayModes: scheduled modes first, then extras (content that exists but isn't scheduled)
+      const scheduledModes = gameModes.filter((gm) => gm.isScheduled);
+      const extraModes = gameModes.filter(
+        (gm) => gm.hasContent && !gm.isScheduled
+      );
+      const displayModes = [...scheduledModes, ...extraModes];
 
       const totalPopulated = gameModes.filter((gm) => gm.hasContent).length;
       const totalMissing = GAME_MODES.length - totalPopulated;
 
       // Schedule-aware calculations
-      const requiredModes = getRequirementsForDate(day);
+      // NOTE: Bonus puzzles do NOT count toward requirements
       const requiredCount = requiredModes.length;
       const populatedRequired = requiredModes.filter((req) =>
-        gameModes.find((gm) => gm.mode === req.gameMode && gm.hasContent)
+        gameModes.find(
+          (gm) => gm.mode === req.gameMode && gm.hasContent && !gm.isBonus
+        )
       ).length;
       const missingRequired = requiredCount - populatedRequired;
       const hasAllRequired = missingRequired === 0;
@@ -137,6 +166,7 @@ export function useCalendarData(puzzles: DailyPuzzle[], month: Date): CalendarDa
         isPast: isBefore(day, today) && !isToday(day),
         isFuture: !isBefore(day, today) && !isToday(day),
         gameModes,
+        displayModes,
         totalPopulated,
         totalMissing,
         requiredModes,

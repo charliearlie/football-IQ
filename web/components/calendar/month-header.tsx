@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Wand2,
   Archive,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ interface MonthHeaderProps {
   onToday: () => void;
   onInitializeWeek?: () => void;
   onToggleBacklog?: () => void;
+  onCreateAdhoc?: () => void;
   backlogCount?: number;
   isInitializing?: boolean;
 }
@@ -29,6 +31,7 @@ export function MonthHeader({
   onToday,
   onInitializeWeek,
   onToggleBacklog,
+  onCreateAdhoc,
   backlogCount = 0,
   isInitializing = false,
 }: MonthHeaderProps) {
@@ -50,6 +53,19 @@ export function MonthHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Create Ad-hoc button */}
+        {onCreateAdhoc && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onCreateAdhoc}
+            className="text-xs bg-pitch-green hover:bg-pitch-green/90 text-stadium-navy"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Create Puzzle
+          </Button>
+        )}
+
         {/* Backlog button */}
         {onToggleBacklog && (
           <Button

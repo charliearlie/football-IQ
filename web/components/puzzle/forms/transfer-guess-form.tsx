@@ -3,6 +3,7 @@
 import { useFormContext } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
+import { CountryAutocomplete } from "@/components/ui/country-autocomplete";
 import {
   FormField,
   FormItem,
@@ -138,17 +139,17 @@ export function TransferGuessForm() {
           These hints are revealed one at a time when the player requests help.
         </FormDescription>
 
-        {/* Hint 1: Nationality */}
+        {/* Hint 1: Shirt Number */}
         <FormField
           control={control}
           name="content.hints.0"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Hint 1: Nationality</FormLabel>
+              <FormLabel>Hint 1: Shirt Number</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="e.g., Belgian or 🇧🇪"
+                  placeholder="e.g., 10, 7, 9"
                   className="bg-white/5 border-white/10"
                 />
               </FormControl>
@@ -176,18 +177,18 @@ export function TransferGuessForm() {
           )}
         />
 
-        {/* Hint 3: Achievement */}
+        {/* Hint 3: Nationality */}
         <FormField
           control={control}
           name="content.hints.2"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Hint 3: Achievement</FormLabel>
+              <FormLabel>Hint 3: Nationality</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  placeholder="e.g., Won Ballon d'Or, Won Champions League"
-                  className="bg-white/5 border-white/10"
+                <CountryAutocomplete
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Search country..."
                 />
               </FormControl>
               <FormMessage />

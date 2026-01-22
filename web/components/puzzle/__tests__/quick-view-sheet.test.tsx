@@ -19,6 +19,7 @@ const mockDay: CalendarDay = {
   isFuture: true,
   isToday: false,
   gameModes: [],
+  displayModes: [],
   totalPopulated: 3,
   totalMissing: 5,
   requiredModes: [],
@@ -40,6 +41,7 @@ const mockPuzzles: DailyPuzzle[] = [
     source: "manual",
     triggered_by: null,
     is_premium: false,
+    is_bonus: false,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
   },
@@ -53,6 +55,7 @@ const mockPuzzles: DailyPuzzle[] = [
     source: "manual",
     triggered_by: null,
     is_premium: false,
+    is_bonus: false,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
   },
@@ -66,6 +69,7 @@ const mockPuzzles: DailyPuzzle[] = [
     source: "manual",
     triggered_by: "admin",
     is_premium: true,
+    is_bonus: false,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
   },
@@ -98,7 +102,10 @@ describe("QuickViewSheet", () => {
 
     it("shows puzzle count in description", () => {
       render(<QuickViewSheet {...defaultProps} />);
-      expect(screen.getByText(/3 of 8 puzzles populated/i)).toBeInTheDocument();
+      // Monday Jan 15, 2024 has 4 mandatory modes (career_path, career_path_pro, guess_the_transfer, top_tens)
+      // 2 of 4 mandatory are populated (career_path, career_path_pro) + 1 optional (the_grid)
+      expect(screen.getByText(/2 of 4 mandatory/i)).toBeInTheDocument();
+      expect(screen.getByText(/\+ 1 extra/i)).toBeInTheDocument();
     });
   });
 
@@ -123,10 +130,18 @@ describe("QuickViewSheet", () => {
       expect(screen.getAllByText("Draft").length).toBe(1);
     });
 
-    it("shows Empty badge for missing puzzles", () => {
+    it("shows Gap badge for missing mandatory puzzles", () => {
       render(<QuickViewSheet {...defaultProps} />);
-      // 8 total modes - 3 populated = 5 empty
-      expect(screen.getAllByText("Empty").length).toBe(5);
+      // Monday has 4 mandatory, 2 populated (career_path, career_path_pro), 2 missing
+      // Missing mandatory: guess_the_transfer, top_tens -> "Gap"
+      expect(screen.getAllByText("Gap").length).toBe(2);
+    });
+
+    it("shows Not Set badge for missing optional puzzles", () => {
+      render(<QuickViewSheet {...defaultProps} />);
+      // 4 optional modes, 1 populated (the_grid), 3 missing
+      // Missing optional: guess_the_goalscorers, topical_quiz, starting_xi -> "Not Set"
+      expect(screen.getAllByText("Not Set").length).toBe(3);
     });
 
     it("shows difficulty badge when present", () => {
@@ -233,9 +248,24 @@ describe("QuickViewSheet", () => {
   });
 
   describe("empty state", () => {
-    it("shows all modes as Empty when no puzzles", () => {
+    it("shows Gap for mandatory and Not Set for optional when no puzzles", () => {
       render(<QuickViewSheet {...defaultProps} puzzles={[]} />);
-      expect(screen.getAllByText("Empty").length).toBe(8);
+      // Monday has 4 mandatory modes -> 4 "Gap" badges
+      expect(screen.getAllByText("Gap").length).toBe(4);
+      // Monday has 4 optional modes -> 4 "Not Set" badges
+      expect(screen.getAllByText("Not Set").length).toBe(4);
+    });
+  });
+
+  describe("section grouping", () => {
+    it("renders Mandatory section header", () => {
+      render(<QuickViewSheet {...defaultProps} />);
+      expect(screen.getByText(/mandatory \(2\/4\)/i)).toBeInTheDocument();
+    });
+
+    it("renders Optional section header", () => {
+      render(<QuickViewSheet {...defaultProps} />);
+      expect(screen.getByText(/optional \(1\/4\)/i)).toBeInTheDocument();
     });
   });
 

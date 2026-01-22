@@ -374,7 +374,12 @@ Schedule-aware puzzle management system for efficient content creation.
 - **Gap Warnings**: Yellow border on days in next 14 days with missing required puzzles
 - **Initialize Week**: Creates draft placeholders for all missing required slots in a week
 - **Save & Next Gap**: Editor button that saves and opens the next chronological gap
-- **Files**: `web/lib/scheduler.ts`, `web/hooks/use-backlog-puzzles.ts`, `web/components/puzzle/backlog-sheet.tsx`
+- **Bonus Puzzles**: Mark puzzles as bonus content (gold ring indicator) - excluded from schedule requirements
+- **Smart Displacement**: When assigning a puzzle to an occupied slot, offers conflict resolution:
+  - **Add as Bonus**: Keep both, mark incoming puzzle as bonus content
+  - **Displace Existing**: Move current puzzle forward to next available slot (supports ripple effect up to 5 levels)
+  - **Swap**: Exchange dates between two puzzles of the same game mode
+- **Files**: `web/lib/scheduler.ts`, `web/lib/displacement.ts`, `web/hooks/use-backlog-puzzles.ts`, `web/components/puzzle/backlog-sheet.tsx`, `web/components/puzzle/conflict-resolution-modal.tsx`
 - **See**: `docs/memory/decisions/intelligent-scheduler.md` for full documentation
 
 **Tech Stack**: Next.js 15, Tailwind CSS, shadcn/ui, Supabase SSR

@@ -5,7 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO, subDays } from "date-fns";
-import { Copy, Save, Send, Loader2, ArrowRight } from "lucide-react";
+import { Copy, Save, Send, Loader2, ArrowRight, Star } from "lucide-react";
 
 import {
   Dialog,
@@ -305,6 +305,15 @@ export function PuzzleEditorModal({
             </DialogTitle>
             {isPremium && (
               <Badge variant="warning" className="text-xs">Premium</Badge>
+            )}
+            {puzzle?.is_bonus && (
+              <Badge
+                variant="outline"
+                className="text-xs bg-card-yellow/10 text-card-yellow border-card-yellow/30"
+              >
+                <Star className="h-3 w-3 mr-1" />
+                Bonus
+              </Badge>
             )}
             <span className="text-muted-foreground">{formattedDate}</span>
           </div>

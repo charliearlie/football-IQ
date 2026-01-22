@@ -11,6 +11,15 @@ import {
   getMissingPuzzlesForWeek,
   isPremiumOnDate,
 } from "@/lib/scheduler";
+import {
+  findNextAvailableSlot,
+  calculateDisplacementChain,
+  buildPuzzleMap,
+  getOccupiedDates,
+  type ConflictInfo,
+  type DisplacementMove,
+  type AvailableSlot,
+} from "@/lib/displacement";
 import { parseISO, startOfWeek, addDays, format } from "date-fns";
 
 // ============================================================================
@@ -652,6 +661,441 @@ export async function initializeWeek(
     };
   } catch (err) {
     console.error("Initialize week error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// BONUS PUZZLES
+// ============================================================================
+
+/**
+ * Toggle the is_bonus flag on a puzzle.
+ * Bonus puzzles do not count toward daily schedule requirements.
+ */
+export async function toggleBonusPuzzle(
+  puzzleId: string,
+  isBonus: boolean
+): Promise<ActionResult> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { data, error } = await supabase
+      .from("daily_puzzles")
+      .update({
+        is_bonus: isBonus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", puzzleId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Toggle bonus puzzle error:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("Toggle bonus puzzle error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// CONFLICT DETECTION
+// ============================================================================
+
+/**
+ * Extract a human-readable title from puzzle content.
+ */
+function getPuzzleTitleFromContent(
+  gameMode: string,
+  content: unknown
+): string {
+  const c = content as Record<string, unknown>;
+
+  switch (gameMode) {
+    case "career_path":
+    case "career_path_pro":
+      return (c.answer as string) || "Untitled Career Path";
+    case "guess_the_transfer":
+      return (c.answer as string) || "Untitled Transfer";
+    case "guess_the_goalscorers":
+      return `${c.home_team || "?"} vs ${c.away_team || "?"}`;
+    case "topical_quiz":
+      return "Topical Quiz";
+    case "top_tens":
+      return (c.title as string) || "Untitled Top Tens";
+    case "starting_xi":
+      return (c.match_name as string) || "Untitled Starting XI";
+    case "the_grid":
+      return "The Grid";
+    default:
+      return "Untitled Puzzle";
+  }
+}
+
+/**
+ * Check if a specific date/mode slot has an existing puzzle (conflict).
+ * Returns conflict info if occupied, null if available.
+ */
+export async function checkSlotConflict(
+  gameMode: GameMode,
+  targetDate: string,
+  excludePuzzleId?: string
+): Promise<ActionResult<{ conflict: ConflictInfo | null; nextSlot: AvailableSlot | null }>> {
+  try {
+    const supabase = await createAdminClient();
+
+    // Check if slot is occupied
+    let query = supabase
+      .from("daily_puzzles")
+      .select("id, content, game_mode, puzzle_date")
+      .eq("puzzle_date", targetDate)
+      .eq("game_mode", gameMode);
+
+    if (excludePuzzleId) {
+      query = query.neq("id", excludePuzzleId);
+    }
+
+    const { data: existing, error } = await query.maybeSingle();
+
+    if (error) {
+      console.error("Check slot conflict error:", error);
+      return { success: false, error: error.message };
+    }
+
+    if (!existing) {
+      return { success: true, data: { conflict: null, nextSlot: null } };
+    }
+
+    // There is a conflict - get all puzzles of this mode to find next available slot
+    const { data: allPuzzles, error: fetchError } = await supabase
+      .from("daily_puzzles")
+      .select("id, puzzle_date, game_mode")
+      .eq("game_mode", gameMode)
+      .not("puzzle_date", "is", null);
+
+    if (fetchError) {
+      console.error("Fetch puzzles for slot error:", fetchError);
+      return { success: false, error: fetchError.message };
+    }
+
+    const occupiedDates = getOccupiedDates(
+      (allPuzzles || []) as Array<{ puzzle_date: string | null; game_mode: string }>,
+      gameMode
+    );
+
+    // Find next available slot
+    const nextSlot = findNextAvailableSlot(gameMode, targetDate, occupiedDates);
+
+    const conflict: ConflictInfo = {
+      existingPuzzleId: existing.id,
+      existingPuzzleTitle: getPuzzleTitleFromContent(existing.game_mode, existing.content),
+      gameMode,
+      date: targetDate,
+    };
+
+    return { success: true, data: { conflict, nextSlot } };
+  } catch (err) {
+    console.error("Check slot conflict error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// PUZZLE DISPLACEMENT
+// ============================================================================
+
+/**
+ * Displace a puzzle to a new date, with optional ripple effect.
+ * If the target date is occupied, the existing puzzle is moved to the next available slot.
+ */
+export async function displacePuzzle(
+  puzzleId: string,
+  newDate: string
+): Promise<ActionResult<{ moves: DisplacementMove[] }>> {
+  try {
+    const supabase = await createAdminClient();
+
+    // Fetch the puzzle to displace
+    const { data: puzzle, error: fetchError } = await supabase
+      .from("daily_puzzles")
+      .select("*")
+      .eq("id", puzzleId)
+      .single();
+
+    if (fetchError || !puzzle) {
+      return { success: false, error: "Puzzle not found" };
+    }
+
+    const gameMode = puzzle.game_mode as GameMode;
+
+    // Get all puzzles of this mode to build the map
+    const { data: allPuzzles, error: allError } = await supabase
+      .from("daily_puzzles")
+      .select("id, puzzle_date, game_mode, content")
+      .eq("game_mode", gameMode)
+      .not("puzzle_date", "is", null);
+
+    if (allError) {
+      console.error("Fetch all puzzles error:", allError);
+      return { success: false, error: allError.message };
+    }
+
+    // Build puzzle map
+    const puzzleMap = buildPuzzleMap(
+      (allPuzzles || []) as Array<{ id: string; puzzle_date: string | null; game_mode: string; content?: unknown }>,
+      gameMode,
+      (p) => getPuzzleTitleFromContent(p.game_mode, p.content)
+    );
+
+    // Calculate displacement chain
+    const chain = calculateDisplacementChain(newDate, gameMode, puzzleMap);
+
+    if (!chain.success) {
+      return { success: false, error: chain.error };
+    }
+
+    // Execute moves in order (the chain is already ordered with deepest first)
+    for (const move of chain.moves) {
+      const { error: moveError } = await supabase
+        .from("daily_puzzles")
+        .update({
+          puzzle_date: move.toDate,
+          is_premium: isPremiumOnDate(gameMode, parseISO(move.toDate)) ?? false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", move.puzzleId);
+
+      if (moveError) {
+        console.error("Displacement move error:", moveError);
+        return { success: false, error: `Failed to move puzzle: ${moveError.message}` };
+      }
+    }
+
+    // Now move the original puzzle to its new date
+    const { error: finalMoveError } = await supabase
+      .from("daily_puzzles")
+      .update({
+        puzzle_date: newDate,
+        is_premium: isPremiumOnDate(gameMode, parseISO(newDate)) ?? false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", puzzleId);
+
+    if (finalMoveError) {
+      console.error("Final displacement error:", finalMoveError);
+      return { success: false, error: finalMoveError.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    // Include the original move in the result
+    const allMoves: DisplacementMove[] = [
+      ...chain.moves,
+      {
+        puzzleId,
+        fromDate: puzzle.puzzle_date || "",
+        toDate: newDate,
+      },
+    ];
+
+    return { success: true, data: { moves: allMoves } };
+  } catch (err) {
+    console.error("Displace puzzle error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Swap dates between two puzzles.
+ * Both puzzles must be of the same game mode.
+ */
+export async function swapPuzzleDates(
+  puzzleId1: string,
+  puzzleId2: string
+): Promise<ActionResult> {
+  try {
+    const supabase = await createAdminClient();
+
+    // Fetch both puzzles
+    const { data: puzzles, error: fetchError } = await supabase
+      .from("daily_puzzles")
+      .select("*")
+      .in("id", [puzzleId1, puzzleId2]);
+
+    if (fetchError || !puzzles || puzzles.length !== 2) {
+      return { success: false, error: "One or both puzzles not found" };
+    }
+
+    const puzzle1 = puzzles.find((p) => p.id === puzzleId1);
+    const puzzle2 = puzzles.find((p) => p.id === puzzleId2);
+
+    if (!puzzle1 || !puzzle2) {
+      return { success: false, error: "Puzzles not found" };
+    }
+
+    if (puzzle1.game_mode !== puzzle2.game_mode) {
+      return { success: false, error: "Cannot swap puzzles of different game modes" };
+    }
+
+    const gameMode = puzzle1.game_mode as GameMode;
+    const date1 = puzzle1.puzzle_date;
+    const date2 = puzzle2.puzzle_date;
+
+    // Use a temporary null to avoid unique constraint violation
+    // Step 1: Set puzzle1's date to null
+    const { error: step1Error } = await supabase
+      .from("daily_puzzles")
+      .update({ puzzle_date: null, updated_at: new Date().toISOString() })
+      .eq("id", puzzleId1);
+
+    if (step1Error) {
+      console.error("Swap step 1 error:", step1Error);
+      return { success: false, error: step1Error.message };
+    }
+
+    // Step 2: Set puzzle2's date to puzzle1's original date
+    const { error: step2Error } = await supabase
+      .from("daily_puzzles")
+      .update({
+        puzzle_date: date1,
+        is_premium: date1 ? isPremiumOnDate(gameMode, parseISO(date1)) ?? false : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", puzzleId2);
+
+    if (step2Error) {
+      // Try to rollback step 1
+      await supabase
+        .from("daily_puzzles")
+        .update({ puzzle_date: date1, updated_at: new Date().toISOString() })
+        .eq("id", puzzleId1);
+      console.error("Swap step 2 error:", step2Error);
+      return { success: false, error: step2Error.message };
+    }
+
+    // Step 3: Set puzzle1's date to puzzle2's original date
+    const { error: step3Error } = await supabase
+      .from("daily_puzzles")
+      .update({
+        puzzle_date: date2,
+        is_premium: date2 ? isPremiumOnDate(gameMode, parseISO(date2)) ?? false : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", puzzleId1);
+
+    if (step3Error) {
+      // Try to rollback - this is a best effort
+      await supabase
+        .from("daily_puzzles")
+        .update({ puzzle_date: date2, updated_at: new Date().toISOString() })
+        .eq("id", puzzleId2);
+      await supabase
+        .from("daily_puzzles")
+        .update({ puzzle_date: date1, updated_at: new Date().toISOString() })
+        .eq("id", puzzleId1);
+      console.error("Swap step 3 error:", step3Error);
+      return { success: false, error: step3Error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return { success: true };
+  } catch (err) {
+    console.error("Swap puzzle dates error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Assign a date to a backlog puzzle, with conflict resolution options.
+ * Enhanced version that supports forcing as bonus on conflict.
+ */
+export async function assignPuzzleDateWithConflictHandling(
+  puzzleId: string,
+  targetDate: string,
+  options?: {
+    forceAsBonus?: boolean;
+  }
+): Promise<ActionResult<{ conflict?: ConflictInfo }>> {
+  try {
+    const supabase = await createAdminClient();
+
+    // First, get the puzzle to check it's a backlog puzzle
+    const { data: puzzle, error: fetchError } = await supabase
+      .from("daily_puzzles")
+      .select("*")
+      .eq("id", puzzleId)
+      .single();
+
+    if (fetchError || !puzzle) {
+      return { success: false, error: "Puzzle not found" };
+    }
+
+    if (puzzle.puzzle_date !== null) {
+      return { success: false, error: "Puzzle is already scheduled" };
+    }
+
+    const gameMode = puzzle.game_mode as GameMode;
+
+    // Check for conflict
+    const conflictResult = await checkSlotConflict(gameMode, targetDate);
+    if (!conflictResult.success) {
+      return { success: false, error: conflictResult.error };
+    }
+
+    const { conflict } = conflictResult.data!;
+
+    if (conflict && !options?.forceAsBonus) {
+      // Return conflict info for the UI to handle
+      return { success: true, data: { conflict } };
+    }
+
+    // If forceAsBonus is true or no conflict, proceed with assignment
+    const isPremium = isPremiumOnDate(gameMode, parseISO(targetDate)) ?? false;
+
+    const { data, error } = await supabase
+      .from("daily_puzzles")
+      .update({
+        puzzle_date: targetDate,
+        is_premium: isPremium,
+        is_bonus: options?.forceAsBonus || false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", puzzleId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Assign puzzle date error:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("Assign puzzle date with conflict handling error:", err);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",

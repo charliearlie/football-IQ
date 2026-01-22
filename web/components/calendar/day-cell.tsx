@@ -68,22 +68,25 @@ export function DayCell({ day, isSelected, onSelect }: DayCellProps) {
         )}
       </div>
 
-      {/* Game mode dots - 2x4 grid */}
-      {day.isCurrentMonth && (
-        <div className="grid grid-cols-4 gap-1">
-          {day.gameModes.map((gm) => (
+      {/* Game mode dots - flexible layout for scheduled modes + extras */}
+      {day.isCurrentMonth && day.displayModes.length > 0 && (
+        <div className="flex flex-wrap gap-1 justify-center">
+          {day.displayModes.map((gm) => (
             <GameModeDot
               key={gm.mode}
               mode={gm.mode as GameMode}
               hasContent={gm.hasContent}
               status={gm.status}
+              isBonus={gm.isBonus}
+              isScheduled={gm.isScheduled}
+              isExtra={gm.isExtra}
             />
           ))}
         </div>
       )}
 
-      {/* Status indicator for fully populated days (all 8 modes) */}
-      {day.isCurrentMonth && day.totalPopulated === 8 && (
+      {/* Status indicator for days with all required puzzles populated */}
+      {day.isCurrentMonth && day.hasAllRequired && day.requiredCount > 0 && (
         <div className="absolute top-1 right-1">
           <div className="w-2 h-2 rounded-full bg-pitch-green animate-pulse" />
         </div>
