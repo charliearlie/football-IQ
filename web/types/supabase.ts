@@ -54,7 +54,8 @@ export type Database = {
           difficulty: string | null
           game_mode: string
           id: string
-          puzzle_date: string
+          is_premium: boolean | null
+          puzzle_date: string | null
           source: string | null
           status: string | null
           triggered_by: string | null
@@ -66,7 +67,8 @@ export type Database = {
           difficulty?: string | null
           game_mode: string
           id?: string
-          puzzle_date: string
+          is_premium?: boolean | null
+          puzzle_date?: string | null
           source?: string | null
           status?: string | null
           triggered_by?: string | null
@@ -78,7 +80,8 @@ export type Database = {
           difficulty?: string | null
           game_mode?: string
           id?: string
-          puzzle_date?: string
+          is_premium?: boolean | null
+          puzzle_date?: string | null
           source?: string | null
           status?: string | null
           triggered_by?: string | null

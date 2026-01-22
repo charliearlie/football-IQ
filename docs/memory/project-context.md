@@ -304,6 +304,11 @@ Visual replay of completed games showing user choices, hints used, and outcomes.
 - iOS: `ca-app-pub-9426782115883407~8797195643`
 - Android: `ca-app-pub-9426782115883407~1712062487`
 
+**OpenAI (CMS AI Scout):**
+- Model: `gpt-4o`
+- Temperature: `0.2` (factual accuracy)
+- Env var: `OPENAI_API_KEY` (server-side only in `web/.env.local`)
+
 ## Key Files Reference
 
 ```
@@ -349,6 +354,28 @@ A Next.js 15 web application for managing puzzle content.
 - Green/Red dot indicators for puzzle status
 - Quick View sidebar for puzzle details
 - Supabase Auth with protected routes
+- **AI Scout**: Auto-populate Career Path timelines from Wikipedia URLs
+- **Intelligent Scheduler**: Schedule-aware puzzle management (see below)
+
+### AI Scout Feature
+Extracts career data from Wikipedia using MediaWiki API + OpenAI gpt-4o.
+- **Input**: Wikipedia player URL (e.g., `https://en.wikipedia.org/wiki/Andrea_Pirlo`)
+- **Output**: Populated career timeline with clubs, years, apps, goals, and trivia
+- **Confidence scoring**: High/Medium/Low indicators per step
+- **Anti-hallucination**: Validates extracted clubs against source wikitext
+- **Files**: `web/lib/ai/career-scout.ts`, `web/types/ai.ts`
+- **See**: `docs/memory/decisions/ai-scout.md` for full documentation
+
+### Intelligent Scheduler
+Schedule-aware puzzle management system for efficient content creation.
+- **Weekly Schedule**: Defines which game modes run on which days (see `web/lib/scheduler.ts`)
+- **Backlog Puzzles**: Create puzzles without dates, assign later from the Backlog panel
+- **Progress Indicators**: Each day shows `populatedRequired/requiredCount` (e.g., "5/6")
+- **Gap Warnings**: Yellow border on days in next 14 days with missing required puzzles
+- **Initialize Week**: Creates draft placeholders for all missing required slots in a week
+- **Save & Next Gap**: Editor button that saves and opens the next chronological gap
+- **Files**: `web/lib/scheduler.ts`, `web/hooks/use-backlog-puzzles.ts`, `web/components/puzzle/backlog-sheet.tsx`
+- **See**: `docs/memory/decisions/intelligent-scheduler.md` for full documentation
 
 **Tech Stack**: Next.js 15, Tailwind CSS, shadcn/ui, Supabase SSR
 

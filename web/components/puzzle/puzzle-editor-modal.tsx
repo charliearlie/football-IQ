@@ -5,7 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO, subDays } from "date-fns";
-import { Copy, Save, Send, Loader2 } from "lucide-react";
+import { Copy, Save, Send, Loader2, ArrowRight } from "lucide-react";
 
 import {
   Dialog,
@@ -64,10 +64,14 @@ import { StartingXIPreview } from "./previews/starting-xi-preview";
 interface PuzzleEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  puzzleDate: string;
+  puzzleDate: string | null;
   gameMode: GameMode;
   puzzle?: DailyPuzzle | null;
   onSaveSuccess?: (puzzle: DailyPuzzle) => void;
+  /** Callback for "Save & Next Gap" - saves then calls this with the saved puzzle */
+  onSaveAndNextGap?: (puzzle: DailyPuzzle) => void;
+  /** Whether to show the "Save & Next Gap" button */
+  showNextGapButton?: boolean;
 }
 
 interface FormValues {
@@ -113,13 +117,17 @@ export function PuzzleEditorModal({
   gameMode,
   puzzle,
   onSaveSuccess,
+  onSaveAndNextGap,
+  showNextGapButton = false,
 }: PuzzleEditorModalProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingNextGap, setIsSavingNextGap] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
 
   const isEditMode = !!puzzle;
   const isPremium = PREMIUM_MODES.includes(gameMode);
+  const isBacklogMode = puzzleDate === null;
   const contentSchema = contentSchemaMap[gameMode];
 
   // Create form schema that wraps content validation
@@ -201,8 +209,44 @@ export function PuzzleEditorModal({
     [form, puzzleDate, gameMode, onSaveSuccess, onClose]
   );
 
+  // Handle save and next gap
+  const handleSaveAndNextGap = useCallback(async () => {
+    if (!onSaveAndNextGap) return;
+
+    setIsSavingNextGap(true);
+    setSaveError(null);
+
+    try {
+      const content = form.getValues("content");
+      const difficulty = form.getValues("difficulty");
+
+      const result = await upsertPuzzle({
+        puzzle_date: puzzleDate,
+        game_mode: gameMode,
+        content,
+        status: "draft", // Always save as draft when using "Save & Next Gap"
+        difficulty,
+        source: "manual",
+      });
+
+      if (!result.success) {
+        setSaveError(result.error || "Failed to save puzzle");
+        return;
+      }
+
+      // Call the next gap callback with the saved puzzle
+      onSaveAndNextGap(result.data as DailyPuzzle);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setIsSavingNextGap(false);
+    }
+  }, [form, puzzleDate, gameMode, onSaveAndNextGap]);
+
   // Handle copy from yesterday
   const handleCopyFromYesterday = useCallback(async () => {
+    if (!puzzleDate) return; // Can't copy for backlog puzzles
+
     setIsCopying(true);
     setSaveError(null);
 
@@ -232,7 +276,9 @@ export function PuzzleEditorModal({
   const FormComponent = formRegistry[gameMode];
   const PreviewComponent = previewRegistry[gameMode];
 
-  const formattedDate = format(parseISO(puzzleDate), "EEEE, MMM d, yyyy");
+  const formattedDate = puzzleDate
+    ? format(parseISO(puzzleDate), "EEEE, MMM d, yyyy")
+    : "Backlog (No Date)";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -335,28 +381,30 @@ export function PuzzleEditorModal({
           )}
 
           <div className="flex items-center gap-3 ml-auto">
-            {/* Copy from Yesterday */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCopyFromYesterday}
-              disabled={isCopying || isSaving}
-              className="border-white/10"
-            >
-              {isCopying ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Copy className="h-4 w-4 mr-2" />
-              )}
-              Copy Yesterday
-            </Button>
+            {/* Copy from Yesterday (only for scheduled puzzles) */}
+            {!isBacklogMode && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCopyFromYesterday}
+                disabled={isCopying || isSaving || isSavingNextGap}
+                className="border-white/10"
+              >
+                {isCopying ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-2" />
+                )}
+                Copy Yesterday
+              </Button>
+            )}
 
             {/* Cancel */}
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
-              disabled={isSaving}
+              disabled={isSaving || isSavingNextGap}
             >
               Cancel
             </Button>
@@ -366,9 +414,9 @@ export function PuzzleEditorModal({
               type="button"
               variant="secondary"
               onClick={() => onSubmit("draft")}
-              disabled={isSaving || !formState.isValid}
+              disabled={isSaving || isSavingNextGap || !formState.isValid}
             >
-              {isSaving ? (
+              {isSaving && !isSavingNextGap ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Save className="h-4 w-4 mr-2" />
@@ -376,14 +424,32 @@ export function PuzzleEditorModal({
               Save Draft
             </Button>
 
+            {/* Save & Next Gap (only shown when enabled and not in backlog mode) */}
+            {showNextGapButton && !isBacklogMode && onSaveAndNextGap && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSaveAndNextGap}
+                disabled={isSaving || isSavingNextGap || !formState.isValid}
+                className="bg-card-yellow/20 hover:bg-card-yellow/30 text-card-yellow border-card-yellow/30"
+              >
+                {isSavingNextGap ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                )}
+                Save &amp; Next Gap
+              </Button>
+            )}
+
             {/* Publish */}
             <Button
               type="button"
               onClick={() => onSubmit("live")}
-              disabled={isSaving || !formState.isValid}
+              disabled={isSaving || isSavingNextGap || !formState.isValid}
               className="bg-pitch-green hover:bg-pitch-green/90"
             >
-              {isSaving ? (
+              {isSaving && !isSavingNextGap ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Send className="h-4 w-4 mr-2" />

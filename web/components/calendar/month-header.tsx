@@ -1,14 +1,25 @@
 "use client";
 
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+  Wand2,
+  Archive,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface MonthHeaderProps {
   month: Date;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onToday: () => void;
+  onInitializeWeek?: () => void;
+  onToggleBacklog?: () => void;
+  backlogCount?: number;
+  isInitializing?: boolean;
 }
 
 export function MonthHeader({
@@ -16,6 +27,10 @@ export function MonthHeader({
   onPreviousMonth,
   onNextMonth,
   onToday,
+  onInitializeWeek,
+  onToggleBacklog,
+  backlogCount = 0,
+  isInitializing = false,
 }: MonthHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -35,6 +50,43 @@ export function MonthHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Backlog button */}
+        {onToggleBacklog && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onToggleBacklog}
+            className="text-xs"
+          >
+            <Archive className="h-3 w-3 mr-1" />
+            Backlog
+            {backlogCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="ml-1.5 h-5 px-1.5 text-[10px] bg-card-yellow/20 text-card-yellow"
+              >
+                {backlogCount}
+              </Badge>
+            )}
+          </Button>
+        )}
+
+        {/* Initialize Week button */}
+        {onInitializeWeek && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onInitializeWeek}
+            disabled={isInitializing}
+            className="text-xs border-card-yellow/50 text-card-yellow hover:bg-card-yellow/10 hover:text-card-yellow"
+          >
+            <Wand2 className="h-3 w-3 mr-1" />
+            {isInitializing ? "Initializing..." : "Initialize Week"}
+          </Button>
+        )}
+
+        <div className="w-px h-6 bg-white/10 mx-1" />
+
         <Button
           variant="ghost"
           size="icon"

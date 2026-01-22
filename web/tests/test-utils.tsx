@@ -27,7 +27,8 @@ function FormWrapper<T extends Record<string, unknown>>({
 }: FormWrapperProps<T>) {
   const methods = useForm<T>({
     defaultValues: defaultValues as UseFormProps<T>["defaultValues"],
-    resolver: schema ? zodResolver(schema) : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: schema ? zodResolver(schema as any) : undefined,
     mode: "onChange",
     ...formOptions,
   });

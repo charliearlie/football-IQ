@@ -13,11 +13,20 @@ import { GAME_MODES, GAME_MODE_DISPLAY_NAMES } from "@/lib/constants";
 
 const mockDay: CalendarDay = {
   date: "2024-01-15",
-  totalPopulated: 3,
+  dayNumber: 15,
   isCurrentMonth: true,
   isPast: false,
   isFuture: true,
   isToday: false,
+  gameModes: [],
+  totalPopulated: 3,
+  totalMissing: 5,
+  requiredModes: [],
+  requiredCount: 6,
+  populatedRequired: 3,
+  missingRequired: 3,
+  hasAllRequired: false,
+  isUpcomingGap: true,
 };
 
 const mockPuzzles: DailyPuzzle[] = [
@@ -30,6 +39,7 @@ const mockPuzzles: DailyPuzzle[] = [
     difficulty: "medium",
     source: "manual",
     triggered_by: null,
+    is_premium: false,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
   },
@@ -42,6 +52,7 @@ const mockPuzzles: DailyPuzzle[] = [
     difficulty: "hard",
     source: "manual",
     triggered_by: null,
+    is_premium: false,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
   },
@@ -54,6 +65,7 @@ const mockPuzzles: DailyPuzzle[] = [
     difficulty: null,
     source: "manual",
     triggered_by: "admin",
+    is_premium: true,
     created_at: "2024-01-14T10:00:00Z",
     updated_at: "2024-01-14T10:00:00Z",
   },

@@ -4,19 +4,27 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { GameMode, PuzzleStatus } from "@/lib/constants";
 import { validateContent } from "@/lib/schemas";
-import type { TablesInsert, TablesUpdate, Json } from "@/types/supabase";
+import type { TablesInsert, TablesUpdate, Json, DailyPuzzle } from "@/types/supabase";
+import type { CareerScoutResult } from "@/types/ai";
+import {
+  getRequirementsForDate,
+  getMissingPuzzlesForWeek,
+  isPremiumOnDate,
+} from "@/lib/scheduler";
+import { parseISO, startOfWeek, addDays, format } from "date-fns";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface CreatePuzzleInput {
-  puzzle_date: string;
+  puzzle_date: string | null;
   game_mode: GameMode;
   content: unknown;
   status: PuzzleStatus;
   difficulty?: string | null;
   source?: string | null;
+  is_premium?: boolean;
 }
 
 export interface UpdatePuzzleInput {
@@ -54,19 +62,22 @@ export async function createPuzzle(
     // Get admin client (bypasses RLS)
     const supabase = await createAdminClient();
 
-    // Check if puzzle already exists for this date and mode (use maybeSingle to avoid error when no rows found)
-    const { data: existing } = await supabase
-      .from("daily_puzzles")
-      .select("id")
-      .eq("puzzle_date", input.puzzle_date)
-      .eq("game_mode", input.game_mode)
-      .maybeSingle();
+    // For scheduled puzzles, check if one already exists for this date and mode
+    // Backlog puzzles (null date) can always be created without duplicate check
+    if (input.puzzle_date !== null) {
+      const { data: existing } = await supabase
+        .from("daily_puzzles")
+        .select("id")
+        .eq("puzzle_date", input.puzzle_date)
+        .eq("game_mode", input.game_mode)
+        .maybeSingle();
 
-    if (existing) {
-      return {
-        success: false,
-        error: "A puzzle already exists for this date and game mode. Use update instead.",
-      };
+      if (existing) {
+        return {
+          success: false,
+          error: "A puzzle already exists for this date and game mode. Use update instead.",
+        };
+      }
     }
 
     // Insert the puzzle
@@ -260,44 +271,57 @@ export async function upsertPuzzle(
 
     const supabase = await createAdminClient();
 
-    // Check if puzzle exists (use maybeSingle to avoid error when no rows found)
-    const { data: existing, error: lookupError } = await supabase
-      .from("daily_puzzles")
-      .select("id")
-      .eq("puzzle_date", input.puzzle_date)
-      .eq("game_mode", input.game_mode)
-      .maybeSingle();
-
-    if (lookupError) {
-      console.error("Puzzle lookup error:", lookupError);
+    // Determine is_premium: use provided value, or derive from schedule if date is provided
+    let isPremium = input.is_premium;
+    if (isPremium === undefined && input.puzzle_date) {
+      isPremium = isPremiumOnDate(input.game_mode, parseISO(input.puzzle_date)) ?? false;
     }
+
+    // For backlog puzzles (null date), always insert new
+    // For scheduled puzzles, check if one exists for this date+mode
+    let existing: { id: string } | null = null;
+
+    if (input.puzzle_date !== null) {
+      const { data, error: lookupError } = await supabase
+        .from("daily_puzzles")
+        .select("id")
+        .eq("puzzle_date", input.puzzle_date)
+        .eq("game_mode", input.game_mode)
+        .maybeSingle();
+
+      if (lookupError) {
+        console.error("Puzzle lookup error:", lookupError);
+      }
+      existing = data as { id: string } | null;
+    }
+
     console.log("Upsert lookup:", { puzzle_date: input.puzzle_date, game_mode: input.game_mode, existing });
 
     let result;
 
     if (existing) {
-      // Update existing
+      // Update existing scheduled puzzle
       const updateData: TablesUpdate<"daily_puzzles"> = {
         content: validation.data as Json,
         status: input.status,
         difficulty: input.difficulty || null,
         source: input.source || "manual",
+        is_premium: isPremium,
         updated_at: new Date().toISOString(),
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       result = await (supabase as any)
         .from("daily_puzzles")
         .update(updateData)
-        .eq("id", (existing as { id: string }).id)
+        .eq("id", existing.id)
         .select()
         .maybeSingle();
 
       if (!result.data && !result.error) {
-        // Update returned 0 rows - this shouldn't happen since we just found the record
         result.error = { message: "Update failed - record not found" };
       }
     } else {
-      // Insert new
+      // Insert new puzzle (either scheduled or backlog)
       const insertData: TablesInsert<"daily_puzzles"> = {
         puzzle_date: input.puzzle_date,
         game_mode: input.game_mode,
@@ -305,6 +329,7 @@ export async function upsertPuzzle(
         status: input.status,
         difficulty: input.difficulty || null,
         source: input.source || "manual",
+        is_premium: isPremium ?? false,
         triggered_by: "manual",
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -325,6 +350,308 @@ export async function upsertPuzzle(
     return { success: true, data: result.data };
   } catch (err) {
     console.error("Upsert puzzle error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// SCOUT PLAYER CAREER (AI)
+// ============================================================================
+
+export async function scoutPlayerCareer(
+  wikipediaUrl: string
+): Promise<ActionResult<CareerScoutResult>> {
+  try {
+    // Validate URL format
+    if (!wikipediaUrl || !wikipediaUrl.includes("wikipedia.org/wiki/")) {
+      return {
+        success: false,
+        error: "Invalid Wikipedia URL. Must be a Wikipedia article URL (e.g., https://en.wikipedia.org/wiki/Player_Name)",
+      };
+    }
+
+    // Dynamically import the AI service to keep it server-side only
+    const { scoutPlayerCareer: scout } = await import("@/lib/ai/career-scout");
+    const result = await scout(wikipediaUrl);
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, data: result };
+  } catch (err) {
+    console.error("Scout player career error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error occurred while scouting player",
+    };
+  }
+}
+
+// ============================================================================
+// BACKLOG PUZZLES
+// ============================================================================
+
+/**
+ * Get all backlog puzzles (puzzles without a scheduled date).
+ */
+export async function getBacklogPuzzles(): Promise<ActionResult<DailyPuzzle[]>> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { data, error } = await supabase
+      .from("daily_puzzles")
+      .select("*")
+      .is("puzzle_date", null)
+      .order("game_mode", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Get backlog puzzles error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as DailyPuzzle[] };
+  } catch (err) {
+    console.error("Get backlog puzzles error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Assign a date to a backlog puzzle.
+ * This moves a puzzle from the backlog to a scheduled slot.
+ */
+export async function assignPuzzleDate(
+  puzzleId: string,
+  targetDate: string,
+  isPremium?: boolean
+): Promise<ActionResult> {
+  try {
+    const supabase = await createAdminClient();
+
+    // First, get the puzzle to check it's a backlog puzzle
+    const { data: puzzle, error: fetchError } = await supabase
+      .from("daily_puzzles")
+      .select("*")
+      .eq("id", puzzleId)
+      .single();
+
+    if (fetchError || !puzzle) {
+      return { success: false, error: "Puzzle not found" };
+    }
+
+    if (puzzle.puzzle_date !== null) {
+      return { success: false, error: "Puzzle is already scheduled" };
+    }
+
+    // Check if target slot is already occupied
+    const { data: existing } = await supabase
+      .from("daily_puzzles")
+      .select("id")
+      .eq("puzzle_date", targetDate)
+      .eq("game_mode", puzzle.game_mode)
+      .maybeSingle();
+
+    if (existing) {
+      return {
+        success: false,
+        error: `A ${puzzle.game_mode} puzzle already exists for ${targetDate}`,
+      };
+    }
+
+    // Determine is_premium from schedule if not provided
+    const finalIsPremium =
+      isPremium ?? isPremiumOnDate(puzzle.game_mode as GameMode, parseISO(targetDate)) ?? false;
+
+    // Update the puzzle with the new date
+    const { data, error } = await supabase
+      .from("daily_puzzles")
+      .update({
+        puzzle_date: targetDate,
+        is_premium: finalIsPremium,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", puzzleId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Assign puzzle date error:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("Assign puzzle date error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// INITIALIZE WEEK
+// ============================================================================
+
+/**
+ * Placeholder content for each game mode when initializing empty slots.
+ */
+const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
+  career_path: {
+    answer: "",
+    career_steps: [
+      { type: "club", text: "", year: "", apps: 0, goals: 0 },
+      { type: "club", text: "", year: "", apps: 0, goals: 0 },
+      { type: "club", text: "", year: "", apps: 0, goals: 0 },
+    ],
+  },
+  career_path_pro: {
+    answer: "",
+    career_steps: [
+      { type: "club", text: "", year: "", apps: 0, goals: 0 },
+      { type: "club", text: "", year: "", apps: 0, goals: 0 },
+      { type: "club", text: "", year: "", apps: 0, goals: 0 },
+    ],
+  },
+  guess_the_transfer: {
+    answer: "",
+    from_club: "",
+    to_club: "",
+    year: 2026,
+    fee: "",
+    hints: ["", "", ""],
+  },
+  guess_the_goalscorers: {
+    home_team: "",
+    away_team: "",
+    home_score: 0,
+    away_score: 0,
+    competition: "",
+    match_date: "",
+    goals: [],
+  },
+  topical_quiz: {
+    questions: [
+      { id: "q1", question: "", options: ["", "", "", ""], correctIndex: 0 },
+      { id: "q2", question: "", options: ["", "", "", ""], correctIndex: 0 },
+      { id: "q3", question: "", options: ["", "", "", ""], correctIndex: 0 },
+      { id: "q4", question: "", options: ["", "", "", ""], correctIndex: 0 },
+      { id: "q5", question: "", options: ["", "", "", ""], correctIndex: 0 },
+    ],
+  },
+  top_tens: {
+    title: "",
+    category: "",
+    answers: Array.from({ length: 10 }, () => ({ name: "", aliases: [], info: "" })),
+  },
+  starting_xi: {
+    match_name: "",
+    competition: "",
+    match_date: "",
+    formation: "4-3-3",
+    team: "",
+    players: [],
+  },
+  the_grid: {
+    xAxis: [
+      { type: "club", value: "" },
+      { type: "club", value: "" },
+      { type: "club", value: "" },
+    ],
+    yAxis: [
+      { type: "nation", value: "" },
+      { type: "nation", value: "" },
+      { type: "nation", value: "" },
+    ],
+    valid_answers: {},
+  },
+};
+
+/**
+ * Initialize a week with draft placeholders for all missing required slots.
+ *
+ * @param weekStartDate - Any date within the target week (will be normalized to Monday)
+ * @returns The number of draft puzzles created
+ */
+export async function initializeWeek(
+  weekStartDate: string
+): Promise<ActionResult<{ created: number; skipped: number }>> {
+  try {
+    const supabase = await createAdminClient();
+
+    // Get the Monday of the target week
+    const monday = startOfWeek(parseISO(weekStartDate), { weekStartsOn: 1 });
+
+    // Fetch existing puzzles for this week
+    const weekDates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      weekDates.push(format(addDays(monday, i), "yyyy-MM-dd"));
+    }
+
+    const { data: existingPuzzles, error: fetchError } = await supabase
+      .from("daily_puzzles")
+      .select("puzzle_date, game_mode")
+      .gte("puzzle_date", weekDates[0])
+      .lte("puzzle_date", weekDates[6]);
+
+    if (fetchError) {
+      console.error("Fetch existing puzzles error:", fetchError);
+      return { success: false, error: fetchError.message };
+    }
+
+    // Get missing puzzles using the scheduler
+    const missing = getMissingPuzzlesForWeek(
+      monday,
+      (existingPuzzles || []) as { puzzle_date: string | null; game_mode: string }[]
+    );
+
+    if (missing.length === 0) {
+      return { success: true, data: { created: 0, skipped: 0 } };
+    }
+
+    // Create draft placeholders for each missing puzzle
+    const inserts: TablesInsert<"daily_puzzles">[] = missing.map((m) => ({
+      puzzle_date: m.date,
+      game_mode: m.gameMode,
+      content: PLACEHOLDER_CONTENT[m.gameMode] as Json,
+      status: "draft",
+      is_premium: m.isPremium,
+      source: "scheduler",
+      triggered_by: "initialize_week",
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("daily_puzzles")
+      .insert(inserts)
+      .select();
+
+    if (error) {
+      console.error("Initialize week error:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return {
+      success: true,
+      data: {
+        created: data?.length || 0,
+        skipped: (existingPuzzles?.length || 0),
+      },
+    };
+  } catch (err) {
+    console.error("Initialize week error:", err);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
