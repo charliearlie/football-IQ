@@ -24,6 +24,7 @@ export function PlayableCareerPath({
   const [showSuccess, setShowSuccess] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [hasWon, setHasWon] = useState(false);
 
   const handleGuess = useCallback(() => {
     if (!currentGuess.trim() || gameOver) return;
@@ -31,6 +32,8 @@ export function PlayableCareerPath({
     const { isMatch } = validateGuess(currentGuess, answer);
 
     if (isMatch) {
+      setRevealedCount(careerSteps.length); // Reveal all clubs
+      setHasWon(true);
       setShowSuccess(true);
       setGameOver(true);
     } else {
@@ -61,7 +64,7 @@ export function PlayableCareerPath({
       <div className="max-w-md mx-auto">
         {/* Section header */}
         <h2 className="font-bebas text-4xl text-center mb-2 tracking-wide">
-          TRY TODAY&apos;S PUZZLE
+          TRY TODAY&apos;S CAREER PATH
         </h2>
         <p className="text-center text-muted-foreground mb-8">
           Guess the player from their career history
@@ -114,8 +117,18 @@ export function PlayableCareerPath({
           </>
         )}
 
+        {/* Game over state (won) */}
+        {gameOver && hasWon && !showSuccess && (
+          <div className="text-center">
+            <p className="text-pitch-green font-semibold mb-2">You got it!</p>
+            <p className="text-floodlight text-lg font-semibold mb-4">
+              {answer}
+            </p>
+          </div>
+        )}
+
         {/* Game over state (lost) */}
-        {gameOver && !showSuccess && (
+        {gameOver && !hasWon && (
           <div className="text-center">
             <p className="text-red-card font-semibold mb-2">Out of clues!</p>
             <p className="text-muted-foreground text-sm mb-4">
@@ -127,6 +140,7 @@ export function PlayableCareerPath({
                 setRevealedCount(1);
                 setCurrentGuess("");
                 setGameOver(false);
+                setHasWon(false);
               }}
               variant="secondary"
             >

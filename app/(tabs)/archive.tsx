@@ -185,7 +185,9 @@ export default function ArchiveScreen() {
       </View>
 
       {/* Premium Upsell Banner (non-premium only) */}
-      <PremiumUpsellBanner testID="archive-premium-upsell" />
+      <View style={styles.bannerContainer}>
+        <PremiumUpsellBanner testID="archive-premium-upsell" />
+      </View>
 
       {/* Match Calendar with Advanced Filter */}
       <ArchiveCalendar
@@ -248,5 +250,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+  },
+  bannerContainer: {
+    paddingHorizontal: spacing.xl,
   },
 });

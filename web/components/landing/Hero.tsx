@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { CTAButton } from "./CTAButton";
-import { APP_STORE_URL } from "@/lib/constants";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
 
 export function Hero() {
   const scrollToDemo = () => {
@@ -28,14 +29,43 @@ export function Hero() {
             leaderboard.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <CTAButton onClick={() => window.open(APP_STORE_URL, "_blank")}>
-              GET THE APP
-            </CTAButton>
-            <CTAButton variant="secondary" onClick={scrollToDemo}>
-              TRY A PUZZLE
-            </CTAButton>
+          {/* Store badges - following Apple & Google guidelines (min 40px height) */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start mb-6">
+            <Link
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Download on the App Store"
+              className="transition-opacity hover:opacity-80"
+            >
+              <Image
+                src="/images/app-store.svg"
+                alt="Download on the App Store"
+                width={150}
+                height={50}
+                className="h-[50px] w-auto"
+              />
+            </Link>
+            <Link
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Get it on Google Play"
+              className="transition-opacity hover:opacity-80"
+            >
+              <Image
+                src="/images/play-store.svg"
+                alt="Get it on Google Play"
+                width={168}
+                height={50}
+                className="h-[50px] w-auto"
+              />
+            </Link>
           </div>
+
+          <CTAButton variant="secondary" onClick={scrollToDemo}>
+            TRY A PUZZLE
+          </CTAButton>
         </div>
 
         {/* Right: iPhone mockup */}
