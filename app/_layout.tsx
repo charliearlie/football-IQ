@@ -111,10 +111,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   // Determine if user needs to set display name
   const needsDisplayName = profile && !profile.display_name;
 
-  // Show briefing if display name is missing OR onboarding not completed
-  // This ensures returning users who cleared app data see the briefing again
-  const showBriefing =
-    needsDisplayName || (onboardingHydrated && !hasCompletedOnboarding);
+  // Show briefing if display name is missing AND onboarding not completed
+  // hasCompletedOnboarding takes precedence - once set true in onSubmit callback,
+  // modal hides immediately even before profile refetch completes
+  const showBriefing = !hasCompletedOnboarding && needsDisplayName;
 
   // Block navigation until auth is initialized AND onboarding state is hydrated
   if (!isInitialized || isLoading || !onboardingHydrated) {
@@ -133,10 +133,13 @@ function AuthGate({ children }: { children: React.ReactNode }) {
                 <FirstRunModal
                   visible={showBriefing}
                   onSubmit={async (displayName) => {
+                    // Set state and persist FIRST to hide modal immediately
+                    setHasCompletedOnboarding(true);
+                    await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+
+                    // Then update display name in Supabase
                     const { error } = await updateDisplayName(displayName);
                     if (error) throw error;
-                    // Update local state immediately for instant UI update
-                    setHasCompletedOnboarding(true);
                   }}
                   testID="first-run-modal"
                 />

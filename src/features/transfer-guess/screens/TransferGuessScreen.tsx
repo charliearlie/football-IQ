@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,25 +7,30 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
-import { useReviewMode } from '@/hooks';
-import { colors, spacing, textStyles, layout } from '@/theme';
+} from "react-native";
+import { useRouter } from "expo-router";
+import {
+  useStablePuzzle,
+  useOnboarding,
+  GameIntroScreen,
+  GameIntroModal,
+} from "@/features/puzzles";
+import { useReviewMode } from "@/hooks";
+import { colors, spacing, textStyles, layout } from "@/theme";
 import {
   GameContainer,
   ReviewAnswerSection,
   ReviewGuessesSection,
   ReviewModeActionZone,
   ReviewModeBanner,
-} from '@/components';
-import { useTransferGuessGame } from '../hooks/useTransferGuessGame';
-import { MarketMovementHeader } from '../components/MarketMovementHeader';
-import { DossierGrid } from '../components/DossierGrid';
-import { TransferGameOverZone } from '../components/TransferGameOverZone';
-import { TransferActionZone } from '../components/TransferActionZone';
-import { TransferResultModal } from '../components/TransferResultModal';
-import { AdBanner } from '@/features/ads';
+} from "@/components";
+import { useTransferGuessGame } from "../hooks/useTransferGuessGame";
+import { MarketMovementHeader } from "../components/MarketMovementHeader";
+import { DossierGrid } from "../components/DossierGrid";
+import { TransferGameOverZone } from "../components/TransferGameOverZone";
+import { TransferActionZone } from "../components/TransferActionZone";
+import { TransferResultModal } from "../components/TransferResultModal";
+import { AdBanner } from "@/features/ads";
 
 /**
  * Metadata structure saved when a Transfer Guess game completes.
@@ -67,7 +72,11 @@ export function TransferGuessScreen({
   const router = useRouter();
 
   // Onboarding state - show intro for first-time users
-  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('guess_the_transfer');
+  const {
+    shouldShowIntro,
+    isReady: isOnboardingReady,
+    completeIntro,
+  } = useOnboarding("guess_the_transfer");
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // State for controlling the result modal visibility (must be before early returns)
@@ -75,7 +84,9 @@ export function TransferGuessScreen({
 
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
-  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_transfer');
+  const { puzzle, isLoading } = useStablePuzzle(
+    puzzleId ?? "guess_the_transfer",
+  );
   const {
     state,
     transferContent,
@@ -92,10 +103,8 @@ export function TransferGuessScreen({
   } = useTransferGuessGame(puzzle);
 
   // Fetch saved attempt data for review mode
-  const {
-    metadata: reviewMetadata,
-    isLoading: isReviewLoading,
-  } = useReviewMode<TransferGuessMetadata>(puzzleId, isReviewMode);
+  const { metadata: reviewMetadata, isLoading: isReviewLoading } =
+    useReviewMode<TransferGuessMetadata>(puzzleId, isReviewMode);
 
   // Debounce loading state to prevent flicker from async hydration timing
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -224,8 +233,8 @@ export function TransferGuessScreen({
     >
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         {/* Scrollable Content */}
         <ScrollView
@@ -248,7 +257,7 @@ export function TransferGuessScreen({
           {isGameOver ? (
             <TransferGameOverZone
               answer={answer}
-              won={state.gameStatus === 'won'}
+              won={state.gameStatus === "won"}
               onShare={shareResult}
               onSeeScore={handleSeeScore}
               testID="game-over-zone"
@@ -270,10 +279,10 @@ export function TransferGuessScreen({
       {state.score && (
         <TransferResultModal
           visible={showResultModal}
-          won={state.gameStatus === 'won'}
+          won={state.gameStatus === "won"}
           score={state.score}
           correctAnswer={answer}
-          puzzleId={puzzle?.id ?? ''}
+          puzzleId={puzzle?.id ?? ""}
           onShare={shareResult}
           onClose={() => router.back()}
           testID="transfer-result-modal"
@@ -314,8 +323,8 @@ export function TransferGuessScreen({
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     gap: spacing.md,
     padding: layout.screenPadding,
   },
@@ -323,7 +332,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   noPuzzleText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.sm,
   },
   keyboardAvoid: {

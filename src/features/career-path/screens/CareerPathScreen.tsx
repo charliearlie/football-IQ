@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useCallback, useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,30 +9,35 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
-import { useReviewMode } from '@/hooks';
-import { colors, spacing, textStyles, layout } from '@/theme';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useHaptics } from "@/hooks/useHaptics";
+import {
+  useStablePuzzle,
+  useOnboarding,
+  GameIntroScreen,
+  GameIntroModal,
+} from "@/features/puzzles";
+import { useReviewMode } from "@/hooks";
+import { colors, spacing, textStyles, layout } from "@/theme";
 import {
   GameContainer,
   ReviewAnswerSection,
   ReviewGuessesSection,
   ReviewModeActionZone,
   ReviewModeBanner,
-} from '@/components';
-import { useCareerPathGame } from '../hooks/useCareerPathGame';
-import { TimelineStepRow } from '../components/TimelineStepRow';
-import { TimelineAxis } from '../components/TimelineAxis';
-import { ActionZone } from '../components/ActionZone';
-import { GameOverActionZone } from '../components/GameOverActionZone';
-import { GameResultModal } from '../components/GameResultModal';
-import { ScoutingDisclaimer } from '../components/ScoutingDisclaimer';
-import { ReportErrorSheet, ReportType } from '../components/ReportErrorSheet';
-import { submitReport } from '../services/reportService';
-import { CareerStep } from '../types/careerPath.types';
-import { AdBanner } from '@/features/ads';
+} from "@/components";
+import { useCareerPathGame } from "../hooks/useCareerPathGame";
+import { TimelineStepRow } from "../components/TimelineStepRow";
+import { TimelineAxis } from "../components/TimelineAxis";
+import { ActionZone } from "../components/ActionZone";
+import { GameOverActionZone } from "../components/GameOverActionZone";
+import { GameResultModal } from "../components/GameResultModal";
+import { ScoutingDisclaimer } from "../components/ScoutingDisclaimer";
+import { ReportErrorSheet, ReportType } from "../components/ReportErrorSheet";
+import { submitReport } from "../services/reportService";
+import { CareerStep } from "../types/careerPath.types";
+import { AdBanner } from "@/features/ads";
 
 /**
  * Content metadata structure embedded in puzzle content.
@@ -41,7 +46,7 @@ interface ContentMetadata {
   scouted_at?: string;
   wikipedia_revision_id?: string;
   wikipedia_revision_date?: string;
-  generated_by?: 'manual' | 'ai_oracle' | 'ai_scout';
+  generated_by?: "manual" | "ai_oracle" | "ai_scout";
 }
 
 /**
@@ -72,14 +77,18 @@ interface CareerPathScreenProps {
    * Game mode variant. Defaults to 'career_path'.
    * Use 'career_path_pro' for premium Career Path Pro mode.
    */
-  gameMode?: 'career_path' | 'career_path_pro';
+  gameMode?: "career_path" | "career_path_pro";
 }
 
 /**
  * Get the screen title based on game mode and review state.
  */
-function getScreenTitle(gameMode: 'career_path' | 'career_path_pro', isReviewMode: boolean): string {
-  const baseTitle = gameMode === 'career_path_pro' ? 'Career Path Pro' : 'Career Path';
+function getScreenTitle(
+  gameMode: "career_path" | "career_path_pro",
+  isReviewMode: boolean,
+): string {
+  const baseTitle =
+    gameMode === "career_path_pro" ? "Career Path Pro" : "Career Path";
   return isReviewMode ? `${baseTitle} - Review` : baseTitle;
 }
 
@@ -95,12 +104,16 @@ function getScreenTitle(gameMode: 'career_path' | 'career_path_pro', isReviewMod
 export function CareerPathScreen({
   puzzleId,
   isReviewMode = false,
-  gameMode = 'career_path',
+  gameMode = "career_path",
 }: CareerPathScreenProps) {
   const router = useRouter();
 
   // Onboarding state - show intro for first-time users
-  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding(gameMode);
+  const {
+    shouldShowIntro,
+    isReady: isOnboardingReady,
+    completeIntro,
+  } = useOnboarding(gameMode);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Use puzzleId if provided, otherwise fall back to game mode lookup
@@ -173,11 +186,18 @@ export function CareerPathScreen({
       clearTimeout(modalTimer);
       clearTimeout(scrollTimer);
     };
-  }, [isVictoryRevealing, careerSteps.length, state.revealedCount, triggerCompletion, completeVictoryReveal, flatListRef]);
+  }, [
+    isVictoryRevealing,
+    careerSteps.length,
+    state.revealedCount,
+    triggerCompletion,
+    completeVictoryReveal,
+    flatListRef,
+  ]);
 
   // Show modal immediately for loss (no victory reveal)
   useEffect(() => {
-    if (state.gameStatus === 'lost') {
+    if (state.gameStatus === "lost") {
       setShowResultModal(true);
     }
   }, [state.gameStatus]);
@@ -212,29 +232,38 @@ export function CareerPathScreen({
     setShowReportSheet(false);
   }, []);
 
-  const handleSubmitReport = useCallback(async (reportType: ReportType, comment?: string) => {
-    if (!puzzle?.id) return;
-    const result = await submitReport(puzzle.id, reportType, comment);
-    if (!result.success) {
-      console.error('[CareerPathScreen] Report submission failed:', result.error);
-      throw new Error(result.error);
-    }
-  }, [puzzle?.id]);
+  const handleSubmitReport = useCallback(
+    async (reportType: ReportType, comment?: string) => {
+      if (!puzzle?.id) return;
+      const result = await submitReport(puzzle.id, reportType, comment);
+      if (!result.success) {
+        console.error(
+          "[CareerPathScreen] Report submission failed:",
+          result.error,
+        );
+        throw new Error(result.error);
+      }
+    },
+    [puzzle?.id],
+  );
 
   // Fetch saved attempt data for review mode
-  const {
-    metadata: reviewMetadata,
-    isLoading: isReviewLoading,
-  } = useReviewMode<CareerPathMetadata>(puzzleId, isReviewMode);
+  const { metadata: reviewMetadata, isLoading: isReviewLoading } =
+    useReviewMode<CareerPathMetadata>(puzzleId, isReviewMode);
 
   // renderStep must be defined before early returns to maintain hooks order
   const renderStep = useCallback(
     ({ item, index }: { item: CareerStep; index: number }) => {
       const stepNumber = index + 1;
       // After winning, all steps should be revealed (prevents revert to locked state)
-      const isRevealed = stepNumber <= state.revealedCount || state.gameStatus === 'won';
-      const isLatest = stepNumber === state.revealedCount && state.gameStatus === 'playing' && !isVictoryRevealing;
-      const isVictoryHiddenStep = isVictoryRevealing && stepNumber > state.revealedCount;
+      const isRevealed =
+        stepNumber <= state.revealedCount || state.gameStatus === "won";
+      const isLatest =
+        stepNumber === state.revealedCount &&
+        state.gameStatus === "playing" &&
+        !isVictoryRevealing;
+      const isVictoryHiddenStep =
+        isVictoryRevealing && stepNumber > state.revealedCount;
 
       return (
         <TimelineStepRow
@@ -248,13 +277,22 @@ export function CareerPathScreen({
           forceReveal={isVictoryHiddenStep}
           revealDelay={(stepNumber - state.revealedCount - 1) * STAGGER_DELAY}
           isVictoryReveal={isVictoryHiddenStep}
-          isWinningStep={state.gameStatus === 'won' && stepNumber === state.revealedCount}
+          isWinningStep={
+            state.gameStatus === "won" && stepNumber === state.revealedCount
+          }
           shouldShake={state.lastGuessIncorrect && isLatest}
           testID={`step-${stepNumber}`}
         />
       );
     },
-    [state.revealedCount, state.gameStatus, state.lastGuessIncorrect, isVictoryRevealing, careerSteps.length, STAGGER_DELAY]
+    [
+      state.revealedCount,
+      state.gameStatus,
+      state.lastGuessIncorrect,
+      isVictoryRevealing,
+      careerSteps.length,
+      STAGGER_DELAY,
+    ],
   );
 
   // Onboarding loading state (prevent flash)
@@ -327,53 +365,49 @@ export function CareerPathScreen({
     // If won, the winning step is the one where they made the correct guess (revealedCount - 1, 0-indexed)
     // If lost, the missed step is the final step (last in the array)
     const winningStepIndex = reviewMetadata?.won
-      ? (reviewMetadata.revealedCount - 1)
+      ? reviewMetadata.revealedCount - 1
       : null;
-    const missedStepIndex = reviewMetadata && !reviewMetadata.won
-      ? (careerSteps.length - 1)
-      : null;
+    const missedStepIndex =
+      reviewMetadata && !reviewMetadata.won ? careerSteps.length - 1 : null;
 
     return (
-      <GameContainer
-        title={reviewTitle}
-        testID="career-path-review"
-      >
+      <GameContainer title={reviewTitle} testID="career-path-review">
         <ScrollView
           contentContainerStyle={styles.reviewContent}
           showsVerticalScrollIndicator={false}
         >
           <ReviewModeBanner testID="review-banner" />
 
-            {/* All career steps revealed with winning/missed highlighting */}
-            {careerSteps.map((step, index) => (
-              <TimelineStepRow
-                key={index}
-                step={step}
-                stepNumber={index + 1}
-                isRevealed={true}
-                isLatest={false}
-                isFirstStep={index === 0}
-                isLastStep={index === careerSteps.length - 1}
-                isWinningStep={index === winningStepIndex}
-                isMissedStep={index === missedStepIndex}
-                testID={`review-step-${index + 1}`}
-              />
-            ))}
-
-            {/* Answer section */}
-            <ReviewAnswerSection
-              answer={answer}
-              won={reviewMetadata?.won ?? false}
-              testID="review-answer-section"
+          {/* All career steps revealed with winning/missed highlighting */}
+          {careerSteps.map((step, index) => (
+            <TimelineStepRow
+              key={index}
+              step={step}
+              stepNumber={index + 1}
+              isRevealed={true}
+              isLatest={false}
+              isFirstStep={index === 0}
+              isLastStep={index === careerSteps.length - 1}
+              isWinningStep={index === winningStepIndex}
+              isMissedStep={index === missedStepIndex}
+              testID={`review-step-${index + 1}`}
             />
+          ))}
 
-            {/* User's incorrect guesses */}
-            {reviewMetadata?.guesses && reviewMetadata.guesses.length > 0 && (
-              <ReviewGuessesSection
-                guesses={reviewMetadata.guesses}
-                testID="review-guesses-section"
-              />
-            )}
+          {/* Answer section */}
+          <ReviewAnswerSection
+            answer={answer}
+            won={reviewMetadata?.won ?? false}
+            testID="review-answer-section"
+          />
+
+          {/* User's incorrect guesses */}
+          {reviewMetadata?.guesses && reviewMetadata.guesses.length > 0 && (
+            <ReviewGuessesSection
+              guesses={reviewMetadata.guesses}
+              testID="review-guesses-section"
+            />
+          )}
         </ScrollView>
 
         {/* Close Review button */}
@@ -385,9 +419,9 @@ export function CareerPathScreen({
     );
   }
 
-  const isGameOver = state.gameStatus !== 'playing';
+  const isGameOver = state.gameStatus !== "playing";
   const canRevealMore =
-    state.revealedCount < totalSteps && state.gameStatus === 'playing';
+    state.revealedCount < totalSteps && state.gameStatus === "playing";
 
   // Progress indicator for header (hidden when viewing full path)
   const progressIndicator = viewingFullPath ? (
@@ -396,21 +430,22 @@ export function CareerPathScreen({
     </Pressable>
   ) : (
     <Text style={[textStyles.body, styles.progress]}>
-      Step{' '}
-      <Text style={styles.progressHighlight}>{state.revealedCount}</Text>
-      {' '}of{' '}
-      <Text style={styles.progressHighlight}>{totalSteps}</Text>
+      Step <Text style={styles.progressHighlight}>{state.revealedCount}</Text>{" "}
+      of <Text style={styles.progressHighlight}>{totalSteps}</Text>
     </Text>
   );
 
   // Modal visibility: show when game over AND showResultModal is true AND not viewing full path AND not during victory reveal
-  const shouldShowModal = state.gameStatus !== 'playing' &&
+  const shouldShowModal =
+    state.gameStatus !== "playing" &&
     showResultModal &&
     !viewingFullPath &&
     !isVictoryRevealing;
 
   // Dynamic title when viewing full path
-  const displayTitle = viewingFullPath ? `${screenTitle} - Full Path` : screenTitle;
+  const displayTitle = viewingFullPath
+    ? `${screenTitle} - Full Path`
+    : screenTitle;
 
   return (
     <GameContainer
@@ -421,8 +456,8 @@ export function CareerPathScreen({
     >
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         {/* Timeline Container - holds axis line and career steps */}
         <View style={styles.timelineContainer}>
@@ -453,25 +488,25 @@ export function CareerPathScreen({
         {state.score && (
           <GameResultModal
             visible={shouldShowModal}
-            won={state.gameStatus === 'won'}
+            won={state.gameStatus === "won"}
             score={state.score}
             correctAnswer={answer}
             totalSteps={totalSteps}
-            puzzleId={puzzle?.id ?? ''}
+            puzzleId={puzzle?.id ?? ""}
             gameMode={gameMode}
             onShare={shareResult}
-            onViewPath={state.gameStatus === 'won' ? handleViewPath : undefined}
+            onViewPath={state.gameStatus === "won" ? handleViewPath : undefined}
             onClose={() => router.back()}
             testID="game-result-modal"
           />
         )}
 
         {/* Action Zone - show GameOverActionZone when game ends, hidden when viewing full path */}
-        {!viewingFullPath && (
-          isGameOver ? (
+        {!viewingFullPath &&
+          (isGameOver ? (
             <GameOverActionZone
               answer={answer}
-              won={state.gameStatus === 'won'}
+              won={state.gameStatus === "won"}
               onSeeScore={() => setShowResultModal(true)}
               testID="game-over-zone"
             />
@@ -487,8 +522,7 @@ export function CareerPathScreen({
               onFocus={handleInputFocus}
               testID="action-zone"
             />
-          )
-        )}
+          ))}
 
         {/* Scouting Disclaimer - shows data provenance and report option */}
         <ScoutingDisclaimer
@@ -527,12 +561,12 @@ const styles = StyleSheet.create({
   },
   timelineContainer: {
     flex: 1,
-    position: 'relative',
+    position: "relative",
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     gap: spacing.md,
     padding: layout.screenPadding,
   },
@@ -540,7 +574,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   noPuzzleText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.sm,
   },
   progress: {
@@ -548,7 +582,7 @@ const styles = StyleSheet.create({
   },
   progressHighlight: {
     color: colors.pitchGreen,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   listContent: {
     paddingHorizontal: layout.screenPadding,
@@ -563,6 +597,6 @@ const styles = StyleSheet.create({
   backLink: {
     ...textStyles.bodySmall,
     color: colors.pitchGreen,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

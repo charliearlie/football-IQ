@@ -15,35 +15,40 @@ import {
   ScrollView,
   Keyboard,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useState, useRef, useEffect, useCallback } from 'react';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   interpolate,
   Easing,
-} from 'react-native-reanimated';
-import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
-import { useReviewMode } from '@/hooks';
-import { colors, spacing, textStyles, layout } from '@/theme';
+} from "react-native-reanimated";
+import {
+  useStablePuzzle,
+  useOnboarding,
+  GameIntroScreen,
+  GameIntroModal,
+} from "@/features/puzzles";
+import { useReviewMode } from "@/hooks";
+import { colors, spacing, textStyles, layout } from "@/theme";
 import {
   GameContainer,
   ReviewModeActionZone,
   ReviewModeBanner,
-} from '@/components';
-import { useGoalscorerRecallGame } from '../hooks/useGoalscorerRecallGame';
-import { MatchHeader } from '../components/MatchHeader';
-import { CompactMatchHeader } from '../components/CompactMatchHeader';
-import { Scoreboard } from '../components/Scoreboard';
-import { TimerDisplay } from '../components/TimerDisplay';
-import { RecallActionZone } from '../components/RecallActionZone';
-import { GoalFlash } from '../components/GoalFlash';
-import { RecallResultModal } from '../components/RecallResultModal';
-import { RecallComparisonView } from '../components/RecallComparisonView';
-import { AdBanner } from '@/features/ads';
-import type { GoalscorerRecallContent } from '../types/goalscorerRecall.types';
+} from "@/components";
+import { useGoalscorerRecallGame } from "../hooks/useGoalscorerRecallGame";
+import { MatchHeader } from "../components/MatchHeader";
+import { CompactMatchHeader } from "../components/CompactMatchHeader";
+import { Scoreboard } from "../components/Scoreboard";
+import { TimerDisplay } from "../components/TimerDisplay";
+import { RecallActionZone } from "../components/RecallActionZone";
+import { GoalFlash } from "../components/GoalFlash";
+import { RecallResultModal } from "../components/RecallResultModal";
+import { RecallComparisonView } from "../components/RecallComparisonView";
+import { AdBanner } from "@/features/ads";
+import type { GoalscorerRecallContent } from "../types/goalscorerRecall.types";
 
 /**
  * Metadata structure saved when a Goalscorer Recall game completes.
@@ -81,20 +86,24 @@ export function GoalscorerRecallScreen({
   const router = useRouter();
 
   // Onboarding state - show intro for first-time users
-  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('guess_the_goalscorers');
+  const {
+    shouldShowIntro,
+    isReady: isOnboardingReady,
+    completeIntro,
+  } = useOnboarding("guess_the_goalscorers");
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
-  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'guess_the_goalscorers');
+  const { puzzle, isLoading } = useStablePuzzle(
+    puzzleId ?? "guess_the_goalscorers",
+  );
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
   const scrollRef = useRef<ScrollView>(null);
 
   // Fetch saved attempt data for review mode
-  const {
-    metadata: reviewMetadata,
-    isLoading: isReviewLoading,
-  } = useReviewMode<GoalscorerRecallMetadata>(puzzleId, isReviewMode);
+  const { metadata: reviewMetadata, isLoading: isReviewLoading } =
+    useReviewMode<GoalscorerRecallMetadata>(puzzleId, isReviewMode);
 
   // Keyboard visibility for collapsible match header animation
   const keyboardVisible = useSharedValue(0);
@@ -102,8 +111,10 @@ export function GoalscorerRecallScreen({
   // Listen for keyboard show/hide events (for match header animation)
   useEffect(() => {
     // Use 'Will' events on iOS for smoother animation, 'Did' on Android
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const showSub = Keyboard.addListener(showEvent, () => {
       keyboardVisible.value = withTiming(1, {
@@ -126,9 +137,13 @@ export function GoalscorerRecallScreen({
 
   // Animated style for full match header (fades out when keyboard opens)
   const matchHeaderAnimatedStyle = useAnimatedStyle(() => ({
-    height: interpolate(keyboardVisible.value, [0, 1], [MATCH_HEADER_HEIGHT, 0]),
+    height: interpolate(
+      keyboardVisible.value,
+      [0, 1],
+      [MATCH_HEADER_HEIGHT, 0],
+    ),
     opacity: interpolate(keyboardVisible.value, [0, 0.5], [1, 0]),
-    overflow: 'hidden' as const,
+    overflow: "hidden" as const,
     marginBottom: interpolate(keyboardVisible.value, [0, 1], [spacing.sm, 0]),
   }));
 
@@ -136,14 +151,20 @@ export function GoalscorerRecallScreen({
   const compactHeaderAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(keyboardVisible.value, [0.5, 1], [0, 1]),
     height: interpolate(keyboardVisible.value, [0, 0.5, 1], [0, 0, 44]),
-    overflow: 'hidden' as const,
+    overflow: "hidden" as const,
     marginBottom: interpolate(keyboardVisible.value, [0, 1], [0, spacing.sm]),
   }));
 
   // Animated style to shrink timer when keyboard opens
   const timerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(keyboardVisible.value, [0, 1], [1, 0.7]) }],
-    marginVertical: interpolate(keyboardVisible.value, [0, 1], [0, -spacing.md]),
+    transform: [
+      { scale: interpolate(keyboardVisible.value, [0, 1], [1, 0.7]) },
+    ],
+    marginVertical: interpolate(
+      keyboardVisible.value,
+      [0, 1],
+      [0, -spacing.md],
+    ),
   }));
 
   const {
@@ -163,7 +184,9 @@ export function GoalscorerRecallScreen({
   // Track when a new goal is found for animation
   const handleGuessCorrect = () => {
     // Find the most recently found goal
-    const justFound = state.goals.find((g) => g.found && g.id !== lastFoundGoalId);
+    const justFound = state.goals.find(
+      (g) => g.found && g.id !== lastFoundGoalId,
+    );
     if (justFound) {
       setLastFoundGoalId(justFound.id);
     }
@@ -237,7 +260,7 @@ export function GoalscorerRecallScreen({
   const content = puzzle.content as GoalscorerRecallContent;
 
   // First-time user intro screen (show while game is idle, after puzzle loads)
-  if (shouldShowIntro && state.gameStatus === 'idle') {
+  if (shouldShowIntro && state.gameStatus === "idle") {
     return (
       <GameIntroScreen
         gameMode="guess_the_goalscorers"
@@ -300,15 +323,15 @@ export function GoalscorerRecallScreen({
           {/* Stats summary */}
           <View style={styles.reviewStats}>
             <Text style={styles.reviewStatsText}>
-              You found{' '}
+              You found{" "}
               <Text style={styles.reviewStatsHighlight}>
                 {reviewMetadata?.scorersFound ?? 0}
               </Text>
-              {' of '}
+              {" of "}
               <Text style={styles.reviewStatsHighlight}>
                 {reviewMetadata?.totalScorers ?? allGoals.length}
               </Text>
-              {' scorers'}
+              {" scorers"}
             </Text>
             {reviewMetadata?.won && (
               <Text style={styles.reviewWinText}>Complete!</Text>
@@ -331,8 +354,8 @@ export function GoalscorerRecallScreen({
       </GameContainer>
     );
   }
-  const isPlaying = state.gameStatus === 'playing';
-  const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'lost';
+  const isPlaying = state.gameStatus === "playing";
+  const isGameOver = state.gameStatus === "won" || state.gameStatus === "lost";
 
   const matchInfo = {
     homeTeam: content.home_team,
@@ -352,7 +375,9 @@ export function GoalscorerRecallScreen({
       testID="goalscorer-recall-screen"
     >
       {/* Full Match Header - Fades out when keyboard is visible */}
-      <Animated.View style={[styles.matchHeaderContainer, matchHeaderAnimatedStyle]}>
+      <Animated.View
+        style={[styles.matchHeaderContainer, matchHeaderAnimatedStyle]}
+      >
         <MatchHeader
           homeTeam={content.home_team}
           awayTeam={content.away_team}
@@ -364,7 +389,9 @@ export function GoalscorerRecallScreen({
       </Animated.View>
 
       {/* Compact Match Header - Fades in when keyboard is visible */}
-      <Animated.View style={[styles.compactHeaderContainer, compactHeaderAnimatedStyle]}>
+      <Animated.View
+        style={[styles.compactHeaderContainer, compactHeaderAnimatedStyle]}
+      >
         <CompactMatchHeader
           homeTeam={content.home_team}
           awayTeam={content.away_team}
@@ -375,18 +402,15 @@ export function GoalscorerRecallScreen({
 
       {/* Timer - shrinks when keyboard is visible */}
       <Animated.View style={timerAnimatedStyle}>
-        <TimerDisplay
-          timeRemaining={timeRemaining}
-          isRunning={isPlaying}
-        />
+        <TimerDisplay timeRemaining={timeRemaining} isRunning={isPlaying} />
       </Animated.View>
 
       {/* Progress indicator */}
       <Text style={styles.progressText}>
         <Text style={styles.progressHighlight}>{foundScorersCount}</Text>
-        {' / '}
+        {" / "}
         <Text style={styles.progressHighlight}>{totalScorers}</Text>
-        {' scorers found'}
+        {" scorers found"}
       </Text>
 
       {/* Scoreboard */}
@@ -414,9 +438,7 @@ export function GoalscorerRecallScreen({
       )}
 
       {/* Goal Flash */}
-      <GoalFlash
-        visible={state.lastGuessCorrect}
-      />
+      <GoalFlash visible={state.lastGuessCorrect} />
 
       {/* Result Modal - shows immediately when game ends */}
       <RecallResultModal
@@ -446,8 +468,8 @@ export function GoalscorerRecallScreen({
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     gap: spacing.md,
     padding: layout.screenPadding,
   },
@@ -455,18 +477,18 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   noPuzzleText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.sm,
   },
   progressText: {
     ...textStyles.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.sm,
   },
   progressHighlight: {
     color: colors.pitchGreen,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   matchHeaderContainer: {
     paddingHorizontal: layout.screenPadding,
@@ -487,22 +509,22 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   reviewStats: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.md,
   },
   reviewStatsText: {
     ...textStyles.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   reviewStatsHighlight: {
     color: colors.pitchGreen,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   reviewWinText: {
     ...textStyles.body,
     color: colors.pitchGreen,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: spacing.xs,
   },
   reviewScorersContainer: {
@@ -516,25 +538,25 @@ const styles = StyleSheet.create({
     ...textStyles.bodySmall,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   reviewScorerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     borderRadius: 8,
     marginBottom: spacing.xs,
   },
   reviewScorerRowOwnGoal: {
-    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+    backgroundColor: "rgba(156, 163, 175, 0.1)",
   },
   reviewScorerRowFound: {
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
   },
   reviewScorerRowMissed: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
   },
   reviewScorerMinute: {
     ...textStyles.bodySmall,
@@ -547,7 +569,7 @@ const styles = StyleSheet.create({
   },
   reviewScorerNameOwnGoal: {
     color: colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   reviewScorerNameFound: {
     color: colors.pitchGreen,
@@ -562,9 +584,9 @@ const styles = StyleSheet.create({
   },
   reviewScorerStatus: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     width: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   reviewStatusFound: {
     color: colors.pitchGreen,

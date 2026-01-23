@@ -7,11 +7,10 @@ import {
   ScrollView,
   AppState,
   AppStateStatus,
-  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Trophy } from 'lucide-react-native';
+// import { Trophy } from 'lucide-react-native'; // TODO: Unhide when scoring system is implemented
 import { colors, textStyles, spacing } from '@/theme';
 import {
   StreakHeader,
@@ -135,17 +134,18 @@ export default function HomeScreen() {
     [router, isPremium]
   );
 
-  // Navigate to daily leaderboard
-  const handleLeaderboardPress = useCallback(() => {
-    router.push('/leaderboard?type=daily');
-  }, [router]);
+  // TODO: Unhide when scoring system is implemented
+  // const handleLeaderboardPress = useCallback(() => {
+  //   router.push('/leaderboard?type=daily');
+  // }, [router]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Fixed Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Football IQ</Text>
-        <Pressable
+        {/* TODO: Unhide when scoring system is implemented */}
+        {/* <Pressable
           onPress={handleLeaderboardPress}
           style={styles.leaderboardButton}
           hitSlop={12}
@@ -153,7 +153,7 @@ export default function HomeScreen() {
           accessibilityRole="button"
         >
           <Trophy size={22} color={colors.cardYellow} />
-        </Pressable>
+        </Pressable> */}
       </View>
 
       {/* Scrollable Content */}

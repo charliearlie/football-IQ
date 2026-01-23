@@ -8,7 +8,6 @@
  * - Large Bebas Neue welcome header
  * - Weekly fixtures grid showing all game modes
  * - Display name input with Pitch Green accent
- * - AsyncStorage persistence for onboarding state
  * - Sentry analytics on completion
  */
 
@@ -23,14 +22,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Sentry from '@sentry/react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { useHaptics } from '@/hooks/useHaptics';
 import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { BriefingBackground } from './BriefingBackground';
 import { WeeklyFixturesGrid } from './WeeklyFixturesGrid';
-import { ONBOARDING_STORAGE_KEY } from '../constants/briefingSchedule';
 
 export interface BriefingScreenProps {
   /** Callback when user submits their display name */
@@ -84,11 +81,8 @@ export function BriefingScreen({ onSubmit, testID }: BriefingScreenProps) {
     setError(null);
 
     try {
-      // Save display name to Supabase
+      // Save display name to Supabase (AsyncStorage is handled by caller)
       await onSubmit(trimmedName);
-
-      // Mark onboarding as completed in AsyncStorage
-      await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
 
       // Log analytics event to Sentry
       Sentry.captureMessage('User Onboarded', {
