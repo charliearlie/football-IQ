@@ -8,20 +8,14 @@
  * - Global rank
  */
 
-import React, { useRef, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  Pressable,
-} from 'react-native';
-import ViewShot from 'react-native-view-shot';
-import { X, Brain, Flame, Trophy, Award } from 'lucide-react-native';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { colors, textStyles, spacing, borderRadius, fonts } from '@/theme';
-import { ElevatedButton } from '@/components';
-import { captureAndShareIQCard, IQCardData } from '../utils/shareIQ';
+import React, { useRef, useState, useCallback } from "react";
+import { View, Text, StyleSheet, Modal, Pressable } from "react-native";
+import ViewShot from "react-native-view-shot";
+import { X, Brain, Flame, Trophy, Award } from "lucide-react-native";
+import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import { colors, textStyles, spacing, borderRadius, fonts } from "@/theme";
+import { ElevatedButton } from "@/components";
+import { captureAndShareIQCard, IQCardData } from "../utils/shareIQ";
 
 interface IQCardOverlayProps {
   /** Whether the modal is visible */
@@ -36,10 +30,10 @@ interface IQCardOverlayProps {
  * Get tier color based on IQ score.
  */
 function getTierColor(iq: number): string {
-  if (iq >= 90) return '#FFD700'; // Gold - Elite
+  if (iq >= 90) return "#FFD700"; // Gold - Elite
   if (iq >= 70) return colors.pitchGreen; // Green - Expert
   if (iq >= 50) return colors.cardYellow; // Yellow - Intermediate
-  if (iq >= 30) return '#FF8C00'; // Orange - Apprentice
+  if (iq >= 30) return "#FF8C00"; // Orange - Apprentice
   return colors.textSecondary; // Gray - Rookie
 }
 
@@ -47,11 +41,11 @@ function getTierColor(iq: number): string {
  * Get tier label based on IQ score.
  */
 function getTierLabel(iq: number): string {
-  if (iq >= 90) return 'Elite';
-  if (iq >= 70) return 'Expert';
-  if (iq >= 50) return 'Intermediate';
-  if (iq >= 30) return 'Apprentice';
-  return 'Rookie';
+  if (iq >= 90) return "Elite";
+  if (iq >= 70) return "Expert";
+  if (iq >= 50) return "Intermediate";
+  if (iq >= 30) return "Apprentice";
+  return "Rookie";
 }
 
 /**
@@ -72,7 +66,9 @@ function IQCard({ data }: { data: IQCardData }) {
       {/* Main IQ Score */}
       <View style={styles.scoreSection}>
         <Brain size={48} color={tierColor} />
-        <Text style={[styles.iqScore, { color: tierColor }]}>{data.globalIQ}</Text>
+        <Text style={[styles.iqScore, { color: tierColor }]}>
+          {data.globalIQ}
+        </Text>
         <View style={[styles.tierBadge, { backgroundColor: tierColor }]}>
           <Text style={styles.tierText}>{tierLabel}</Text>
         </View>
@@ -110,7 +106,7 @@ function IQCard({ data }: { data: IQCardData }) {
 
       {/* Footer */}
       <View style={styles.cardFooter}>
-        <Text style={styles.footerText}>footballiq.app</Text>
+        <Text style={styles.footerText}>football-iq.app</Text>
       </View>
     </View>
   );
@@ -122,22 +118,24 @@ function IQCard({ data }: { data: IQCardData }) {
 export function IQCardOverlay({ visible, onClose, data }: IQCardOverlayProps) {
   const viewShotRef = useRef<ViewShot>(null);
   const [isSharing, setIsSharing] = useState(false);
-  const [shareStatus, setShareStatus] = useState<'idle' | 'shared' | 'error'>('idle');
+  const [shareStatus, setShareStatus] = useState<"idle" | "shared" | "error">(
+    "idle",
+  );
 
   const handleShare = useCallback(async () => {
     setIsSharing(true);
-    setShareStatus('idle');
+    setShareStatus("idle");
 
     const result = await captureAndShareIQCard(viewShotRef, data);
 
     setIsSharing(false);
 
     if (result.success) {
-      setShareStatus('shared');
+      setShareStatus("shared");
       // Reset after 2 seconds
-      setTimeout(() => setShareStatus('idle'), 2000);
+      setTimeout(() => setShareStatus("idle"), 2000);
     } else {
-      setShareStatus('error');
+      setShareStatus("error");
     }
   }, [data]);
 
@@ -148,20 +146,13 @@ export function IQCardOverlay({ visible, onClose, data }: IQCardOverlayProps) {
       animationType="none"
       onRequestClose={onClose}
     >
-      <Animated.View
-        entering={FadeIn.duration(200)}
-        style={styles.overlay}
-      >
+      <Animated.View entering={FadeIn.duration(200)} style={styles.overlay}>
         <Animated.View
           entering={SlideInDown.springify().damping(15)}
           style={styles.container}
         >
           {/* Close Button */}
-          <Pressable
-            onPress={onClose}
-            style={styles.closeButton}
-            hitSlop={12}
-          >
+          <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
             <X size={24} color={colors.floodlightWhite} />
           </Pressable>
 
@@ -174,7 +165,7 @@ export function IQCardOverlay({ visible, onClose, data }: IQCardOverlayProps) {
           {/* Capturable Card */}
           <ViewShot
             ref={viewShotRef}
-            options={{ format: 'png', quality: 1 }}
+            options={{ format: "png", quality: 1 }}
             style={styles.viewShot}
           >
             <IQCard data={data} />
@@ -185,10 +176,10 @@ export function IQCardOverlay({ visible, onClose, data }: IQCardOverlayProps) {
             <ElevatedButton
               title={
                 isSharing
-                  ? 'Sharing...'
-                  : shareStatus === 'shared'
-                  ? 'Shared!'
-                  : 'Share IQ Card'
+                  ? "Sharing..."
+                  : shareStatus === "shared"
+                    ? "Shared!"
+                    : "Share IQ Card"
               }
               onPress={handleShare}
               disabled={isSharing}
@@ -204,20 +195,20 @@ export function IQCardOverlay({ visible, onClose, data }: IQCardOverlayProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: spacing.xl,
   },
   container: {
-    width: '100%',
+    width: "100%",
     maxWidth: 360,
     backgroundColor: colors.stadiumNavy,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
   },
   closeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: spacing.lg,
     right: spacing.lg,
     zIndex: 1,
@@ -225,28 +216,28 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...textStyles.h1,
     color: colors.floodlightWhite,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xs,
   },
   modalSubtitle: {
     ...textStyles.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xl,
   },
   viewShot: {
     borderRadius: borderRadius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   card: {
-    backgroundColor: '#1a2744',
+    backgroundColor: "#1a2744",
     borderRadius: borderRadius.lg,
     padding: spacing.xl,
     borderWidth: 2,
     borderColor: colors.pitchGreen,
   },
   cardHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.xl,
   },
   cardTitle: {
@@ -260,7 +251,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   scoreSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.xl,
   },
   iqScore: {
@@ -278,23 +269,23 @@ const styles = StyleSheet.create({
   tierText: {
     ...textStyles.body,
     color: colors.stadiumNavy,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
   statValue: {
     ...textStyles.body,
     color: colors.floodlightWhite,
-    fontWeight: '700',
+    fontWeight: "700",
     marginTop: spacing.xs,
   },
   statLabel: {
@@ -303,7 +294,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cardFooter: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: 1,

@@ -10,8 +10,8 @@
 import type {
   GoalscorerRecallScore,
   GoalWithState,
-} from '../types/goalscorerRecall.types';
-import { generateGoalscorerEmojiGrid } from './scoreDisplay';
+} from "../types/goalscorerRecall.types";
+import { generateGoalscorerEmojiGrid } from "./scoreDisplay";
 
 interface MatchInfo {
   homeTeam: string;
@@ -43,20 +43,20 @@ export function generateGoalscorerShareText(
   score: GoalscorerRecallScore,
   goals: GoalWithState[],
   matchInfo: MatchInfo,
-  puzzleDate?: string
+  puzzleDate?: string,
 ): string {
   const lines: string[] = [];
 
   // Header
-  lines.push('Football IQ ⚽ Goalscorer Recall');
+  lines.push("Football IQ ⚽ Goalscorer Recall");
 
   // Match line with optional date
   const matchLine = `${matchInfo.homeTeam} ${matchInfo.homeScore}-${matchInfo.awayScore} ${matchInfo.awayTeam}`;
   if (puzzleDate) {
     const date = new Date(puzzleDate);
-    const formatted = date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    const formatted = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
     lines.push(`${matchLine} (${formatted})`);
   } else {
@@ -64,7 +64,7 @@ export function generateGoalscorerShareText(
   }
 
   // Empty line
-  lines.push('');
+  lines.push("");
 
   // Emoji grid
   const emojiGrid = generateGoalscorerEmojiGrid(goals);
@@ -74,10 +74,10 @@ export function generateGoalscorerShareText(
   lines.push(`${score.scorersFound}/${score.totalScorers} scorers found`);
 
   // Empty line and link
-  lines.push('');
-  lines.push('https://footballiq.app');
+  lines.push("");
+  lines.push("https://football-iq.app");
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -85,5 +85,5 @@ export function generateGoalscorerShareText(
  */
 export interface ShareResult {
   success: boolean;
-  method?: 'clipboard' | 'native';
+  method?: "clipboard" | "native";
 }

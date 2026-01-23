@@ -5,7 +5,7 @@
  * Uses in-app display for a seamless user experience.
  */
 
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -14,19 +14,19 @@ import {
   Pressable,
   StyleSheet,
   Dimensions,
-} from 'react-native';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { X } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
-import { useHaptics } from '@/hooks/useHaptics';
+} from "react-native";
+import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import { X } from "lucide-react-native";
+import { colors, textStyles, spacing, borderRadius } from "@/theme";
+import { useHaptics } from "@/hooks/useHaptics";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export interface LegalModalProps {
   /** Whether the modal is visible */
   visible: boolean;
   /** Type of legal content to display */
-  type: 'privacy' | 'terms';
+  type: "privacy" | "terms";
   /** Close handler */
   onClose: () => void;
   /** Test ID for testing */
@@ -57,7 +57,7 @@ We use analytics services to improve the app experience. These services collect 
 You can request deletion of your data at any time by contacting us.
 
 6. Contact Us
-For privacy concerns, contact: privacy@footballiq.app`;
+For privacy concerns, contact: privacy@football-iq.app`;
 
 const TERMS_OF_SERVICE_CONTENT = `Last Updated: January 2025
 
@@ -86,7 +86,7 @@ Football IQ is not liable for any damages arising from use of the app.
 We may update these terms at any time. Continued use constitutes acceptance.
 
 8. Contact
-For questions, contact: support@footballiq.app`;
+For questions, contact: support@football-iq.app`;
 
 export function LegalModal({
   visible,
@@ -98,8 +98,9 @@ export function LegalModal({
 
   if (!visible) return null;
 
-  const title = type === 'privacy' ? 'Privacy Policy' : 'Terms of Service';
-  const content = type === 'privacy' ? PRIVACY_POLICY_CONTENT : TERMS_OF_SERVICE_CONTENT;
+  const title = type === "privacy" ? "Privacy Policy" : "Terms of Service";
+  const content =
+    type === "privacy" ? PRIVACY_POLICY_CONTENT : TERMS_OF_SERVICE_CONTENT;
 
   const handleClose = () => {
     triggerLight();
@@ -170,11 +171,11 @@ export function LegalModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
   },
   container: {
     backgroundColor: colors.stadiumNavy,
@@ -186,9 +187,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
     borderBottomWidth: 1,
@@ -201,8 +202,8 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.glassBackground,
     borderRadius: 20,
     borderWidth: 1,
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.xl,
-    paddingBottom: spacing['3xl'],
+    paddingBottom: spacing["3xl"],
   },
   content: {
     ...textStyles.body,

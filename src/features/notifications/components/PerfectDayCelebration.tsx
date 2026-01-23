@@ -8,7 +8,7 @@
  * - Shareable card for social media
  */
 
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,8 +17,8 @@ import {
   Pressable,
   Share,
   Platform,
-} from 'react-native';
-import ViewShot from 'react-native-view-shot';
+} from "react-native";
+import ViewShot from "react-native-view-shot";
 import Animated, {
   FadeIn,
   SlideInUp,
@@ -26,25 +26,32 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withDelay,
-} from 'react-native-reanimated';
-import { Trophy, Share2, X, Flame, Calendar } from 'lucide-react-native';
-import { Confetti } from '@/components/Confetti';
-import { ElevatedButton } from '@/components/ElevatedButton';
-import { triggerPerfectDay } from '@/lib/haptics';
-import { getAuthorizedDateUnsafe } from '@/lib/time';
-import { colors, spacing, borderRadius, fonts, fontWeights, textStyles } from '@/theme';
-import type { PerfectDayCelebrationProps } from '../types';
+} from "react-native-reanimated";
+import { Trophy, Share2, X, Flame, Calendar } from "lucide-react-native";
+import { Confetti } from "@/components/Confetti";
+import { ElevatedButton } from "@/components/ElevatedButton";
+import { triggerPerfectDay } from "@/lib/haptics";
+import { getAuthorizedDateUnsafe } from "@/lib/time";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  fonts,
+  fontWeights,
+  textStyles,
+} from "@/theme";
+import type { PerfectDayCelebrationProps } from "../types";
 
 /**
  * Format date for display (e.g., "January 18, 2026")
  */
 function formatDateForDisplay(dateString: string): string {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const [year, month, day] = dateString.split("-").map(Number);
   const date = new Date(year, month - 1, day);
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -161,14 +168,14 @@ export function PerfectDayCelebration({
         await Share.share(
           Platform.select({
             ios: { url: uri, message },
-            default: { message: `${message}\n\nDownload: footballiq.app` },
-          }) || { message }
+            default: { message: `${message}\n\nDownload: football-iq.app` },
+          }) || { message },
         );
       }
 
       await onShare();
     } catch (error) {
-      console.error('[PerfectDay] Share error:', error);
+      console.error("[PerfectDay] Share error:", error);
     } finally {
       setIsSharing(false);
     }
@@ -184,13 +191,13 @@ export function PerfectDayCelebration({
     >
       <View style={styles.overlay}>
         {/* Confetti layer */}
-        <Confetti active={showConfetti} testID={testID ? `${testID}-confetti` : undefined} />
+        <Confetti
+          active={showConfetti}
+          testID={testID ? `${testID}-confetti` : undefined}
+        />
 
         {/* Content */}
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          style={styles.container}
-        >
+        <Animated.View entering={FadeIn.duration(200)} style={styles.container}>
           {/* Close button */}
           <Pressable
             style={styles.closeButton}
@@ -203,16 +210,16 @@ export function PerfectDayCelebration({
 
           {/* Card */}
           <Animated.View style={[styles.cardWrapper, cardAnimatedStyle]}>
-            <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
-              <PerfectDayCard puzzleCount={puzzleCount} streakCount={streakCount} />
+            <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
+              <PerfectDayCard
+                puzzleCount={puzzleCount}
+                streakCount={streakCount}
+              />
             </ViewShot>
           </Animated.View>
 
           {/* Subtitle */}
-          <Animated.Text
-            entering={FadeIn.delay(300)}
-            style={styles.subtitle}
-          >
+          <Animated.Text entering={FadeIn.delay(300)} style={styles.subtitle}>
             You completed all {puzzleCount} puzzles today!
           </Animated.Text>
 
@@ -222,7 +229,7 @@ export function PerfectDayCelebration({
             style={styles.buttonContainer}
           >
             <ElevatedButton
-              title={isSharing ? 'Sharing...' : 'Share'}
+              title={isSharing ? "Sharing..." : "Share"}
               onPress={handleShare}
               disabled={isSharing}
               icon={<Share2 size={18} color={colors.stadiumNavy} />}
@@ -249,26 +256,26 @@ export function PerfectDayCelebration({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     paddingHorizontal: spacing.lg,
   },
   closeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 60,
     right: 24,
     zIndex: 10,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   cardWrapper: {
     marginBottom: spacing.lg,
@@ -280,15 +287,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stadiumNavy,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
     borderColor: colors.cardYellow,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   cardGlow: {
-    position: 'absolute',
+    position: "absolute",
     top: -50,
-    left: '50%',
+    left: "50%",
     marginLeft: -100,
     width: 200,
     height: 200,
@@ -303,12 +310,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 36,
     color: colors.cardYellow,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xs,
   },
   dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
     marginBottom: spacing.lg,
   },
@@ -318,14 +325,14 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.lg,
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
   },
@@ -358,7 +365,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...textStyles.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xl,
   },
   buttonContainer: {

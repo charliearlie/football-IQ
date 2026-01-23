@@ -2,21 +2,21 @@
  * Share functionality for Starting XI game results.
  */
 
-import { Share, Platform } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import { Share, Platform } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import type {
   StartingXIScore,
   PlayerSlotState,
   LineupContent,
-} from '../types/startingXI.types';
+} from "../types/startingXI.types";
 import {
   generateStartingXIEmojiGrid,
   generateLinearEmojiDisplay,
-} from './scoreDisplay';
+} from "./scoreDisplay";
 
 export interface ShareResult {
   success: boolean;
-  method: 'share' | 'clipboard' | 'none';
+  method: "share" | "clipboard" | "none";
 }
 
 /**
@@ -44,27 +44,27 @@ export interface ShareResult {
 export function generateShareText(
   score: StartingXIScore,
   slots: PlayerSlotState[],
-  content: LineupContent
+  content: LineupContent,
 ): string {
   const emojiGrid = generateStartingXIEmojiGrid(slots, content.formation);
 
   // Extract year from match_date if available
-  const year = content.match_date?.slice(0, 4) || '';
-  const yearDisplay = year ? ` (${year})` : '';
+  const year = content.match_date?.slice(0, 4) || "";
+  const yearDisplay = year ? ` (${year})` : "";
 
   const lines = [
-    'Football IQ - Starting XI',
+    "Football IQ - Starting XI",
     content.match_name,
     `${content.competition}${yearDisplay}`,
-    '',
+    "",
     `Found ${score.foundCount}/${score.totalHidden} | Score: ${score.points}`,
-    '',
+    "",
     emojiGrid,
-    '',
-    'footballiq.app',
+    "",
+    "football-iq.app",
   ];
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -78,15 +78,15 @@ export function generateShareText(
 export async function shareStartingXIResult(
   score: StartingXIScore,
   slots: PlayerSlotState[],
-  content: LineupContent
+  content: LineupContent,
 ): Promise<ShareResult> {
   const shareText = generateShareText(score, slots, content);
 
   try {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       // Web: copy to clipboard
       await Clipboard.setStringAsync(shareText);
-      return { success: true, method: 'clipboard' };
+      return { success: true, method: "clipboard" };
     }
 
     // Mobile: use native share sheet
@@ -95,21 +95,21 @@ export async function shareStartingXIResult(
     });
 
     if (result.action === Share.sharedAction) {
-      return { success: true, method: 'share' };
+      return { success: true, method: "share" };
     } else if (result.action === Share.dismissedAction) {
       // User dismissed, but we can still copy to clipboard
       await Clipboard.setStringAsync(shareText);
-      return { success: true, method: 'clipboard' };
+      return { success: true, method: "clipboard" };
     }
 
-    return { success: false, method: 'none' };
+    return { success: false, method: "none" };
   } catch (error) {
     // Fallback to clipboard on error
     try {
       await Clipboard.setStringAsync(shareText);
-      return { success: true, method: 'clipboard' };
+      return { success: true, method: "clipboard" };
     } catch {
-      return { success: false, method: 'none' };
+      return { success: false, method: "none" };
     }
   }
 }

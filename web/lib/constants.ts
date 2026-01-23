@@ -54,3 +54,24 @@ export const COLORS = {
 // Puzzle status values
 export const PUZZLE_STATUSES = ["live", "draft", "archived"] as const;
 export type PuzzleStatus = (typeof PUZZLE_STATUSES)[number];
+
+// App Store URLs (placeholder - update when app is published)
+export const IOS_APP_ID = "footballiq";
+export const ANDROID_PACKAGE = "com.footballiq.app";
+export const APP_STORE_URL = `https://apps.apple.com/app/${IOS_APP_ID}`;
+export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+
+// Fallback puzzle data for when no puzzle exists for today
+export const FALLBACK_CAREER_PUZZLE = {
+  answer: "Bukayo Saka",
+  career_steps: [
+    {
+      type: "club" as const,
+      text: "Arsenal",
+      year: "2018-present",
+      apps: 180,
+      goals: 45,
+    },
+    { type: "club" as const, text: "Arsenal Academy", year: "2008-2018" },
+  ],
+};
