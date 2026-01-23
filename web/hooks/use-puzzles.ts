@@ -1,9 +1,9 @@
 "use client";
 
 import useSWR from "swr";
-import { createClient } from "@/lib/supabase/client";
 import type { DailyPuzzle } from "@/types/supabase";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { fetchPuzzlesForCalendar } from "@/app/(dashboard)/calendar/actions";
 
 export interface UsePuzzlesOptions {
   startDate: string; // YYYY-MM-DD
@@ -18,21 +18,15 @@ export interface UsePuzzlesResult {
 }
 
 async function fetchPuzzles({ startDate, endDate }: UsePuzzlesOptions): Promise<DailyPuzzle[]> {
-  const supabase = createClient();
+  // Use server action with admin client to bypass RLS
+  // This ensures draft puzzles are visible in the CMS
+  const result = await fetchPuzzlesForCalendar({ startDate, endDate });
 
-  const { data, error } = await supabase
-    .from("daily_puzzles")
-    .select("*")
-    .gte("puzzle_date", startDate)
-    .lte("puzzle_date", endDate)
-    .order("puzzle_date", { ascending: true })
-    .order("game_mode", { ascending: true });
-
-  if (error) {
-    throw new Error(error.message);
+  if (!result.success || !result.data) {
+    throw new Error(result.error || "Failed to fetch puzzles");
   }
 
-  return data || [];
+  return result.data.puzzles;
 }
 
 export function usePuzzles(options: UsePuzzlesOptions): UsePuzzlesResult {

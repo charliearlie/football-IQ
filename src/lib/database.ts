@@ -284,6 +284,31 @@ export async function getPuzzleTimestampsForDateRange(
   );
 }
 
+/**
+ * Get all local puzzle IDs.
+ * Used for orphan detection during sync.
+ */
+export async function getAllLocalPuzzleIds(): Promise<string[]> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<{ id: string }>('SELECT id FROM puzzles');
+  return rows.map((r) => r.id);
+}
+
+/**
+ * Delete puzzles by their IDs.
+ * Used to remove orphaned puzzles that no longer exist on server.
+ */
+export async function deletePuzzlesByIds(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const database = getDatabase();
+  const placeholders = ids.map(() => '?').join(',');
+  const result = await database.runAsync(
+    `DELETE FROM puzzles WHERE id IN (${placeholders})`,
+    ids
+  );
+  return result.changes;
+}
+
 // ============ ATTEMPT OPERATIONS ============
 
 /**
@@ -762,6 +787,31 @@ export async function getCatalogEntryCountIncomplete(): Promise<number> {
 export async function clearCatalog(): Promise<void> {
   const database = getDatabase();
   await database.runAsync('DELETE FROM puzzle_catalog');
+}
+
+/**
+ * Get all local catalog entry IDs.
+ * Used for orphan detection during catalog sync.
+ */
+export async function getAllLocalCatalogIds(): Promise<string[]> {
+  const database = getDatabase();
+  const rows = await database.getAllAsync<{ id: string }>('SELECT id FROM puzzle_catalog');
+  return rows.map((r) => r.id);
+}
+
+/**
+ * Delete catalog entries by their IDs.
+ * Used to remove orphaned entries that no longer exist on server.
+ */
+export async function deleteCatalogByIds(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const database = getDatabase();
+  const placeholders = ids.map(() => '?').join(',');
+  const result = await database.runAsync(
+    `DELETE FROM puzzle_catalog WHERE id IN (${placeholders})`,
+    ids
+  );
+  return result.changes;
 }
 
 // ============ AD UNLOCK OPERATIONS ============

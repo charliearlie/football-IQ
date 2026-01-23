@@ -31,6 +31,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 | `profiles` | Yes | User profiles with `is_premium` flag |
 | `puzzle_attempts` | Yes | User puzzle attempts with scores |
 | `user_streaks` | Yes | Streak tracking per game mode |
+| `content_reports` | Yes | User error reports for puzzle content |
 | `agent_runs` | Blocked | AI agent logs (admin-only) |
 | `match_data` | Blocked | Football match data (admin-only) |
 
@@ -363,8 +364,30 @@ Extracts career data from Wikipedia using MediaWiki API + OpenAI gpt-4o.
 - **Output**: Populated career timeline with clubs, years, apps, goals, and trivia
 - **Confidence scoring**: High/Medium/Low indicators per step
 - **Anti-hallucination**: Validates extracted clubs against source wikitext
+- **Provenance Metadata**: Extracts Wikipedia revision ID and timestamp for audit trail
 - **Files**: `web/lib/ai/career-scout.ts`, `web/types/ai.ts`
 - **See**: `docs/memory/decisions/ai-scout.md` for full documentation
+
+### Content Oracle
+AI-powered bulk puzzle generation and user error reporting system.
+- **Oracle Engine**: Suggests players for Career Path/Pro based on game mode difficulty
+  - `career_path`: High-profile players (Ballon d'Or nominees, league legends)
+  - `career_path_pro`: Cult heroes, journeymen, obscure legends
+  - 30-day deduplication against existing puzzles
+- **Metadata Enrichment**: `_metadata` object in puzzle content tracks provenance:
+  - `scouted_at`: ISO timestamp when AI Scout extracted data
+  - `wikipedia_revision_id`: MediaWiki revision ID for audit trail
+  - `generated_by`: `"manual"` | `"ai_oracle"` | `"ai_scout"`
+- **CMS Features**:
+  - "Oracle" dropdown in Calendar header to bulk-fill schedule gaps
+  - Report badges (red indicator) on GameModeDot for puzzles with pending reports
+  - Report triage section in PuzzleEditorModal with Resolve/Dismiss actions
+- **Mobile Features**:
+  - ScoutingDisclaimer footer showing data provenance date
+  - ReportErrorSheet for submitting error reports (5 quick-select types)
+- **Database**: `content_reports` table with RLS (users can insert, admins can read/update)
+- **Files**: `web/lib/ai/oracle.ts`, `web/hooks/use-reports.ts`, `src/features/career-path/components/ScoutingDisclaimer.tsx`, `src/features/career-path/components/ReportErrorSheet.tsx`
+- **See**: `docs/memory/decisions/content-oracle.md` for full documentation
 
 ### Intelligent Scheduler
 Schedule-aware puzzle management system for efficient content creation.

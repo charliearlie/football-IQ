@@ -5,7 +5,8 @@ import { createAdminClient } from "@/lib/supabase/server";
 import type { GameMode, PuzzleStatus } from "@/lib/constants";
 import { validateContent } from "@/lib/schemas";
 import type { TablesInsert, TablesUpdate, Json, DailyPuzzle } from "@/types/supabase";
-import type { CareerScoutResult } from "@/types/ai";
+import type { CareerScoutResult, OracleResult, OracleSuggestion, ContentMetadata, OracleTheme } from "@/types/ai";
+import type { ContentReport, ContentReportInsert, ReportType, ReportStatus } from "@/types/supabase";
 import {
   getRequirementsForDate,
   getMissingPuzzlesForWeek,
@@ -216,6 +217,36 @@ export async function deletePuzzle(id: string): Promise<ActionResult> {
 }
 
 // ============================================================================
+// PUBLISH PUZZLE (Change status to live)
+// ============================================================================
+
+export async function publishPuzzle(id: string): Promise<ActionResult> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { error } = await supabase
+      .from("daily_puzzles")
+      .update({ status: "live" })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Supabase publish error:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return { success: true };
+  } catch (err) {
+    console.error("Publish puzzle error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
 // COPY FROM PREVIOUS DAY
 // ============================================================================
 
@@ -252,6 +283,40 @@ export async function copyFromPreviousDay(
     };
   } catch (err) {
     console.error("Copy puzzle error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// FETCH PUZZLES FOR CALENDAR (Admin client - bypasses RLS)
+// ============================================================================
+
+export async function fetchPuzzlesForCalendar(input: {
+  startDate: string;
+  endDate: string;
+}): Promise<ActionResult<{ puzzles: DailyPuzzle[] }>> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { data, error } = await supabase
+      .from("daily_puzzles")
+      .select("*")
+      .gte("puzzle_date", input.startDate)
+      .lte("puzzle_date", input.endDate)
+      .order("puzzle_date", { ascending: true })
+      .order("game_mode", { ascending: true });
+
+    if (error) {
+      console.error("Fetch puzzles error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: { puzzles: data || [] } };
+  } catch (err) {
+    console.error("Fetch puzzles error:", err);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
@@ -1074,7 +1139,7 @@ export async function assignPuzzleDateWithConflictHandling(
     // If forceAsBonus is true or no conflict, proceed with assignment
     const isPremium = isPremiumOnDate(gameMode, parseISO(targetDate)) ?? false;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("daily_puzzles")
       .update({
         puzzle_date: targetDate,
@@ -1082,9 +1147,7 @@ export async function assignPuzzleDateWithConflictHandling(
         is_bonus: options?.forceAsBonus || false,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", puzzleId)
-      .select()
-      .single();
+      .eq("id", puzzleId);
 
     if (error) {
       console.error("Assign puzzle date error:", error);
@@ -1093,9 +1156,400 @@ export async function assignPuzzleDateWithConflictHandling(
 
     revalidatePath("/dashboard/calendar");
 
-    return { success: true, data };
+    return { success: true, data: {} };
   } catch (err) {
     console.error("Assign puzzle date with conflict handling error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// CONTENT ORACLE
+// ============================================================================
+
+/**
+ * Get Oracle suggestions for filling schedule gaps.
+ * This is a fast operation (~2s) that returns player suggestions.
+ */
+export async function getOracleSuggestions(input: {
+  gameMode: "career_path" | "career_path_pro";
+  count: number;
+  theme?: OracleTheme;
+  customPrompt?: string;
+}): Promise<ActionResult<{ suggestions: OracleSuggestion[] }>> {
+  try {
+    const { gameMode, count, theme, customPrompt } = input;
+
+    // Dynamically import the Oracle service to keep it server-side only
+    const { suggestPlayersForGaps } = await import("@/lib/ai/oracle");
+    const result = await suggestPlayersForGaps({
+      gameMode,
+      count: count + 2, // Request a few extra in case some fail
+      excludeRecentDays: 30,
+      theme,
+      customPrompt,
+    });
+
+    if (!result.success || !result.suggestions) {
+      return { success: false, error: result.error || "Failed to generate suggestions" };
+    }
+
+    return { success: true, data: { suggestions: result.suggestions } };
+  } catch (err) {
+    console.error("Get Oracle suggestions error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Scout a single player and save as a draft puzzle.
+ * This is a slow operation (~3-5s) that fetches from Wikipedia and uses AI.
+ */
+export async function oracleScoutAndSave(input: {
+  suggestion: OracleSuggestion;
+  gameMode: "career_path" | "career_path_pro";
+  targetDate: string;
+}): Promise<ActionResult<{ puzzleId: string; playerName: string }>> {
+  try {
+    const { suggestion, gameMode, targetDate } = input;
+
+    // Scout the player
+    const { scoutPlayerCareer: scout } = await import("@/lib/ai/career-scout");
+    const scoutResult = await scout(suggestion.wikipediaUrl);
+
+    if (!scoutResult.success || !scoutResult.data) {
+      return {
+        success: false,
+        error: `Scout failed for ${suggestion.name}: ${scoutResult.error || "Unknown error"}`,
+      };
+    }
+
+    // Prepare content with metadata
+    const content = {
+      ...scoutResult.data,
+      _metadata: scoutResult._metadata,
+    };
+
+    // Determine is_premium from schedule
+    const isPremium = isPremiumOnDate(gameMode, parseISO(targetDate)) ?? false;
+
+    // Save as draft
+    const supabase = await createAdminClient();
+    const insertData: TablesInsert<"daily_puzzles"> = {
+      puzzle_date: targetDate,
+      game_mode: gameMode,
+      content: content as unknown as Json,
+      status: "draft",
+      difficulty: suggestion.suggestedDifficulty,
+      source: "ai_generated",
+      is_premium: isPremium,
+      triggered_by: "oracle_fill",
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from("daily_puzzles")
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      return {
+        success: false,
+        error: `Save failed for ${suggestion.name}: ${error.message}`,
+      };
+    }
+
+    // Don't revalidate here - the modal will revalidate once when done
+    return {
+      success: true,
+      data: { puzzleId: data.id, playerName: scoutResult.data.answer || suggestion.name },
+    };
+  } catch (err) {
+    console.error("Oracle scout and save error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Revalidate the calendar page after Oracle operations complete.
+ * Called by OracleModal when batch processing finishes.
+ */
+export async function revalidateCalendar(): Promise<void> {
+  revalidatePath("/dashboard/calendar");
+}
+
+/**
+ * @deprecated Use getOracleSuggestions + oracleScoutAndSave individually for progress tracking.
+ * Oracle-powered bulk fill: suggests players, scouts them, and saves as drafts.
+ */
+export async function oracleFillGaps(input: {
+  gameMode: "career_path" | "career_path_pro";
+  targetDates: string[];
+}): Promise<ActionResult<{ created: number; failed: number; details: string[] }>> {
+  try {
+    const { gameMode, targetDates } = input;
+
+    if (targetDates.length === 0) {
+      return { success: false, error: "No target dates provided" };
+    }
+
+    // Get Oracle suggestions
+    const { suggestPlayersForGaps } = await import("@/lib/ai/oracle");
+    const oracleResult = await suggestPlayersForGaps({
+      gameMode,
+      count: targetDates.length + 2, // Request a few extra in case some fail
+      excludeRecentDays: 30,
+    });
+
+    if (!oracleResult.success || !oracleResult.suggestions) {
+      return { success: false, error: oracleResult.error || "Oracle failed to generate suggestions" };
+    }
+
+    const { scoutPlayerCareer: scout } = await import("@/lib/ai/career-scout");
+    const supabase = await createAdminClient();
+
+    let created = 0;
+    let failed = 0;
+    const details: string[] = [];
+
+    // Process each target date sequentially
+    for (let i = 0; i < targetDates.length && i < oracleResult.suggestions.length; i++) {
+      const targetDate = targetDates[i];
+      const suggestion = oracleResult.suggestions[i];
+
+      try {
+        // Scout the player
+        const scoutResult = await scout(suggestion.wikipediaUrl);
+
+        if (!scoutResult.success || !scoutResult.data) {
+          failed++;
+          details.push(`${suggestion.name}: Scout failed - ${scoutResult.error}`);
+          continue;
+        }
+
+        // Prepare content with metadata
+        const content = {
+          ...scoutResult.data,
+          _metadata: scoutResult._metadata,
+        };
+
+        // Determine is_premium from schedule
+        const isPremium = isPremiumOnDate(gameMode, parseISO(targetDate)) ?? false;
+
+        // Save as draft
+        const insertData: TablesInsert<"daily_puzzles"> = {
+          puzzle_date: targetDate,
+          game_mode: gameMode,
+          content: content as unknown as Json,
+          status: "draft",
+          difficulty: suggestion.suggestedDifficulty,
+          source: "ai_generated",
+          is_premium: isPremium,
+          triggered_by: "oracle_fill",
+        };
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase as any)
+          .from("daily_puzzles")
+          .insert(insertData)
+          .select()
+          .single();
+
+        if (error) {
+          failed++;
+          details.push(`${suggestion.name}: Save failed - ${error.message}`);
+        } else {
+          created++;
+          details.push(`${suggestion.name}: Created for ${targetDate}`);
+        }
+      } catch (err) {
+        failed++;
+        details.push(`${suggestion.name}: Error - ${err instanceof Error ? err.message : "Unknown error"}`);
+      }
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return {
+      success: true,
+      data: { created, failed, details },
+    };
+  } catch (err) {
+    console.error("Oracle fill gaps error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// CONTENT REPORTS
+// ============================================================================
+
+/**
+ * Get all pending reports for puzzles within a date range.
+ * Used to show report indicators on the calendar.
+ */
+export async function getPendingReportsForDateRange(
+  startDate: string,
+  endDate: string
+): Promise<ActionResult<{ puzzleId: string; reportCount: number }[]>> {
+  try {
+    const supabase = await createAdminClient();
+
+    // Join content_reports with daily_puzzles to filter by date range
+    const { data, error } = await supabase
+      .from("content_reports")
+      .select(`
+        puzzle_id,
+        daily_puzzles!inner (
+          puzzle_date
+        )
+      `)
+      .eq("status", "pending")
+      .gte("daily_puzzles.puzzle_date", startDate)
+      .lte("daily_puzzles.puzzle_date", endDate);
+
+    if (error) {
+      console.error("Get pending reports error:", error);
+      return { success: false, error: error.message };
+    }
+
+    // Aggregate by puzzle_id
+    const countMap = new Map<string, number>();
+    for (const report of data || []) {
+      const puzzleId = report.puzzle_id;
+      countMap.set(puzzleId, (countMap.get(puzzleId) || 0) + 1);
+    }
+
+    const result = Array.from(countMap.entries()).map(([puzzleId, reportCount]) => ({
+      puzzleId,
+      reportCount,
+    }));
+
+    return { success: true, data: result };
+  } catch (err) {
+    console.error("Get pending reports error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Get reports for a specific puzzle.
+ */
+export async function getReportsForPuzzle(
+  puzzleId: string
+): Promise<ActionResult<ContentReport[]>> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { data, error } = await supabase
+      .from("content_reports")
+      .select("*")
+      .eq("puzzle_id", puzzleId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Get reports for puzzle error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as ContentReport[] };
+  } catch (err) {
+    console.error("Get reports for puzzle error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Resolve or dismiss a report.
+ */
+export async function resolveReport(
+  reportId: string,
+  status: "resolved" | "dismissed"
+): Promise<ActionResult> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { data, error } = await supabase
+      .from("content_reports")
+      .update({
+        status,
+        resolved_at: new Date().toISOString(),
+        // Note: resolved_by would need the admin user's ID, but we don't have auth context here
+      })
+      .eq("id", reportId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Resolve report error:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/calendar");
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("Resolve report error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Create a new content report.
+ * This is called from the mobile app via Supabase directly, but exposed here for completeness.
+ */
+export async function createReport(input: {
+  puzzleId: string;
+  reportType: ReportType;
+  comment?: string;
+  reporterId?: string;
+}): Promise<ActionResult<ContentReport>> {
+  try {
+    const supabase = await createAdminClient();
+
+    const insertData: ContentReportInsert = {
+      puzzle_id: input.puzzleId,
+      report_type: input.reportType,
+      comment: input.comment || null,
+      reporter_id: input.reporterId || null,
+    };
+
+    const { data, error } = await supabase
+      .from("content_reports")
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Create report error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as ContentReport };
+  } catch (err) {
+    console.error("Create report error:", err);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",

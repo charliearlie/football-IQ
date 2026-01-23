@@ -5,7 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO, subDays } from "date-fns";
-import { Copy, Save, Send, Loader2, ArrowRight, Star } from "lucide-react";
+import { Copy, Save, Send, Loader2, ArrowRight, Star, AlertTriangle, Check, X, Info } from "lucide-react";
 
 import {
   Dialog,
@@ -31,13 +31,32 @@ import {
   type GameMode,
   type PuzzleStatus,
 } from "@/lib/constants";
-import type { DailyPuzzle } from "@/types/supabase";
+import type { DailyPuzzle, ContentReport } from "@/types/supabase";
 import {
   contentSchemaMap,
   getDefaultContent,
   type PuzzleContent,
 } from "@/lib/schemas";
 import { upsertPuzzle, copyFromPreviousDay } from "@/app/(dashboard)/calendar/actions";
+import { useReportsForPuzzle } from "@/hooks/use-reports";
+
+// Report type labels for display
+const REPORT_TYPE_LABELS: Record<string, string> = {
+  retired_moved: "Retired/Moved",
+  incorrect_stats: "Incorrect Stats",
+  name_visible: "Name Visible",
+  wrong_club: "Wrong Club",
+  other: "Other",
+};
+
+// Content metadata interface for AI-scouted puzzles
+interface ContentMetadata {
+  scouted_at?: string;
+  wikipedia_revision_id?: string;
+  wikipedia_revision_date?: string;
+  generated_by?: "manual" | "ai_oracle" | "ai_scout";
+  wikipedia_url?: string;
+}
 
 // Import form components
 import { CareerPathForm } from "./forms/career-path-form";
@@ -129,6 +148,21 @@ export function PuzzleEditorModal({
   const isPremium = PREMIUM_MODES.includes(gameMode);
   const isBacklogMode = puzzleDate === null;
   const contentSchema = contentSchemaMap[gameMode];
+
+  // Fetch reports for this puzzle
+  const {
+    reports,
+    pendingCount,
+    resolve: resolveReport,
+    isLoading: isLoadingReports,
+  } = useReportsForPuzzle(puzzle?.id ?? null);
+
+  // Extract metadata from puzzle content
+  const contentMetadata = useMemo(() => {
+    if (!puzzle?.content) return null;
+    const content = puzzle.content as { _metadata?: ContentMetadata };
+    return content._metadata ?? null;
+  }, [puzzle?.content]);
 
   // Create form schema that wraps content validation
   const formSchema = useMemo(
@@ -360,6 +394,82 @@ export function PuzzleEditorModal({
                   <FormComponent />
                 </form>
               </FormProvider>
+
+              {/* Reports Section - shown when there are pending reports */}
+              {isEditMode && pendingCount > 0 && (
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle className="h-4 w-4 text-red-card" />
+                    <span className="text-sm font-medium text-red-card">
+                      {pendingCount} Pending Report{pendingCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {reports
+                      .filter((r) => r.status === "pending")
+                      .map((report) => (
+                        <div
+                          key={report.id}
+                          className="p-3 rounded-lg bg-red-card/10 border border-red-card/20"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <Badge variant="outline" className="mb-2 text-xs border-red-card/30 text-red-card">
+                                {REPORT_TYPE_LABELS[report.report_type] || report.report_type}
+                              </Badge>
+                              {report.comment && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {report.comment}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground/70 mt-2">
+                                Reported {format(parseISO(report.created_at), "MMM d, yyyy 'at' h:mm a")}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => resolveReport(report.id, "resolved")}
+                                className="h-7 px-2 text-pitch-green hover:bg-pitch-green/10"
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Resolve
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => resolveReport(report.id, "dismissed")}
+                                className="h-7 px-2 text-muted-foreground hover:bg-white/5"
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Dismiss
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata Footer - shown for AI-scouted content */}
+              {isEditMode && contentMetadata && (
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Info className="h-3 w-3" />
+                    <span>
+                      Scouted{" "}
+                      {contentMetadata.scouted_at
+                        ? format(parseISO(contentMetadata.scouted_at), "MMM d, yyyy")
+                        : "Unknown"}
+                      {contentMetadata.generated_by && ` via ${contentMetadata.generated_by}`}
+                    </span>
+                  </div>
+                </div>
+              )}
             </ScrollArea>
           </div>
 

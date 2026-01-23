@@ -167,20 +167,6 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
         validCards.splice(proIndex, 0, placeholderCard);
       }
 
-      // If top_tens has no puzzle, add a placeholder (premium-only)
-      if (!puzzleMap.has('top_tens')) {
-        const topTensIndex = GAME_MODE_ORDER.indexOf('top_tens');
-        const placeholderCard: DailyPuzzleCard = {
-          puzzleId: 'coming-soon-top-tens',
-          gameMode: 'top_tens',
-          status: 'play', // Will be handled specially in the component
-          difficulty: null,
-          isPremiumOnly: true,
-        };
-        // Insert at correct position
-        validCards.splice(topTensIndex, 0, placeholderCard);
-      }
-
       setCards(validCards);
     } catch (error) {
       console.error('Failed to load daily puzzle cards:', error);

@@ -21,7 +21,7 @@ import {
 } from "@/lib/constants";
 import { isRequiredOnDate } from "@/lib/scheduler";
 import type { CalendarDay } from "@/hooks/use-calendar-data";
-import { Crown, ChevronDown, ChevronRight, Pencil, Plus, Star } from "lucide-react";
+import { Crown, ChevronDown, ChevronRight, Pencil, Plus, Star, Trash2, CheckCircle2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import type { DailyPuzzle } from "@/types/supabase";
 
@@ -33,6 +33,8 @@ interface QuickViewSheetProps {
   isLoading?: boolean;
   onEditPuzzle?: (gameMode: GameMode, puzzle?: DailyPuzzle) => void;
   onToggleBonus?: (puzzleId: string, isBonus: boolean) => void;
+  onDeletePuzzle?: (puzzleId: string) => void;
+  onPublishPuzzle?: (puzzleId: string) => void;
 }
 
 interface GameModeCardProps {
@@ -43,6 +45,8 @@ interface GameModeCardProps {
   onToggleExpand: (puzzleId: string) => void;
   onEditPuzzle?: (gameMode: GameMode, puzzle?: DailyPuzzle) => void;
   onToggleBonus?: (puzzleId: string, isBonus: boolean) => void;
+  onDeletePuzzle?: (puzzleId: string) => void;
+  onPublishPuzzle?: (puzzleId: string) => void;
 }
 
 function GameModeCard({
@@ -53,6 +57,8 @@ function GameModeCard({
   onToggleExpand,
   onEditPuzzle,
   onToggleBonus,
+  onDeletePuzzle,
+  onPublishPuzzle,
 }: GameModeCardProps) {
   const isPremium = PREMIUM_MODES.includes(mode);
 
@@ -174,6 +180,36 @@ function GameModeCard({
                 {JSON.stringify(puzzle.content, null, 2)}
               </pre>
             </div>
+
+            {/* Publish button (for drafts) */}
+            {onPublishPuzzle && puzzle.status === "draft" && (
+              <div className="pt-3 border-t border-white/10">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-pitch-green hover:bg-pitch-green/90"
+                  onClick={() => onPublishPuzzle(puzzle.id)}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                  Publish (Go Live)
+                </Button>
+              </div>
+            )}
+
+            {/* Delete button */}
+            {onDeletePuzzle && (
+              <div className={puzzle.status !== "draft" ? "pt-3 border-t border-white/10" : ""}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  onClick={() => onDeletePuzzle(puzzle.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Delete Puzzle
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -189,6 +225,8 @@ export function QuickViewSheet({
   isLoading,
   onEditPuzzle,
   onToggleBonus,
+  onDeletePuzzle,
+  onPublishPuzzle,
 }: QuickViewSheetProps) {
   const [expandedPuzzle, setExpandedPuzzle] = useState<string | null>(null);
 
@@ -254,6 +292,8 @@ export function QuickViewSheet({
                       }
                       onEditPuzzle={onEditPuzzle}
                       onToggleBonus={onToggleBonus}
+                      onDeletePuzzle={onDeletePuzzle}
+                      onPublishPuzzle={onPublishPuzzle}
                     />
                   ))}
                 </div>
@@ -277,6 +317,8 @@ export function QuickViewSheet({
                       }
                       onEditPuzzle={onEditPuzzle}
                       onToggleBonus={onToggleBonus}
+                      onDeletePuzzle={onDeletePuzzle}
+                      onPublishPuzzle={onPublishPuzzle}
                     />
                   ))}
                 </div>

@@ -4,14 +4,17 @@ import { cn } from "@/lib/utils";
 import { GameModeDot } from "./game-mode-dot";
 import type { CalendarDay } from "@/hooks/use-calendar-data";
 import type { GameMode } from "@/lib/constants";
+import type { PendingReportCount } from "@/hooks/use-reports";
 
 interface DayCellProps {
   day: CalendarDay;
   isSelected: boolean;
   onSelect: (date: string) => void;
+  /** Map of puzzleId -> report count for displaying report indicators */
+  pendingReports?: Map<string, number>;
 }
 
-export function DayCell({ day, isSelected, onSelect }: DayCellProps) {
+export function DayCell({ day, isSelected, onSelect, pendingReports }: DayCellProps) {
   const handleClick = () => {
     if (day.isCurrentMonth) {
       onSelect(day.date);
@@ -71,17 +74,24 @@ export function DayCell({ day, isSelected, onSelect }: DayCellProps) {
       {/* Game mode dots - flexible layout for scheduled modes + extras */}
       {day.isCurrentMonth && day.displayModes.length > 0 && (
         <div className="flex flex-wrap gap-1 justify-center">
-          {day.displayModes.map((gm) => (
-            <GameModeDot
-              key={gm.mode}
-              mode={gm.mode as GameMode}
-              hasContent={gm.hasContent}
-              status={gm.status}
-              isBonus={gm.isBonus}
-              isScheduled={gm.isScheduled}
-              isExtra={gm.isExtra}
-            />
-          ))}
+          {day.displayModes.map((gm) => {
+            const reportCount = gm.puzzleId
+              ? pendingReports?.get(gm.puzzleId) || 0
+              : 0;
+            return (
+              <GameModeDot
+                key={gm.mode}
+                mode={gm.mode as GameMode}
+                hasContent={gm.hasContent}
+                status={gm.status}
+                isBonus={gm.isBonus}
+                isScheduled={gm.isScheduled}
+                isExtra={gm.isExtra}
+                hasPendingReport={reportCount > 0}
+                pendingReportCount={reportCount}
+              />
+            );
+          })}
         </div>
       )}
 

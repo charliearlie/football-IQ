@@ -244,6 +244,53 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          id: string
+          puzzle_id: string
+          report_type: "retired_moved" | "incorrect_stats" | "name_visible" | "wrong_club" | "other"
+          comment: string | null
+          status: "pending" | "resolved" | "dismissed"
+          reporter_id: string | null
+          resolved_by: string | null
+          resolved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          puzzle_id: string
+          report_type: "retired_moved" | "incorrect_stats" | "name_visible" | "wrong_club" | "other"
+          comment?: string | null
+          status?: "pending" | "resolved" | "dismissed"
+          reporter_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          puzzle_id?: string
+          report_type?: "retired_moved" | "incorrect_stats" | "name_visible" | "wrong_club" | "other"
+          comment?: string | null
+          status?: "pending" | "resolved" | "dismissed"
+          reporter_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_puzzle_id_fkey"
+            columns: ["puzzle_id"]
+            isOneToOne: false
+            referencedRelation: "daily_puzzles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -467,3 +514,9 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// Convenience type for content_reports rows
+export type ContentReport = Tables<"content_reports">
+export type ContentReportInsert = TablesInsert<"content_reports">
+export type ReportType = ContentReport["report_type"]
+export type ReportStatus = ContentReport["status"]

@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,8 +28,21 @@ import { TimelineAxis } from '../components/TimelineAxis';
 import { ActionZone } from '../components/ActionZone';
 import { GameOverActionZone } from '../components/GameOverActionZone';
 import { GameResultModal } from '../components/GameResultModal';
+import { ScoutingDisclaimer } from '../components/ScoutingDisclaimer';
+import { ReportErrorSheet, ReportType } from '../components/ReportErrorSheet';
+import { submitReport } from '../services/reportService';
 import { CareerStep } from '../types/careerPath.types';
 import { AdBanner } from '@/features/ads';
+
+/**
+ * Content metadata structure embedded in puzzle content.
+ */
+interface ContentMetadata {
+  scouted_at?: string;
+  wikipedia_revision_id?: string;
+  wikipedia_revision_date?: string;
+  generated_by?: 'manual' | 'ai_oracle' | 'ai_scout';
+}
 
 /**
  * Metadata structure saved when a Career Path game completes.
@@ -118,6 +131,16 @@ export function CareerPathScreen({
   const [showResultModal, setShowResultModal] = useState(false);
   const [viewingFullPath, setViewingFullPath] = useState(false);
 
+  // Report error sheet state
+  const [showReportSheet, setShowReportSheet] = useState(false);
+
+  // Extract metadata from puzzle content for scouting provenance
+  const scoutedAt = useMemo(() => {
+    if (!puzzle?.content) return null;
+    const content = puzzle.content as { _metadata?: ContentMetadata };
+    return content._metadata?.scouted_at ?? null;
+  }, [puzzle?.content]);
+
   // Animation constants
   const STAGGER_DELAY = 200; // ms between each card reveal
   const POST_REVEAL_DELAY = 1500; // ms before modal appears
@@ -179,6 +202,24 @@ export function CareerPathScreen({
       });
     }
   }, [state.revealedCount]);
+
+  // Report error handlers
+  const handleOpenReportSheet = useCallback(() => {
+    setShowReportSheet(true);
+  }, []);
+
+  const handleCloseReportSheet = useCallback(() => {
+    setShowReportSheet(false);
+  }, []);
+
+  const handleSubmitReport = useCallback(async (reportType: ReportType, comment?: string) => {
+    if (!puzzle?.id) return;
+    const result = await submitReport(puzzle.id, reportType, comment);
+    if (!result.success) {
+      console.error('[CareerPathScreen] Report submission failed:', result.error);
+      throw new Error(result.error);
+    }
+  }, [puzzle?.id]);
 
   // Fetch saved attempt data for review mode
   const {
@@ -449,6 +490,13 @@ export function CareerPathScreen({
           )
         )}
 
+        {/* Scouting Disclaimer - shows data provenance and report option */}
+        <ScoutingDisclaimer
+          scoutedAt={scoutedAt}
+          onReportError={handleOpenReportSheet}
+          testID="scouting-disclaimer"
+        />
+
         {/* Banner Ad (non-premium only) */}
         <AdBanner testID="career-path-ad-banner" />
 
@@ -458,6 +506,15 @@ export function CareerPathScreen({
           visible={showHelpModal}
           onClose={() => setShowHelpModal(false)}
           testID="career-path-help-modal"
+        />
+
+        {/* Report Error Sheet */}
+        <ReportErrorSheet
+          visible={showReportSheet}
+          puzzleId={puzzle?.id ?? null}
+          onDismiss={handleCloseReportSheet}
+          onSubmit={handleSubmitReport}
+          testID="report-error-sheet"
         />
       </KeyboardAvoidingView>
     </GameContainer>

@@ -11,6 +11,7 @@ import type {
   ScoutedCareerStep,
   WikitextResult,
   ConfidenceLevel,
+  ContentMetadata,
 } from "@/types/ai";
 
 // ============================================================================
@@ -53,6 +54,7 @@ function extractPageTitle(url: string): string | null {
 
 /**
  * Fetches the wikitext content of a Wikipedia article using the MediaWiki API.
+ * Also extracts revision metadata for provenance tracking.
  */
 async function fetchWikipediaWikitext(pageTitle: string): Promise<WikitextResult> {
   try {
@@ -60,7 +62,8 @@ async function fetchWikipediaWikitext(pageTitle: string): Promise<WikitextResult
     apiUrl.searchParams.set("action", "query");
     apiUrl.searchParams.set("titles", pageTitle);
     apiUrl.searchParams.set("prop", "revisions");
-    apiUrl.searchParams.set("rvprop", "content");
+    // Request revision IDs, timestamps, and content
+    apiUrl.searchParams.set("rvprop", "ids|timestamp|content");
     apiUrl.searchParams.set("format", "json");
     apiUrl.searchParams.set("formatversion", "2");
 
@@ -88,8 +91,9 @@ async function fetchWikipediaWikitext(pageTitle: string): Promise<WikitextResult
       return { success: false, error: `Wikipedia page not found: ${pageTitle}` };
     }
 
-    // Extract wikitext
-    const wikitext = page.revisions?.[0]?.content;
+    // Extract wikitext and revision metadata
+    const revision = page.revisions?.[0];
+    const wikitext = revision?.content;
     if (!wikitext) {
       return { success: false, error: "No content found on page" };
     }
@@ -98,6 +102,9 @@ async function fetchWikipediaWikitext(pageTitle: string): Promise<WikitextResult
       success: true,
       wikitext,
       pageTitle: page.title,
+      // Revision metadata for provenance tracking
+      revisionId: revision?.revid?.toString(),
+      revisionTimestamp: revision?.timestamp,
     };
   } catch (error) {
     return {
@@ -310,14 +317,22 @@ function validateAgainstSource(
 // ============================================================================
 
 /**
+ * Extended result type that includes metadata for provenance tracking.
+ */
+export interface CareerScoutResultWithMetadata extends CareerScoutResult {
+  /** Metadata about the scouting operation for provenance tracking */
+  _metadata?: ContentMetadata;
+}
+
+/**
  * Scouts a player's career from their Wikipedia page.
  *
  * @param wikipediaUrl - The full Wikipedia URL for the player
- * @returns CareerScoutResult with extracted career data or error
+ * @returns CareerScoutResultWithMetadata with extracted career data and provenance metadata
  */
 export async function scoutPlayerCareer(
   wikipediaUrl: string
-): Promise<CareerScoutResult> {
+): Promise<CareerScoutResultWithMetadata> {
   // Extract page title from URL
   const pageTitle = extractPageTitle(wikipediaUrl);
 
@@ -343,6 +358,22 @@ export async function scoutPlayerCareer(
 
   // Extract career data using AI
   const result = await extractCareerWithAI(wikitextResult.wikitext, playerName);
+
+  // Add metadata for provenance tracking
+  if (result.success && result.data) {
+    const metadata: ContentMetadata = {
+      scouted_at: new Date().toISOString(),
+      wikipedia_revision_id: wikitextResult.revisionId,
+      wikipedia_revision_date: wikitextResult.revisionTimestamp,
+      generated_by: "ai_scout",
+      wikipedia_url: wikipediaUrl,
+    };
+
+    return {
+      ...result,
+      _metadata: metadata,
+    };
+  }
 
   return result;
 }

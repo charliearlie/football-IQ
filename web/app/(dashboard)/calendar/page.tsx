@@ -18,6 +18,7 @@ import {
   ConflictResolutionModal,
   type ConflictResolution,
 } from "@/components/puzzle/conflict-resolution-modal";
+import { OracleModal, type OracleGameMode } from "@/components/calendar/oracle-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { findNextGap } from "@/lib/scheduler";
 import type { ConflictInfo, AvailableSlot } from "@/lib/displacement";
@@ -29,6 +30,8 @@ import {
   displacePuzzle,
   swapPuzzleDates,
   assignPuzzleDateWithConflictHandling,
+  deletePuzzle,
+  publishPuzzle,
 } from "./actions";
 import type { GameMode } from "@/lib/constants";
 import type { DailyPuzzle } from "@/types/supabase";
@@ -65,6 +68,13 @@ export default function CalendarPage() {
 
   // Ad-hoc creation modal state
   const [adhocModalOpen, setAdhocModalOpen] = useState(false);
+
+  // Oracle modal state
+  const [oracleModal, setOracleModal] = useState<{
+    isOpen: boolean;
+    gameMode: OracleGameMode | null;
+    gapDates: string[];
+  }>({ isOpen: false, gameMode: null, gapDates: [] });
 
   // Conflict resolution state
   const [conflictState, setConflictState] = useState<ConflictState>({
@@ -220,6 +230,43 @@ export default function CalendarPage() {
     }
   }, [currentMonth, mutate]);
 
+  // Handle Oracle fill - opens modal with gap dates
+  const handleOracleFill = useCallback(
+    (gameMode: OracleGameMode) => {
+      // Find gap dates for this game mode in the current month view
+      const gapDates: string[] = [];
+      for (const week of calendarData.weeks) {
+        for (const day of week.days) {
+          if (!day.isCurrentMonth) continue;
+          // Check if this day needs the game mode and doesn't have it
+          const modeStatus = day.displayModes.find((m) => m.mode === gameMode);
+          if (modeStatus && !modeStatus.hasContent && modeStatus.isScheduled) {
+            gapDates.push(day.date);
+          }
+        }
+      }
+
+      if (gapDates.length === 0) {
+        toast.info(`No ${gameMode === "career_path" ? "Career Path" : "Career Path Pro"} gaps found in this month`);
+        return;
+      }
+
+      // Open Oracle modal with the gap dates
+      setOracleModal({
+        isOpen: true,
+        gameMode,
+        gapDates,
+      });
+    },
+    [calendarData.weeks]
+  );
+
+  // Handle Oracle modal completion
+  const handleOracleComplete = useCallback(() => {
+    mutate();
+    toast.success("Oracle operation completed");
+  }, [mutate]);
+
   // Helper to get puzzle title from content
   const getPuzzleTitle = useCallback((puzzle: DailyPuzzle): string => {
     const c = puzzle.content as Record<string, unknown>;
@@ -259,6 +306,51 @@ export default function CalendarPage() {
         mutate();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to update bonus status");
+      }
+    },
+    [mutate]
+  );
+
+  // Delete a puzzle
+  const handleDeletePuzzle = useCallback(
+    async (puzzleId: string) => {
+      if (!window.confirm("Are you sure you want to delete this puzzle? This cannot be undone.")) {
+        return;
+      }
+
+      try {
+        const result = await deletePuzzle(puzzleId);
+
+        if (!result.success) {
+          toast.error(result.error || "Failed to delete puzzle");
+          return;
+        }
+
+        toast.success("Puzzle deleted");
+        mutate();
+        backlogData.mutate();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to delete puzzle");
+      }
+    },
+    [mutate, backlogData]
+  );
+
+  // Publish a puzzle (change status to live)
+  const handlePublishPuzzle = useCallback(
+    async (puzzleId: string) => {
+      try {
+        const result = await publishPuzzle(puzzleId);
+
+        if (!result.success) {
+          toast.error(result.error || "Failed to publish puzzle");
+          return;
+        }
+
+        toast.success("Puzzle published");
+        mutate();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to publish puzzle");
       }
     },
     [mutate]
@@ -461,6 +553,7 @@ export default function CalendarPage() {
         onInitializeWeek={handleInitializeWeek}
         onToggleBacklog={handleToggleBacklog}
         onCreateAdhoc={handleCreateAdhoc}
+        onOracleFill={handleOracleFill}
         backlogCount={backlogData.count}
         isInitializing={isInitializing}
       />
@@ -508,6 +601,8 @@ export default function CalendarPage() {
         isLoading={isLoading}
         onEditPuzzle={handleEditPuzzle}
         onToggleBonus={handleToggleBonus}
+        onDeletePuzzle={handleDeletePuzzle}
+        onPublishPuzzle={handlePublishPuzzle}
       />
 
       {/* Puzzle editor modal */}
@@ -554,6 +649,17 @@ export default function CalendarPage() {
         onClose={() => setAdhocModalOpen(false)}
         onConfirm={handleAdhocConfirm}
       />
+
+      {/* Oracle modal */}
+      {oracleModal.gameMode && (
+        <OracleModal
+          isOpen={oracleModal.isOpen}
+          onClose={() => setOracleModal({ isOpen: false, gameMode: null, gapDates: [] })}
+          gameMode={oracleModal.gameMode}
+          gapDates={oracleModal.gapDates}
+          onComplete={handleOracleComplete}
+        />
+      )}
     </div>
   );
 }

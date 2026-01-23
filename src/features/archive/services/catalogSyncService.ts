@@ -10,7 +10,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
-import { saveCatalogEntries } from '@/lib/database';
+import { saveCatalogEntries, getAllLocalCatalogIds, deleteCatalogByIds } from '@/lib/database';
 import { LocalCatalogEntry } from '@/types/database';
 import { CatalogSyncResult } from '../types/archive.types';
 
@@ -53,20 +53,19 @@ interface SupabaseCatalogEntry {
  * returning metadata for all published puzzles. This allows the
  * Archive screen to show locked placeholders for premium content.
  *
- * Supports incremental sync - if `since` is provided, only fetches
- * entries created after that timestamp.
+ * Always performs a full sync to enable orphan detection - removes
+ * local catalog entries that no longer exist on the server.
  *
- * @param since - Optional ISO timestamp to fetch only newer entries
+ * @param since - Ignored (kept for backward compatibility, always does full sync)
  * @returns CatalogSyncResult with success status and count of synced entries
  */
 export async function syncCatalogFromSupabase(
   since?: string | null
 ): Promise<CatalogSyncResult> {
   try {
-    // Call RPC function that bypasses RLS
-    // Pass since_timestamp for incremental sync (null = full sync)
+    // Always do full sync (pass null) to enable orphan detection
     const { data: entries, error } = await supabase.rpc('get_puzzle_catalog', {
-      since_timestamp: since || null,
+      since_timestamp: null,
     });
 
     if (error) {
@@ -78,13 +77,24 @@ export async function syncCatalogFromSupabase(
       };
     }
 
-    if (!entries || entries.length === 0) {
-      // Even with no new entries, update sync timestamp
-      await setLastCatalogSyncTime(new Date().toISOString());
+    if (!entries) {
       return {
         success: true,
         syncedCount: 0,
       };
+    }
+
+    // Get local catalog IDs BEFORE saving new ones
+    const localCatalogIds = await getAllLocalCatalogIds();
+    const serverCatalogIds = new Set(entries.map((e: SupabaseCatalogEntry) => e.id));
+
+    // Find orphans (local entries not on server)
+    const orphanIds = localCatalogIds.filter((id) => !serverCatalogIds.has(id));
+
+    // Delete orphaned catalog entries
+    if (orphanIds.length > 0) {
+      const deletedCount = await deleteCatalogByIds(orphanIds);
+      console.log(`[CatalogSync] Deleted ${deletedCount} orphaned catalog entries`);
     }
 
     // Transform and save entries to SQLite

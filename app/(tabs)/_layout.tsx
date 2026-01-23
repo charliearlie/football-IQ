@@ -90,7 +90,7 @@ export default function TabLayout() {
       </Tabs>
 
       {/* Global banner ad - hidden for premium users, positioned above home indicator */}
-      <AdBanner testID="global-banner-ad" />
+      {/* <AdBanner testID="global-banner-ad" /> */}
     </View>
   );
 }

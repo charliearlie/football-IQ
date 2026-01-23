@@ -1702,3 +1702,115 @@ web/
   hooks/use-calendar-data.ts     - Calendar transformation
   lib/supabase/server.ts         - Admin client (service role)
 ```
+
+## Content Oracle & Reporting
+
+### Mobile: Error Reporting
+```typescript
+import { ScoutingDisclaimer } from '@/features/career-path/components/ScoutingDisclaimer';
+import { ReportErrorSheet, ReportType } from '@/features/career-path/components/ReportErrorSheet';
+import { submitReport, hasUserReportedPuzzle } from '@/features/career-path/services/reportService';
+
+// Report types
+type ReportType = 'retired_moved' | 'incorrect_stats' | 'name_visible' | 'wrong_club' | 'other';
+
+// Submit a report
+const result = await submitReport(puzzleId, 'incorrect_stats', 'Wrong apps for Barcelona');
+// result: { success: true, reportId: 'uuid' }
+
+// Check if user already reported
+const alreadyReported = await hasUserReportedPuzzle(puzzleId);
+
+// ScoutingDisclaimer component (shows metadata + report button)
+<ScoutingDisclaimer
+  scoutedAt="2026-01-20T10:00:00Z"
+  onReportError={() => setShowReportSheet(true)}
+/>
+
+// ReportErrorSheet component (modal for submitting reports)
+<ReportErrorSheet
+  visible={showReportSheet}
+  puzzleId={puzzle.id}
+  onDismiss={() => setShowReportSheet(false)}
+  onSubmit={async (type, comment) => {
+    await submitReport(puzzle.id, type, comment);
+  }}
+/>
+```
+
+### CMS: Report Triage
+```typescript
+import { useReportsForPuzzle, usePendingReports } from '@/hooks/use-reports';
+
+// Fetch reports for a specific puzzle
+const {
+  reports,       // ContentReport[]
+  isLoading,
+  error,
+  refetch,
+  resolve,       // (reportId, status) => Promise<boolean>
+  pendingCount,  // Number of pending reports
+} = useReportsForPuzzle(puzzleId);
+
+// Resolve a report
+await resolve(reportId, 'resolved');  // or 'dismissed'
+
+// Fetch pending reports for date range (calendar badges)
+const {
+  pendingReports,      // PendingReportCount[]
+  hasPendingReport,    // (puzzleId) => boolean
+  getPendingCount,     // (puzzleId) => number
+} = usePendingReports('2026-01-01', '2026-01-31');
+```
+
+### Content Metadata
+```typescript
+// Stored in puzzle.content._metadata
+interface ContentMetadata {
+  scouted_at?: string;           // ISO timestamp when AI Scout extracted data
+  wikipedia_revision_id?: string; // MediaWiki revision ID
+  wikipedia_revision_date?: string; // When Wikipedia was last edited
+  generated_by?: 'manual' | 'ai_oracle' | 'ai_scout';
+}
+
+// Extract from puzzle
+const content = puzzle.content as { _metadata?: ContentMetadata };
+const scoutedAt = content._metadata?.scouted_at;
+```
+
+### Oracle Engine (CMS)
+```typescript
+import { suggestPlayersForGaps, getRecentlyUsedPlayers } from '@/lib/ai/oracle';
+
+// Get AI suggestions for content gaps
+const suggestions = await suggestPlayersForGaps({
+  gameMode: 'career_path',
+  count: 5,
+  excludeRecent: 30,  // Exclude players used in last 30 days
+});
+// Returns: OracleSuggestion[] with player names + Wikipedia URLs
+
+// Get recently used players for deduplication
+const recent = await getRecentlyUsedPlayers('career_path', 30);
+// Returns: string[] of player names
+```
+
+### Server Actions
+```typescript
+// web/app/(dashboard)/calendar/actions.ts
+
+// Submit report (from mobile via Supabase, CMS via server action)
+await createReport({ puzzleId, reportType, comment });
+
+// Resolve report
+await resolveReport(reportId, 'resolved' | 'dismissed');
+
+// Get reports for puzzle
+const reports = await getReportsForPuzzle(puzzleId);
+
+// Get pending reports for date range
+const pending = await getPendingReportsForDateRange(startDate, endDate);
+
+// Oracle: fill content gaps
+await oracleFillGaps({ gameMode: 'career_path', targetDates: ['2026-02-01'] });
+```

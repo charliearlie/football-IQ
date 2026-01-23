@@ -9,12 +9,17 @@
  */
 
 import { supabase } from '@/lib/supabase';
-import { savePuzzle } from '@/lib/database';
+import { savePuzzle, getAllLocalPuzzleIds, deletePuzzlesByIds } from '@/lib/database';
 import { LocalPuzzle } from '@/types/database';
 import { SupabasePuzzle, SyncResult, PuzzleSyncOptions } from '../types/puzzle.types';
 
 /**
  * Sync puzzles from Supabase to local SQLite.
+ *
+ * Fetches all puzzles the user has access to (RLS-filtered) and:
+ * 1. Detects orphaned local puzzles (deleted from server)
+ * 2. Removes orphans from local SQLite
+ * 3. Saves/updates all puzzles from server
  *
  * @param options - Sync options including user info and last sync timestamp
  * @returns SyncResult with success status and count of synced puzzles
@@ -22,18 +27,15 @@ import { SupabasePuzzle, SyncResult, PuzzleSyncOptions } from '../types/puzzle.t
 export async function syncPuzzlesFromSupabase(
   options: PuzzleSyncOptions
 ): Promise<SyncResult> {
-  const { isPremium, lastSyncedAt } = options;
+  // Note: options.isPremium and options.lastSyncedAt are available but we
+  // always do a full sync to enable orphan detection
 
   try {
-    // Build query - RLS will filter based on user's access tier
-    let query = supabase.from('daily_puzzles').select('*');
-
-    // For premium users with a last sync timestamp, do incremental sync
-    if (isPremium && lastSyncedAt) {
-      query = query.gt('updated_at', lastSyncedAt);
-    }
-
-    const { data: puzzles, error } = await query;
+    // Fetch ALL puzzles - RLS will filter based on user's access tier
+    // We don't use incremental sync anymore to enable orphan detection
+    const { data: puzzles, error } = await supabase
+      .from('daily_puzzles')
+      .select('*');
 
     if (error) {
       return {
@@ -43,11 +45,24 @@ export async function syncPuzzlesFromSupabase(
       };
     }
 
-    if (!puzzles || puzzles.length === 0) {
+    if (!puzzles) {
       return {
         success: true,
         syncedCount: 0,
       };
+    }
+
+    // Get local puzzle IDs BEFORE saving new ones
+    const localPuzzleIds = await getAllLocalPuzzleIds();
+    const serverPuzzleIds = new Set(puzzles.map((p) => p.id));
+
+    // Find orphans (local puzzles not on server)
+    const orphanIds = localPuzzleIds.filter((id) => !serverPuzzleIds.has(id));
+
+    // Delete orphaned puzzles
+    if (orphanIds.length > 0) {
+      const deletedCount = await deletePuzzlesByIds(orphanIds);
+      console.log(`[PuzzleSync] Deleted ${deletedCount} orphaned puzzles`);
     }
 
     // Transform and save each puzzle to SQLite

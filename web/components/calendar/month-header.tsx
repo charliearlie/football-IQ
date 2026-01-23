@@ -8,9 +8,20 @@ import {
   Wand2,
   Archive,
   Plus,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+
+export type OracleGameMode = "career_path" | "career_path_pro";
 
 interface MonthHeaderProps {
   month: Date;
@@ -20,6 +31,7 @@ interface MonthHeaderProps {
   onInitializeWeek?: () => void;
   onToggleBacklog?: () => void;
   onCreateAdhoc?: () => void;
+  onOracleFill?: (gameMode: OracleGameMode) => void;
   backlogCount?: number;
   isInitializing?: boolean;
 }
@@ -32,6 +44,7 @@ export function MonthHeader({
   onInitializeWeek,
   onToggleBacklog,
   onCreateAdhoc,
+  onOracleFill,
   backlogCount = 0,
   isInitializing = false,
 }: MonthHeaderProps) {
@@ -64,6 +77,36 @@ export function MonthHeader({
             <Plus className="h-3 w-3 mr-1" />
             Create Puzzle
           </Button>
+        )}
+
+        {/* Oracle Fill button */}
+        {onOracleFill && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Oracle
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                AI-Powered Gap Filling
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onOracleFill("career_path")}>
+                <Sparkles className="h-4 w-4 mr-2 text-pitch-green" />
+                Fill Career Path Gaps
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOracleFill("career_path_pro")}>
+                <Sparkles className="h-4 w-4 mr-2 text-card-yellow" />
+                Fill Career Path Pro Gaps
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Backlog button */}
