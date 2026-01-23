@@ -54,12 +54,33 @@ player_database (id, external_id, name, search_name, clubs, nationalities, is_ac
 ### Flow
 1. App mount → Check existing session
 2. No session → Auto `signInAnonymously()`
-3. First run → Prompt for display_name (FirstRunModal)
+3. First run → Full-screen Briefing (BriefingScreen) with weekly schedule + display name
 4. Optional → Email OTP to link account and preserve data
+
+### Onboarding Briefing
+Full-screen experience shown on first launch to introduce the app and collect display name.
+
+**Components:**
+- `BriefingScreen` - Main full-screen composition with header, schedule grid, and name input
+- `BriefingBackground` - SVG tactical formation pattern (4-3-3 shape)
+- `WeeklyFixturesGrid` - Two-column grid showing all 7 game modes with schedule
+- `FixtureCard` - MiniCard-style game mode display with premium badges
+
+**Trigger Logic:**
+- Shown when `needsDisplayName` (no profile.display_name) OR `!hasCompletedOnboarding` (AsyncStorage)
+- AsyncStorage key: `@app_onboarding_completed`
+- Persists immediately on "START YOUR CAREER" press
+
+**Validation:**
+- Display name: 3-30 characters (minimum increased from 2)
+- Success haptic on submit
+- Sentry event: `User Onboarded` with `display_name_length` tag
 
 ### Key Files
 - `src/features/auth/context/AuthContext.tsx` - AuthProvider + useAuth hook
-- `src/features/auth/components/AuthGate.tsx` - Blocks until authenticated
+- `src/features/auth/components/BriefingScreen.tsx` - Full-screen onboarding experience
+- `src/features/auth/components/FirstRunModal.tsx` - Modal wrapper for BriefingScreen
+- `src/features/auth/constants/briefingSchedule.ts` - Weekly schedule data
 - `src/features/auth/context/SubscriptionSyncContext.tsx` - RevenueCat ↔ Supabase sync
 
 ## Shared Systems

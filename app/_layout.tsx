@@ -1,8 +1,9 @@
 // Sentry must be imported first for proper instrumentation
 import * as Sentry from '@sentry/react-native';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initDatabase } from '@/lib/database';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -18,6 +19,7 @@ import {
   AuthLoadingScreen,
   FirstRunModal,
   SubscriptionSyncProvider,
+  ONBOARDING_STORAGE_KEY,
 } from '@/features/auth';
 import { PuzzleProvider, OnboardingProvider, usePuzzleContext } from '@/features/puzzles';
 import { PuzzleUpdateToast } from '@/components/PuzzleUpdateToast';
@@ -73,16 +75,49 @@ function PuzzleToastRenderer() {
  * AuthGate - Blocks navigation until auth is initialized
  *
  * Shows loading screen while auth state is being established,
- * and displays the FirstRunModal if user needs to set display name.
+ * and displays the FirstRunModal (Briefing) if:
+ * - User needs to set display name, OR
+ * - User hasn't completed onboarding (AsyncStorage check)
  */
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isInitialized, isLoading, profile, updateDisplayName } = useAuth();
+  const [onboardingHydrated, setOnboardingHydrated] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const isMounted = useRef(true);
+
+  // Hydrate onboarding state from AsyncStorage
+  useEffect(() => {
+    isMounted.current = true;
+
+    AsyncStorage.getItem(ONBOARDING_STORAGE_KEY)
+      .then((value) => {
+        if (isMounted.current) {
+          setHasCompletedOnboarding(value === 'true');
+          setOnboardingHydrated(true);
+        }
+      })
+      .catch(() => {
+        if (isMounted.current) {
+          setHasCompletedOnboarding(false);
+          setOnboardingHydrated(true);
+        }
+      });
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Determine if user needs to set display name
   const needsDisplayName = profile && !profile.display_name;
 
-  // Block navigation until auth is initialized
-  if (!isInitialized || isLoading) {
+  // Show briefing if display name is missing OR onboarding not completed
+  // This ensures returning users who cleared app data see the briefing again
+  const showBriefing =
+    needsDisplayName || (onboardingHydrated && !hasCompletedOnboarding);
+
+  // Block navigation until auth is initialized AND onboarding state is hydrated
+  if (!isInitialized || isLoading || !onboardingHydrated) {
     return <AuthLoadingScreen testID="auth-loading" />;
   }
 
@@ -96,10 +131,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
                 {children}
                 <PuzzleToastRenderer />
                 <FirstRunModal
-                  visible={needsDisplayName ?? false}
+                  visible={showBriefing}
                   onSubmit={async (displayName) => {
                     const { error } = await updateDisplayName(displayName);
                     if (error) throw error;
+                    // Update local state immediately for instant UI update
+                    setHasCompletedOnboarding(true);
                   }}
                   testID="first-run-modal"
                 />

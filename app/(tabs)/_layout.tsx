@@ -1,9 +1,9 @@
-import { View, StyleSheet } from 'react-native';
-import { Tabs } from 'expo-router';
-import { Home, Archive, Brain, Settings } from 'lucide-react-native';
-import { colors, fonts } from '@/theme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { AdBanner } from '@/features/ads';
+import { View, StyleSheet } from "react-native";
+import { Tabs } from "expo-router";
+import { Home, Archive, Brain, Settings } from "lucide-react-native";
+import { colors, fonts } from "@/theme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { AdBanner } from "@/features/ads";
 
 /**
  * Tab Navigator Layout
@@ -50,7 +50,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: "Home",
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <Home color={color} size={size} strokeWidth={2} />
@@ -60,7 +60,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="archive"
           options={{
-            title: 'Archive',
+            title: "Archive",
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <Archive color={color} size={size} strokeWidth={2} />
@@ -70,7 +70,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="stats"
           options={{
-            title: 'My IQ',
+            title: "My IQ",
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <Brain color={color} size={size} strokeWidth={2} />
@@ -80,7 +80,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="settings"
           options={{
-            title: 'Settings',
+            title: "Settings",
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <Settings color={color} size={size} strokeWidth={2} />
@@ -90,7 +90,7 @@ export default function TabLayout() {
       </Tabs>
 
       {/* Global banner ad - hidden for premium users, positioned above home indicator */}
-      {/* <AdBanner testID="global-banner-ad" /> */}
+      <AdBanner testID="global-banner-ad" />
     </View>
   );
 }
