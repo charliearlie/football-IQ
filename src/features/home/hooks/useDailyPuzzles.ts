@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useAuth } from '@/features/auth';
 import { getAttemptByPuzzleId, getValidAdUnlocks } from '@/lib/database';
 import { getAuthorizedDateUnsafe } from '@/lib/time';
 import { GameMode, ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
@@ -94,6 +95,8 @@ const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens'
  */
 export function useDailyPuzzles(): UseDailyPuzzlesResult {
   const { puzzles, syncStatus, refreshLocalPuzzles, syncPuzzles } = usePuzzleContext();
+  const { profile } = useAuth();
+  const isPremium = profile?.is_premium ?? false;
   const [cards, setCards] = useState<DailyPuzzleCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[]>([]);
@@ -167,13 +170,23 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
         validCards.splice(proIndex, 0, placeholderCard);
       }
 
+      // For non-premium users, move premium-only games to the bottom
+      // Premium users keep the original order
+      if (!isPremium) {
+        validCards.sort((a, b) => {
+          const aIsPremium = a.isPremiumOnly ? 1 : 0;
+          const bIsPremium = b.isPremiumOnly ? 1 : 0;
+          return aIsPremium - bIsPremium;
+        });
+      }
+
       setCards(validCards);
     } catch (error) {
       console.error('Failed to load daily puzzle cards:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [puzzles]);
+  }, [puzzles, isPremium]);
 
   /**
    * Load cards with fresh ad unlocks from database.

@@ -1149,3 +1149,19 @@ export async function closeDatabase(): Promise<void> {
     db = null;
   }
 }
+
+/**
+ * Clear all user data from the local database.
+ * Used when user requests to delete their data.
+ */
+export async function clearAllLocalData(): Promise<void> {
+  const database = getDatabase();
+  await database.execAsync(`
+    DELETE FROM attempts;
+    DELETE FROM puzzles;
+    DELETE FROM puzzle_catalog;
+    DELETE FROM unlocked_puzzles;
+    DELETE FROM player_database;
+    DELETE FROM sync_queue;
+  `);
+}

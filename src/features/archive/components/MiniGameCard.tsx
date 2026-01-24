@@ -43,13 +43,13 @@ const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
 };
 
 /**
- * Game mode display titles.
+ * Game mode display titles (full names for vertical layout).
  */
 export const GAME_MODE_TITLES: Record<GameMode, string> = {
   career_path: 'Career Path',
-  career_path_pro: 'Career Pro',
-  guess_the_transfer: 'Transfer',
-  guess_the_goalscorers: 'Recall',
+  career_path_pro: 'Career Path Pro',
+  guess_the_transfer: 'Transfer Guess',
+  guess_the_goalscorers: 'Goalscorer Recall',
   the_grid: 'The Grid',
   topical_quiz: 'Quiz',
   top_tens: 'Top Tens',
@@ -122,10 +122,10 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
   // Render status indicator (simple icons, not buttons)
   const renderStatus = () => {
     if (isComplete) {
-      // Done state: green score text
+      // Done state: green checkmark
       return (
         <View style={styles.statusIndicator}>
-          <Text style={styles.statusTextDone}>+{puzzle.score ?? 0} IQ</Text>
+          <Check size={20} color={colors.pitchGreen} strokeWidth={3} />
         </View>
       );
     }

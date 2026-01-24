@@ -137,21 +137,21 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
     case 'career_path':
       return {
         title: 'Career Path',
-        subtitle: 'Guess the player',
+        subtitle: 'Follow the journey',
         icon: iconElement!,
         iconColor: colors.cardYellow,
       };
     case 'career_path_pro':
       return {
         title: 'Career Path Pro',
-        subtitle: 'Pro challenge',
+        subtitle: 'For true experts',
         icon: iconElement!,
         iconColor: colors.cardYellow,
       };
     case 'guess_the_transfer':
       return {
         title: 'Transfer Guess',
-        subtitle: 'Name the player',
+        subtitle: 'Who made the move?',
         icon: iconElement!,
         iconColor: colors.pitchGreen,
       };
@@ -396,7 +396,7 @@ export function UniversalGameCard({
                 {config.title}
               </Text>
               <Text style={styles.subtitle} numberOfLines={1}>
-                {isPremiumLocked ? 'Pro' : config.subtitle}
+                {config.subtitle}
               </Text>
             </View>
           </View>

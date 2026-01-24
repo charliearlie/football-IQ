@@ -8,13 +8,16 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, FileText, Star, Trash2, Bell, RotateCcw } from 'lucide-react-native';
+import { Shield, FileText, Star, Trash2, Bell, RotateCcw, UserX } from 'lucide-react-native';
 import * as StoreReview from 'expo-store-review';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { colors, textStyles, spacing } from '@/theme';
-import { deleteAttemptsByGameMode } from '@/lib/database';
+import { deleteAttemptsByGameMode, clearAllLocalData } from '@/lib/database';
+import { useAuth } from '@/features/auth';
+import { supabase } from '@/lib/supabase';
 import {
   scheduleNotification,
   getMorningMessage,
@@ -34,14 +37,17 @@ export interface SettingsScreenProps {
 
 export function SettingsScreen({ testID }: SettingsScreenProps) {
   // Modal visibility states
-  const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Dev mode state (tap version 7 times to enable)
   const [devModeEnabled, setDevModeEnabled] = useState(false);
   const tapCountRef = useRef(0);
   const lastTapTimeRef = useRef(0);
+
+  // Auth context for user data and sign out
+  const { session, signOut } = useAuth();
 
   // Onboarding context for resetting intro screens
   const { resetAllIntros } = useOnboardingContext();
@@ -167,10 +173,10 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, [resetAllIntros]);
 
   /**
-   * Handle Privacy Policy row press
+   * Handle Privacy Policy row press - opens external URL
    */
   const handlePrivacyPress = useCallback(() => {
-    setPrivacyModalVisible(true);
+    Linking.openURL('https://football-iq-phi.vercel.app/privacy');
   }, []);
 
   /**
@@ -200,10 +206,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   /**
    * Close modals
    */
-  const closePrivacyModal = useCallback(() => {
-    setPrivacyModalVisible(false);
-  }, []);
-
   const closeTermsModal = useCallback(() => {
     setTermsModalVisible(false);
   }, []);
@@ -211,6 +213,65 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   const closeRateModal = useCallback(() => {
     setRateModalVisible(false);
   }, []);
+
+  /**
+   * Handle Delete My Data - removes all user data from Supabase and local storage
+   */
+  const handleDeleteData = useCallback(() => {
+    Alert.alert(
+      'Delete My Data',
+      'This will permanently delete all your data including:\n\n• Your profile\n• All puzzle attempts\n• All streaks\n• Local app data\n\nThis action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Everything',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              'Are you sure?',
+              'All your progress will be lost forever.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setIsDeleting(true);
+                    try {
+                      // 1. Delete from Supabase (if authenticated)
+                      const userId = session?.user?.id;
+                      if (userId) {
+                        await supabase.from('puzzle_attempts').delete().eq('user_id', userId);
+                        await supabase.from('user_streaks').delete().eq('user_id', userId);
+                        await supabase.from('profiles').delete().eq('id', userId);
+                      }
+
+                      // 2. Clear local SQLite database
+                      await clearAllLocalData();
+
+                      // 3. Clear AsyncStorage
+                      await AsyncStorage.clear();
+
+                      // 4. Sign out
+                      await signOut();
+
+                      Alert.alert('Data Deleted', 'All your data has been deleted.');
+                    } catch (error) {
+                      console.error('Failed to delete data:', error);
+                      Alert.alert('Error', 'Failed to delete some data. Please try again.');
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  }, [session, signOut]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -254,6 +315,16 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             label="Rate App"
             onPress={handleRateAppPress}
             testID={testID ? `${testID}-rate-row` : undefined}
+          />
+        </SettingsSection>
+
+        {/* Data Section */}
+        <SettingsSection title="Data">
+          <SettingsRow
+            icon={<UserX size={20} color={colors.redCard} strokeWidth={2} />}
+            label="Delete My Data"
+            onPress={handleDeleteData}
+            testID={testID ? `${testID}-delete-data-row` : undefined}
           />
         </SettingsSection>
 
@@ -309,13 +380,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
       </ScrollView>
 
       {/* Modals */}
-      <LegalModal
-        visible={privacyModalVisible}
-        type="privacy"
-        onClose={closePrivacyModal}
-        testID="legal-modal"
-      />
-
       <LegalModal
         visible={termsModalVisible}
         type="terms"

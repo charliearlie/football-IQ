@@ -58,16 +58,17 @@ export function PremiumUpsellBanner({
         accessibilityRole="button"
       >
         <GlassCard style={styles.card}>
-          {/* Dismiss button */}
+          {/* Dismiss button - top right corner */}
           <Pressable
             onPress={() => setIsDismissed(true)}
             style={styles.dismissButton}
-            hitSlop={8}
+            hitSlop={12}
             accessibilityLabel="Dismiss banner"
             accessibilityRole="button"
           >
-            <X size={16} color={colors.floodlightWhite} />
+            <X size={12} color="rgba(255, 255, 255, 0.35)" />
           </Pressable>
+
           <View style={styles.content}>
             {/* Crown Icon */}
             <View style={styles.iconContainer}>
@@ -109,10 +110,10 @@ const styles = StyleSheet.create({
   },
   dismissButton: {
     position: "absolute",
-    top: spacing.sm,
-    right: spacing.sm,
+    top: 6,
+    right: 6,
+    padding: 6,
     zIndex: 1,
-    padding: spacing.xs,
   },
   content: {
     flexDirection: "row",

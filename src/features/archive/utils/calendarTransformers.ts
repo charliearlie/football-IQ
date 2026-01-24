@@ -161,10 +161,9 @@ export function getEstimatedItemSize(item: ArchiveListItem): number {
     return 56;
   }
 
-  // Expanded content: 2-column grid
-  // Each card is 72px + 8px gap, calculate rows needed
+  // Expanded content: 1-column vertical list
+  // Each card is 72px + 8px gap
   const puzzleCount = item.data.puzzles.length;
-  const rows = Math.ceil(puzzleCount / 2);
-  const contentHeight = rows * 72 + (rows - 1) * 8 + 16; // Cards + gaps + padding
+  const contentHeight = puzzleCount * 72 + (puzzleCount - 1) * 8 + 16; // Cards + gaps + padding
   return contentHeight;
 }

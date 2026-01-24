@@ -134,13 +134,12 @@ export function ArchiveCalendar({
       if (item.type === 'date-row') {
         layout.size = DATE_ROW_HEIGHT;
       } else {
-        // Calculate expanded content height based on puzzle count
+        // Calculate expanded content height based on puzzle count (1 column layout)
         const puzzleCount = item.data.puzzles.length;
-        const rows = Math.ceil(puzzleCount / 2);
         const cardHeight = 72;
         const gap = 8;
         const padding = 24; // Top + bottom padding
-        layout.size = rows * cardHeight + (rows - 1) * gap + padding;
+        layout.size = puzzleCount * cardHeight + (puzzleCount - 1) * gap + padding;
       }
     },
     []

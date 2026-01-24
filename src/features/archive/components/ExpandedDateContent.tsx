@@ -2,11 +2,11 @@
  * ExpandedDateContent Component
  *
  * Expanded content for a date accordion row.
- * Shows a 2-column grid of MiniGameCards with fade-in animation.
+ * Shows a vertical list of MiniGameCards with fade-in animation.
  */
 
 import React, { useMemo } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { colors, spacing } from '@/theme';
 import { ArchiveDateGroup, ArchivePuzzle } from '../types/archive.types';
@@ -25,10 +25,10 @@ const CARD_GAP = spacing.sm;
 const CONTAINER_PADDING = spacing.lg;
 
 /**
- * ExpandedDateContent - Animated grid of mini game cards.
+ * ExpandedDateContent - Animated vertical list of mini game cards.
  *
  * Features:
- * - 2-column responsive grid
+ * - Single column vertical layout
  * - Smooth fade-in/fade-out animation
  * - Layout animation for height changes
  */
@@ -37,12 +37,6 @@ export function ExpandedDateContent({
   onPuzzlePress,
   testID,
 }: ExpandedDateContentProps) {
-  const { width: screenWidth } = useWindowDimensions();
-
-  // Calculate card width for 2-column layout
-  const contentWidth = screenWidth - CONTAINER_PADDING * 2;
-  const cardWidth = (contentWidth - CARD_GAP) / 2;
-
   // Filter out unrecognized game modes (no "Unknown" cards)
   const validPuzzles = useMemo(
     () => group.puzzles.filter((p) => GAME_MODE_TITLES[p.gameMode] !== undefined),
@@ -57,12 +51,9 @@ export function ExpandedDateContent({
       style={styles.container}
       testID={testID}
     >
-      <View style={styles.grid}>
+      <View style={styles.list}>
         {validPuzzles.map((puzzle, index) => (
-          <View
-            key={puzzle.id}
-            style={[styles.cardWrapper, { width: cardWidth }]}
-          >
+          <View key={puzzle.id} style={styles.cardWrapper}>
             <MiniGameCard
               puzzle={puzzle}
               onPress={() => onPuzzlePress(puzzle)}
@@ -83,12 +74,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.glassBorder,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  list: {
+    flexDirection: 'column',
     gap: CARD_GAP,
   },
   cardWrapper: {
-    // Width is set dynamically based on screen width
+    width: '100%',
   },
 });
