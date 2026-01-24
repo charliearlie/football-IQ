@@ -9,6 +9,7 @@
  * - Sync premium status to Supabase profiles table
  * - Identify/logout users with RevenueCat
  * - Wrap customer info listener
+ * - Wait for entitlement activation with retry logic
  */
 
 import Purchases, { CustomerInfo } from 'react-native-purchases';
@@ -128,4 +129,101 @@ export function addCustomerInfoListener(
   listener: CustomerInfoListener
 ): () => void {
   return Purchases.addCustomerInfoUpdateListener(listener);
+}
+
+/**
+ * Configuration for entitlement verification retry logic.
+ */
+export const ENTITLEMENT_RETRY_CONFIG = {
+  maxAttempts: 5,
+  initialDelayMs: 1000,
+  maxDelayMs: 5000,
+  backoffMultiplier: 1.5,
+};
+
+/**
+ * Result of waiting for entitlement activation.
+ */
+export interface EntitlementActivationResult {
+  /** Whether the entitlement was successfully verified */
+  success: boolean;
+  /** Final CustomerInfo if successful */
+  customerInfo: CustomerInfo | null;
+  /** Number of attempts made */
+  attempts: number;
+  /** Error message if failed */
+  errorMessage: string | null;
+}
+
+/**
+ * Waits for premium entitlement to be active, with retry logic.
+ *
+ * This handles the timing issue where RevenueCat may not have
+ * processed the entitlement immediately after purchase.
+ *
+ * @param initialCustomerInfo - CustomerInfo from purchase/restore
+ * @returns EntitlementActivationResult with success status
+ */
+export async function waitForEntitlementActivation(
+  initialCustomerInfo: CustomerInfo
+): Promise<EntitlementActivationResult> {
+  // Check if already active
+  if (checkPremiumEntitlement(initialCustomerInfo).hasPremium) {
+    return {
+      success: true,
+      customerInfo: initialCustomerInfo,
+      attempts: 1,
+      errorMessage: null,
+    };
+  }
+
+  const { maxAttempts, initialDelayMs, maxDelayMs, backoffMultiplier } =
+    ENTITLEMENT_RETRY_CONFIG;
+
+  let delay = initialDelayMs;
+  let hasSynced = false;
+
+  for (let attempt = 2; attempt <= maxAttempts; attempt++) {
+    // Wait before retry
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    try {
+      // First retry: force sync with Apple
+      if (!hasSynced) {
+        await Purchases.syncPurchases();
+        hasSynced = true;
+        console.log('[SubscriptionSync] Synced purchases with Apple');
+      }
+
+      // Fetch latest customer info
+      const customerInfo = await Purchases.getCustomerInfo();
+
+      if (checkPremiumEntitlement(customerInfo).hasPremium) {
+        console.log(
+          `[SubscriptionSync] Entitlement active after ${attempt} attempts`
+        );
+        return {
+          success: true,
+          customerInfo,
+          attempts: attempt,
+          errorMessage: null,
+        };
+      }
+    } catch (error) {
+      console.warn(`[SubscriptionSync] Retry ${attempt} failed:`, error);
+    }
+
+    // Exponential backoff
+    delay = Math.min(delay * backoffMultiplier, maxDelayMs);
+  }
+
+  // All retries exhausted
+  console.warn('[SubscriptionSync] Entitlement not active after all retries');
+  return {
+    success: false,
+    customerInfo: null,
+    attempts: maxAttempts,
+    errorMessage:
+      'Purchase successful but activation pending. Please try refreshing.',
+  };
 }

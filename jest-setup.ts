@@ -180,6 +180,7 @@ const mockPurchases = {
   restorePurchases: jest.fn(),
   addCustomerInfoUpdateListener: jest.fn(() => jest.fn()),
   getCustomerInfo: jest.fn(),
+  syncPurchases: jest.fn(),
 };
 
 jest.mock('react-native-purchases', () => ({

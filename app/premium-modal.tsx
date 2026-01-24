@@ -37,7 +37,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
-import { useAuth, useSubscriptionSync } from '@/features/auth';
+import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/features/auth';
 import { processPackagesWithOffers, type OfferInfo } from '@/features/subscription';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
@@ -155,8 +155,13 @@ export default function PremiumModalScreen() {
 
         if (!isMountedRef.current) return;
 
-        if (customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]) {
-          // Force sync premium status to Supabase BEFORE showing success
+        // Wait for entitlement with retry logic (handles RevenueCat timing issues)
+        const result = await waitForEntitlementActivation(customerInfo);
+
+        if (!isMountedRef.current) return;
+
+        if (result.success) {
+          // Force sync premium status to Supabase
           await forceSync();
 
           // Haptics may fail on some devices - don't let it break the flow
@@ -170,7 +175,9 @@ export default function PremiumModalScreen() {
             setState('success');
           }
         } else {
-          setErrorMessage('Purchase completed but subscription not activated.');
+          // Purchase completed but entitlement pending - still try to sync
+          await forceSync();
+          setErrorMessage(result.errorMessage);
           setState('error');
         }
       } catch (error: unknown) {
@@ -202,7 +209,12 @@ export default function PremiumModalScreen() {
 
       if (!isMountedRef.current) return;
 
-      if (customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]) {
+      // Wait for entitlement with retry logic
+      const result = await waitForEntitlementActivation(customerInfo);
+
+      if (!isMountedRef.current) return;
+
+      if (result.success) {
         // Force sync premium status to Supabase
         await forceSync();
 
@@ -358,6 +370,9 @@ export default function PremiumModalScreen() {
         {state === 'success' && (
           <View style={styles.successContainer}>
             <Text style={styles.successText}>Your archive is now fully unlocked!</Text>
+            <Text style={styles.thankYouText}>
+              Thank you for your support! Your contribution helps us add more puzzles and improve the game.
+            </Text>
             <Text style={styles.successSubtext}>Tap anywhere to continue</Text>
           </View>
         )}
@@ -683,6 +698,12 @@ const styles = StyleSheet.create({
     color: colors.pitchGreen,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  thankYouText: {
+    ...textStyles.caption,
+    color: colors.floodlightWhite,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
   successSubtext: {
     ...textStyles.caption,

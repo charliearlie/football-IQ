@@ -14,6 +14,8 @@ export {
   syncPremiumToSupabase,
   identifyUser,
   logOutUser,
+  waitForEntitlementActivation,
+  ENTITLEMENT_RETRY_CONFIG,
 } from './services/SubscriptionSync';
 
 // Components
@@ -31,4 +33,7 @@ export {
 
 // Types
 export type { Profile, AuthState, AuthContextValue } from './types/auth.types';
-export type { EntitlementCheckResult } from './services/SubscriptionSync';
+export type {
+  EntitlementCheckResult,
+  EntitlementActivationResult,
+} from './services/SubscriptionSync';

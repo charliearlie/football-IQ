@@ -104,11 +104,10 @@
         "@sentry/react-native/expo",
         {
           "organization": "football-iq",
-          "project": "football-iq-mobile",
-          "uploadSourceMaps": false,
-          "uploadNativeSymbols": false
+          "project": "football-iq-mobile"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

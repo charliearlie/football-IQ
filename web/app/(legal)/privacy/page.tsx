@@ -64,6 +64,37 @@ export default function PrivacyPolicyPage() {
                 secure data storage and authentication services. Your data is
                 stored securely using industry-standard encryption.
               </li>
+              <li>
+                <strong className="text-floodlight">PostHog</strong> — For
+                product analytics to understand how the app is used and improve
+                the user experience. This includes anonymous usage data and
+                feature interactions. See{" "}
+                <a
+                  href="https://posthog.com/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-pitch-green hover:underline"
+                >
+                  PostHog&apos;s Privacy Policy
+                </a>
+                .
+              </li>
+              <li>
+                <strong className="text-floodlight">Google AdMob</strong> — For
+                displaying banner and rewarded advertisements. AdMob may collect
+                device identifiers and ad interaction data. On iOS, you will be
+                prompted via App Tracking Transparency to allow personalized
+                ads; you can opt out for non-personalized ads. See{" "}
+                <a
+                  href="https://policies.google.com/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-pitch-green hover:underline"
+                >
+                  Google&apos;s Privacy Policy
+                </a>
+                .
+              </li>
             </ul>
           </Section>
 

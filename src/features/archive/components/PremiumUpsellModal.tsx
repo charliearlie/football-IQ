@@ -42,7 +42,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
-import { useAuth } from '@/features/auth';
+import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/features/auth';
 import { processPackagesWithOffers, type OfferInfo } from '@/features/subscription';
 import { colors } from '@/theme/colors';
 
@@ -114,6 +114,7 @@ export function PremiumUpsellModal({
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { user } = useAuth();
+  const { forceSync } = useSubscriptionSync();
 
   /**
    * Fetch offerings from RevenueCat.
@@ -182,15 +183,19 @@ export function PremiumUpsellModal({
           Object.keys(customerInfo.entitlements.active)
         );
 
-        // Check if purchase granted the entitlement
-        if (customerInfo.entitlements.active['premium_access']) {
+        // Wait for entitlement with retry logic (handles RevenueCat timing issues)
+        const result = await waitForEntitlementActivation(customerInfo);
+
+        if (result.success) {
+          // Force sync premium status to Supabase
+          await forceSync();
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setState('success');
         } else {
-          // Purchase completed but entitlement not active
-          // This happens with Test Store purchases (simulator only)
-          console.warn('[PremiumUpsellModal] No premium_access entitlement found. This is expected for Test Store purchases on simulator.');
-          setErrorMessage('Purchase completed but subscription not activated. Use a physical device with sandbox account for real testing.');
+          // Purchase completed but entitlement pending - still try to sync
+          await forceSync();
+          console.warn('[PremiumUpsellModal] Entitlement pending after purchase');
+          setErrorMessage(result.errorMessage);
           setState('error');
         }
       } catch (error: unknown) {
@@ -211,7 +216,7 @@ export function PremiumUpsellModal({
         setState('error');
       }
     },
-    [user]
+    [user, forceSync]
   );
 
   /**
@@ -222,7 +227,12 @@ export function PremiumUpsellModal({
     try {
       const customerInfo = await Purchases.restorePurchases();
 
-      if (customerInfo.entitlements.active['premium_access']) {
+      // Wait for entitlement with retry logic
+      const result = await waitForEntitlementActivation(customerInfo);
+
+      if (result.success) {
+        // Force sync premium status to Supabase
+        await forceSync();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setState('success');
       } else {
@@ -237,7 +247,7 @@ export function PremiumUpsellModal({
       setErrorMessage(message || 'Restore failed. Please try again.');
       setState('error');
     }
-  }, []);
+  }, [forceSync]);
 
   /**
    * Handle retry after error.
@@ -572,6 +582,9 @@ function SuccessContent({ testID }: { testID?: string }) {
       <Text style={styles.successText}>
         Your archive is now fully unlocked!
       </Text>
+      <Text style={styles.thankYouText}>
+        Thank you for your support! Your contribution helps us add more puzzles and improve the game.
+      </Text>
       <Text style={styles.successSubtext}>
         Tap anywhere to continue exploring
       </Text>
@@ -850,6 +863,12 @@ const styles = StyleSheet.create({
     color: colors.pitchGreen,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  thankYouText: {
+    ...textStyles.caption,
+    color: colors.floodlightWhite,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
   successSubtext: {
     ...textStyles.caption,
