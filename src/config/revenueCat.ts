@@ -2,7 +2,15 @@
  * RevenueCat Configuration
  *
  * Provides environment-specific API keys for RevenueCat SDK.
- * Uses __DEV__ to differentiate between sandbox and production.
+ *
+ * Environment selection priority:
+ * 1. EXPO_PUBLIC_REVENUECAT_ENV override ('sandbox' or 'production')
+ * 2. __DEV__ flag (true = sandbox, false = production)
+ *
+ * IMPORTANT for TestFlight:
+ * - TestFlight has __DEV__ = false (production build)
+ * - But sandbox Apple accounts create purchases in RevenueCat SANDBOX
+ * - To test IAP on TestFlight, set EXPO_PUBLIC_REVENUECAT_ENV=sandbox in build
  */
 
 /**
@@ -23,15 +31,32 @@ export const PREMIUM_OFFERING_ID = 'default_offering';
 
 /**
  * The entitlement identifier that grants premium access.
+ * Must match the entitlement ID in RevenueCat dashboard exactly.
  */
-export const PREMIUM_ENTITLEMENT_ID = 'premium_access';
+export const PREMIUM_ENTITLEMENT_ID = 'Football IQ Pro';
+
+/**
+ * Determines the current RevenueCat environment.
+ *
+ * @returns 'sandbox' or 'production'
+ */
+export function getRevenueCatEnvironment(): 'sandbox' | 'production' {
+  // Check for explicit environment override (useful for TestFlight testing)
+  const envOverride = process.env.EXPO_PUBLIC_REVENUECAT_ENV;
+  if (envOverride === 'sandbox' || envOverride === 'production') {
+    return envOverride;
+  }
+
+  // Default: sandbox in development, production otherwise
+  return __DEV__ ? 'sandbox' : 'production';
+}
 
 /**
  * Returns the appropriate RevenueCat API key based on environment.
- * Uses __DEV__ global to determine environment.
  *
- * @returns The sandbox key in development, production key otherwise
+ * @returns The sandbox key in development/testing, production key for App Store
  */
 export function getRevenueCatApiKey(): string {
-  return __DEV__ ? REVENUECAT_API_KEYS.sandbox : REVENUECAT_API_KEYS.production;
+  const env = getRevenueCatEnvironment();
+  return REVENUECAT_API_KEYS[env];
 }

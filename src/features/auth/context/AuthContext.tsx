@@ -144,6 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     verifyOTP,
     updateDisplayName,
     signOut,
+    refetchProfile,
   }), [
     session,
     user,
@@ -157,6 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     verifyOTP,
     updateDisplayName,
     signOut,
+    refetchProfile,
   ]);
 
   return (

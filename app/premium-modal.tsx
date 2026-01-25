@@ -13,6 +13,7 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -155,6 +156,20 @@ export default function PremiumModalScreen() {
 
         if (!isMountedRef.current) return;
 
+        // DEBUG: Show what RevenueCat returned after purchase (remove after debugging)
+        const debugInfo = {
+          appUserID: customerInfo.originalAppUserId,
+          activeEntitlements: Object.keys(customerInfo.entitlements.active),
+          allEntitlements: Object.keys(customerInfo.entitlements.all),
+          purchasedProducts: customerInfo.allPurchasedProductIdentifiers,
+          activeSubscriptions: customerInfo.activeSubscriptions,
+        };
+        Alert.alert(
+          'DEBUG: Purchase Result',
+          JSON.stringify(debugInfo, null, 2),
+          [{ text: 'OK' }]
+        );
+
         // Wait for entitlement with retry logic (handles RevenueCat timing issues)
         const result = await waitForEntitlementActivation(customerInfo);
 
@@ -209,6 +224,20 @@ export default function PremiumModalScreen() {
 
       if (!isMountedRef.current) return;
 
+      // DEBUG: Show what RevenueCat returned (remove after debugging)
+      const debugInfo = {
+        appUserID: customerInfo.originalAppUserId,
+        activeEntitlements: Object.keys(customerInfo.entitlements.active),
+        allEntitlements: Object.keys(customerInfo.entitlements.all),
+        purchasedProducts: customerInfo.allPurchasedProductIdentifiers,
+        activeSubscriptions: customerInfo.activeSubscriptions,
+      };
+      Alert.alert(
+        'DEBUG: Restore Result',
+        JSON.stringify(debugInfo, null, 2),
+        [{ text: 'OK' }]
+      );
+
       // Wait for entitlement with retry logic
       const result = await waitForEntitlementActivation(customerInfo);
 
@@ -229,7 +258,14 @@ export default function PremiumModalScreen() {
           setState('success');
         }
       } else {
-        setErrorMessage('No previous purchases found');
+        // Check if there are any transactions at all
+        const hasAnyPurchases = customerInfo.allPurchasedProductIdentifiers.length > 0;
+        if (hasAnyPurchases) {
+          // Has purchases but entitlement not granted - likely a RevenueCat config issue
+          setErrorMessage('Subscription found but not activated. Please contact support.');
+        } else {
+          setErrorMessage('No previous purchases found');
+        }
         setState('error');
       }
     } catch (error: unknown) {
@@ -382,14 +418,26 @@ export default function PremiumModalScreen() {
             <Text style={styles.errorText}>
               {errorMessage || 'Something went wrong. Please try again.'}
             </Text>
-            <ElevatedButton
-              title="Try Again"
-              onPress={fetchOfferings}
-              size="medium"
-              topColor={colors.cardYellow}
-              shadowColor="#D4A500"
-              fullWidth
-            />
+            {errorMessage?.includes('pending') ? (
+              // Purchase succeeded but activation pending - offer restore
+              <ElevatedButton
+                title="Restore Purchases"
+                onPress={handleRestore}
+                size="medium"
+                topColor={colors.cardYellow}
+                shadowColor="#D4A500"
+                fullWidth
+              />
+            ) : (
+              <ElevatedButton
+                title="Try Again"
+                onPress={fetchOfferings}
+                size="medium"
+                topColor={colors.cardYellow}
+                shadowColor="#D4A500"
+                fullWidth
+              />
+            )}
             <ElevatedButton
               title="Cancel"
               onPress={handleClose}

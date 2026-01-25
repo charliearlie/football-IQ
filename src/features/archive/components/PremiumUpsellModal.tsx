@@ -236,7 +236,14 @@ export function PremiumUpsellModal({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setState('success');
       } else {
-        setErrorMessage('No previous purchases found');
+        // Check if there are any transactions at all
+        const hasAnyPurchases = customerInfo.allPurchasedProductIdentifiers.length > 0;
+        if (hasAnyPurchases) {
+          // Has purchases but entitlement not granted - likely a RevenueCat config issue
+          setErrorMessage('Subscription found but not activated. Please contact support.');
+        } else {
+          setErrorMessage('No previous purchases found');
+        }
         setState('error');
       }
     } catch (error: unknown) {
@@ -350,6 +357,7 @@ export function PremiumUpsellModal({
               <ErrorContent
                 message={errorMessage}
                 onRetry={handleRetry}
+                onRestore={handleRestore}
                 onClose={onClose}
                 testID={testID}
               />
@@ -598,14 +606,19 @@ function SuccessContent({ testID }: { testID?: string }) {
 function ErrorContent({
   message,
   onRetry,
+  onRestore,
   onClose,
   testID,
 }: {
   message: string | null;
   onRetry: () => void;
+  onRestore: () => void;
   onClose: () => void;
   testID?: string;
 }) {
+  // Show restore button if purchase succeeded but activation pending
+  const showRestore = message?.includes('pending');
+
   return (
     <Animated.View
       entering={FadeIn.duration(200)}
@@ -615,15 +628,27 @@ function ErrorContent({
         {message || 'Something went wrong. Please try again.'}
       </Text>
       <View style={styles.buttonContainer}>
-        <ElevatedButton
-          title="Try Again"
-          onPress={onRetry}
-          size="medium"
-          topColor={colors.cardYellow}
-          shadowColor="#D4A500"
-          fullWidth
-          testID={`${testID}-retry-button`}
-        />
+        {showRestore ? (
+          <ElevatedButton
+            title="Restore Purchases"
+            onPress={onRestore}
+            size="medium"
+            topColor={colors.cardYellow}
+            shadowColor="#D4A500"
+            fullWidth
+            testID={`${testID}-restore-button`}
+          />
+        ) : (
+          <ElevatedButton
+            title="Try Again"
+            onPress={onRetry}
+            size="medium"
+            topColor={colors.cardYellow}
+            shadowColor="#D4A500"
+            fullWidth
+            testID={`${testID}-retry-button`}
+          />
+        )}
         <ElevatedButton
           title="Cancel"
           onPress={onClose}

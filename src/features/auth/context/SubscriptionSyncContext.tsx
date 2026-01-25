@@ -49,7 +49,7 @@ interface SubscriptionSyncProviderProps {
 export function SubscriptionSyncProvider({
   children,
 }: SubscriptionSyncProviderProps) {
-  const { user, isInitialized } = useAuth();
+  const { user, isInitialized, refetchProfile } = useAuth();
   const removeListenerRef = useRef<(() => void) | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
 
@@ -71,9 +71,13 @@ export function SubscriptionSyncProvider({
       const { error } = await syncPremiumToSupabase(userId, hasPremium);
       if (error) {
         console.error('[SubscriptionSync] Failed to sync to Supabase:', error);
+      } else {
+        // Refetch profile to update React state immediately
+        await refetchProfile();
+        console.log('[SubscriptionSync] Profile refetched after premium sync');
       }
     },
-    []
+    [refetchProfile]
   );
 
   /**

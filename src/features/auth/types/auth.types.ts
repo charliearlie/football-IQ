@@ -32,4 +32,6 @@ export interface AuthContextValue extends AuthState {
   updateDisplayName: (displayName: string) => Promise<{ error: Error | null }>;
   /** Sign out the current user */
   signOut: () => Promise<void>;
+  /** Force refetch of profile data from Supabase */
+  refetchProfile: () => Promise<void>;
 }
