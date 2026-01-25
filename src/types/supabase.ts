@@ -291,6 +291,39 @@ export type Database = {
           },
         ]
       }
+      game_submissions: {
+        Row: {
+          id: string
+          user_id: string | null
+          title: string
+          description: string
+          email: string | null
+          status: "pending" | "reviewed" | "accepted" | "rejected"
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          title: string
+          description: string
+          email?: string | null
+          status?: "pending" | "reviewed" | "accepted" | "rejected"
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          title?: string
+          description?: string
+          email?: string | null
+          status?: "pending" | "reviewed" | "accepted" | "rejected"
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

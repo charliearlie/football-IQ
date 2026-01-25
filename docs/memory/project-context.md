@@ -32,6 +32,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 | `puzzle_attempts` | Yes | User puzzle attempts with scores |
 | `user_streaks` | Yes | Streak tracking per game mode |
 | `content_reports` | Yes | User error reports for puzzle content |
+| `game_submissions` | Yes | User-submitted game mode ideas |
 | `agent_runs` | Blocked | AI agent logs (admin-only) |
 | `match_data` | Blocked | Football match data (admin-only) |
 
@@ -261,6 +262,14 @@ Wordle-style "How You Compare" bar chart in result modals.
 Fourth tab with Privacy Policy, Terms, Rate App, and secret dev menu (7 taps on version).
 - **Files**: `src/features/settings/`, `app/(tabs)/settings.tsx`
 
+### Submit Game Ideas
+User-submitted game mode ideas with Pro subscription reward incentive.
+- **Entry Points**: Lightbulb icon in Home header, "Submit Game Idea" row in Settings > Community
+- **Reward**: 1 year of Pro if idea is used
+- **Form Fields**: Title (required), Description (required), Email (optional)
+- **Database**: `game_submissions` table with RLS (users insert, service role reads)
+- **Files**: `src/features/ideas/`, `app/submit-idea.tsx`
+
 ### Local Notifications
 Push-style local notifications to maximize DAU and protect streaks.
 - **Daily Kick-off** (08:30): Morning reminder if user hasn't played, rotating messages
@@ -345,6 +354,7 @@ app/
   top-tens/            # Top Tens routes (premium)
   starting-xi/         # Starting XI routes
   premium-modal.tsx    # Native subscription sheet
+  submit-idea.tsx      # Game idea submission screen
   leaderboard/         # Leaderboard screen
 
 src/

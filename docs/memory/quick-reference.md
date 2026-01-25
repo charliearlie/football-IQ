@@ -1212,6 +1212,7 @@ const result = await prefetchQuizImages(urls);
 - Topical Quiz: `src/features/topical-quiz/`
 - Top Tens: `src/features/top-tens/` (premium-only)
 - Starting XI: `src/features/starting-xi/`
+- Ideas: `src/features/ideas/` (game idea submissions)
 - Archive: `src/features/archive/`
 - My IQ (Stats): `src/features/stats/`
 - Leaderboard: `src/features/leaderboard/`
@@ -1232,6 +1233,7 @@ app/
   topical-quiz/         # Topical Quiz game routes
   top-tens/             # Top Tens game routes (premium-only)
   starting-xi/          # Starting XI game routes
+  submit-idea.tsx       # Game idea submission screen
   leaderboard/          # Leaderboard screen with Daily/Global toggle
   design-lab.tsx        # Component showcase
 src/
@@ -1260,6 +1262,7 @@ src/
     stats/             # usePerformanceStats, IQCardOverlay
     leaderboard/       # useLeaderboard, LeaderboardList, StickyMeBar
     ads/               # AdProvider, AdBanner, UnlockChoiceModal
+    ideas/             # SubmitIdeaScreen, submitIdea service
 ```
 
 ## Design Tokens

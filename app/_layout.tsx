@@ -311,6 +311,13 @@ export default function RootLayout() {
                         presentation: "modal",
                       }}
                     />
+                    <Stack.Screen
+                      name="submit-idea"
+                      options={{
+                        title: "Submit Idea",
+                        headerShown: false,
+                      }}
+                    />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                   <StatusBar style="light" />

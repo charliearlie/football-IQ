@@ -10,7 +10,8 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, FileText, Star, Trash2, Bell, RotateCcw, UserX } from 'lucide-react-native';
+import { Shield, FileText, Star, Trash2, Bell, RotateCcw, UserX, Lightbulb } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -36,6 +37,8 @@ export interface SettingsScreenProps {
 }
 
 export function SettingsScreen({ testID }: SettingsScreenProps) {
+  const router = useRouter();
+
   // Modal visibility states
   const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
@@ -315,6 +318,16 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             label="Rate App"
             onPress={handleRateAppPress}
             testID={testID ? `${testID}-rate-row` : undefined}
+          />
+        </SettingsSection>
+
+        {/* Community Section */}
+        <SettingsSection title="Community">
+          <SettingsRow
+            icon={<Lightbulb size={20} color={colors.pitchGreen} strokeWidth={2} />}
+            label="Submit Game Idea"
+            onPress={() => router.push('/submit-idea')}
+            testID={testID ? `${testID}-submit-idea-row` : undefined}
           />
         </SettingsSection>
 

@@ -7,10 +7,11 @@ import {
   ScrollView,
   AppState,
   AppStateStatus,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import { Trophy } from 'lucide-react-native'; // TODO: Unhide when scoring system is implemented
+import { Lightbulb } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   StreakHeader,
@@ -134,26 +135,25 @@ export default function HomeScreen() {
     [router, isPremium]
   );
 
-  // TODO: Unhide when scoring system is implemented
-  // const handleLeaderboardPress = useCallback(() => {
-  //   router.push('/leaderboard?type=daily');
-  // }, [router]);
+  // Navigate to submit game idea screen
+  const handleSubmitIdeaPress = useCallback(() => {
+    router.push('/submit-idea');
+  }, [router]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Fixed Header */}
       <View style={styles.header}>
         <Text style={textStyles.h1}>Football IQ</Text>
-        {/* TODO: Unhide when scoring system is implemented */}
-        {/* <Pressable
-          onPress={handleLeaderboardPress}
-          style={styles.leaderboardButton}
+        <Pressable
+          onPress={handleSubmitIdeaPress}
+          style={styles.headerButton}
           hitSlop={12}
-          accessibilityLabel="View Leaderboard"
+          accessibilityLabel="Submit Game Idea"
           accessibilityRole="button"
         >
-          <Trophy size={22} color={colors.cardYellow} />
-        </Pressable> */}
+          <Lightbulb size={22} color={colors.cardYellow} />
+        </Pressable>
       </View>
 
       {/* Scrollable Content */}
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
   },
-  leaderboardButton: {
+  headerButton: {
     width: 40,
     height: 40,
     alignItems: 'center',
