@@ -159,7 +159,10 @@ function careerPathReducer(
  * const { state, careerSteps, submitGuess, revealNext, shareResult } = useCareerPathGame(puzzle);
  * ```
  */
-export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
+export function useCareerPathGame(
+  puzzle: ParsedLocalPuzzle | null,
+  isFocused: boolean = true
+) {
   const [state, dispatch] = useReducer(careerPathReducer, createInitialState());
   const flatListRef = useRef<FlatList>(null);
   const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
@@ -196,6 +199,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
   // Game persistence (attemptId, progress restore, background save, completion save)
   useGamePersistence<CareerPathState, CareerPathMeta>({
     puzzle,
+    isFocused,
     state,
     dispatch,
     hasProgressToSave: (s) => s.revealedCount > 1,

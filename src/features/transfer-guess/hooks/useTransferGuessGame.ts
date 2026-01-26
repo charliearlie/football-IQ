@@ -157,7 +157,10 @@ function transferGuessReducer(
  * const { state, content, submitGuess, revealHint, giveUp, shareResult } = useTransferGuessGame(puzzle);
  * ```
  */
-export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
+export function useTransferGuessGame(
+  puzzle: ParsedLocalPuzzle | null,
+  isFocused: boolean = true
+) {
   const [state, dispatch] = useReducer(transferGuessReducer, createInitialState());
   const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
@@ -185,6 +188,7 @@ export function useTransferGuessGame(puzzle: ParsedLocalPuzzle | null) {
   // Game persistence (attemptId, progress restore, background save, completion save)
   useGamePersistence<TransferGuessState, TransferGuessMeta>({
     puzzle,
+    isFocused,
     state,
     dispatch,
     hasProgressToSave: (s) => s.hintsRevealed > 0 || s.guesses.length > 0,

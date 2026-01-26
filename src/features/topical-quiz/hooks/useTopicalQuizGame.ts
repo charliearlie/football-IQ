@@ -338,6 +338,40 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
     return () => subscription.remove();
   }, [puzzle]);
 
+  // Save progress when screen unmounts (in-app navigation back)
+  useEffect(() => {
+    if (!puzzle) return;
+
+    const currentPuzzle = puzzle;
+
+    return () => {
+      const currentState = stateRef.current;
+      if (currentState.gameStatus !== 'playing' || !currentState.attemptId) {
+        return;
+      }
+
+      // Fire and forget - can't await in cleanup
+      const attempt: LocalAttempt = {
+        id: currentState.attemptId,
+        puzzle_id: currentPuzzle.id,
+        completed: 0,
+        score: null,
+        score_display: null,
+        metadata: JSON.stringify({
+          currentQuestionIndex: currentState.currentQuestionIndex,
+          answers: currentState.answers,
+        }),
+        started_at: currentState.startedAt,
+        completed_at: null,
+        synced: 0,
+      };
+
+      saveAttempt(attempt).catch((error) => {
+        console.error('Failed to save progress on unmount:', error);
+      });
+    };
+  }, [puzzle?.id]);
+
   // Persist attempt to local database when game ends
   useEffect(() => {
     if (

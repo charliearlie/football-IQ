@@ -15,7 +15,6 @@ import Animated, {
   withTiming,
   interpolateColor,
 } from 'react-native-reanimated';
-import { Calendar } from 'lucide-react-native';
 import { colors, spacing, fonts, borderRadius, depthOffset } from '@/theme';
 import { HintLabel } from '../types/transferGuess.types';
 
@@ -42,8 +41,9 @@ const SETTLE_SPRING = {
   mass: 0.8,
 };
 
-/** Map hint labels to custom PNG icons (Year uses Lucide icon) */
-const SLOT_PNG_ICONS: Partial<Record<HintLabel, ImageSourcePropType>> = {
+/** Map hint labels to custom PNG icons */
+const SLOT_PNG_ICONS: Record<HintLabel, ImageSourcePropType> = {
+  Year: require('../../../../assets/images/transfer-year.png'),
   Position: require('../../../../assets/images/transfer-position.png'),
   Nation: require('../../../../assets/images/transfer-nationality.png'),
 };
@@ -140,16 +140,9 @@ export function DossierSlot({
             >
               {hint}
             </Text>
-          ) : label === 'Year' ? (
-            <Calendar
-              size={40}
-              color={colors.textSecondary}
-              strokeWidth={1.5}
-              testID={`${testID}-icon`}
-            />
           ) : (
             <Image
-              source={SLOT_PNG_ICONS[label]!}
+              source={SLOT_PNG_ICONS[label]}
               style={styles.icon}
               resizeMode="contain"
               testID={`${testID}-icon`}

@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import {
   useStablePuzzle,
   useOnboarding,
@@ -70,6 +71,7 @@ export function TransferGuessScreen({
   isReviewMode = false,
 }: TransferGuessScreenProps) {
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   // Onboarding state - show intro for first-time users
   const {
@@ -100,7 +102,7 @@ export function TransferGuessScreen({
     giveUp,
     setCurrentGuess,
     shareResult,
-  } = useTransferGuessGame(puzzle);
+  } = useTransferGuessGame(puzzle, isFocused);
 
   // Fetch saved attempt data for review mode
   const { metadata: reviewMetadata, isLoading: isReviewLoading } =

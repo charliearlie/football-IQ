@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { useHaptics } from "@/hooks/useHaptics";
 import {
   useStablePuzzle,
@@ -107,6 +108,7 @@ export function CareerPathScreen({
   gameMode = "career_path",
 }: CareerPathScreenProps) {
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   // Onboarding state - show intro for first-time users
   const {
@@ -135,7 +137,7 @@ export function CareerPathScreen({
     flatListRef,
     isVictoryRevealing,
     completeVictoryReveal,
-  } = useCareerPathGame(puzzle);
+  } = useCareerPathGame(puzzle, isFocused);
 
   // Haptics for victory celebration
   const { triggerCompletion } = useHaptics();

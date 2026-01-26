@@ -301,6 +301,44 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     };
   }, [puzzle]);
 
+  // Save progress when screen unmounts (in-app navigation back)
+  useEffect(() => {
+    if (!puzzle) return;
+
+    const currentPuzzle = puzzle;
+
+    return () => {
+      const currentState = stateRef.current;
+
+      // Only save if game is in progress and has an attempt ID
+      if (currentState.gameStatus !== 'playing' || !currentState.attemptId) return;
+
+      // Only save if there's progress to save
+      const filledCount = countFilledCells(currentState.cells);
+      if (filledCount === 0) return;
+
+      const metadata: TheGridAttemptMetadata = {
+        cellsFilled: filledCount,
+        cells: currentState.cells,
+      };
+
+      // Fire and forget - can't await in cleanup
+      saveAttempt({
+        id: currentState.attemptId,
+        puzzle_id: currentPuzzle.id,
+        completed: 0,
+        score: 0,
+        score_display: null,
+        metadata: JSON.stringify(metadata),
+        started_at: new Date().toISOString(),
+        completed_at: null,
+        synced: 0,
+      }).catch((error) => {
+        console.warn('[TheGrid] Failed to save progress on unmount:', error);
+      });
+    };
+  }, [puzzle?.id]);
+
   // Clear incorrect state after delay
   useEffect(() => {
     if (!state.lastGuessIncorrect) return;

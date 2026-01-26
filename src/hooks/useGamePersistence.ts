@@ -4,8 +4,9 @@
  * Extracts common game lifecycle management patterns from individual game hooks:
  * - StateRef tracking for AppState callbacks
  * - AttemptId generation on game start
- * - Progress restoration from interrupted attempts
+ * - Progress restoration from interrupted attempts (on mount/focus)
  * - Background save on AppState change
+ * - Progress save on screen unmount (in-app navigation back)
  * - Completion save when game ends
  *
  * Each game provides game-specific logic via configuration callbacks.
@@ -70,6 +71,9 @@ export type PersistenceDispatch = (action: PersistenceAction) => void;
 export interface UseGamePersistenceConfig<TState extends BaseGameState, TMeta> {
   /** The puzzle being played */
   puzzle: ParsedLocalPuzzle | null;
+
+  /** Whether the screen is currently focused (from useIsFocused). Triggers restoration on focus. */
+  isFocused?: boolean;
 
   /** Current game state from useReducer */
   state: TState;
@@ -138,9 +142,10 @@ export interface UseGamePersistenceConfig<TState extends BaseGameState, TMeta> {
  * Handles:
  * 1. StateRef sync for AppState callbacks
  * 2. AttemptId generation when game starts
- * 3. Progress restoration from interrupted attempts
+ * 3. Progress restoration from interrupted attempts (on mount/focus)
  * 4. Background save when app goes inactive
- * 5. Final save when game completes
+ * 5. Progress save when screen unmounts (in-app navigation back)
+ * 6. Final save when game completes
  *
  * @example
  * ```tsx
@@ -178,6 +183,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
 ): void {
   const {
     puzzle,
+    isFocused,
     state,
     dispatch,
     hasProgressToSave,
@@ -202,10 +208,11 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     }
   }, [state.gameStatus, state.attemptId, puzzle, dispatch]);
 
-  // 3. Restore progress from interrupted attempt on mount
+  // 3. Restore progress from interrupted attempt on mount/focus
   useEffect(() => {
     async function checkForResume() {
-      if (!puzzle) return;
+      // Skip if no puzzle or screen is unfocused
+      if (!puzzle || isFocused === false) return;
 
       try {
         const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
@@ -225,9 +232,9 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     }
 
     checkForResume();
-    // Only run on puzzle change, not on config callback changes
+    // Run on puzzle change or when screen gains focus
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle?.id]);
+  }, [puzzle?.id, isFocused]);
 
   // 4. Save progress when app goes to background
   useEffect(() => {
@@ -275,7 +282,44 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle]);
 
-  // 5. Save final attempt when game ends
+  // 5. Save progress when screen unmounts (in-app navigation back)
+  useEffect(() => {
+    // Return cleanup function that saves on unmount
+    return () => {
+      const currentState = stateRef.current;
+
+      // Check prerequisites
+      if (
+        currentState.gameStatus !== 'playing' ||
+        !puzzle ||
+        !currentState.attemptId ||
+        !hasProgressToSave(currentState)
+      ) {
+        return;
+      }
+
+      // Save progress - fire and forget (can't await in cleanup)
+      const attempt: LocalAttempt = {
+        id: currentState.attemptId,
+        puzzle_id: puzzle.id,
+        completed: 0,
+        score: null,
+        score_display: null,
+        metadata: JSON.stringify(serializeProgress(currentState)),
+        started_at: currentState.startedAt,
+        completed_at: null,
+        synced: 0,
+      };
+
+      saveAttempt(attempt).catch((error) => {
+        console.error('Failed to save progress on unmount:', error);
+      });
+    };
+    // Only re-create cleanup when puzzle changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puzzle?.id]);
+
+  // 6. Save final attempt when game ends
   useEffect(() => {
     // Check completion conditions
     if (

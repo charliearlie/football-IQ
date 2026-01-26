@@ -19,19 +19,13 @@ import {
   StyleSheet,
   Modal,
   Pressable,
+  Image,
 } from 'react-native';
-import {
-  Brain,
-  DollarSign,
-  Timer,
-  Grid3X3,
-  MessageCircle,
-  ListOrdered,
-  X,
-} from 'lucide-react-native';
+import { Grid3X3, X } from 'lucide-react-native';
 import { colors, fonts, borderRadius, spacing } from '@/theme';
 import { CalendarDay } from '../../types/calendar.types';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { RULES_MAP } from '@/features/puzzles/constants/rules';
 import { triggerMedium } from '@/lib/haptics';
 import { ElevatedButton } from '@/components';
 
@@ -75,8 +69,11 @@ function formatDetailDate(dateString: string): string {
   return `${dayName} ${day}${suffix} ${month} ${year}`;
 }
 
+const ICON_SIZE = 26;
+
 /**
  * Get icon component for a game mode.
+ * Uses PNG icons from RULES_MAP with Grid3X3 Lucide fallback for the_grid.
  */
 function GameModeIcon({
   gameMode,
@@ -85,27 +82,10 @@ function GameModeIcon({
   gameMode: GameMode;
   completed: boolean;
 }) {
-  const iconColor = completed ? colors.pitchGreen : 'rgba(255, 255, 255, 0.3)';
-  const iconSize = 18;
-
-  const getIcon = () => {
-    switch (gameMode) {
-      case 'career_path':
-        return <Brain size={iconSize} color={iconColor} />;
-      case 'guess_the_transfer':
-        return <DollarSign size={iconSize} color={iconColor} />;
-      case 'guess_the_goalscorers':
-        return <Timer size={iconSize} color={iconColor} />;
-      case 'the_grid':
-        return <Grid3X3 size={iconSize} color={iconColor} />;
-      case 'topical_quiz':
-        return <MessageCircle size={iconSize} color={iconColor} />;
-      case 'top_tens':
-        return <ListOrdered size={iconSize} color={iconColor} />;
-      default:
-        return null;
-    }
-  };
+  const rules = RULES_MAP[gameMode];
+  const iconSource = rules?.icon;
+  // Grid icon needs different colors based on background
+  const gridIconColor = completed ? colors.pitchGreen : 'rgba(255, 255, 255, 0.6)';
 
   return (
     <View
@@ -114,7 +94,20 @@ function GameModeIcon({
         completed ? styles.gameModeCompleted : styles.gameModeIncomplete,
       ]}
     >
-      {getIcon()}
+      {iconSource ? (
+        <Image
+          source={iconSource}
+          style={{
+            width: ICON_SIZE,
+            height: ICON_SIZE,
+            opacity: completed ? 1 : 0.6,
+          }}
+          resizeMode="contain"
+        />
+      ) : (
+        // Fallback for the_grid which has no PNG icon
+        <Grid3X3 size={22} color={gridIconColor} />
+      )}
     </View>
   );
 }
@@ -302,21 +295,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   gameModeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gameModeCompleted: {
-    backgroundColor: 'rgba(88, 204, 2, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(88, 204, 2, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderWidth: 2,
+    borderColor: colors.pitchGreen,
   },
   gameModeIncomplete: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   countText: {
     fontFamily: fonts.body,

@@ -380,6 +380,40 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
     return () => subscription.remove();
   }, [puzzle]);
 
+  // Save progress when screen unmounts (in-app navigation back)
+  useEffect(() => {
+    if (!puzzle) return;
+
+    const currentPuzzle = puzzle;
+
+    return () => {
+      const currentState = stateRef.current;
+      if (currentState.gameStatus !== 'playing' || !currentState.attemptId) {
+        return;
+      }
+
+      // Fire and forget - can't await in cleanup
+      const attempt: LocalAttempt = {
+        id: currentState.attemptId,
+        puzzle_id: currentPuzzle.id,
+        completed: 0,
+        score: null,
+        score_display: null,
+        metadata: JSON.stringify({
+          cells: currentState.cells,
+          currentTurn: currentState.currentTurn,
+        }),
+        started_at: currentState.startedAt,
+        completed_at: null,
+        synced: 0,
+      };
+
+      saveAttempt(attempt).catch((error) => {
+        console.error('Failed to save progress on unmount:', error);
+      });
+    };
+  }, [puzzle?.id]);
+
   // Check for win/draw after player move (before AI moves)
   useEffect(() => {
     if (state.gameStatus !== 'playing') return;

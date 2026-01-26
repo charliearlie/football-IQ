@@ -405,6 +405,47 @@ export function useStartingXIGame(puzzle: ParsedLocalPuzzle | null) {
     };
   }, [puzzle]);
 
+  // Save progress when screen unmounts (in-app navigation back)
+  useEffect(() => {
+    if (!puzzle) return;
+
+    const currentPuzzle = puzzle;
+
+    return () => {
+      const currentState = stateRef.current;
+
+      // Only save if game is in progress with an attempt ID
+      if (currentState.gameStatus !== 'playing' || !currentState.attemptId) return;
+
+      // Only save if there's progress
+      const foundSlots = currentState.slots
+        .map((s, i) => (s.isHidden && s.isFound ? i : -1))
+        .filter((i) => i >= 0) as SlotIndex[];
+
+      if (foundSlots.length === 0) return;
+
+      const metadata: StartingXIMeta = {
+        foundSlots,
+        startedAt: currentState.startedAt || new Date().toISOString(),
+      };
+
+      // Fire and forget - can't await in cleanup
+      saveAttempt({
+        id: currentState.attemptId,
+        puzzle_id: currentPuzzle.id,
+        completed: 0,
+        score: 0,
+        score_display: null,
+        metadata: JSON.stringify(metadata),
+        started_at: currentState.startedAt || new Date().toISOString(),
+        completed_at: null,
+        synced: 0,
+      }).catch((error) => {
+        console.warn('[StartingXI] Failed to save progress on unmount:', error);
+      });
+    };
+  }, [puzzle?.id]);
+
   // Clear incorrect state after delay
   useEffect(() => {
     if (!state.lastGuessIncorrect) return;

@@ -423,6 +423,43 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
     };
   }, [puzzle]);
 
+  // Save progress when screen unmounts (in-app navigation back)
+  useEffect(() => {
+    if (!puzzle) return;
+
+    const currentPuzzle = puzzle;
+
+    return () => {
+      const currentState = stateRef.current;
+
+      if (currentState.gameStatus !== 'playing' || !currentState.attemptId) return;
+      if (currentState.foundCount === 0 && currentState.wrongGuessCount === 0) return;
+
+      const metadata: TopTensAttemptMetadata = {
+        foundIndices: currentState.rankSlots
+          .map((slot, i) => (slot.found ? i : -1))
+          .filter((i) => i >= 0),
+        wrongGuessCount: currentState.wrongGuessCount,
+        startedAt: currentState.startedAt || new Date().toISOString(),
+      };
+
+      // Fire and forget - can't await in cleanup
+      saveAttempt({
+        id: currentState.attemptId,
+        puzzle_id: currentPuzzle.id,
+        completed: 0,
+        score: null,
+        score_display: null,
+        metadata: JSON.stringify(metadata),
+        started_at: currentState.startedAt || new Date().toISOString(),
+        completed_at: null,
+        synced: 0,
+      }).catch((error) => {
+        console.warn('[TopTens] Failed to save progress on unmount:', error);
+      });
+    };
+  }, [puzzle?.id]);
+
   // Auto-save progress after each correct guess
   useEffect(() => {
     async function autoSaveProgress() {
