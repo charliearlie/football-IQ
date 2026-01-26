@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initDatabase } from "@/lib/database";
-import { Stack } from "expo-router";
+import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -36,7 +36,7 @@ import {
 } from "@/features/notifications";
 import { getRevenueCatApiKey } from "@/config/revenueCat";
 import { SentryErrorFallback } from "@/components";
-import { PostHogProvider } from "posthog-react-native";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 
 // Initialize Sentry error monitoring
 Sentry.init({
@@ -77,6 +77,42 @@ function PuzzleToastRenderer() {
       onDismiss={dismissUpdateToast}
     />
   );
+}
+
+/**
+ * PostHogLogger - Logs PostHog initialization status
+ * Must be inside PostHogProvider to access context.
+ */
+function PostHogLogger() {
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (posthog) {
+      console.log("[PostHog] SDK initialized successfully");
+    }
+  }, [posthog]);
+
+  return null;
+}
+
+/**
+ * PostHogScreenTracker - Tracks screen views for expo-router
+ * Must be inside both PostHogProvider and navigation context.
+ */
+function PostHogScreenTracker() {
+  const posthog = usePostHog();
+  const pathname = usePathname();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (posthog && pathname) {
+      // Create a readable screen name from segments
+      const screenName = segments.length > 0 ? segments.join("/") : "index";
+      posthog.screen(screenName, { pathname });
+    }
+  }, [posthog, pathname, segments]);
+
+  return null;
 }
 
 /**
@@ -138,6 +174,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
             <AdProvider>
               <NotificationWrapper>
                 {children}
+                <PostHogScreenTracker />
                 <PuzzleToastRenderer />
                 <FirstRunModal
                   visible={showBriefing}
@@ -277,9 +314,11 @@ export default function RootLayout() {
           host: "https://eu.i.posthog.com",
         }}
         autocapture={{
-          captureScreens: false,
+          captureScreens: false, // Manual tracking required for expo-router
         }}
+        debug={__DEV__}
       >
+        <PostHogLogger />
         <SubscriptionSyncProvider>
           <GestureHandlerRootView style={styles.container}>
             <AuthGate>

@@ -107,7 +107,8 @@
           "project": "football-iq-mobile"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "posthog-react-native/expo"
     ],
     "experiments": {
       "typedRoutes": true
