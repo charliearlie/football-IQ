@@ -126,34 +126,63 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const { isInitialized, isLoading, profile, updateDisplayName, user } = useAuth();
   const [onboardingHydrated, setOnboardingHydrated] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const isMounted = useRef(true);
 
   // Hydrate onboarding state from AsyncStorage
   // Re-run when user changes (e.g., after data deletion and new account creation)
   useEffect(() => {
     isMounted.current = true;
+    const STORAGE_TIMEOUT_MS = 5000;
 
-    AsyncStorage.getItem(ONBOARDING_STORAGE_KEY)
-      .then((value) => {
+    const loadOnboarding = async () => {
+      try {
+        const storagePromise = AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+        const timeoutPromise = new Promise<string | null>((_, reject) =>
+          setTimeout(() => reject(new Error("AsyncStorage timeout")), STORAGE_TIMEOUT_MS)
+        );
+
+        const value = await Promise.race([storagePromise, timeoutPromise]);
+
         if (isMounted.current) {
           setHasCompletedOnboarding(value === "true");
           setOnboardingHydrated(true);
         }
-      })
-      .catch(() => {
+      } catch (error) {
+        console.warn("[AuthGate] Onboarding load failed:", error);
         if (isMounted.current) {
+          // Default to showing onboarding on error (safe fallback)
           setHasCompletedOnboarding(false);
           setOnboardingHydrated(true);
         }
-      });
+      }
+    };
+
+    loadOnboarding();
 
     return () => {
       isMounted.current = false;
     };
   }, [user?.id]);
 
+  // Global timeout failsafe - prevent infinite loading under any circumstances
+  useEffect(() => {
+    const GLOBAL_TIMEOUT_MS = 15000;
+
+    const timeout = setTimeout(() => {
+      if (!isInitialized || isLoading || !onboardingHydrated) {
+        console.error("[AuthGate] Global timeout - forcing app to proceed");
+        Sentry.captureMessage("AuthGate global timeout triggered", "error");
+        setLoadingTimedOut(true);
+      }
+    }, GLOBAL_TIMEOUT_MS);
+
+    return () => clearTimeout(timeout);
+  }, [isInitialized, isLoading, onboardingHydrated]);
+
   // Determine if user needs to set display name
-  const needsDisplayName = profile && !profile.display_name;
+  // Use optional chaining so null profile (new user) also triggers welcome modal
+  const needsDisplayName = !profile?.display_name;
 
   // Show briefing if display name is missing AND onboarding not completed
   // hasCompletedOnboarding takes precedence - once set true in onSubmit callback,
@@ -161,7 +190,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const showBriefing = !hasCompletedOnboarding && needsDisplayName;
 
   // Block navigation until auth is initialized AND onboarding state is hydrated
-  if (!isInitialized || isLoading || !onboardingHydrated) {
+  // Allow proceeding if global timeout triggered (failsafe)
+  if (!loadingTimedOut && (!isInitialized || isLoading || !onboardingHydrated)) {
     return <AuthLoadingScreen testID="auth-loading" />;
   }
 

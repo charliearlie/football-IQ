@@ -67,11 +67,9 @@ export default function TabLayout() {
             ),
           }}
         />
-        {/* TODO: Unhide when scoring system is implemented */}
         <Tabs.Screen
           name="stats"
           options={{
-            href: null, // Temporarily hidden until scoring system is ready
             title: "My IQ",
             headerShown: false,
             tabBarIcon: ({ color, size }) => (

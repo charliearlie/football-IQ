@@ -74,7 +74,7 @@ export function TopTensResultModal({
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="top_tens"
-        userScore={score.points * 10}
+        userScore={Math.round((score.points / 8) * 100)}
         testID={testID ? `${testID}-distribution` : undefined}
       />
     </BaseResultModal>

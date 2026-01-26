@@ -231,9 +231,9 @@ interface TransferGuessContent {
   answer: string;
   from_club: string;
   to_club: string;
-  year: number;
+  year: number;  // Used for Hint 1 (not shown in header)
   fee: string;
-  hints: [string, string, string]; // [nationality, position, achievement]
+  hints: [string, string, string]; // [year, position, nationality]
 }
 
 // Hook usage (internal to TransferGuessScreen)
@@ -638,13 +638,13 @@ state.score              // TopTensScore | null (set on game end)
 state.lastGuessIncorrect // Triggers shake animation
 state.lastGuessDuplicate // Triggers duplicate feedback
 
-// Scoring: Progressive tiers (1,1,2,2,3,3,4,4,5,8), max 30
-// Score progression: 1 → 2 → 4 → 6 → 9 → 12 → 16 → 20 → 25 → 30
-calculateTopTensScore(7, 3, false)  // { points: 16, maxPoints: 30, won: false }
-calculateTopTensScore(10, 2, true)  // { points: 30, maxPoints: 30, won: true }
-calculateTopTensScore(5, 0, false)  // { points: 9, maxPoints: 30, won: false }
+// Scoring: Flat tier system, max 8
+// Score tiers: 1-2→1, 3-4→2, 5-6→3, 7-8→4, 9→5, 10→8 (Jackpot!)
+calculateTopTensScore(7, 3, false)  // { points: 4, maxPoints: 8, won: false }
+calculateTopTensScore(10, 2, true)  // { points: 8, maxPoints: 8, won: true }
+calculateTopTensScore(5, 0, false)  // { points: 3, maxPoints: 8, won: false }
 
-// Format: "16/30"
+// Format: "4/8"
 formatTopTensScore(score)
 
 // Emoji grid: ✅✅✅✅✅✅✅❌❌❌

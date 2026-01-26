@@ -155,8 +155,9 @@ Uses `PremiumOnlyGate` wrapper - non-premium users cannot access regardless of p
 ### Transfer Guess
 Identify player from transfer details. Hints revealed voluntarily (not on wrong guess).
 
-**Content**: `{ answer, from_club, to_club, year, fee, hints: [nation, position, achievement] }`
-**Scoring**: `10 - (hints×2) - (wrongGuesses×1)`, min 1 if correct, 0 if lost
+**Content**: `{ answer, from_club, to_club, year, fee, hints: [year, position, nationality] }`
+**Visible**: Clubs and fee shown in header. Year is Hint 1 (revealed on request).
+**Scoring**: 5/3/2/1 points based on hints revealed (0=5pts, 1=3pts, 2=2pts, 3=1pt)
 **Display**: `⚫` hint hidden, `🟡` revealed; `❌` wrong, `✅` correct, `💀` gave up
 **Files**: `src/features/transfer-guess/`
 
@@ -192,7 +193,7 @@ Fill 3x3 matrix with players matching row (Y-axis) and column (X-axis) criteria.
 Guess all 10 items in a ranked list. Correct guesses reveal at rank position.
 
 **Content**: `{ title, category?, answers: [{ name, aliases?, info? }] }`
-**Scoring**: Progressive tiers (1,1,2,2,3,3,4,4,5,8) max 30pts, 10th = Jackpot!
+**Scoring**: Flat tier system, max 8pts (1-2→1, 3-4→2, 5-6→3, 7-8→4, 9→5, 10→8 Jackpot!)
 **Display**: `✅✅✅❌❌❌❌❌❌❌` (one per rank)
 **Access**: `PremiumOnlyGate` component wraps screens
 **Files**: `src/features/top-tens/`

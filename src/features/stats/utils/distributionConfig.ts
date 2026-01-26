@@ -135,8 +135,8 @@ export function normalizeScoreForMode(
 ): number {
   switch (gameMode) {
     case 'top_tens':
-      // 0-10 points -> 0-100
-      return rawScore * 10;
+      // 0-8 points -> 0-100
+      return Math.round((rawScore / 8) * 100);
     case 'topical_quiz':
       // 0-10 points (2 per question) -> 0-100
       return rawScore * 10;

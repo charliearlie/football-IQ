@@ -10,15 +10,38 @@ import { GameMode } from '../types/puzzle.types';
 import { colors } from '@/theme';
 
 /**
- * Scoring tier configuration for progressive scoring games
+ * 15-tier intelligence hierarchy for IQ Growth display.
+ * Used across all game modes to map performance to scouting rank.
+ */
+export const INTELLIGENCE_TIERS = [
+  'Trainee',            // 1
+  'Scout',              // 2
+  'Senior Scout',       // 3
+  'Lead Scout',         // 4
+  'Chief Scout',        // 5
+  'Regional Director',  // 6
+  'Head of Scouting',   // 7
+  'Technical Analyst',  // 8
+  'Technical Director', // 9
+  'Director of Football', // 10
+  'Sporting Director',  // 11
+  'Football Genius',    // 12
+  'World Class',        // 13
+  'Legendary',          // 14
+  'Hall of Famer',      // 15
+] as const;
+
+export type IntelligenceTier = (typeof INTELLIGENCE_TIERS)[number];
+
+/**
+ * Scoring tier configuration for progressive scoring games.
+ * Labels describe performance level without explicit point values.
  */
 export interface ScoringTier {
-  /** Range description (e.g., "1-2", "9", "10") */
+  /** Range description (e.g., "0 hints", "10 correct") */
   range: string;
-  /** Points awarded for this tier */
-  points: number;
-  /** Optional label like "Jackpot!" */
-  label?: string;
+  /** Intelligence tier label for this range */
+  label: string;
 }
 
 /**
@@ -39,8 +62,8 @@ export interface ScoringConfig {
   type: 'dynamic' | 'tiered' | 'percentage' | 'fixed';
   /** Human-readable description of scoring */
   description: string;
-  /** Maximum possible points (if applicable) */
-  maxPoints?: number;
+  /** IQ Growth potential label (e.g., "HALL OF FAMER", "LEGENDARY") */
+  potentialLabel?: string;
   /** Scoring tiers for tiered scoring type */
   tiers?: ScoringTier[];
 }
@@ -77,11 +100,12 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     rules: [
       { text: 'Clubs revealed one at a time', highlight: 'one at a time' },
       { text: 'Incorrect guesses reveal the next club' },
-      { text: 'Guess correctly with fewer clues for more points' },
+      { text: 'Guess with fewer clues for higher IQ', highlight: 'higher IQ' },
     ],
     scoring: {
       type: 'dynamic',
-      description: 'IQ points based on clubs remaining when you guess correctly',
+      description: 'IQ tier based on clubs remaining when you guess correctly',
+      potentialLabel: 'HALL OF FAMER',
     },
     icon: require('../../../../assets/images/puzzles/career-path.png'),
     accentColor: colors.cardYellow,
@@ -98,7 +122,8 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     ],
     scoring: {
       type: 'dynamic',
-      description: 'IQ points based on clubs remaining when you guess correctly',
+      description: 'IQ tier based on clubs remaining when you guess correctly',
+      potentialLabel: 'HALL OF FAMER',
     },
     icon: require('../../../../assets/images/puzzles/career-path.png'),
     accentColor: colors.cardYellow,
@@ -109,19 +134,19 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     displayTitle: 'Guess the Transfer',
     goal: 'Name the player from their transfer',
     rules: [
-      { text: 'Shows: year, clubs, and fee' },
-      { text: 'Hints reveal more intel (costs points)' },
-      { text: 'No hints = max points', highlight: 'max points' },
+      { text: 'Shows: clubs and fee' },
+      { text: 'Hints reveal year, position, nation' },
+      { text: 'Fewer hints = higher IQ', highlight: 'higher IQ' },
     ],
     scoring: {
       type: 'tiered',
-      description: 'Points decrease with each hint revealed',
-      maxPoints: 5,
+      description: 'Maximize IQ by solving with fewer hints revealed',
+      potentialLabel: 'LEGENDARY',
       tiers: [
-        { range: '0 hints', points: 5 },
-        { range: '1 hint', points: 3 },
-        { range: '2 hints', points: 2 },
-        { range: '3 hints', points: 1 },
+        { range: '0 hints', label: 'Legendary' },
+        { range: '1 hint', label: 'Director of Football' },
+        { range: '2 hints', label: 'Chief Scout' },
+        { range: '3 hints', label: 'Scout' },
       ],
     },
     icon: require('../../../../assets/images/puzzles/guess-the-transfer.png'),
@@ -135,11 +160,12 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     rules: [
       { text: 'You have 60 seconds to name all scorers', highlight: '60 seconds' },
       { text: 'Type a player name and tap Guess' },
-      { text: 'Find all scorers for a 3pt bonus!', highlight: '3pt bonus' },
+      { text: 'Find all scorers for bonus IQ!', highlight: 'bonus IQ' },
     ],
     scoring: {
       type: 'fixed',
-      description: '1 point per scorer + 3 point bonus for all',
+      description: 'IQ growth per scorer found, plus bonus for finding all',
+      potentialLabel: 'WORLD CLASS',
     },
     icon: require('../../../../assets/images/puzzles/goalscorer-recall.png'),
     accentColor: colors.redCard,
@@ -156,8 +182,8 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     ],
     scoring: {
       type: 'fixed',
-      description: '1 point per player + 3 point "Perfect XI" bonus',
-      maxPoints: 8,
+      description: 'IQ growth for each player found, plus a Perfect XI bonus',
+      potentialLabel: 'WORLD CLASS',
     },
     icon: require('../../../../assets/images/puzzles/starting-xi.png'),
     accentColor: colors.cardYellow,
@@ -170,18 +196,19 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     rules: [
       { text: 'A category is revealed (e.g., Top 10 Premier League scorers)' },
       { text: 'Correct guesses slot into their rank position' },
-      { text: 'Higher ranks are worth more points', highlight: 'Higher ranks' },
+      { text: 'Find all 10 for Hall of Famer status!', highlight: 'Hall of Famer' },
     ],
     scoring: {
       type: 'tiered',
-      description: 'Progressive points - harder ranks worth more',
-      maxPoints: 30,
+      description: 'Progressive IQ growth - more correct answers unlock higher ranks',
+      potentialLabel: 'HALL OF FAMER',
       tiers: [
-        { range: '1-2 correct', points: 1 },
-        { range: '3-4 correct', points: 2 },
-        { range: '5-6 correct', points: 3 },
-        { range: '7-8 correct', points: 4 },
-        { range: '9-10 correct', points: 5 },
+        { range: '1-2 correct', label: 'Scout' },
+        { range: '3-4 correct', label: 'Chief Scout' },
+        { range: '5-6 correct', label: 'Head of Scouting' },
+        { range: '7-8 correct', label: 'Director of Football' },
+        { range: '9 correct', label: 'World Class' },
+        { range: '10 correct', label: 'Hall of Famer' },
       ],
     },
     icon: require('../../../../assets/images/puzzles/top-tens.png'),
@@ -195,12 +222,12 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     rules: [
       { text: 'Each cell has row AND column criteria to match' },
       { text: 'Search for players who fit both requirements' },
-      { text: 'Rarer answers score higher points', highlight: 'Rarer answers' },
+      { text: 'Rarer answers earn higher IQ', highlight: 'higher IQ' },
     ],
     scoring: {
       type: 'dynamic',
-      description: '~11 points per cell based on answer rarity',
-      maxPoints: 100,
+      description: 'IQ based on answer rarity - obscure picks earn more',
+      potentialLabel: 'HALL OF FAMER',
     },
     icon: undefined, // Uses Grid3X3 Lucide icon as fallback
     accentColor: colors.pitchGreen,
@@ -213,12 +240,12 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     rules: [
       { text: '5 questions on current football topics' },
       { text: 'Each question has 4 answer options' },
-      { text: '2 points per correct answer', highlight: '2 points' },
+      { text: 'Get all 5 correct for maximum IQ!', highlight: 'maximum IQ' },
     ],
     scoring: {
       type: 'fixed',
-      description: '2 points per correct answer',
-      maxPoints: 10,
+      description: 'IQ growth for each correct answer',
+      potentialLabel: 'FOOTBALL GENIUS',
     },
     icon: require('../../../../assets/images/puzzles/quiz.png'),
     accentColor: colors.cardYellow,

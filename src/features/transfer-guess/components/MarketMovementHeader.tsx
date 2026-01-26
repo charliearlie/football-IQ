@@ -1,14 +1,12 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { ArrowRight } from 'lucide-react-native';
-import { colors, spacing, fonts, fontWeights, borderRadius } from '@/theme';
+import { colors, spacing, fonts, borderRadius } from '@/theme';
 
 export interface MarketMovementHeaderProps {
   /** Origin club name */
   fromClub: string;
   /** Destination club name */
   toClub: string;
-  /** Transfer year */
-  year: number;
   /** Transfer fee (e.g., "€80M") */
   fee: string;
   /** Test ID for testing */
@@ -20,22 +18,20 @@ export interface MarketMovementHeaderProps {
  *
  * Premium typography-focused design without club badges.
  * Large Bebas Neue club names with pitchGreen arrow connector.
+ * Year is now a hint (revealed in DossierGrid), not shown here.
  *
  * Layout:
  * ┌─────────────────────────────────────────┐
+ * │               €80M                       │
  * │   REAL MADRID  →  MANCHESTER UNITED     │
- * │          €80M | 2024/25                 │
  * └─────────────────────────────────────────┘
  */
 export function MarketMovementHeader({
   fromClub,
   toClub,
-  year,
   fee,
   testID,
 }: MarketMovementHeaderProps) {
-  // Format season display (e.g., "2024/25")
-  const season = `${year}/${String(year + 1).slice(2)}`;
 
   return (
     <View style={styles.container} testID={testID}>
@@ -74,11 +70,6 @@ export function MarketMovementHeader({
           {toClub.toUpperCase()}
         </Text>
       </View>
-
-      {/* Season - de-emphasized */}
-      <Text style={styles.season} testID={`${testID}-season`}>
-        {season}
-      </Text>
     </View>
   );
 }
@@ -118,13 +109,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 1,
     marginBottom: spacing.sm,
-  },
-  season: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.semiBold,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.sm,
   },
 });

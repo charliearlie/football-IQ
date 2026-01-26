@@ -2,7 +2,7 @@
  * Scoring Section Component
  *
  * Displays the "Tactical Briefing" box with scoring information.
- * Shows description, optional tiers, and max points badge.
+ * Shows description, optional tiers, and IQ potential label.
  */
 
 import { View, Text, StyleSheet } from 'react-native';
@@ -46,20 +46,17 @@ export function ScoringSection({ rules, testID }: ScoringSectionProps) {
               <View key={index} style={styles.tierRow}>
                 <Text style={styles.tierRange}>{tier.range}</Text>
                 <View style={styles.tierDots} />
-                <Text style={styles.tierPoints}>
-                  {tier.points} pts
-                  {tier.label && <Text style={styles.tierLabel}> {tier.label}</Text>}
-                </Text>
+                <Text style={styles.tierLabel}>{tier.label}</Text>
               </View>
             ))}
           </View>
         )}
 
-        {/* Max points badge (if defined) */}
-        {scoring.maxPoints && (
-          <View style={styles.maxPointsBadge}>
-            <Text style={styles.maxPointsText}>
-              MAX: {scoring.maxPoints} points
+        {/* IQ Growth potential badge (if defined) */}
+        {scoring.potentialLabel && (
+          <View style={styles.potentialBadge}>
+            <Text style={styles.potentialText}>
+              IQ GROWTH: {scoring.potentialLabel}
             </Text>
           </View>
         )}
@@ -107,7 +104,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
     fontSize: 14,
     color: colors.textSecondary,
-    minWidth: 80,
+    minWidth: 100,
   },
   tierDots: {
     flex: 1,
@@ -117,16 +114,13 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
     marginHorizontal: spacing.sm,
   },
-  tierPoints: {
+  tierLabel: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.semiBold,
     fontSize: 14,
-    color: colors.pitchGreen,
-  },
-  tierLabel: {
     color: colors.cardYellow,
   },
-  maxPointsBadge: {
+  potentialBadge: {
     marginTop: spacing.md,
     alignSelf: 'center',
     backgroundColor: 'rgba(88, 204, 2, 0.1)',
@@ -136,7 +130,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.pitchGreen,
   },
-  maxPointsText: {
+  potentialText: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.semiBold,
     fontSize: 12,

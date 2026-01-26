@@ -43,19 +43,19 @@ score = clubsRemaining
 **Max Points:** 5
 
 ### Rules
-- Player sees: year, from club, to club, and fee
-- Can reveal hints for more information (costs points)
-- Goal: Name the player with fewest hints possible
+- Player sees: from club, to club, and fee
+- Can reveal 3 hints: Year, Position, Nationality (each costs IQ)
+- Goal: Name the player with fewest hints revealed
 
 ### Scoring Table
 
-| Hints Used | Points |
-|------------|--------|
-| 0 hints    | 5      |
-| 1 hint     | 3      |
-| 2 hints    | 2      |
-| 3 hints    | 1      |
-| Failed     | 0      |
+| Hints Revealed | Points | Intelligence Tier |
+|----------------|--------|-------------------|
+| 0 hints        | 5      | Legendary         |
+| 1 hint         | 3      | Director of Football |
+| 2 hints        | 2      | Chief Scout       |
+| 3 hints        | 1      | Scout             |
+| Failed         | 0      | -                 |
 
 ---
 
@@ -116,42 +116,27 @@ score = playersFound + (foundAll ? 3 : 0)
 
 ## Top Tens
 
-**Type:** Tiered (Progressive)
+**Type:** Tiered (Flat)
 **Game Mode ID:** `top_tens`
-**Max Points:** 30
+**Max Points:** 8
 
 ### Rules
 - A ranking category is revealed (e.g., "Top 10 Premier League scorers")
 - Correct guesses slot into their rank position
-- Higher ranks are worth more points
+- Find all 10 for maximum IQ (Hall of Famer status)
 
 ### Scoring Table
 
-Points are awarded **per correct answer** based on cumulative count:
+Score is based on **total found** (flat tier system, not cumulative):
 
-| Correct Answers | Points Each |
-|-----------------|-------------|
-| 1st-2nd correct | 1 point each |
-| 3rd-4th correct | 2 points each |
-| 5th-6th correct | 3 points each |
-| 7th-8th correct | 4 points each |
-| 9th correct     | 5 points |
-| 10th correct (Jackpot!) | 8 points |
-
-### Score Breakdown
-
-| Total Found | Total Score |
-|-------------|-------------|
-| 1           | 1           |
-| 2           | 2           |
-| 3           | 4           |
-| 4           | 6           |
-| 5           | 9           |
-| 6           | 12          |
-| 7           | 16          |
-| 8           | 20          |
-| 9           | 25          |
-| 10          | 30          |
+| Total Found | Points | Intelligence Tier |
+|-------------|--------|-------------------|
+| 1-2         | 1      | Scout             |
+| 3-4         | 2      | Chief Scout       |
+| 5-6         | 3      | Head of Scouting  |
+| 7-8         | 4      | Director of Football |
+| 9           | 5      | World Class       |
+| 10 (Jackpot!) | 8    | Hall of Famer     |
 
 ---
 
@@ -215,9 +200,33 @@ When implementing or auditing scoring:
 
 - [ ] **Career Path**: Score = clubs remaining when correct
 - [ ] **Career Path Pro**: Same as Career Path
-- [ ] **Guess the Transfer**: 5/3/2/1 points based on hints used
+- [ ] **Guess the Transfer**: 5/3/2/1 points based on hints revealed (Year, Position, Nation)
 - [ ] **Goalscorer Recall**: 1pt per scorer + 3pt bonus for all
 - [ ] **Starting XI**: 1pt per player + 3pt Perfect XI bonus
-- [ ] **Top Tens**: Progressive tier scoring (1,1,2,2,3,3,4,4,5,8)
+- [ ] **Top Tens**: Flat tier scoring, max 8 (1→1, 3→2, 5→3, 7→4, 9→5, 10→8)
 - [ ] **The Grid**: Rarity-based, ~11 pts/cell avg, max 100
 - [ ] **Topical Quiz**: 2pts per correct answer
+
+## Intelligence Tiers
+
+15-tier hierarchy used for IQ Growth display across all game modes:
+
+| Tier | Name |
+|------|------|
+| 1 | Trainee |
+| 2 | Scout |
+| 3 | Senior Scout |
+| 4 | Lead Scout |
+| 5 | Chief Scout |
+| 6 | Regional Director |
+| 7 | Head of Scouting |
+| 8 | Technical Analyst |
+| 9 | Technical Director |
+| 10 | Director of Football |
+| 11 | Sporting Director |
+| 12 | Football Genius |
+| 13 | World Class |
+| 14 | Legendary |
+| 15 | Hall of Famer |
+
+Each game mode maps to appropriate tiers based on performance level.

@@ -25,7 +25,6 @@ import { useHaptics } from '@/hooks';
 import { colors, spacing, fonts, layout } from '@/theme';
 import { HeroSection } from './HeroSection';
 import { RulesSection } from './RulesSection';
-import { ScoringSection } from './ScoringSection';
 
 interface GameIntroScreenProps {
   /** Game mode to show intro for */
@@ -115,9 +114,6 @@ export function GameIntroScreen({
 
           {/* Rules */}
           <RulesSection rules={rules} testID={testID ? `${testID}-rules` : undefined} />
-
-          {/* Scoring */}
-          <ScoringSection rules={rules} testID={testID ? `${testID}-scoring` : undefined} />
 
           {/* Spacer for button */}
           <View style={styles.spacer} />

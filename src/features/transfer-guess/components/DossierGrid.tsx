@@ -3,7 +3,7 @@ import { spacing } from '@/theme';
 import { DossierSlot } from './DossierSlot';
 
 export interface DossierGridProps {
-  /** Array of 3 hints: [number, position, nationality] */
+  /** Array of 3 hints: [year, position, nationality] */
   hints: [string, string, string];
   /** Number of hints revealed (0-3) */
   hintsRevealed: number;
@@ -18,14 +18,14 @@ export interface DossierGridProps {
  *
  * Layout:
  * ┌─────────────┬─────────────┐
- * │  [#] Number │ [⚽] Position│
- * │      7      │     ATT     │
+ * │  [📅] Year  │ [⚽] Position│
+ * │    2019     │     ATT     │
  * ├─────────────┴─────────────┤
  * │       [🏴] Nationality     │
  * │           Brazil           │
  * └───────────────────────────┘
  *
- * Number + Position side-by-side on top row
+ * Year + Position side-by-side on top row
  * Nationality spans full width on bottom row (the "big reveal")
  */
 export function DossierGrid({
@@ -36,15 +36,15 @@ export function DossierGrid({
 }: DossierGridProps) {
   return (
     <View style={styles.container} testID={testID}>
-      {/* Top row: Number + Position (side-by-side) */}
+      {/* Top row: Year + Position (side-by-side) */}
       <View style={styles.topRow}>
         <DossierSlot
-          label="Number"
+          label="Year"
           hint={hints[0]}
           isRevealed={hintsRevealed >= 1}
           isReviewMode={isReviewMode}
           style={styles.halfSlot}
-          testID={`${testID}-slot-number`}
+          testID={`${testID}-slot-year`}
         />
         <DossierSlot
           label="Position"

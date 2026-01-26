@@ -2,6 +2,25 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '../types/auth.types';
 
+const PROFILE_TIMEOUT_MS = 10000;
+
+/**
+ * Wraps a promise-like (thenable) with a timeout to prevent indefinite hanging.
+ * Works with both Promises and Supabase's PostgrestBuilder.
+ */
+function withTimeout<T>(
+  promiseLike: PromiseLike<T>,
+  ms: number,
+  message: string
+): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promiseLike),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(message)), ms)
+    ),
+  ]);
+}
+
 interface UseProfileResult {
   profile: Profile | null;
   isLoading: boolean;
@@ -33,17 +52,42 @@ export function useProfile(userId: string | null): UseProfileResult {
     setIsLoading(true);
     setError(null);
 
-    const { data, error: fetchError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error: fetchError } = await withTimeout(
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        PROFILE_TIMEOUT_MS,
+        'Profile fetch timed out'
+      );
 
-    if (fetchError) {
-      setError(fetchError as unknown as Error);
+      if (fetchError) {
+        // PGRST116 = "Row not found" - create profile for new user
+        if (fetchError.code === 'PGRST116') {
+          console.log('[useProfile] Profile not found, creating for user:', userId);
+          const { data: newProfile, error: createError } = await withTimeout(
+            supabase.from('profiles').insert({ id: userId }).select().single(),
+            PROFILE_TIMEOUT_MS,
+            'Profile creation timed out'
+          );
+
+          if (createError) {
+            console.error('[useProfile] Failed to create profile:', createError);
+            setError(createError as unknown as Error);
+            setProfile(null);
+          } else {
+            setProfile(newProfile);
+          }
+        } else {
+          console.error('[useProfile] Profile fetch error:', fetchError);
+          setError(fetchError as unknown as Error);
+          setProfile(null);
+        }
+      } else {
+        setProfile(data);
+      }
+    } catch (timeoutError) {
+      console.error('[useProfile] Operation timed out:', timeoutError);
+      setError(timeoutError as Error);
       setProfile(null);
-    } else {
-      setProfile(data);
     }
 
     setIsLoading(false);

@@ -139,20 +139,23 @@ export function TransferGuessForm() {
           These hints are revealed one at a time when the player requests help.
         </FormDescription>
 
-        {/* Hint 1: Shirt Number */}
+        {/* Hint 1: Transfer Year */}
         <FormField
           control={control}
           name="content.hints.0"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Hint 1: Shirt Number</FormLabel>
+              <FormLabel>Hint 1: Transfer Year</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="e.g., 10, 7, 9"
+                  placeholder="e.g., 2019, 2023"
                   className="bg-white/5 border-white/10"
                 />
               </FormControl>
+              <FormDescription className="text-xs">
+                Should match the Transfer Year field above (as a string)
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

@@ -182,7 +182,6 @@ export function TransferGuessScreen({
           <MarketMovementHeader
             fromClub={transferContent.from_club}
             toClub={transferContent.to_club}
-            year={transferContent.year}
             fee={transferContent.fee}
             testID="review-market-header"
           />
@@ -248,7 +247,6 @@ export function TransferGuessScreen({
           <MarketMovementHeader
             fromClub={transferContent.from_club}
             toClub={transferContent.to_club}
-            year={transferContent.year}
             fee={transferContent.fee}
             testID="market-header"
           />

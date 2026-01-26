@@ -1,36 +1,45 @@
 /**
  * Top Tens Scoring
  *
- * Progressive tier scoring system for Top Tens game mode.
- * Points increase as you find more answers!
+ * Flat tier scoring system for Top Tens game mode.
+ * Score is determined by how many answers you find, with a bonus for finding all 10.
  *
  * Tiers:
- * - 1st-2nd correct: 1 point each
- * - 3rd-4th correct: 2 points each
- * - 5th-6th correct: 3 points each
- * - 7th-8th correct: 4 points each
- * - 9th-10th correct: 5 points each
+ * - 1-2 answers: 1 IQ point
+ * - 3-4 answers: 2 IQ points
+ * - 5-6 answers: 3 IQ points
+ * - 7-8 answers: 4 IQ points
+ * - 9 answers: 5 IQ points
+ * - 10 answers: 8 IQ points (Jackpot!)
  *
- * Score progression: 1 → 2 → 4 → 6 → 9 → 12 → 16 → 20 → 25 → 30
+ * Score progression: 1 → 1 → 2 → 2 → 3 → 3 → 4 → 4 → 5 → 8
  */
+
+/** Maximum possible points */
+export const MAX_POINTS = 8;
 
 /**
- * Points awarded for each answer found (index = foundCount - 1)
- * [1st, 2nd, 3rd, 4th, 5th, 6th, 7th, 8th, 9th, 10th]
+ * Get the score for a given number of answers found.
+ * Uses flat tier system rather than cumulative.
  */
-const TIER_POINTS = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5] as const;
-
-/** Maximum possible points (sum of all tiers) */
-export const MAX_POINTS = 30;
+function getScoreForFoundCount(foundCount: number): number {
+  if (foundCount <= 0) return 0;
+  if (foundCount <= 2) return 1;
+  if (foundCount <= 4) return 2;
+  if (foundCount <= 6) return 3;
+  if (foundCount <= 8) return 4;
+  if (foundCount === 9) return 5;
+  return 8; // foundCount >= 10 (Jackpot!)
+}
 
 /**
  * Score structure for Top Tens.
  */
 export interface TopTensScore {
-  /** Points earned (0-30, progressive tier scoring) */
+  /** Points earned (0-8, flat tier scoring) */
   points: number;
-  /** Maximum possible points (always 30) */
-  maxPoints: 30;
+  /** Maximum possible points (always 8) */
+  maxPoints: 8;
   /** Number of answers found (0-10) */
   foundCount: number;
   /** Number of incorrect guesses made */
@@ -43,30 +52,23 @@ export interface TopTensScore {
  * Calculate points for a given number of answers found.
  *
  * @param foundCount - Number of answers found (0-10)
- * @returns Total points based on tier system
+ * @returns Total points based on flat tier system
  *
  * @example
- * calculatePoints(1)  // 1 (1st tier)
- * calculatePoints(2)  // 2 (1+1)
- * calculatePoints(5)  // 9 (1+1+2+2+3)
- * calculatePoints(10) // 30 (all tiers + jackpot)
+ * calculatePoints(1)  // 1 (tier 1)
+ * calculatePoints(2)  // 1 (tier 1)
+ * calculatePoints(5)  // 3 (tier 3)
+ * calculatePoints(10) // 8 (jackpot!)
  */
 export function calculatePoints(foundCount: number): number {
-  let points = 0;
-  const count = Math.min(foundCount, 10); // Cap at 10
-
-  for (let i = 0; i < count; i++) {
-    points += TIER_POINTS[i];
-  }
-
-  return points;
+  return getScoreForFoundCount(foundCount);
 }
 
 /**
  * Calculate the final score.
  *
- * Progressive tier scoring - earlier answers worth less, later answers worth more.
- * Finding all 10 answers earns the maximum 30 points.
+ * Flat tier scoring - score determined by tier bracket, not cumulative.
+ * Finding all 10 answers earns the maximum 8 points (Jackpot!).
  *
  * @param foundCount - Number of answers found (0-10)
  * @param wrongGuessCount - Number of incorrect guesses made
@@ -76,17 +78,17 @@ export function calculatePoints(foundCount: number): number {
  * @example
  * // Found all 10 - max score
  * calculateTopTensScore(10, 5, true)
- * // { points: 30, maxPoints: 30, foundCount: 10, ... }
+ * // { points: 8, maxPoints: 8, foundCount: 10, ... }
  *
  * @example
  * // Found 5 answers
  * calculateTopTensScore(5, 3, false)
- * // { points: 9, maxPoints: 30, foundCount: 5, ... }
+ * // { points: 3, maxPoints: 8, foundCount: 5, ... }
  *
  * @example
  * // Found 7 answers
  * calculateTopTensScore(7, 2, false)
- * // { points: 16, maxPoints: 30, foundCount: 7, ... }
+ * // { points: 4, maxPoints: 8, foundCount: 7, ... }
  */
 export function calculateTopTensScore(
   foundCount: number,
@@ -106,29 +108,29 @@ export function calculateTopTensScore(
  * Format score for display.
  *
  * @param score - Score object
- * @returns Formatted string like "16/30"
+ * @returns Formatted string like "4/8"
  */
 export function formatTopTensScore(score: TopTensScore): string {
   return `${score.points}/${score.maxPoints}`;
 }
 
 /**
- * Get the cumulative score for each answer count.
+ * Get the score for each answer count.
  * Useful for displaying score progression in UI.
  *
- * @returns Array of cumulative scores for 1-10 answers found
+ * @returns Array of scores for 1-10 answers found
  */
 export function getScoreProgression(): number[] {
-  return [1, 2, 4, 6, 9, 12, 16, 20, 25, 30];
+  return [1, 1, 2, 2, 3, 3, 4, 4, 5, 8];
 }
 
 /**
- * Get the points value for finding the Nth answer.
+ * Get the score for finding exactly N answers.
  *
- * @param n - Which answer (1-10)
- * @returns Points for that answer
+ * @param n - Number of answers found (1-10)
+ * @returns Score for that number of answers
  */
 export function getPointsForAnswer(n: number): number {
   if (n < 1 || n > 10) return 0;
-  return TIER_POINTS[n - 1];
+  return getScoreForFoundCount(n);
 }
