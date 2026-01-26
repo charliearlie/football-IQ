@@ -88,12 +88,13 @@ function PuzzleToastRenderer() {
  * - User hasn't completed onboarding (AsyncStorage check)
  */
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isInitialized, isLoading, profile, updateDisplayName } = useAuth();
+  const { isInitialized, isLoading, profile, updateDisplayName, user } = useAuth();
   const [onboardingHydrated, setOnboardingHydrated] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const isMounted = useRef(true);
 
   // Hydrate onboarding state from AsyncStorage
+  // Re-run when user changes (e.g., after data deletion and new account creation)
   useEffect(() => {
     isMounted.current = true;
 
@@ -114,7 +115,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted.current = false;
     };
-  }, []);
+  }, [user?.id]);
 
   // Determine if user needs to set display name
   const needsDisplayName = profile && !profile.display_name;

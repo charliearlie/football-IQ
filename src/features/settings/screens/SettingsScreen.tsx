@@ -8,16 +8,17 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, FileText, Star, Trash2, Bell, RotateCcw, UserX, Lightbulb } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import Purchases from 'react-native-purchases';
 import { colors, textStyles, spacing } from '@/theme';
 import { deleteAttemptsByGameMode, clearAllLocalData } from '@/lib/database';
-import { useAuth } from '@/features/auth';
+import { useAuth, useSubscriptionSync } from '@/features/auth';
 import { supabase } from '@/lib/supabase';
 import {
   scheduleNotification,
@@ -51,6 +52,9 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
 
   // Auth context for user data and sign out
   const { session, signOut } = useAuth();
+
+  // Subscription sync for restoring purchases after data deletion
+  const { forceSync } = useSubscriptionSync();
 
   // Onboarding context for resetting intro screens
   const { resetAllIntros } = useOnboardingContext();
@@ -256,8 +260,24 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
                       // 3. Clear AsyncStorage
                       await AsyncStorage.clear();
 
-                      // 4. Sign out
+                      // 4. Sign out (will auto-create new anonymous account)
                       await signOut();
+
+                      // 5. Restore any purchases tied to this device's App Store account
+                      // This preserves Pro status even after data deletion
+                      if (Platform.OS !== 'web') {
+                        // Small delay to let auth re-initialize with new anonymous account
+                        setTimeout(async () => {
+                          try {
+                            await Purchases.restorePurchases();
+                            await forceSync();
+                            console.log('[Settings] Purchases restored after data deletion');
+                          } catch (restoreError) {
+                            // Not an error if no purchases to restore
+                            console.log('[Settings] No purchases to restore:', restoreError);
+                          }
+                        }, 1500);
+                      }
 
                       Alert.alert('Data Deleted', 'All your data has been deleted.');
                     } catch (error) {
@@ -274,7 +294,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         },
       ]
     );
-  }, [session, signOut]);
+  }, [session, signOut, forceSync]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
