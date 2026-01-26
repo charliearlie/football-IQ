@@ -22,6 +22,8 @@ export {
   TacticalRadarChart,
   ShieldBadge,
   TrophyCase,
+  RankBadge,
+  ArchetypeLabel,
 } from './components/ScoutReport';
 export type {
   ElitePlayerCardProps,
@@ -29,6 +31,8 @@ export type {
   TacticalRadarChartProps,
   ShieldBadgeProps,
   TrophyCaseProps,
+  RankBadgeProps,
+  ArchetypeLabelProps,
 } from './components/ScoutReport';
 
 // Hooks
@@ -43,6 +47,18 @@ export {
   calculateGlobalIQ,
   calculateBadges,
 } from './utils/iqCalculation';
+
+// Tier Progression System
+export {
+  IQ_TIERS,
+  getTierForPoints,
+  getProgressToNextTier,
+  getPointsToNextTier,
+  getTierColor,
+  getNextTier,
+  formatTotalIQ,
+} from './utils/tierProgression';
+export type { IQTier } from './utils/tierProgression';
 
 // Components
 export { ProfileHeader } from './components/ProfileHeader';

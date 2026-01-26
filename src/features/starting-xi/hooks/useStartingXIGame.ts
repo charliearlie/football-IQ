@@ -19,6 +19,7 @@ import * as Crypto from 'expo-crypto';
 import { ParsedLocalPuzzle } from '@/types/database';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useAuth } from '@/features/auth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { validateGuess } from '@/lib/validation';
 import type {
@@ -220,6 +221,7 @@ function startingXIReducer(
 export function useStartingXIGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(startingXIReducer, undefined, createInitialState);
   const { syncAttempts } = usePuzzleContext();
+  const { refreshLocalIQ } = useAuth();
   const { triggerSuccess, triggerError, triggerCompletion, triggerSelection, triggerIncomplete } =
     useHaptics();
 
@@ -331,6 +333,11 @@ export function useStartingXIGame(puzzle: ParsedLocalPuzzle | null) {
 
         dispatch({ type: 'ATTEMPT_SAVED' });
 
+        // Refresh local IQ for immediate UI update
+        refreshLocalIQ().catch((err) => {
+          console.error('[StartingXI] Failed to refresh local IQ:', err);
+        });
+
         // Fire-and-forget cloud sync
         syncAttempts().catch((err) => {
           console.error('[StartingXI] Cloud sync failed:', err);
@@ -341,7 +348,7 @@ export function useStartingXIGame(puzzle: ParsedLocalPuzzle | null) {
     }
 
     saveCompletedAttempt();
-  }, [state.gameStatus, state.attemptSaved, puzzle, syncAttempts]);
+  }, [state.gameStatus, state.attemptSaved, puzzle, syncAttempts, refreshLocalIQ]);
 
   // Save progress on app background
   useEffect(() => {

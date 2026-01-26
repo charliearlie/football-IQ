@@ -123,6 +123,13 @@ export interface UseGamePersistenceConfig<TState extends BaseGameState, TMeta> {
    * Pass `syncAttempts` from usePuzzles() context.
    */
   onAttemptSaved?: () => Promise<unknown>;
+
+  /**
+   * Optional callback fired immediately after local save (before cloud sync).
+   * Use to refresh local IQ display for immediate UI update.
+   * Pass `refreshLocalIQ` from useAuth().
+   */
+  onLocalAttemptSaved?: () => Promise<void>;
 }
 
 /**
@@ -179,6 +186,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     deserializeProgress,
     buildFinalAttempt,
     onAttemptSaved,
+    onLocalAttemptSaved,
   } = config;
 
   // 1. StateRef for AppState callbacks (avoids stale closure)
@@ -293,6 +301,13 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
 
         await saveAttempt(attempt);
         dispatch({ type: 'ATTEMPT_SAVED' });
+
+        // Refresh local IQ immediately for instant UI update
+        if (onLocalAttemptSaved) {
+          onLocalAttemptSaved().catch((err) => {
+            console.error('Failed to refresh local IQ:', err);
+          });
+        }
 
         // Fire-and-forget cloud sync if callback provided
         if (onAttemptSaved) {

@@ -9,6 +9,7 @@ import {
   usePerformanceStats,
   IQCardOverlay,
   StreakCalendar,
+  getTierForPoints,
 } from '@/features/stats';
 import {
   ElitePlayerCard,
@@ -34,7 +35,7 @@ import { ElevatedButton } from '@/components/ElevatedButton';
 export default function ScoutReportScreen() {
   const router = useRouter();
   const { stats, isLoading, refresh } = usePerformanceStats();
-  const { profile, user, updateDisplayName } = useAuth();
+  const { profile, user, updateDisplayName, totalIQ } = useAuth();
 
   // IQ Card modal state
   const [showIQCard, setShowIQCard] = useState(false);
@@ -44,7 +45,10 @@ export default function ScoutReportScreen() {
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [isSubmittingName, setIsSubmittingName] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
-  const needsDisplayName = !profile?.display_name;
+  // Check if user needs to set display name (handles null, undefined, and empty string)
+  // Also show if profile hasn't loaded yet (profile is null)
+  const needsDisplayName = profile === null || !profile.display_name || profile.display_name.trim() === '';
+
 
   // Fetch user's global rank when stats are loaded
   useEffect(() => {
@@ -168,18 +172,8 @@ export default function ScoutReportScreen() {
           }
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>
-              Ready to Build Your Profile?
-            </Text>
-            <Text style={styles.emptyText}>
-              Play daily puzzles to unlock your Scout Report. Your Football IQ,
-              tactical profile, and achievements will appear here.
-            </Text>
-          </View>
-
-          {/* Display name input - fallback for users who missed onboarding */}
-          {needsDisplayName && (
+          {needsDisplayName ? (
+            /* Display name input - for users who haven't set their name */
             <View style={styles.displayNameSection}>
               <Text style={styles.displayNameHeader}>SET YOUR SCOUT NAME</Text>
               <Text style={styles.displayNameHint}>
@@ -212,7 +206,23 @@ export default function ScoutReportScreen() {
                 testID="save-display-name-button"
               />
             </View>
+          ) : (
+            /* Welcome message for users who have set their name */
+            <View style={styles.welcomeSection}>
+              <Text style={styles.welcomeGreeting}>Welcome, {profile?.display_name}!</Text>
+              <Text style={styles.welcomeTier}>{getTierForPoints(totalIQ).name}</Text>
+            </View>
           )}
+
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>
+              Your Scout Report Awaits
+            </Text>
+            <Text style={styles.emptyText}>
+              Complete your first puzzle to unlock your Football IQ stats.
+              Your tier, archetype, and progress will appear here.
+            </Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     );
@@ -244,11 +254,11 @@ export default function ScoutReportScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Elite Player Card - FUT-style header */}
+        {/* Elite Player Card - FUT-style header with tier crest and progress */}
         <ElitePlayerCard
           displayName={profile?.display_name ?? 'Football Fan'}
           memberSince={profile?.created_at ?? null}
-          globalIQ={stats.globalIQ}
+          totalIQ={totalIQ}
           currentStreak={stats.currentStreak}
           userRank={userRank}
           onSharePress={handleSharePress}
@@ -423,5 +433,23 @@ const styles = StyleSheet.create({
     color: colors.redCard,
     textAlign: 'center',
     marginBottom: spacing.md,
+  },
+  welcomeSection: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  welcomeGreeting: {
+    fontFamily: fonts.headline,
+    fontSize: 24,
+    color: colors.floodlightWhite,
+    marginBottom: spacing.xs,
+  },
+  welcomeTier: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

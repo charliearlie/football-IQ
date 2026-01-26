@@ -3,8 +3,8 @@
  *
  * A visually striking header component that showcases the user's
  * Football IQ with FUT card aesthetics. Features:
- * - Dynamic player grade badge
- * - Large IQ score with tier-based coloring
+ * - Tier crest badge as hero element
+ * - Progress bar to next tier
  * - Pulsing glow effect during win streaks
  * - Share button for social export
  */
@@ -20,38 +20,26 @@ import Animated, {
   withDelay,
   Easing,
   FadeInDown,
-  interpolate,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
 import { User, Share2 } from 'lucide-react-native';
-import { colors, fonts, fontWeights, spacing, borderRadius, depthOffset, getDepthColor } from '@/theme';
-import { PlayerGrade } from './PlayerGrade';
+import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
+import { TierCrest } from './TierCrest';
+import {
+  getTierForPoints,
+  getTierColor as getTierColorFromTier,
+  getProgressToNextTier,
+  getNextTier,
+} from '../../utils/tierProgression';
 
-/**
- * Get IQ tier color based on score.
- */
-function getTierColor(score: number): string {
-  if (score >= 90) return '#FFD700'; // Gold for Elite
-  if (score >= 70) return colors.pitchGreen;
-  if (score >= 40) return colors.cardYellow;
-  return colors.warningOrange;
-}
-
-/**
- * Get IQ tier label based on score.
- */
-function getTierLabel(score: number): string {
-  if (score >= 90) return 'Elite';
-  if (score >= 70) return 'Expert';
-  if (score >= 50) return 'Intermediate';
-  if (score >= 30) return 'Apprentice';
-  return 'Rookie';
-}
 
 export interface ElitePlayerCardProps {
   displayName: string;
   memberSince: string | null;
-  globalIQ: number;
+  /** Cumulative IQ points (0-20,000+) for the 10-tier progression system */
+  totalIQ: number;
+  /** @deprecated Use totalIQ instead. Kept for backward compatibility during transition. */
+  globalIQ?: number;
   currentStreak: number;
   userRank: { rank: number; totalUsers: number } | null;
   onSharePress: () => void;
@@ -61,25 +49,29 @@ export interface ElitePlayerCardProps {
 export function ElitePlayerCard({
   displayName,
   memberSince,
+  totalIQ,
   globalIQ,
   currentStreak,
   userRank,
   onSharePress,
   testID,
 }: ElitePlayerCardProps) {
-  const tierColor = getTierColor(globalIQ);
-  const tierLabel = getTierLabel(globalIQ);
+  // Use totalIQ (new system) or fallback to globalIQ (deprecated) for backward compat
+  const iqValue = totalIQ ?? globalIQ ?? 0;
+  const tier = getTierForPoints(iqValue);
+  const tierColor = getTierColorFromTier(tier.tier);
+  const tierLabel = tier.name;
 
-  // Calculate rank percentile for grade
-  const rankPercentile = userRank
-    ? Math.round((userRank.rank / userRank.totalUsers) * 100)
-    : null;
+  // Progress tracking
+  const progress = getProgressToNextTier(iqValue);
+  const nextTier = getNextTier(tier);
+  const isMaxLevel = tier.tier === 10;
 
   // Glow effect when streak >= 3
   const showGlow = currentStreak >= 3;
   const glowIntensity = Math.min(currentStreak / 10, 1); // Max at 10-day streak
   const glowOpacity = useSharedValue(0);
-  const scoreScale = useSharedValue(0);
+  const progressWidth = useSharedValue(0);
 
   // Format member since date
   const formatMemberSince = (dateStr: string | null): string => {
@@ -113,13 +105,13 @@ export function ElitePlayerCard({
     }
   }, [showGlow, glowIntensity, glowOpacity]);
 
-  // Score entrance animation
+  // Progress bar animation
   useEffect(() => {
-    scoreScale.value = withDelay(
-      200,
-      withSpring(1, { damping: 12, stiffness: 100 })
+    progressWidth.value = withDelay(
+      300,
+      withSpring(progress, { damping: 15, stiffness: 100 })
     );
-  }, [scoreScale]);
+  }, [progress, progressWidth]);
 
   const glowStyle = useAnimatedStyle(() => ({
     shadowColor: colors.pitchGreen,
@@ -129,9 +121,8 @@ export function ElitePlayerCard({
     elevation: showGlow ? 10 : 0,
   }));
 
-  const scoreAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scoreScale.value }],
-    opacity: scoreScale.value,
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
   }));
 
   return (
@@ -153,13 +144,9 @@ export function ElitePlayerCard({
         />
       )}
 
-      {/* Header row: Grade + Share button */}
+      {/* Header row: Share button only */}
       <View style={styles.headerRow}>
-        <PlayerGrade
-          globalIQ={globalIQ}
-          rankPercentile={rankPercentile}
-          testID={`${testID}-grade`}
-        />
+        <View style={styles.spacer} />
         <Pressable
           onPress={onSharePress}
           style={styles.shareButton}
@@ -169,6 +156,16 @@ export function ElitePlayerCard({
         >
           <Share2 size={20} color={colors.floodlightWhite} />
         </Pressable>
+      </View>
+
+      {/* Tier Crest - Hero element */}
+      <View style={styles.crestSection}>
+        <TierCrest
+          tierName={tierLabel}
+          tierColor={tierColor}
+          tierLevel={tier.tier}
+          testID={`${testID}-crest`}
+        />
       </View>
 
       {/* Player identity */}
@@ -183,20 +180,26 @@ export function ElitePlayerCard({
         <Text style={styles.memberSince}>{formatMemberSince(memberSince)}</Text>
       </View>
 
-      {/* IQ Score Display */}
-      <Animated.View style={[styles.scoreSection, scoreAnimatedStyle]}>
-        <View style={[styles.scoreContainer, { borderColor: tierColor }]}>
-          <Text style={[styles.iqLabel, { color: tierColor }]}>
-            FOOTBALL IQ
-          </Text>
-          <Text style={[styles.iqScore, { color: tierColor }]}>
-            {globalIQ}
-          </Text>
-          <View style={[styles.tierBadge, { backgroundColor: tierColor }]}>
-            <Text style={styles.tierText}>{tierLabel}</Text>
+      {/* Progress to next tier */}
+      <View style={styles.progressFooter}>
+        <View style={styles.progressRow}>
+          <View style={styles.progressBarBackground}>
+            <Animated.View
+              style={[
+                styles.progressBarFill,
+                { backgroundColor: colors.pitchGreen },
+                progressBarStyle,
+              ]}
+            />
           </View>
+          {!isMaxLevel && nextTier && (
+            <Text style={styles.nextTierLabel}>{nextTier.name}</Text>
+          )}
         </View>
-      </Animated.View>
+        {isMaxLevel && (
+          <Text style={styles.maxLevelText}>Maximum Level Achieved</Text>
+        )}
+      </View>
 
       {/* Streak indicator (when active) */}
       {currentStreak > 0 && (
@@ -232,7 +235,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  spacer: {
+    flex: 1,
   },
   shareButton: {
     width: 40,
@@ -244,9 +250,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
+  crestSection: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
   identitySection: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   avatarContainer: {
     marginBottom: spacing.md,
@@ -274,51 +284,44 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
-  scoreSection: {
-    alignItems: 'center',
-  },
-  scoreContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing['2xl'],
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-  },
-  iqLabel: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.semiBold,
-    fontSize: 11,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  iqScore: {
-    fontFamily: fonts.headline,
-    fontSize: 96,
-    lineHeight: 100,
-    letterSpacing: 2,
-  },
-  tierBadge: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    marginTop: spacing.sm,
-  },
-  tierText: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.semiBold,
-    fontSize: 12,
-    color: colors.stadiumNavy,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  streakRow: {
-    alignItems: 'center',
-    marginTop: spacing.lg,
+  progressFooter: {
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  progressBarBackground: {
+    flex: 1,
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  nextTierLabel: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  maxLevelText: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.medium,
+    fontSize: 12,
+    color: colors.pitchGreen,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  streakRow: {
+    alignItems: 'center',
+    marginTop: spacing.md,
   },
   streakText: {
     fontFamily: fonts.body,

@@ -746,6 +746,58 @@ await shareResult();  // Returns ShareResult { success, method }
 // StartingXIResultModal - Completion modal with confetti
 ```
 
+## IQ Tier Progression
+```typescript
+import {
+  IQ_TIERS,
+  getTierForPoints,
+  getProgressToNextTier,
+  getPointsToNextTier,
+  getTierColor,
+  getNextTier,
+  formatTotalIQ,
+  type IQTier,
+} from '@/features/stats';
+
+// Get tier for current points
+const tier = getTierForPoints(342);
+// tier: { tier: 4, name: 'Impact Sub', minPoints: 250, maxPoints: 499 }
+
+// Progress within current tier (0-100)
+getProgressToNextTier(342)  // 36.8 (36.8% through Impact Sub)
+
+// Points needed for next tier
+getPointsToNextTier(342)    // 158 (need 158 more for Rotation Player)
+
+// Tier colors (for UI)
+getTierColor(1)   // '#58CC02' (Pitch Green - tiers 1-3)
+getTierColor(5)   // '#FACC15' (Card Yellow - tiers 4-6)
+getTierColor(7)   // '#F97316' (Orange - tiers 7-8)
+getTierColor(9)   // '#EC4899' (Pink - tier 9)
+getTierColor(10)  // '#06B6D4' (Cyan - GOAT)
+
+// Format for display
+formatTotalIQ(1234)  // "1,234"
+
+// 10-tier thresholds
+// 1=0, 2=25, 3=100, 4=250, 5=500, 6=1000, 7=2000, 8=4000, 9=8000, 10=20000
+
+// Scout Report components
+import { RankBadge, ArchetypeLabel } from '@/features/stats/components/ScoutReport';
+
+// RankBadge - shows tier name, total IQ, animated progress bar
+<RankBadge totalIQ={342} testID="rank-badge" />
+
+// ArchetypeLabel - shows dominant game mode archetype
+<ArchetypeLabel proficiencies={stats.proficiencies} testID="archetype" />
+
+// Archetypes by game mode:
+// career_path → Detective, career_path_pro → Master Detective
+// guess_the_transfer → Market Analyst, guess_the_goalscorers → Historian
+// the_grid → Pattern Master, topical_quiz → News Hound
+// top_tens → Statistician, starting_xi → Tactical Mind
+```
+
 ## My IQ Profile Screen
 ```typescript
 import {

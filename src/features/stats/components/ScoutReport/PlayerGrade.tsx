@@ -16,6 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
+import { getTierForPoints } from '../../utils/tierProgression';
 
 export type PlayerGradeLevel = 'GOAT' | 'WORLD CLASS' | 'DIVISION 1' | 'DIVISION 2' | 'PROSPECT';
 
@@ -29,16 +30,24 @@ interface GradeConfig {
 }
 
 /**
- * Determine player grade based on IQ and rank percentile.
+ * Determine player grade based on total IQ points and rank percentile.
+ *
+ * Uses the 10-tier progression system thresholds:
+ * - GOAT: Tier 10 (20,000+) AND top 1%
+ * - WORLD CLASS: Tier 7+ (2,000+) AND top 10%
+ * - DIVISION 1: Tier 5+ (500+)
+ * - DIVISION 2: Tier 3+ (100+)
+ * - PROSPECT: Tier 1-2 (0-99)
  */
 export function getPlayerGrade(
-  globalIQ: number,
+  totalIQ: number,
   rankPercentile: number | null
 ): GradeConfig {
   const pct = rankPercentile ?? 100; // Default to low percentile if no rank
+  const tier = getTierForPoints(totalIQ);
 
-  // GOAT: IQ >= 90 AND top 1%
-  if (globalIQ >= 90 && pct <= 1) {
+  // GOAT: Tier 10 (20,000+) AND top 1%
+  if (tier.tier >= 10 && pct <= 1) {
     return {
       label: 'GOAT',
       backgroundColor: '#FFD700', // Gold
@@ -49,8 +58,8 @@ export function getPlayerGrade(
     };
   }
 
-  // World Class: IQ >= 75 AND top 10%
-  if (globalIQ >= 75 && pct <= 10) {
+  // World Class: Tier 7+ (2,000+) AND top 10%
+  if (tier.tier >= 7 && pct <= 10) {
     return {
       label: 'WORLD CLASS',
       backgroundColor: colors.pitchGreen,
@@ -61,8 +70,8 @@ export function getPlayerGrade(
     };
   }
 
-  // Division 1: IQ >= 60
-  if (globalIQ >= 60) {
+  // Division 1: Tier 5+ (500+)
+  if (tier.tier >= 5) {
     return {
       label: 'DIVISION 1',
       backgroundColor: colors.cardYellow,
@@ -72,8 +81,8 @@ export function getPlayerGrade(
     };
   }
 
-  // Division 2: IQ >= 40
-  if (globalIQ >= 40) {
+  // Division 2: Tier 3+ (100+)
+  if (tier.tier >= 3) {
     return {
       label: 'DIVISION 2',
       backgroundColor: colors.warningOrange,
@@ -83,7 +92,7 @@ export function getPlayerGrade(
     };
   }
 
-  // Prospect: IQ < 40
+  // Prospect: Tier 1-2 (0-99)
   return {
     label: 'PROSPECT',
     backgroundColor: colors.textSecondary,
@@ -94,14 +103,19 @@ export function getPlayerGrade(
 }
 
 export interface PlayerGradeProps {
-  globalIQ: number;
+  /** Cumulative IQ points (0-20,000+) */
+  totalIQ: number;
+  /** @deprecated Use totalIQ instead */
+  globalIQ?: number;
   /** User's rank percentile (1 = top 1%, 10 = top 10%, etc.) */
   rankPercentile: number | null;
   testID?: string;
 }
 
-export function PlayerGrade({ globalIQ, rankPercentile, testID }: PlayerGradeProps) {
-  const grade = getPlayerGrade(globalIQ, rankPercentile);
+export function PlayerGrade({ totalIQ, globalIQ, rankPercentile, testID }: PlayerGradeProps) {
+  // Use totalIQ (new) or fallback to globalIQ (deprecated)
+  const iqValue = totalIQ ?? globalIQ ?? 0;
+  const grade = getPlayerGrade(iqValue, rankPercentile);
   const shimmerPosition = useSharedValue(-1);
   const glowOpacity = useSharedValue(0.4);
 

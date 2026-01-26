@@ -26,6 +26,7 @@ import { validateGuess, normalizeString } from '@/lib/validation';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { useHaptics } from '@/hooks/useHaptics';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useAuth } from '@/features/auth';
 import type { ParsedLocalPuzzle, LocalAttempt } from '@/types/database';
 
 /**
@@ -221,6 +222,7 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(reducer, createInitialState());
   const { triggerNotification, triggerHeavy, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
+  const { refreshLocalIQ } = useAuth();
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ref to track current state for AppState callback
@@ -580,6 +582,11 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
         try {
           await saveAttempt(attempt);
           dispatch({ type: 'ATTEMPT_SAVED' });
+
+          // Refresh local IQ for immediate UI update
+          refreshLocalIQ().catch((err) => {
+            console.error('[GoalscorerRecall] Failed to refresh local IQ:', err);
+          });
 
           // Fire-and-forget cloud sync
           syncAttempts().catch((err) => {

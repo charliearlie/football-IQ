@@ -142,6 +142,7 @@ export type Database = {
           id: string
           is_premium: boolean | null
           premium_purchased_at: string | null
+          total_iq: number
           updated_at: string | null
           username: string | null
         }
@@ -152,6 +153,7 @@ export type Database = {
           id: string
           is_premium?: boolean | null
           premium_purchased_at?: string | null
+          total_iq?: number
           updated_at?: string | null
           username?: string | null
         }
@@ -162,6 +164,7 @@ export type Database = {
           id?: string
           is_premium?: boolean | null
           premium_purchased_at?: string | null
+          total_iq?: number
           updated_at?: string | null
           username?: string | null
         }

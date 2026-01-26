@@ -1,6 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Platform } from 'react-native';
 import { Profile } from '../types/auth.types';
+import { getUnsyncedIQ } from '@/lib/database';
 
 const PROFILE_TIMEOUT_MS = 10000;
 
@@ -28,7 +30,11 @@ interface UseProfileResult {
   isPremium: boolean;
   displayName: string | null;
   needsDisplayName: boolean;
+  /** Combined total IQ: server value + local unsynced attempts */
+  totalIQ: number;
   refetch: () => Promise<void>;
+  /** Refresh local unsynced IQ (call after completing a game) */
+  refreshLocalIQ: () => Promise<void>;
 }
 
 /**
@@ -41,6 +47,10 @@ export function useProfile(userId: string | null): UseProfileResult {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(userId !== null);
   const [error, setError] = useState<Error | null>(null);
+  const [localUnsyncedIQ, setLocalUnsyncedIQ] = useState(0);
+
+  // Track server total_iq to detect when sync completes
+  const prevServerTotalIQ = useRef<number | null>(null);
 
   const fetchProfile = useCallback(async () => {
     if (!userId) {
@@ -93,6 +103,38 @@ export function useProfile(userId: string | null): UseProfileResult {
     setIsLoading(false);
   }, [userId]);
 
+  // Fetch local unsynced IQ from SQLite
+  const refreshLocalIQ = useCallback(async () => {
+    // SQLite not available on web
+    if (Platform.OS === 'web') {
+      setLocalUnsyncedIQ(0);
+      return;
+    }
+    try {
+      const unsyncedIQ = await getUnsyncedIQ();
+      setLocalUnsyncedIQ(unsyncedIQ);
+    } catch (err) {
+      console.warn('[useProfile] Failed to get unsynced IQ:', err);
+      setLocalUnsyncedIQ(0);
+    }
+  }, []);
+
+  // Reset local IQ when server total_iq changes (sync completed)
+  useEffect(() => {
+    const serverTotalIQ = profile?.total_iq ?? 0;
+    if (prevServerTotalIQ.current !== null && serverTotalIQ !== prevServerTotalIQ.current) {
+      // Server IQ changed, meaning sync completed - refresh local IQ
+      // (it should now be 0 or lower as synced attempts are cleared)
+      refreshLocalIQ();
+    }
+    prevServerTotalIQ.current = serverTotalIQ;
+  }, [profile?.total_iq, refreshLocalIQ]);
+
+  // Fetch local IQ on mount
+  useEffect(() => {
+    refreshLocalIQ();
+  }, [refreshLocalIQ]);
+
   // Fetch profile and subscribe to realtime changes
   useEffect(() => {
     if (!userId) {
@@ -131,6 +173,9 @@ export function useProfile(userId: string | null): UseProfileResult {
   const isPremium = profile?.is_premium ?? false;
   const displayName = profile?.display_name ?? null;
   const needsDisplayName = profile !== null && !profile.display_name;
+  // Combine server IQ with local unsynced IQ for immediate display
+  const serverTotalIQ = profile?.total_iq ?? 0;
+  const totalIQ = serverTotalIQ + localUnsyncedIQ;
 
   return {
     profile,
@@ -139,6 +184,8 @@ export function useProfile(userId: string | null): UseProfileResult {
     isPremium,
     displayName,
     needsDisplayName,
+    totalIQ,
     refetch: fetchProfile,
+    refreshLocalIQ,
   };
 }

@@ -34,4 +34,8 @@ export interface AuthContextValue extends AuthState {
   signOut: () => Promise<void>;
   /** Force refetch of profile data from Supabase */
   refetchProfile: () => Promise<void>;
+  /** Refresh local unsynced IQ (call after completing a puzzle for immediate UI update) */
+  refreshLocalIQ: () => Promise<void>;
+  /** Combined total IQ: server value + local unsynced attempts */
+  totalIQ: number;
 }

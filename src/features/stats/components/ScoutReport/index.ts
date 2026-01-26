@@ -6,14 +6,14 @@
  */
 
 export { ElitePlayerCard } from './ElitePlayerCard';
-export { PlayerGrade } from './PlayerGrade';
+export { TierCrest } from './TierCrest';
 export { TacticalRadarChart } from './TacticalRadarChart';
 export { ShieldBadge } from './ShieldBadge';
 export { TrophyCase } from './TrophyCase';
 
 // Types
-export type { PlayerGradeLevel } from './PlayerGrade';
 export type { ElitePlayerCardProps } from './ElitePlayerCard';
+export type { TierCrestProps } from './TierCrest';
 export type { TacticalRadarChartProps } from './TacticalRadarChart';
 export type { ShieldBadgeProps } from './ShieldBadge';
 export type { TrophyCaseProps } from './TrophyCase';

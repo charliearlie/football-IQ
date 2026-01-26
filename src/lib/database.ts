@@ -377,6 +377,24 @@ export async function getUnsyncedAttempts(): Promise<ParsedLocalAttempt[]> {
 }
 
 /**
+ * Get total IQ earned from local unsynced completed attempts.
+ * Used to show offline IQ accumulation before sync.
+ * This allows the UI to display accumulated IQ immediately after
+ * completing a puzzle, even before it syncs to Supabase.
+ *
+ * @returns Total IQ points from unsynced completed attempts
+ */
+export async function getUnsyncedIQ(): Promise<number> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ total: number }>(
+    `SELECT COALESCE(SUM(score), 0) as total
+     FROM attempts
+     WHERE synced = 0 AND completed = 1 AND score > 0`
+  );
+  return result?.total ?? 0;
+}
+
+/**
  * Get the most recent attempt for a specific puzzle.
  * Used to determine card status (play/resume/done) on Home Screen.
  */

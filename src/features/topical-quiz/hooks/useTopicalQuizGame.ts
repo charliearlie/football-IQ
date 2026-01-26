@@ -3,6 +3,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useHaptics } from '@/hooks/useHaptics';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useAuth } from '@/features/auth';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { LocalAttempt } from '@/types/database';
@@ -139,6 +140,7 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
   const [state, dispatch] = useReducer(quizReducer, createInitialState());
   const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
+  const { refreshLocalIQ } = useAuth();
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Ref to track current state for AppState callback
@@ -366,6 +368,11 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
 
           await saveAttempt(attempt);
           dispatch({ type: 'ATTEMPT_SAVED' });
+
+          // Refresh local IQ for immediate UI update
+          refreshLocalIQ().catch((err) => {
+            console.error('[TopicalQuiz] Failed to refresh local IQ:', err);
+          });
 
           // Fire-and-forget cloud sync
           syncAttempts().catch((err) => {

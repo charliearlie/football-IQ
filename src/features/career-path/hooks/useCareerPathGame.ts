@@ -3,6 +3,7 @@ import { FlatList } from 'react-native';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useGamePersistence } from '@/hooks/useGamePersistence';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useAuth } from '@/features/auth';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { LocalAttempt } from '@/types/database';
 import {
@@ -163,6 +164,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
   const flatListRef = useRef<FlatList>(null);
   const { triggerSuccess, triggerError, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
+  const { refreshLocalIQ } = useAuth();
 
   // Parse puzzle content
   const puzzleContent = useMemo<CareerPathContent | null>(() => {
@@ -236,6 +238,7 @@ export function useCareerPathGame(puzzle: ParsedLocalPuzzle | null) {
       };
     },
     onAttemptSaved: syncAttempts,
+    onLocalAttemptSaved: refreshLocalIQ,
   });
 
   // Reveal the next step manually

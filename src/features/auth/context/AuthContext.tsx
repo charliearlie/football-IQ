@@ -32,7 +32,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isPremium,
     displayName,
     needsDisplayName,
+    totalIQ,
     refetch: refetchProfile,
+    refreshLocalIQ,
   } = useProfile(user?.id ?? null);
 
   // Initialize auth on mount
@@ -145,6 +147,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateDisplayName,
     signOut,
     refetchProfile,
+    refreshLocalIQ,
+    totalIQ,
   }), [
     session,
     user,
@@ -159,6 +163,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateDisplayName,
     signOut,
     refetchProfile,
+    refreshLocalIQ,
+    totalIQ,
   ]);
 
   return (

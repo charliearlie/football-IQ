@@ -86,6 +86,27 @@ Full-screen experience shown on first launch to introduce the app and collect di
 
 ## Shared Systems
 
+### IQ Progression System
+Cumulative points system with 10 football-themed tiers from Trialist (0) to GOAT (20,000).
+
+**Tier Thresholds:**
+| Tier | Name | Min Points |
+|------|------|------------|
+| 1 | Trialist | 0 |
+| 2 | Youth Squad | 25 |
+| 3 | Reserve Team | 100 |
+| 4 | Impact Sub | 250 |
+| 5 | Rotation Player | 500 |
+| 6 | First Team Regular | 1,000 |
+| 7 | Key Player | 2,000 |
+| 8 | Club Legend | 4,000 |
+| 9 | National Treasure | 8,000 |
+| 10 | GOAT | 20,000 |
+
+**Server-Side Increment:** PostgreSQL trigger automatically adds puzzle score to `profiles.total_iq` on completed attempt INSERT.
+
+**Files:** `src/features/stats/utils/tierProgression.ts`, `supabase/migrations/018_total_iq_progression.sql`
+
 ### Fuzzy Name Validation
 All game modes use `src/lib/validation.ts` for player name matching:
 - Case insensitive, accent normalization (Özil = Ozil)
