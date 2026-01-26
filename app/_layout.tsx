@@ -43,7 +43,6 @@ Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   enabled: !__DEV__,
   tracesSampleRate: 1.0,
-  debug: __DEV__,
 });
 
 // Conditionally import MobileAds only on native platforms
@@ -316,7 +315,6 @@ export default function RootLayout() {
         autocapture={{
           captureScreens: false, // Manual tracking required for expo-router
         }}
-        debug={__DEV__}
       >
         <PostHogLogger />
         <SubscriptionSyncProvider>

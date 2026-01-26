@@ -781,6 +781,53 @@ export async function getCatalogEntryCountIncomplete(): Promise<number> {
 }
 
 /**
+ * Get a random unplayed puzzle respecting premium gating.
+ *
+ * For non-premium users:
+ * - Only puzzles within last 7 days OR with valid ad unlock
+ * - Excludes premium-only game modes (career_path_pro, top_tens)
+ *
+ * For premium users:
+ * - Full backlog access, all game modes
+ *
+ * @param isPremium - Whether user has premium subscription
+ * @param freeWindowStartDate - Start of 7-day free window (YYYY-MM-DD)
+ * @returns Random unplayed puzzle catalog entry, or null if none available
+ */
+export async function getRandomUnplayedPuzzle(
+  isPremium: boolean,
+  freeWindowStartDate: string
+): Promise<LocalCatalogEntry | null> {
+  const database = getDatabase();
+
+  if (isPremium) {
+    // Premium: full backlog, all modes, only incomplete
+    return database.getFirstAsync<LocalCatalogEntry>(
+      `SELECT pc.* FROM puzzle_catalog pc
+       LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
+       WHERE pc.puzzle_date <= date('now', 'localtime')
+         AND a.id IS NULL
+       ORDER BY RANDOM()
+       LIMIT 1`
+    );
+  }
+
+  // Non-premium: 7-day window OR ad-unlocked, exclude premium modes
+  return database.getFirstAsync<LocalCatalogEntry>(
+    `SELECT pc.* FROM puzzle_catalog pc
+     LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
+     LEFT JOIN unlocked_puzzles up ON pc.id = up.puzzle_id
+     WHERE pc.puzzle_date <= date('now', 'localtime')
+       AND a.id IS NULL
+       AND pc.game_mode NOT IN ('career_path_pro', 'top_tens')
+       AND (pc.puzzle_date >= $freeWindowStart OR up.puzzle_id IS NOT NULL)
+     ORDER BY RANDOM()
+     LIMIT 1`,
+    { $freeWindowStart: freeWindowStartDate }
+  );
+}
+
+/**
  * Clear all catalog entries.
  * Used for full resync scenarios.
  */

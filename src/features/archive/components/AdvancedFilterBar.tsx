@@ -30,7 +30,9 @@ import {
   Trophy,
   ListOrdered,
   Users,
+  Shuffle,
 } from 'lucide-react-native';
+import { ElevatedButton } from '@/components/ElevatedButton';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
 import { triggerLight } from '@/lib/haptics';
 import { ArchiveFilterState, StatusFilter } from '../types/archive.types';
@@ -41,6 +43,10 @@ interface AdvancedFilterBarProps {
   filters: ArchiveFilterState;
   /** Callback when filters change */
   onFiltersChange: (filters: ArchiveFilterState) => void;
+  /** Callback for random play button */
+  onRandomPlay: () => void;
+  /** Whether random play is loading */
+  isRandomLoading?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -135,6 +141,8 @@ function StatusSegment({
 export function AdvancedFilterBar({
   filters,
   onFiltersChange,
+  onRandomPlay,
+  isRandomLoading = false,
   testID,
 }: AdvancedFilterBarProps) {
   const [showGameModeDropdown, setShowGameModeDropdown] = useState(false);
@@ -190,6 +198,20 @@ export function AdvancedFilterBar({
           </View>
           <ChevronDown size={16} color={colors.textSecondary} />
         </Pressable>
+      </View>
+
+      {/* Random Play Button */}
+      <View style={styles.randomPlayRow}>
+        <ElevatedButton
+          title="Random Unplayed Game"
+          icon={<Shuffle size={18} color={colors.stadiumNavy} />}
+          onPress={onRandomPlay}
+          disabled={isRandomLoading}
+          size="small"
+          fullWidth
+          hapticType="none"
+          testID={`${testID}-random-play`}
+        />
       </View>
 
       {/* Game Mode Selection Modal */}
@@ -273,6 +295,9 @@ const styles = StyleSheet.create({
   dropdownRow: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  randomPlayRow: {
+    marginTop: spacing.xs,
   },
   dropdown: {
     flex: 1,

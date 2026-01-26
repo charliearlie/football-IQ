@@ -221,6 +221,10 @@ Historical puzzle browser with premium gating and "Velvet Rope" locked card desi
 - **Filters**: All, Incomplete, or by game mode
 - **Catalog sync**: `get_puzzle_catalog()` RPC bypasses RLS to show locked puzzle metadata
 - **Completed puzzles**: Always unlocked for viewing results
+- **Random Play**: "Random Unplayed Game" button in filter bar selects random incomplete puzzle
+  - Non-premium: 7-day window + ad-unlocked puzzles, excludes `career_path_pro`/`top_tens`
+  - Premium: full backlog, all game modes
+  - Shows "All Caught Up!" alert when no unplayed puzzles remain
 - **Files**: `src/features/archive/`, `app/(tabs)/archive.tsx`
 
 ### Premium Gating

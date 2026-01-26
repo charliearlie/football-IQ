@@ -1061,6 +1061,25 @@ isPuzzleLocked('2024-12-15', true, 'p-123', [], false)  // false (premium sees a
 formatPuzzleDate('2024-12-24') // "Tuesday, Dec 24"
 ```
 
+## Random Play
+```typescript
+import { useRandomPlay } from '@/features/archive';
+
+// Hook usage
+const { playRandom, isLoading } = useRandomPlay();
+
+// Selects random unplayed puzzle respecting premium gating:
+// - Non-premium: 7-day window + ad-unlocked, excludes career_path_pro/top_tens
+// - Premium: full backlog, all game modes
+// Shows "All Caught Up!" alert when no unplayed puzzles remain
+
+<ElevatedButton
+  title="Random Unplayed Game"
+  onPress={playRandom}
+  disabled={isLoading}
+/>
+```
+
 ## Premium Gating (Navigation + Route Protection)
 ```typescript
 // Layer 1: UI Hook (Archive screen)

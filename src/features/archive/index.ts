@@ -23,6 +23,7 @@ export type {
 export { useArchivePuzzles } from './hooks/useArchivePuzzles';
 export { useGatedNavigation } from './hooks/useGatedNavigation';
 export { useAccordionState } from './hooks/useAccordionState';
+export { useRandomPlay } from './hooks/useRandomPlay';
 
 // Components - New Match Calendar
 export { ArchiveCalendar } from './components/ArchiveCalendar';

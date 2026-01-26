@@ -14,6 +14,7 @@ import {
 } from '@/features/archive';
 import { ArchiveCalendar } from '@/features/archive/components/ArchiveCalendar';
 import { AdvancedFilterBar } from '@/features/archive/components/AdvancedFilterBar';
+import { useRandomPlay } from '@/features/archive/hooks/useRandomPlay';
 import { applyFilters, groupByDate } from '@/features/archive/utils/calendarTransformers';
 import { useAds, UnlockChoiceModal, PremiumUpsellBanner } from '@/features/ads';
 import { CompletedGameModal } from '@/features/home';
@@ -66,6 +67,9 @@ export default function ArchiveScreen() {
 
   // Check if user should see ads (non-premium users)
   const { shouldShowAds } = useAds();
+
+  // Random play hook
+  const { playRandom, isLoading: isRandomLoading } = useRandomPlay();
 
   // Load archive data with 'all' filter (we filter client-side for more flexibility)
   const {
@@ -202,6 +206,8 @@ export default function ArchiveScreen() {
           <AdvancedFilterBar
             filters={filters}
             onFiltersChange={setFilters}
+            onRandomPlay={playRandom}
+            isRandomLoading={isRandomLoading}
             testID="archive-filter"
           />
         }
