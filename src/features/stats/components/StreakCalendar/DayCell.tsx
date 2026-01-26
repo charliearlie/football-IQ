@@ -38,6 +38,8 @@ export interface DayCellProps {
   isToday: boolean;
   /** Whether this date is in the future (not yet playable) */
   isFutureDate?: boolean;
+  /** Whether this date is before the app launch (Jan 20, 2026) */
+  isPreLaunchDate?: boolean;
   /** Callback when cell is pressed with position info */
   onPress: (day: CalendarDay, position: CellPosition) => void;
   /** Test ID for testing */
@@ -78,6 +80,7 @@ export function DayCell({
   isInPerfectWeek,
   isToday,
   isFutureDate = false,
+  isPreLaunchDate = false,
   onPress,
   testID,
 }: DayCellProps) {
@@ -133,9 +136,12 @@ export function DayCell({
 
   const intensity = day ? getCellIntensity(day.count) : 'empty';
 
+  // Disabled cells: future dates and pre-launch dates
+  const isDisabled = isFutureDate || isPreLaunchDate;
+
   const handlePressIn = () => {
-    // Don't animate press for future dates
-    if (day && !isFutureDate) {
+    // Don't animate press for disabled dates
+    if (day && !isDisabled) {
       pressed.value = withSpring(1, SPRING_CONFIG);
     }
   };
@@ -145,19 +151,19 @@ export function DayCell({
   };
 
   const handlePress = () => {
-    // Don't respond to presses for future dates
-    if (day && !isFutureDate) {
+    // Don't respond to presses for disabled dates
+    if (day && !isDisabled) {
       triggerSelection();
       // Position not used by bottom sheet - pass dummy values
       onPress(day, { x: 0, y: 0, width: 0, height: 0 });
     }
-    // No action for padding cells or future dates
+    // No action for padding cells, future dates, or pre-launch dates
   };
 
-  // Determine colors based on intensity and future state
+  // Determine colors based on intensity and disabled state
   const getTopColor = () => {
-    // Future dates get muted/disabled appearance
-    if (isFutureDate) {
+    // Future dates and pre-launch dates get muted/disabled appearance
+    if (isDisabled) {
       return '#0D1520'; // Very dark, muted appearance
     }
     switch (intensity) {
@@ -171,8 +177,8 @@ export function DayCell({
   };
 
   const getShadowColor = () => {
-    // Future dates get muted shadow
-    if (isFutureDate) {
+    // Future dates and pre-launch dates get muted shadow
+    if (isDisabled) {
       return 'rgba(0, 0, 0, 0.15)';
     }
     switch (intensity) {
@@ -208,13 +214,15 @@ export function DayCell({
       ]}
       testID={testID}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isFutureDate }}
+      accessibilityState={{ disabled: isDisabled }}
       accessibilityLabel={
-        isFutureDate
-          ? `Day ${dayNumber}, not yet available`
-          : day
-            ? `${day.date}, ${day.count} games played, ${day.totalIQ} IQ earned`
-            : `Day ${dayNumber}, no games played`
+        isPreLaunchDate
+          ? `Day ${dayNumber}, before app launch`
+          : isFutureDate
+            ? `Day ${dayNumber}, not yet available`
+            : day
+              ? `${day.date}, ${day.count} games played, ${day.totalIQ} IQ earned`
+              : `Day ${dayNumber}, no games played`
       }
     >
       {/* Shadow/Depth Layer - Fixed at bottom */}
@@ -260,9 +268,9 @@ export function DayCell({
         <Text
           style={[
             styles.dayNumber,
-            isFutureDate && styles.dayNumberFuture,
-            !isFutureDate && intensity === 'empty' && styles.dayNumberEmpty,
-            !isFutureDate && intensity !== 'empty' && styles.dayNumberFilled,
+            isDisabled && styles.dayNumberFuture,
+            !isDisabled && intensity === 'empty' && styles.dayNumberEmpty,
+            !isDisabled && intensity !== 'empty' && styles.dayNumberFilled,
           ]}
         >
           {dayNumber}

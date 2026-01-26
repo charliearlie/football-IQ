@@ -134,31 +134,42 @@ export function StreakCalendar({
     triggerLight();
   }, []);
 
-  // Ensure current month exists in data (for empty state)
+  // Build empty current month (used when no data or current month not in data)
+  const emptyCurrentMonth = useMemo((): CalendarMonth => {
+    const now = new Date();
+    return {
+      monthKey: currentMonthKey,
+      monthName: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      days: [],
+      longestStreak: 0,
+      totalIQ: 0,
+      perfectWeeks: [],
+    };
+  }, [currentMonthKey]);
+
+  // Ensure current month exists in data and is at index 0 (for navigation)
   const monthsToRender = useMemo(() => {
-    if (!data) return [];
-
-    // Check if current month exists in data
-    const hasCurrentMonth = data.months.some((m) => m.monthKey === currentMonthKey);
-
-    if (!hasCurrentMonth) {
-      // Add empty current month
-      const now = new Date();
-      const emptyCurrentMonth: CalendarMonth = {
-        monthKey: currentMonthKey,
-        monthName: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        year: now.getFullYear(),
-        month: now.getMonth() + 1,
-        days: [],
-        longestStreak: 0,
-        totalIQ: 0,
-        perfectWeeks: [],
-      };
-      return [emptyCurrentMonth, ...data.months];
+    if (!data || data.months.length === 0) {
+      // No data yet - show empty current month
+      return [emptyCurrentMonth];
     }
 
-    return data.months;
-  }, [data, currentMonthKey]);
+    // Filter out future months (after current month) - they shouldn't be navigable
+    const filteredMonths = data.months.filter((m) => m.monthKey <= currentMonthKey);
+
+    // Check if current month exists in filtered data
+    const hasCurrentMonth = filteredMonths.some((m) => m.monthKey === currentMonthKey);
+
+    if (!hasCurrentMonth) {
+      // Add empty current month at index 0
+      return [emptyCurrentMonth, ...filteredMonths];
+    }
+
+    // Current month should be at index 0 (data.months is sorted newest-first, filtered to <= current)
+    return filteredMonths;
+  }, [data, currentMonthKey, emptyCurrentMonth]);
 
   // Wrapper component based on variant
   const Wrapper = isEmbedded ? View : GlassCard;

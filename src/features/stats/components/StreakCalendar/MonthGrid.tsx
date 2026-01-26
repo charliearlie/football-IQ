@@ -10,6 +10,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { colors, fonts, spacing } from '@/theme';
 import { CalendarMonth, CalendarDay, CellPosition } from '../../types/calendar.types';
+import { LAUNCH_DATE } from '../../hooks/useStreakCalendar';
 import { MonthHeader } from './MonthHeader';
 import { DayCell } from './DayCell';
 
@@ -54,6 +55,8 @@ interface GridCell {
   isInPerfectWeek: boolean;
   /** Whether this date is in the future (not yet playable) */
   isFutureDate: boolean;
+  /** Whether this date is before the app launch (Jan 20, 2026) */
+  isPreLaunchDate: boolean;
 }
 
 /**
@@ -79,7 +82,7 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
 
   // Add leading padding cells
   for (let i = 0; i < startWeekday; i++) {
-    cells.push({ dayNumber: null, day: null, isInPerfectWeek: false, isFutureDate: false });
+    cells.push({ dayNumber: null, day: null, isInPerfectWeek: false, isFutureDate: false, isPreLaunchDate: false });
   }
 
   // Get today's date string for comparison (local timezone)
@@ -92,10 +95,13 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
     // Check if this date is in the future
     const isFutureDate = dateStr > today;
 
+    // Check if this date is before the app launch
+    const isPreLaunchDate = dateStr < LAUNCH_DATE;
+
     // Get data from map, or create empty CalendarDay for past/today dates only
-    // Future dates without catalog data should not be clickable
+    // Future dates and pre-launch dates should not be clickable
     const existingData = dayMap.get(dateStr);
-    const dayData = existingData ?? (isFutureDate ? null : {
+    const dayData = existingData ?? (isFutureDate || isPreLaunchDate ? null : {
       date: dateStr,
       count: 0,
       totalIQ: 0,
@@ -112,6 +118,7 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
       day: dayData,
       isInPerfectWeek,
       isFutureDate,
+      isPreLaunchDate,
     });
   }
 
@@ -120,7 +127,7 @@ function buildMonthGrid(month: CalendarMonth): GridCell[] {
   if (remainder > 0) {
     const padding = 7 - remainder;
     for (let i = 0; i < padding; i++) {
-      cells.push({ dayNumber: null, day: null, isInPerfectWeek: false, isFutureDate: false });
+      cells.push({ dayNumber: null, day: null, isInPerfectWeek: false, isFutureDate: false, isPreLaunchDate: false });
     }
   }
 
@@ -230,6 +237,7 @@ export function MonthGrid({
                   isInPerfectWeek={cell.isInPerfectWeek}
                   isToday={isToday(dateStr)}
                   isFutureDate={cell.isFutureDate}
+                  isPreLaunchDate={cell.isPreLaunchDate}
                   onPress={onDayPress}
                   testID={`day-cell-${globalIndex}`}
                 />

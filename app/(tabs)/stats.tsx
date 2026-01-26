@@ -11,11 +11,7 @@ import {
   StreakCalendar,
   getTierForPoints,
 } from '@/features/stats';
-import {
-  ElitePlayerCard,
-  TacticalRadarChart,
-  TrophyCase,
-} from '@/features/stats/components/ScoutReport';
+import { ElitePlayerCard } from '@/features/stats/components/ScoutReport';
 import { IQCardData } from '@/features/stats/utils/shareIQ';
 import { useAuth } from '@/features/auth';
 import { getUserRank } from '@/features/leaderboard';
@@ -268,7 +264,7 @@ export default function ScoutReportScreen() {
         {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Season Progress Section - moved up for engagement/monetization */}
+        {/* Season Progress Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>SEASON PROGRESS</Text>
           <StreakCalendar
@@ -276,25 +272,6 @@ export default function ScoutReportScreen() {
             onPremiumPress={handlePremiumPress}
             variant="embedded"
             testID="streak-calendar"
-          />
-        </View>
-
-        {/* Tactical Profile Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>TACTICAL PROFILE</Text>
-          <TacticalRadarChart
-            proficiencies={stats.proficiencies}
-            testID="tactical-radar"
-          />
-        </View>
-
-        {/* Trophy Case Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>TROPHY CASE</Text>
-          <TrophyCase
-            stats={stats}
-            userRank={userRank}
-            testID="trophy-case"
           />
         </View>
       </ScrollView>

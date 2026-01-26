@@ -262,20 +262,21 @@ Daily (0-500 cumulative) and Global IQ (0-100 weighted) rankings.
 - Polling every 30s, sticky "Me" bar when scrolled
 - **Files**: `src/features/leaderboard/`, `app/leaderboard/index.tsx`
 
-### My IQ Profile
-Aggregates all attempts to calculate Global IQ (weighted average across modes).
-- **Tiers**: Rookie (0-29), Apprentice (30-49), Intermediate (50-69), Expert (70-89), Elite (90+)
-- **Badges**: Streak milestones, perfect scores, games played
+### Scout Report (My IQ Profile)
+Third tab displaying user's football identity with tier progression.
+- **Components**: ElitePlayerCard (FUT-style header) + StreakCalendar
+- **Tiers**: 10 football-themed tiers from Trialist (0) to GOAT (20,000)
 - **Files**: `src/features/stats/`, `app/(tabs)/stats.tsx`
 
 ### Streak Calendar
-Mobile-optimized calendar showing daily completion history on My IQ tab.
+Mobile-optimized calendar showing daily completion history on Scout Report tab.
 - **Cell intensity**: 0 games (navy), 1-3 (green 50%), 4+ (green 100%)
 - **3D depth**: Uses Solid Layer architecture (1px sunk, 3px filled)
 - **Tooltips**: Tap cell to see date, IQ earned, game mode completion icons
 - **Perfect Week**: Gold left border on weeks with Mon-Sun completions
 - **Flame Icon**: Shows longest streak within each month
 - **Premium Gating**: Free users see 60 days, older months blurred with upsell
+- **Launch Date Floor**: January 20, 2026 - days before are dimmed and non-pressable
 - **Files**: `src/features/stats/components/StreakCalendar/`
 
 ### Score Distribution Graph

@@ -26,6 +26,12 @@ import {
 } from '../types/calendar.types';
 
 /**
+ * App launch date - no valid activity data exists before this date.
+ * Used as a hard floor for streak calculations and calendar display.
+ */
+export const LAUNCH_DATE = '2026-01-20';
+
+/**
  * Get local date string in YYYY-MM-DD format.
  * Uses local timezone (not UTC) to avoid DST/timezone issues.
  */
@@ -144,6 +150,7 @@ function createCalendarDay(
 /**
  * Calculate longest streak within a single month.
  * Looks at consecutive days with completions.
+ * Skips dates before LAUNCH_DATE.
  */
 function calculateMonthStreak(days: CalendarDay[], year: number, month: number): number {
   if (days.length === 0) return 0;
@@ -157,6 +164,11 @@ function calculateMonthStreak(days: CalendarDay[], year: number, month: number):
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    // Skip dates before launch date - don't count them for streaks
+    if (dateStr < LAUNCH_DATE) {
+      continue;
+    }
 
     if (dateSet.has(dateStr)) {
       currentStreak++;
@@ -173,6 +185,7 @@ function calculateMonthStreak(days: CalendarDay[], year: number, month: number):
  * Find perfect weeks in a month.
  * A perfect week is Mon-Sun where all 7 days have at least one completion.
  * Returns array of week indices (0-based).
+ * Weeks containing any dates before LAUNCH_DATE cannot be perfect.
  */
 function findPerfectWeeks(days: CalendarDay[], year: number, month: number): number[] {
   const perfectWeeks: number[] = [];
@@ -210,6 +223,13 @@ function findPerfectWeeks(days: CalendarDay[], year: number, month: number): num
       }
 
       const dateStr = getLocalDateString(checkDate);
+
+      // Skip weeks that include pre-launch dates - they can't be perfect
+      if (dateStr < LAUNCH_DATE) {
+        allDaysCompleted = false;
+        break;
+      }
+
       if (!dateSet.has(dateStr)) {
         allDaysCompleted = false;
         break;
@@ -230,12 +250,18 @@ function findPerfectWeeks(days: CalendarDay[], year: number, month: number): num
 
 /**
  * Calculate overall longest streak across all attempts.
+ * Filters out dates before LAUNCH_DATE.
  */
 function calculateOverallStreak(byDate: Map<string, CalendarAttemptRow[]>): number {
   if (byDate.size === 0) return 0;
 
-  // Sort dates
-  const sortedDates = Array.from(byDate.keys()).sort();
+  // Sort dates and filter out pre-launch dates
+  const sortedDates = Array.from(byDate.keys())
+    .filter((date) => date >= LAUNCH_DATE)
+    .sort();
+
+  if (sortedDates.length === 0) return 0;
+
   let maxStreak = 1;
   let currentStreak = 1;
 

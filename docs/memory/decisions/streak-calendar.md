@@ -39,6 +39,22 @@ The Streak Calendar is a mobile-optimized calendar showing daily completion hist
 - Provides enough history for engagement without giving away everything
 - Clear value proposition for premium upgrade
 
+### 5. Launch Date Hard Floor (January 20, 2026)
+**Decision:** Implement a hard floor date of January 20, 2026 for all calendar functionality.
+
+**Rationale:**
+- App launched on this date, no valid activity data exists before
+- Prevents nonsensical empty calendar cells for pre-launch period
+- Streak and perfect week calculations should not include pre-launch dates
+
+**Implementation:**
+- `LAUNCH_DATE` constant exported from `useStreakCalendar.ts`
+- Days before Jan 20, 2026 are visually dimmed (same as future dates)
+- Days before Jan 20, 2026 are non-pressable (no bottom sheet)
+- `calculateMonthStreak()` skips pre-launch dates
+- `findPerfectWeeks()` cannot include pre-launch dates
+- `calculateOverallStreak()` filters out pre-launch dates
+
 ## Implementation Details
 
 ### Cell Intensity Thresholds
