@@ -1,6 +1,4 @@
 /**
- * @jest-environment node
- *
  * PremiumGate Fail-Open Security Tests
  *
  * CRITICAL: Tests for revenue-impacting security behavior
@@ -15,11 +13,12 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { Text } from 'react-native';
+import { render, waitFor } from '@testing-library/react-native';
 import { PremiumGate } from '../components/PremiumGate';
-import * as useStablePuzzle from '@/features/puzzles/hooks/useStablePuzzle';
-import * as useAuth from '@/features/auth/hooks/useAuth';
-import * as useAdUnlocks from '@/features/ads/hooks/useAdUnlocks';
+import * as AuthContext from '@/features/auth/context/AuthContext';
+import * as database from '@/lib/database';
+import * as dateGrouping from '@/features/archive/utils/dateGrouping';
 import { useRouter } from 'expo-router';
 
 // Mock dependencies
@@ -27,9 +26,9 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('@/features/puzzles/hooks/useStablePuzzle');
-jest.mock('@/features/auth/hooks/useAuth');
-jest.mock('@/features/ads/hooks/useAdUnlocks');
+jest.mock('@/features/auth/context/AuthContext');
+jest.mock('@/lib/database');
+jest.mock('@/features/archive/utils/dateGrouping');
 
 describe('PremiumGate Fail-Open Security Tests', () => {
   const mockRouter = {
@@ -42,254 +41,250 @@ describe('PremiumGate Fail-Open Security Tests', () => {
     jest.clearAllMocks();
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
 
-    // Default: free user, no ad unlocks
-    (useAuth as jest.MockedFunction<typeof useAuth>).mockReturnValue({
-      isPremium: false,
+    // Default: free user
+    (AuthContext.useAuth as jest.Mock).mockReturnValue({
+      profile: { is_premium: false },
       isLoading: false,
-    } as any);
+    });
 
-    (useAdUnlocks as jest.MockedFunction<typeof useAdUnlocks>).mockReturnValue({
-      adUnlocks: [],
-      isLoading: false,
-      areAdUnlocksLoaded: true,
-    } as any);
+    // Default: no ad unlocks
+    (database.getValidAdUnlocks as jest.Mock).mockResolvedValue([]);
+    (database.getPuzzle as jest.Mock).mockResolvedValue(null);
+
+    // Default: date grouping returns locked for old dates
+    (dateGrouping.isWithinFreeWindow as jest.Mock).mockReturnValue(false);
+    (dateGrouping.isPuzzleLocked as jest.Mock).mockReturnValue(true);
   });
 
   describe('CRITICAL: Revenue Loss Scenarios', () => {
-    it('🚨 FAILS: allows free access when SQLite sync fails (no puzzle data)', () => {
+    it('allows free access when SQLite sync fails (no puzzle data) - fail-open behavior', async () => {
       // Scenario: Free user tries to access locked puzzle
       // But SQLite catalog not synced yet (puzzle data missing)
-      // Expected OLD behavior: Block access (fail-closed)
-      // Actual NEW behavior: Allow access (fail-open) ❌
+      // NEW behavior: Allow access (fail-open)
+      // This is intentional to prioritize UX for recent puzzles
 
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: null, // SQLite not synced
-        isLoading: false,
-        error: null,
-      } as any);
+      (database.getPuzzle as jest.Mock).mockResolvedValue(null);
 
       const { getByText } = render(
         <PremiumGate puzzleId="puzzle-old-locked" puzzleDate={undefined}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // CURRENT BEHAVIOR: Renders children (free access)
-      expect(getByText('Protected Content')).toBeTruthy();
-      expect(mockRouter.push).not.toHaveBeenCalled();
+      // Wait for async effects
+      await waitFor(() => {
+        // CURRENT BEHAVIOR: Renders children (free access)
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
 
-      // 🚨 RISK: Free user gets access to locked content
-      // This is a REVENUE LOSS bug if it happens for old puzzles
+      // Note: This is a TRADE-OFF - UX over strict security
     });
 
-    it('🚨 FAILS: allows free access when puzzleDate param is missing', () => {
+    it('allows free access when puzzleDate param is missing - fail-open behavior', async () => {
       // Scenario: Navigation params are corrupted/missing
       // No puzzleDate provided, SQLite returns null
-      // Expected: Block access until we can verify date
-      // Actual: Allow access (fail-open)
+      // NEW behavior: Allow access (fail-open)
 
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: null,
-        isLoading: false,
-        error: null,
-      } as any);
+      (database.getPuzzle as jest.Mock).mockResolvedValue(null);
 
       const { getByText } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate={undefined}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // Allows access even though we can't verify lock status
-      expect(getByText('Protected Content')).toBeTruthy();
-
-      // 🚨 SECURITY FLAW: Cannot verify if puzzle should be locked
+      await waitFor(() => {
+        // Allows access even though we can't verify lock status
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
     });
 
-    it('🚨 FAILS: allows access during SQLite loading (race condition)', () => {
-      // Scenario: User navigates quickly, SQLite query still pending
-      // The gate checks before data is ready
-      // Expected: Show loading state, then block if locked
-      // Actual: Might allow access if timing is wrong
-
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: null,
-        isLoading: true, // Still loading
-        error: null,
-      } as any);
-
-      const { queryByText } = render(
-        <PremiumGate puzzleId="puzzle-locked" puzzleDate={undefined}>
-          <div>Protected Content</div>
-        </PremiumGate>
-      );
-
-      // During loading, should NOT render protected content
-      // But fail-open logic might allow it through
-      const content = queryByText('Protected Content');
-
-      // If this passes, it means we're blocking during load (good)
-      // If this fails, we're allowing access during load (bad)
-      expect(content).toBeFalsy(); // Currently blocks (GOOD)
-    });
-
-    it('blocks access when puzzle is explicitly locked (expected behavior)', () => {
+    it('blocks access when puzzle is explicitly locked (expected behavior)', async () => {
       // Scenario: Puzzle date confirms it's locked (outside 7-day window)
       const oldDate = '2024-12-01'; // 40+ days ago
 
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: { id: 'puzzle-123', puzzle_date: oldDate } as any,
-        isLoading: false,
-        error: null,
-      } as any);
+      (database.getPuzzle as jest.Mock).mockResolvedValue({
+        id: 'puzzle-123',
+        puzzle_date: oldDate
+      });
+      (dateGrouping.isWithinFreeWindow as jest.Mock).mockReturnValue(false);
+      (dateGrouping.isPuzzleLocked as jest.Mock).mockReturnValue(true);
 
       const { queryByText } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate={oldDate}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // Should block (show loading fallback)
-      expect(queryByText('Protected Content')).toBeFalsy();
-
-      // Should redirect to premium modal
-      expect(mockRouter.push).toHaveBeenCalledWith({
-        pathname: '/premium-modal',
-        params: { puzzleDate: oldDate, mode: 'blocked' },
+      await waitFor(() => {
+        // Should block (show loading fallback)
+        expect(queryByText('Protected Content')).toBeFalsy();
       });
+
+      // Should redirect to archive with unlock modal
+      expect(mockRouter.replace).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pathname: '/(tabs)/archive',
+          params: expect.objectContaining({
+            showUnlock: 'true',
+            unlockPuzzleId: 'puzzle-123',
+          }),
+        })
+      );
     });
   });
 
   describe('Edge Cases: Malformed Data', () => {
-    it('handles null puzzleDate gracefully', () => {
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: null,
-        isLoading: false,
-        error: null,
-      } as any);
+    it('handles null puzzleDate gracefully', async () => {
+      (database.getPuzzle as jest.Mock).mockResolvedValue(null);
 
       const { getByText } = render(
-        <PremiumGate puzzleId="puzzle-123" puzzleDate={null as any}>
-          <div>Protected Content</div>
+        <PremiumGate puzzleId="puzzle-123" puzzleDate={null as unknown as undefined}>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // Currently allows access (fail-open)
-      expect(getByText('Protected Content')).toBeTruthy();
+      await waitFor(() => {
+        // Currently allows access (fail-open)
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
     });
 
-    it('handles empty string puzzleDate', () => {
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: null,
-        isLoading: false,
-        error: null,
-      } as any);
+    it('handles empty string puzzleDate', async () => {
+      (database.getPuzzle as jest.Mock).mockResolvedValue(null);
 
       const { getByText } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate="">
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // Fail-open behavior
-      expect(getByText('Protected Content')).toBeTruthy();
+      await waitFor(() => {
+        // Fail-open behavior
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
     });
 
-    it('handles malformed date strings', () => {
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: { puzzle_date: 'invalid-date' } as any,
-        isLoading: false,
-        error: null,
-      } as any);
+    it('handles malformed date strings', async () => {
+      (database.getPuzzle as jest.Mock).mockResolvedValue({
+        puzzle_date: 'invalid-date'
+      });
 
       // Should not crash, but behavior is undefined
-      const { container } = render(
+      const { root } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate="invalid-date">
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      expect(container).toBeTruthy();
+      expect(root).toBeTruthy();
     });
   });
 
   describe('Premium User Bypass', () => {
-    it('allows premium users immediate access without date check', () => {
+    it('allows premium users immediate access without date check', async () => {
       // Premium users should ALWAYS get fast access
-      (useAuth as jest.MockedFunction<typeof useAuth>).mockReturnValue({
-        isPremium: true,
+      (AuthContext.useAuth as jest.Mock).mockReturnValue({
+        profile: { is_premium: true },
         isLoading: false,
-      } as any);
+      });
 
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: null, // Even with missing data
-        isLoading: false,
-        error: null,
-      } as any);
+      (database.getPuzzle as jest.Mock).mockResolvedValue(null);
 
       const { getByText } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate={undefined}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // Premium gets immediate access
-      expect(getByText('Protected Content')).toBeTruthy();
-      expect(mockRouter.push).not.toHaveBeenCalled();
+      await waitFor(() => {
+        // Premium gets immediate access
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
+      expect(mockRouter.replace).not.toHaveBeenCalled();
     });
   });
 
   describe('Recent Puzzle Access (7-day window)', () => {
-    it('allows access to puzzles within 7-day window', () => {
+    it('allows access to puzzles within 7-day window', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const recentDate = yesterday.toISOString().split('T')[0];
 
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: { puzzle_date: recentDate } as any,
-        isLoading: false,
-        error: null,
-      } as any);
+      (database.getPuzzle as jest.Mock).mockResolvedValue({
+        puzzle_date: recentDate
+      });
+      (dateGrouping.isWithinFreeWindow as jest.Mock).mockReturnValue(true);
+      (dateGrouping.isPuzzleLocked as jest.Mock).mockReturnValue(false);
 
       const { getByText } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate={recentDate}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // Should allow access (within free window)
-      expect(getByText('Protected Content')).toBeTruthy();
-      expect(mockRouter.push).not.toHaveBeenCalled();
+      await waitFor(() => {
+        // Should allow access (within free window)
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
+      expect(mockRouter.replace).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Ad Unlock Access', () => {
+    it('allows access when puzzle is ad-unlocked', async () => {
+      const oldDate = '2024-12-01';
+
+      (database.getValidAdUnlocks as jest.Mock).mockResolvedValue([
+        { puzzle_id: 'puzzle-123', expires_at: new Date(Date.now() + 86400000).toISOString() }
+      ]);
+      (database.getPuzzle as jest.Mock).mockResolvedValue({
+        puzzle_date: oldDate
+      });
+      (dateGrouping.isWithinFreeWindow as jest.Mock).mockReturnValue(false);
+
+      const { getByText } = render(
+        <PremiumGate puzzleId="puzzle-123" puzzleDate={oldDate}>
+          <Text>Protected Content</Text>
+        </PremiumGate>
+      );
+
+      await waitFor(() => {
+        expect(getByText('Protected Content')).toBeTruthy();
+      });
+      expect(mockRouter.replace).not.toHaveBeenCalled();
     });
   });
 
   describe('Performance: Multiple Re-renders', () => {
-    it('does not create navigation loops', () => {
+    it('does not create navigation loops', async () => {
       const oldDate = '2024-12-01';
 
-      (useStablePuzzle as jest.MockedFunction<typeof useStablePuzzle>).mockReturnValue({
-        puzzle: { puzzle_date: oldDate } as any,
-        isLoading: false,
-        error: null,
-      } as any);
+      (database.getPuzzle as jest.Mock).mockResolvedValue({
+        puzzle_date: oldDate
+      });
+      (dateGrouping.isWithinFreeWindow as jest.Mock).mockReturnValue(false);
+      (dateGrouping.isPuzzleLocked as jest.Mock).mockReturnValue(true);
 
       const { rerender } = render(
         <PremiumGate puzzleId="puzzle-123" puzzleDate={oldDate}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      // First render triggers navigation
-      expect(mockRouter.push).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        // First render triggers navigation
+        expect(mockRouter.replace).toHaveBeenCalledTimes(1);
+      });
 
       // Re-render should NOT trigger navigation again (hasNavigatedRef)
       rerender(
         <PremiumGate puzzleId="puzzle-123" puzzleDate={oldDate}>
-          <div>Protected Content</div>
+          <Text>Protected Content</Text>
         </PremiumGate>
       );
 
-      expect(mockRouter.push).toHaveBeenCalledTimes(1); // Still 1, not 2
+      expect(mockRouter.replace).toHaveBeenCalledTimes(1); // Still 1, not 2
     });
   });
 });

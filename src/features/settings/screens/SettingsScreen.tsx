@@ -30,7 +30,6 @@ import {
 import { useOnboardingContext } from '@/features/puzzles';
 import { SettingsRow } from '../components/SettingsRow';
 import { SettingsSection } from '../components/SettingsSection';
-import { LegalModal } from '../components/LegalModal';
 import { RateAppModal } from '../components/RateAppModal';
 
 export interface SettingsScreenProps {
@@ -41,7 +40,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   const router = useRouter();
 
   // Modal visibility states
-  const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -187,10 +185,10 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   /**
-   * Handle Terms of Service row press
+   * Handle Terms of Service row press - opens external URL
    */
   const handleTermsPress = useCallback(() => {
-    setTermsModalVisible(true);
+    Linking.openURL('https://football-iq-phi.vercel.app/terms');
   }, []);
 
   /**
@@ -213,10 +211,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   /**
    * Close modals
    */
-  const closeTermsModal = useCallback(() => {
-    setTermsModalVisible(false);
-  }, []);
-
   const closeRateModal = useCallback(() => {
     setRateModalVisible(false);
   }, []);
@@ -413,13 +407,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
       </ScrollView>
 
       {/* Modals */}
-      <LegalModal
-        visible={termsModalVisible}
-        type="terms"
-        onClose={closeTermsModal}
-        testID="legal-modal"
-      />
-
       <RateAppModal
         visible={rateModalVisible}
         onClose={closeRateModal}

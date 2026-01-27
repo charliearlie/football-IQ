@@ -323,8 +323,8 @@ describe('useProfile', () => {
       // Act
       const { result } = renderHook(() => useProfile('user-123'));
 
-      // Fast-forward past the timeout (10 seconds)
-      jest.advanceTimersByTime(11000);
+      // Fast-forward past the timeout (10 seconds) and flush promises
+      await jest.advanceTimersByTimeAsync(11000);
 
       // Assert - Should timeout and set loading to false
       await waitFor(() => {

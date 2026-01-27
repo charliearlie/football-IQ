@@ -23,12 +23,12 @@ describe('SubscriptionSync Service', () => {
   });
 
   describe('checkPremiumEntitlement', () => {
-    it('returns hasPremium: true when premium_access entitlement is active', () => {
+    it('returns hasPremium: true when Football IQ Pro entitlement is active', () => {
       const customerInfo = {
         entitlements: {
           active: {
-            premium_access: {
-              identifier: 'premium_access',
+            'Football IQ Pro': {
+              identifier: 'Football IQ Pro',
               isActive: true,
               expirationDate: '2025-12-31T00:00:00Z',
             },
@@ -42,7 +42,7 @@ describe('SubscriptionSync Service', () => {
       expect(result.expirationDate).toBe('2025-12-31T00:00:00Z');
     });
 
-    it('returns hasPremium: false when premium_access entitlement is not present', () => {
+    it('returns hasPremium: false when Football IQ Pro entitlement is not present', () => {
       const customerInfo = {
         entitlements: {
           active: {},
@@ -71,8 +71,8 @@ describe('SubscriptionSync Service', () => {
       const customerInfo = {
         entitlements: {
           active: {
-            premium_access: {
-              identifier: 'premium_access',
+            'Football IQ Pro': {
+              identifier: 'Football IQ Pro',
               isActive: true,
               expirationDate: null,
             },
@@ -86,7 +86,7 @@ describe('SubscriptionSync Service', () => {
       expect(result.expirationDate).toBeNull();
     });
 
-    it('ignores other entitlements when checking for premium_access', () => {
+    it('ignores other entitlements when checking for Football IQ Pro', () => {
       const customerInfo = {
         entitlements: {
           active: {
@@ -227,7 +227,7 @@ describe('Entitlement Sync Integration', () => {
     const customerInfo = {
       entitlements: {
         active: {
-          premium_access: { isActive: true, expirationDate: null },
+          'Football IQ Pro': { isActive: true, expirationDate: null },
         },
       },
     } as unknown as CustomerInfo;

@@ -4,10 +4,10 @@ export {
   SubscriptionSyncProvider,
   useSubscriptionSync,
 } from './context/SubscriptionSyncContext';
+export { OnboardingProvider, useOnboarding } from './context/OnboardingContext';
 
 // Hooks
 export { useProfile } from './hooks/useProfile';
-export { useOnboardingLock } from './hooks/useOnboardingLock';
 
 // Services
 export {

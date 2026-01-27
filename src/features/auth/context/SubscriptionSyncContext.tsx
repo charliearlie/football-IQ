@@ -52,9 +52,12 @@ export function SubscriptionSyncProvider({
   const { user, isInitialized, refetchProfile } = useAuth();
   const removeListenerRef = useRef<(() => void) | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
+  // Track last known premium status to avoid unnecessary refetches
+  const lastPremiumStatusRef = useRef<boolean | null>(null);
 
   /**
    * Handle customer info updates from RevenueCat.
+   * Only triggers profile refetch if premium status actually changed.
    */
   const handleCustomerInfoUpdate = useCallback(
     async (customerInfo: CustomerInfo) => {
@@ -63,16 +66,27 @@ export function SubscriptionSyncProvider({
 
       const { hasPremium } = checkPremiumEntitlement(customerInfo);
 
+      // Only proceed if premium status actually changed
+      const premiumChanged = hasPremium !== lastPremiumStatusRef.current;
+      if (!premiumChanged && lastPremiumStatusRef.current !== null) {
+        // Status unchanged - skip sync to avoid unnecessary re-renders
+        return;
+      }
+
       console.log('[SubscriptionSync] Entitlement update:', {
         userId,
         hasPremium,
+        previousStatus: lastPremiumStatusRef.current,
+        changed: premiumChanged,
       });
 
       const { error } = await syncPremiumToSupabase(userId, hasPremium);
       if (error) {
         console.error('[SubscriptionSync] Failed to sync to Supabase:', error);
       } else {
-        // Refetch profile to update React state immediately
+        // Update tracked status BEFORE refetch to prevent re-triggering
+        lastPremiumStatusRef.current = hasPremium;
+        // Only refetch profile when status actually changed
         await refetchProfile();
         console.log('[SubscriptionSync] Profile refetched after premium sync');
       }
@@ -125,6 +139,9 @@ export function SubscriptionSyncProvider({
       await logOutUser();
       currentUserIdRef.current = null;
     }
+
+    // Reset premium status tracking for next session
+    lastPremiumStatusRef.current = null;
   }, []);
 
   /**

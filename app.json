@@ -7,7 +7,7 @@
     "icon": "./assets/images/footballiq-icon.png",
     "scheme": "footballiq",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -100,15 +100,7 @@
       ],
       "expo-tracking-transparency",
       "expo-notifications",
-      [
-        "@sentry/react-native/expo",
-        {
-          "organization": "football-iq",
-          "project": "football-iq-mobile"
-        }
-      ],
-      "expo-localization",
-      "posthog-react-native/expo"
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

@@ -44,7 +44,7 @@ describe('RevenueCat Configuration', () => {
     });
 
     it('exports correct entitlement ID', () => {
-      expect(PREMIUM_ENTITLEMENT_ID).toBe('premium_access');
+      expect(PREMIUM_ENTITLEMENT_ID).toBe('Football IQ Pro');
     });
 
     it('has both sandbox and production keys defined', () => {

@@ -277,7 +277,7 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
       try {
         const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
         if (existingAttempt && !existingAttempt.completed && existingAttempt.metadata) {
-          const savedState = JSON.parse(existingAttempt.metadata) as {
+          const savedState = existingAttempt.metadata as {
             currentQuestionIndex: number;
             answers: QuizAnswer[];
           };

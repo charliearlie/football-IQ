@@ -1,25 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
-import { Trophy } from 'lucide-react-native';
-import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
+import { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Pressable,
+  TextInput,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { Trophy } from "lucide-react-native";
+import { colors, fonts, fontWeights, spacing, borderRadius } from "@/theme";
 import {
   usePerformanceStats,
   IQCardOverlay,
   ScoutingReportOverlay,
   StreakCalendar,
   getTierForPoints,
-} from '@/features/stats';
-import { ElitePlayerCard } from '@/features/stats/components/ScoutReport';
-import { FieldExperienceSection } from '@/features/stats/components/FieldExperienceSection';
-import { IQCardData } from '@/features/stats/utils/shareIQ';
-import { ScoutingReportData } from '@/features/stats/components/ScoutingReportCard';
-import { useAuth } from '@/features/auth';
-import { getUserRank } from '@/features/leaderboard';
-import { FullStatsSkeleton } from '@/components/ui/Skeletons';
-import { ElevatedButton } from '@/components/ElevatedButton';
+} from "@/features/stats";
+import { ElitePlayerCard } from "@/features/stats/components/ScoutReport";
+import { FieldExperienceSection } from "@/features/stats/components/FieldExperienceSection";
+import { IQCardData } from "@/features/stats/utils/shareIQ";
+import { ScoutingReportData } from "@/features/stats/components/ScoutingReportCard";
+import { useAuth } from "@/features/auth";
+import { getUserRank } from "@/features/leaderboard";
+import { FullStatsSkeleton } from "@/components/ui/Skeletons";
+import { ElevatedButton } from "@/components/ElevatedButton";
 
 /**
  * Scout Report Screen (formerly My IQ)
@@ -38,23 +46,28 @@ export default function ScoutReportScreen() {
 
   // IQ Card modal state
   const [showIQCard, setShowIQCard] = useState(false);
-  const [userRank, setUserRank] = useState<{ rank: number; totalUsers: number } | null>(null);
+  const [userRank, setUserRank] = useState<{
+    rank: number;
+    totalUsers: number;
+  } | null>(null);
 
   // Display name input state (fallback for missed onboarding)
-  const [displayNameInput, setDisplayNameInput] = useState('');
+  const [displayNameInput, setDisplayNameInput] = useState("");
   const [isSubmittingName, setIsSubmittingName] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   // Check if user needs to set display name (handles null, undefined, and empty string)
   // Also show if profile hasn't loaded yet (profile is null)
-  const needsDisplayName = profile === null || !profile.display_name || profile.display_name.trim() === '';
-
+  const needsDisplayName =
+    profile === null ||
+    !profile.display_name ||
+    profile.display_name.trim() === "";
 
   // Fetch user's global rank when stats are loaded
   useEffect(() => {
     async function fetchRank() {
       if (!user?.id || !stats?.globalIQ) return;
 
-      const result = await getUserRank(user.id, 'global');
+      const result = await getUserRank(user.id, "global");
       if (result) {
         setUserRank({ rank: result.rank, totalUsers: result.totalUsers });
       }
@@ -67,11 +80,11 @@ export default function ScoutReportScreen() {
   useFocusEffect(
     useCallback(() => {
       refresh();
-    }, [refresh])
+    }, [refresh]),
   );
 
   const handleLeaderboardPress = () => {
-    router.push('/leaderboard');
+    router.push("/leaderboard");
   };
 
   const handleSharePress = useCallback(() => {
@@ -83,18 +96,18 @@ export default function ScoutReportScreen() {
   }, []);
 
   const handlePremiumPress = useCallback(() => {
-    router.push('/premium-modal');
+    router.push("/premium-modal");
   }, [router]);
 
   // Handle display name submission (fallback for missed onboarding)
   const handleSetDisplayName = useCallback(async () => {
     const trimmed = displayNameInput.trim();
     if (trimmed.length < 3) {
-      setNameError('Name must be at least 3 characters');
+      setNameError("Name must be at least 3 characters");
       return;
     }
     if (trimmed.length > 30) {
-      setNameError('Name must be 30 characters or less');
+      setNameError("Name must be 30 characters or less");
       return;
     }
 
@@ -104,10 +117,10 @@ export default function ScoutReportScreen() {
     try {
       const { error } = await updateDisplayName(trimmed);
       if (error) {
-        setNameError('Failed to save. Please try again.');
+        setNameError("Failed to save. Please try again.");
       }
     } catch {
-      setNameError('Failed to save. Please try again.');
+      setNameError("Failed to save. Please try again.");
     } finally {
       setIsSubmittingName(false);
     }
@@ -118,38 +131,42 @@ export default function ScoutReportScreen() {
    */
   const getTopBadgeName = (): string | null => {
     if (!stats?.badges || stats.badges.length === 0) return null;
-    const earnedBadge = stats.badges.find(b => b.earnedAt != null);
+    const earnedBadge = stats.badges.find((b) => b.earnedAt != null);
     return earnedBadge?.name ?? null;
   };
 
   /**
    * Build IQ Card data from current stats.
    */
-  const iqCardData: IQCardData | null = stats ? {
-    globalIQ: stats.globalIQ,
-    currentStreak: stats.currentStreak,
-    rank: userRank?.rank ?? null,
-    totalUsers: userRank?.totalUsers ?? null,
-    topBadgeName: getTopBadgeName(),
-    displayName: profile?.display_name ?? 'Football Fan',
-  } : null;
+  const iqCardData: IQCardData | null = stats
+    ? {
+        globalIQ: stats.globalIQ,
+        currentStreak: stats.currentStreak,
+        rank: userRank?.rank ?? null,
+        totalUsers: userRank?.totalUsers ?? null,
+        topBadgeName: getTopBadgeName(),
+        displayName: profile?.display_name ?? "Football Fan",
+      }
+    : null;
 
   /**
    * Build Scouting Report data from current stats.
    */
-  const scoutingReportData: ScoutingReportData | null = stats ? {
-    displayName: profile?.display_name ?? 'Football Fan',
-    totalIQ: totalIQ,
-    archetypeMode: stats.fieldExperience.dominantMode,
-    totalAppearances: stats.fieldExperience.totalAppearances,
-    currentStreak: stats.currentStreak,
-    userId: user?.id,
-  } : null;
+  const scoutingReportData: ScoutingReportData | null = stats
+    ? {
+        displayName: profile?.display_name ?? "Football Fan",
+        totalIQ: totalIQ,
+        archetypeMode: stats.fieldExperience.dominantMode,
+        totalAppearances: stats.fieldExperience.totalAppearances,
+        currentStreak: stats.currentStreak,
+        userId: user?.id,
+      }
+    : null;
 
   // Loading state with skeleton
   if (isLoading && !stats) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Scout Report</Text>
         </View>
@@ -167,7 +184,7 @@ export default function ScoutReportScreen() {
   // Empty state (no games played yet)
   if (!stats || stats.totalPuzzlesSolved === 0) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Scout Report</Text>
         </View>
@@ -191,7 +208,10 @@ export default function ScoutReportScreen() {
                 Choose a name for the leaderboard
               </Text>
               <TextInput
-                style={[styles.displayNameInput, nameError && styles.inputError]}
+                style={[
+                  styles.displayNameInput,
+                  nameError && styles.inputError,
+                ]}
                 placeholder="Enter your display name"
                 placeholderTextColor={colors.textSecondary}
                 value={displayNameInput}
@@ -207,11 +227,15 @@ export default function ScoutReportScreen() {
                 editable={!isSubmittingName}
                 testID="display-name-input"
               />
-              {nameError && <Text style={styles.nameErrorText}>{nameError}</Text>}
+              {nameError && (
+                <Text style={styles.nameErrorText}>{nameError}</Text>
+              )}
               <ElevatedButton
-                title={isSubmittingName ? 'Saving...' : 'Save Name'}
+                title={isSubmittingName ? "Saving..." : "Save Name"}
                 onPress={handleSetDisplayName}
-                disabled={isSubmittingName || displayNameInput.trim().length < 3}
+                disabled={
+                  isSubmittingName || displayNameInput.trim().length < 3
+                }
                 size="medium"
                 fullWidth
                 testID="save-display-name-button"
@@ -220,18 +244,20 @@ export default function ScoutReportScreen() {
           ) : (
             /* Welcome message for users who have set their name */
             <View style={styles.welcomeSection}>
-              <Text style={styles.welcomeGreeting}>Welcome, {profile?.display_name}!</Text>
-              <Text style={styles.welcomeTier}>{getTierForPoints(totalIQ).name}</Text>
+              <Text style={styles.welcomeGreeting}>
+                Welcome, {profile?.display_name}!
+              </Text>
+              <Text style={styles.welcomeTier}>
+                {getTierForPoints(totalIQ).name}
+              </Text>
             </View>
           )}
 
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>
-              Your Scout Report Awaits
-            </Text>
+            <Text style={styles.emptyTitle}>Your Scout Report Awaits</Text>
             <Text style={styles.emptyText}>
-              Complete your first puzzle to unlock your Football IQ stats.
-              Your tier, archetype, and progress will appear here.
+              Complete your first puzzle to unlock your Football IQ stats. Your
+              tier, archetype, and progress will appear here.
             </Text>
           </View>
         </ScrollView>
@@ -240,17 +266,17 @@ export default function ScoutReportScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header with Leaderboard Button */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scout Report</Text>
-        <Pressable
+        {/* <Pressable
           onPress={handleLeaderboardPress}
           style={styles.leaderboardButton}
           hitSlop={12}
         >
           <Trophy size={24} color={colors.cardYellow} />
-        </Pressable>
+        </Pressable> */}
       </View>
 
       <ScrollView
@@ -267,7 +293,7 @@ export default function ScoutReportScreen() {
       >
         {/* Elite Player Card - FUT-style header with tier crest and progress */}
         <ElitePlayerCard
-          displayName={profile?.display_name ?? 'Football Fan'}
+          displayName={profile?.display_name ?? "Football Fan"}
           memberSince={profile?.created_at ?? null}
           totalIQ={totalIQ}
           currentStreak={stats.currentStreak}
@@ -320,9 +346,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stadiumNavy,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
   },
@@ -335,8 +361,8 @@ const styles = StyleSheet.create({
   leaderboardButton: {
     width: 44,
     height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.glassBackground,
     borderRadius: 22,
     borderWidth: 1,
@@ -347,7 +373,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing['3xl'] + 60, // Extra padding for ad banner
+    paddingBottom: spacing["3xl"] + 60, // Extra padding for ad banner
   },
   section: {
     marginBottom: spacing.xl,
@@ -362,22 +388,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.pitchGreen,
     letterSpacing: 2,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     marginBottom: spacing.md,
   },
   emptyState: {
     backgroundColor: colors.stadiumNavy,
     borderWidth: 1,
     borderColor: colors.glassBorder,
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius["2xl"],
     padding: spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyTitle: {
     fontFamily: fonts.headline,
     fontSize: 24,
     color: colors.floodlightWhite,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
   },
   emptyText: {
@@ -385,7 +411,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
   },
   displayNameSection: {
@@ -393,7 +419,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stadiumNavy,
     borderWidth: 1,
     borderColor: colors.glassBorder,
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius["2xl"],
     padding: spacing.xl,
   },
   displayNameHeader: {
@@ -402,14 +428,14 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     letterSpacing: 1.5,
     marginBottom: spacing.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
   displayNameHint: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.regular,
     fontSize: 14,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
   },
   displayNameInput: {
@@ -423,7 +449,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fonts.body,
     fontWeight: fontWeights.medium,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
   },
   inputError: {
@@ -434,11 +460,11 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     fontSize: 14,
     color: colors.redCard,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
   },
   welcomeSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -452,7 +478,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
 });
