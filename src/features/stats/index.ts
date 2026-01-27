@@ -14,6 +14,7 @@
 // Types
 export * from './types/stats.types';
 export * from './types/calendar.types';
+export * from './types/fieldExperience.types';
 
 // Scout Report Components
 export {
@@ -80,6 +81,28 @@ export { LockedMonthOverlay } from './components/StreakCalendar';
 // Share utilities
 export type { IQCardData, ShareIQResult } from './utils/shareIQ';
 export { captureIQCard, shareIQCard, captureAndShareIQCard } from './utils/shareIQ';
+
+// Field Experience
+export {
+  calculateFieldExperience,
+  getDominantMode,
+  ALL_GAME_MODES,
+} from './utils/fieldExperience';
+
+// Scouting Report
+export { FieldExperienceSection } from './components/FieldExperienceSection';
+export type { FieldExperienceSectionProps } from './components/FieldExperienceSection';
+export { ScoutingReportCard, generateDeepLink } from './components/ScoutingReportCard';
+export type { ScoutingReportData, ScoutingReportCardProps } from './components/ScoutingReportCard';
+export { ScoutingReportOverlay } from './components/ScoutingReportOverlay';
+export type { ScoutingReportOverlayProps } from './components/ScoutingReportOverlay';
+export {
+  captureScoutingReport,
+  shareScoutingReport,
+  captureAndShareScoutingReport,
+  generateShareText,
+} from './utils/shareScoutingReport';
+export type { ShareResult } from './utils/shareScoutingReport';
 
 // Score Distribution
 export { ScoreDistributionContainer } from './components/ScoreDistributionContainer';

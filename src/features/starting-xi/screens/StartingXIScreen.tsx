@@ -279,6 +279,7 @@ export function StartingXIScreen({
         slots={state.slots}
         matchName={puzzleContent.match_name}
         puzzleId={puzzle?.id ?? ''}
+        puzzleDate={puzzle?.puzzle_date ?? ''}
         onClose={() => {
           setShowResultModal(false);
           router.back();

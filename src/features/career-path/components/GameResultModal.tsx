@@ -1,26 +1,27 @@
 /**
  * Career Path Game Result Modal
  *
- * Displays game results with a premium button layout:
- * - Share icon button (centered)
+ * Displays game results using the standard BaseResultModal pattern:
+ * - "Share Result" + "Close" buttons
  * - Score distribution
- * - "View career" + "Home" action buttons
+ * - Image-based sharing
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { Trophy, XCircle, Share2 } from 'lucide-react-native';
+import React from 'react';
+import { Trophy, XCircle } from 'lucide-react-native';
 import {
   BaseResultModal,
   AnswerReveal,
+  ResultShareCard,
 } from '@/components/GameResultModal';
-import { ElevatedButton, IconButton } from '@/components';
+import type { ResultShareData } from '@/components/GameResultModal';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
-import { useHaptics } from '@/hooks/useHaptics';
-import { colors, spacing } from '@/theme';
+import { useAuth } from '@/features/auth';
+import { colors } from '@/theme';
 import { GameScore } from '../types/careerPath.types';
 import { ShareResult } from '../utils/share';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { generateEmojiGrid } from '../utils/scoreDisplay';
 
 interface GameResultModalProps {
   /** Whether the modal is visible */
@@ -35,9 +36,11 @@ interface GameResultModalProps {
   totalSteps: number;
   /** Puzzle ID for score distribution */
   puzzleId: string;
+  /** Puzzle date in YYYY-MM-DD format for share card */
+  puzzleDate: string;
   /** Game mode for score distribution labels */
   gameMode?: GameMode;
-  /** Callback to share result */
+  /** Callback to share result (legacy text-based, used as fallback) */
   onShare: () => Promise<ShareResult>;
   /** Callback to enter review mode (optional) */
   onReview?: () => void;
@@ -50,7 +53,7 @@ interface GameResultModalProps {
 }
 
 /**
- * Career Path game result modal with premium button layout.
+ * Career Path game result modal with standard button layout.
  */
 export function GameResultModal({
   visible,
@@ -59,37 +62,43 @@ export function GameResultModal({
   correctAnswer,
   totalSteps,
   puzzleId,
+  puzzleDate,
   gameMode = 'career_path',
   onShare,
-  onViewPath,
   onClose,
   testID,
 }: GameResultModalProps) {
-  const { triggerSelection, triggerNotification } = useHaptics();
-  const [shareLabel, setShareLabel] = useState<string | undefined>(undefined);
+  const { profile, totalIQ } = useAuth();
 
-  // Handle share with feedback
-  const handleShare = useCallback(async () => {
-    triggerSelection();
-    try {
-      const result = await onShare();
-      if (result.success) {
-        triggerNotification('success');
-        // Show appropriate label based on share method
-        const label = Platform.OS === 'web' || result.method === 'clipboard'
-          ? 'Copied!'
-          : 'Shared!';
-        setShareLabel(label);
-        // Reset after 2 seconds
-        setTimeout(() => setShareLabel(undefined), 2000);
-      }
-    } catch {
-      // Silently fail - user cancelled or error
-    }
-  }, [onShare, triggerSelection, triggerNotification]);
+  // Generate score description for share card
+  const scoreDescription = generateEmojiGrid(score, totalSteps);
 
-  // Determine if we show two buttons or just one
-  const showViewCareer = won && onViewPath;
+  // Check if perfect score (won with 1 clue revealed)
+  const isPerfectScore = won && score.stepsRevealed === 1;
+
+  // Build share data for image capture
+  const shareData: ResultShareData = {
+    gameMode,
+    scoreDisplay: scoreDescription,
+    puzzleDate,
+    displayName: profile?.display_name ?? 'Football Fan',
+    totalIQ,
+    won,
+    isPerfectScore,
+  };
+
+  // Share card content for image capture
+  const shareCardContent = (
+    <ResultShareCard
+      gameMode={gameMode}
+      resultType={won ? 'win' : 'loss'}
+      scoreDisplay={scoreDescription}
+      puzzleDate={puzzleDate}
+      displayName={shareData.displayName}
+      totalIQ={totalIQ}
+      isPerfectScore={isPerfectScore}
+    />
+  );
 
   return (
     <BaseResultModal
@@ -108,24 +117,14 @@ export function GameResultModal({
           ? `Solved with ${score.stepsRevealed} clue${score.stepsRevealed > 1 ? 's' : ''} revealed!`
           : 'Better luck tomorrow!'
       }
-      hideDefaultButtons
-      hideCloseButton
+      onShare={onShare}
+      shareCardContent={shareCardContent}
+      shareData={shareData}
+      onClose={onClose}
       testID={testID}
     >
       {/* Answer reveal for loss */}
       {!won && <AnswerReveal value={correctAnswer} />}
-
-      {/* Share icon button - centered */}
-      <View style={styles.shareContainer}>
-        <IconButton
-          icon={<Share2 size={20} color={colors.stadiumNavy} />}
-          onPress={handleShare}
-          label={shareLabel}
-          variant="primary"
-          size="medium"
-          testID={testID ? `${testID}-share` : 'share-icon-button'}
-        />
-      </View>
 
       {/* Score distribution */}
       <ScoreDistributionContainer
@@ -135,46 +134,6 @@ export function GameResultModal({
         maxSteps={totalSteps}
         testID={testID ? `${testID}-distribution` : undefined}
       />
-
-      {/* Action buttons row */}
-      <View style={styles.buttonRow}>
-        {showViewCareer && (
-          <ElevatedButton
-            title="View career"
-            onPress={onViewPath}
-            variant="secondary"
-            size="small"
-            style={styles.buttonHalf}
-            testID={testID ? `${testID}-view-path` : undefined}
-          />
-        )}
-        <ElevatedButton
-          title="Home"
-          onPress={onClose}
-          variant="primary"
-          size="small"
-          style={showViewCareer ? styles.buttonHalf : styles.buttonFull}
-          testID={testID ? `${testID}-home` : undefined}
-        />
-      </View>
     </BaseResultModal>
   );
 }
-
-const styles = StyleSheet.create({
-  shareContainer: {
-    marginBottom: spacing.md,
-    alignItems: 'center',
-  },
-  buttonRow: {
-    width: '100%',
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  buttonHalf: {
-    flex: 1,
-  },
-  buttonFull: {
-    flex: 1,
-  },
-});

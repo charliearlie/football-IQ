@@ -6,6 +6,7 @@
  */
 
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { FieldExperience } from './fieldExperience.types';
 
 // Re-export existing score types for metadata parsing
 export { GameScore } from '@/features/career-path/utils/scoring';
@@ -164,6 +165,8 @@ export interface PerformanceStats {
   longestStreak: number;
   /** Earned badges */
   badges: Badge[];
+  /** Field Experience: per-mode completion counts */
+  fieldExperience: FieldExperience;
 }
 
 /**

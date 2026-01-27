@@ -495,6 +495,7 @@ export function CareerPathScreen({
             correctAnswer={answer}
             totalSteps={totalSteps}
             puzzleId={puzzle?.id ?? ""}
+            puzzleDate={puzzle?.puzzle_date ?? ""}
             gameMode={gameMode}
             onShare={shareResult}
             onViewPath={state.gameStatus === "won" ? handleViewPath : undefined}

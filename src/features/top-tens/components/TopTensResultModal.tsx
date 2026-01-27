@@ -1,18 +1,23 @@
 /**
  * Top Tens Game Result Modal
  *
- * Displays game results using the shared BaseResultModal component.
+ * Displays game results using the shared BaseResultModal component
+ * with image-based sharing.
  */
 
 import { Trophy, XCircle } from 'lucide-react-native';
 import {
   BaseResultModal,
   ScoreDisplay,
+  ResultShareCard,
 } from '@/components/GameResultModal';
+import type { ResultShareData } from '@/components/GameResultModal';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
+import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
 import { TopTensScore, RankSlotState } from '../types/topTens.types';
 import { ShareResult } from '../utils/share';
+import { generateTopTensEmojiGrid } from '../utils/scoreDisplay';
 
 interface TopTensResultModalProps {
   /** Whether the modal is visible */
@@ -25,7 +30,9 @@ interface TopTensResultModalProps {
   rankSlots: RankSlotState[];
   /** Puzzle ID for score distribution */
   puzzleId: string;
-  /** Callback to share result */
+  /** Puzzle date in YYYY-MM-DD format */
+  puzzleDate: string;
+  /** Callback to share result (legacy fallback) */
   onShare: () => Promise<ShareResult>;
   /** Callback to close/dismiss the modal */
   onClose: () => void;
@@ -34,7 +41,7 @@ interface TopTensResultModalProps {
 }
 
 /**
- * Top Tens game result modal with win/loss display.
+ * Top Tens game result modal with win/loss display and image-based sharing.
  *
  * Win: Shows trophy, "ALL FOUND!", score, and confetti
  * Loss: Shows X, "GAME OVER", score (partial)
@@ -45,10 +52,43 @@ export function TopTensResultModal({
   score,
   rankSlots,
   puzzleId,
+  puzzleDate,
   onShare,
   onClose,
   testID,
 }: TopTensResultModalProps) {
+  const { profile, totalIQ } = useAuth();
+
+  // Generate emoji grid for share card
+  const emojiGrid = generateTopTensEmojiGrid(rankSlots, score);
+
+  // Perfect score: all 10 found
+  const isPerfectScore = won && score.foundCount === 10;
+
+  // Build share data for image capture
+  const shareData: ResultShareData = {
+    gameMode: 'top_tens',
+    scoreDisplay: emojiGrid,
+    puzzleDate,
+    displayName: profile?.display_name ?? 'Football Fan',
+    totalIQ,
+    won,
+    isPerfectScore,
+  };
+
+  // Share card content for image capture
+  const shareCardContent = (
+    <ResultShareCard
+      gameMode="top_tens"
+      resultType={won ? 'win' : 'loss'}
+      scoreDisplay={emojiGrid}
+      puzzleDate={puzzleDate}
+      displayName={shareData.displayName}
+      totalIQ={totalIQ}
+      isPerfectScore={isPerfectScore}
+    />
+  );
+
   return (
     <BaseResultModal
       visible={visible}
@@ -67,6 +107,8 @@ export function TopTensResultModal({
           : `You found ${score.foundCount} out of 10`
       }
       onShare={onShare}
+      shareCardContent={shareCardContent}
+      shareData={shareData}
       onClose={onClose}
       testID={testID}
     >

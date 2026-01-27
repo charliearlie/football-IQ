@@ -1,7 +1,7 @@
 /**
  * Top Tens Score Display
  *
- * Generates emoji grids and display text for sharing results.
+ * Generates text-based descriptions for sharing results.
  */
 
 import { RankSlotState, TopTensScore } from '../types/topTens.types';
@@ -18,34 +18,27 @@ export interface ScoreDisplayOptions {
 }
 
 /**
- * Generate emoji grid for Top Tens result.
- *
- * Shows found (checkmark) vs missed (X) for each rank.
+ * Generate text description for Top Tens result.
  *
  * @param rankSlots - Array of 10 rank slot states
  * @param score - Final score
- * @returns Emoji string like "✅✅✅❌❌❌❌❌❌❌"
+ * @returns Text description like "7 of 10 found"
+ */
+export function generateTopTensScoreDescription(
+  rankSlots: RankSlotState[],
+  score: TopTensScore
+): string {
+  return `${score.foundCount} of 10 found`;
+}
+
+/**
+ * @deprecated Use generateTopTensScoreDescription instead. Kept for backwards compatibility.
  */
 export function generateTopTensEmojiGrid(
   rankSlots: RankSlotState[],
   score: TopTensScore
 ): string {
-  // For a completed game (won or lost), show based on original found state
-  // Note: When giving up, all slots are revealed, but we track via score.foundCount
-  if (score.won) {
-    // All found
-    return rankSlots.map(() => '✅').join('');
-  }
-
-  // Lost - show which were found before giving up
-  // Use foundCount since all slots are now revealed
-  return rankSlots
-    .map((slot, i) => {
-      // If we found this one before giving up, show check
-      // Since rankSlots are all revealed on give up, we need to use foundCount
-      return i < score.foundCount ? '✅' : '❌';
-    })
-    .join('');
+  return generateTopTensScoreDescription(rankSlots, score);
 }
 
 /**
@@ -55,7 +48,7 @@ export function generateTopTensEmojiGrid(
  * Football IQ - Top Tens
  * [date if provided]
  * 7/10
- * ✅✅✅✅✅✅✅❌❌❌
+ * 7 of 10 found
  *
  * @param rankSlots - Array of 10 rank slot states
  * @param score - Final score
@@ -78,24 +71,17 @@ export function generateTopTensScoreDisplay(
   }
 
   lines.push(formatTopTensScore(score));
-  lines.push(generateTopTensEmojiGrid(rankSlots, score));
+  lines.push(generateTopTensScoreDescription(rankSlots, score));
 
   return lines.join('\n');
 }
 
 /**
- * Generate a two-row emoji grid (5 per row) for compact display.
- *
- * @param rankSlots - Array of 10 rank slot states
- * @param score - Final score
- * @returns Two-line emoji grid
+ * @deprecated Use generateTopTensScoreDescription instead.
  */
 export function generateTopTensTwoRowGrid(
   rankSlots: RankSlotState[],
   score: TopTensScore
 ): string {
-  const fullGrid = generateTopTensEmojiGrid(rankSlots, score);
-  const row1 = fullGrid.slice(0, 5);
-  const row2 = fullGrid.slice(5, 10);
-  return `${row1}\n${row2}`;
+  return generateTopTensScoreDescription(rankSlots, score);
 }

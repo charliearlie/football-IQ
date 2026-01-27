@@ -283,6 +283,7 @@ export function TransferGuessScreen({
           score={state.score}
           correctAnswer={answer}
           puzzleId={puzzle?.id ?? ""}
+          puzzleDate={puzzle?.puzzle_date ?? ""}
           onShare={shareResult}
           onClose={() => router.back()}
           testID="transfer-result-modal"

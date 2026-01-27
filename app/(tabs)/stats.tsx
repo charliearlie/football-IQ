@@ -8,11 +8,14 @@ import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import {
   usePerformanceStats,
   IQCardOverlay,
+  ScoutingReportOverlay,
   StreakCalendar,
   getTierForPoints,
 } from '@/features/stats';
 import { ElitePlayerCard } from '@/features/stats/components/ScoutReport';
+import { FieldExperienceSection } from '@/features/stats/components/FieldExperienceSection';
 import { IQCardData } from '@/features/stats/utils/shareIQ';
+import { ScoutingReportData } from '@/features/stats/components/ScoutingReportCard';
 import { useAuth } from '@/features/auth';
 import { getUserRank } from '@/features/leaderboard';
 import { FullStatsSkeleton } from '@/components/ui/Skeletons';
@@ -129,6 +132,18 @@ export default function ScoutReportScreen() {
     totalUsers: userRank?.totalUsers ?? null,
     topBadgeName: getTopBadgeName(),
     displayName: profile?.display_name ?? 'Football Fan',
+  } : null;
+
+  /**
+   * Build Scouting Report data from current stats.
+   */
+  const scoutingReportData: ScoutingReportData | null = stats ? {
+    displayName: profile?.display_name ?? 'Football Fan',
+    totalIQ: totalIQ,
+    archetypeMode: stats.fieldExperience.dominantMode,
+    totalAppearances: stats.fieldExperience.totalAppearances,
+    currentStreak: stats.currentStreak,
+    userId: user?.id,
   } : null;
 
   // Loading state with skeleton
@@ -261,6 +276,17 @@ export default function ScoutReportScreen() {
           testID="elite-player-card"
         />
 
+        {/* Field Experience Section - per-mode completion counts */}
+        {stats.fieldExperience.totalAppearances > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>FIELD EXPERIENCE</Text>
+            <FieldExperienceSection
+              fieldExperience={stats.fieldExperience}
+              testID="field-experience-section"
+            />
+          </View>
+        )}
+
         {/* Divider */}
         <View style={styles.divider} />
 
@@ -276,12 +302,12 @@ export default function ScoutReportScreen() {
         </View>
       </ScrollView>
 
-      {/* IQ Card Share Modal */}
-      {iqCardData && (
-        <IQCardOverlay
+      {/* Scouting Report Share Modal */}
+      {scoutingReportData && (
+        <ScoutingReportOverlay
           visible={showIQCard}
           onClose={handleCloseIQCard}
-          data={iqCardData}
+          data={scoutingReportData}
         />
       )}
     </SafeAreaView>

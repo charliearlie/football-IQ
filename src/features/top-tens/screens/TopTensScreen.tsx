@@ -252,6 +252,7 @@ export function TopTensScreen({
           score={state.score}
           rankSlots={state.rankSlots}
           puzzleId={puzzle?.id ?? ''}
+          puzzleDate={puzzle?.puzzle_date ?? ''}
           onShare={shareResult}
           onClose={handleClose}
           testID="game-result-modal"

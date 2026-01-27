@@ -113,6 +113,7 @@ const defaultProps = {
   correctAnswer: 'Morgan Rogers',
   totalSteps: 5,
   puzzleId: 'test-puzzle-123',
+  puzzleDate: '2026-01-15',
   onShare: jest.fn().mockResolvedValue({ success: true, method: 'share' }),
   onClose: jest.fn(),
 };

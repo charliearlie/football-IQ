@@ -27,6 +27,7 @@ import {
   calculateGlobalIQ,
   calculateBadges,
 } from '../utils/iqCalculation';
+import { calculateFieldExperience } from '../utils/fieldExperience';
 
 /**
  * All game modes in display order.
@@ -151,6 +152,9 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
       const longestStreak = userStats.longestStreak;
       const badges = calculateBadges(proficiencies, currentStreak, totalPuzzlesSolved);
 
+      // Calculate Field Experience (per-mode completion counts)
+      const fieldExperience = calculateFieldExperience(attempts);
+
       setStats({
         globalIQ,
         proficiencies,
@@ -160,6 +164,7 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
         currentStreak,
         longestStreak,
         badges,
+        fieldExperience,
       });
       setError(null);
       lastLoadTime.current = Date.now();

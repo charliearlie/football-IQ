@@ -1,7 +1,8 @@
 /**
  * Transfer Result Modal Component
  *
- * Displays game results using the shared BaseResultModal component.
+ * Displays game results using the shared BaseResultModal component
+ * with image-based sharing.
  */
 
 import React from 'react';
@@ -10,11 +11,15 @@ import {
   BaseResultModal,
   ScoreDisplay,
   AnswerReveal,
+  ResultShareCard,
 } from '@/components/GameResultModal';
+import type { ResultShareData } from '@/components/GameResultModal';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
+import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
 import { TransferGuessScore, formatTransferScore } from '../utils/transferScoring';
 import { ShareResult } from '../utils/transferShare';
+import { generateTransferEmojiGrid } from '../utils/transferScoreDisplay';
 
 interface TransferResultModalProps {
   /** Whether the modal is visible */
@@ -27,7 +32,9 @@ interface TransferResultModalProps {
   correctAnswer: string;
   /** Puzzle ID for score distribution */
   puzzleId: string;
-  /** Callback to share result */
+  /** Puzzle date in YYYY-MM-DD format */
+  puzzleDate: string;
+  /** Callback to share result (legacy fallback) */
   onShare: () => Promise<ShareResult>;
   /** Callback to review the game */
   onReview?: () => void;
@@ -58,7 +65,7 @@ function getMessage(won: boolean, score: TransferGuessScore): string {
 }
 
 /**
- * Transfer game result modal with win/loss display.
+ * Transfer game result modal with win/loss display and image-based sharing.
  */
 export function TransferResultModal({
   visible,
@@ -66,11 +73,44 @@ export function TransferResultModal({
   score,
   correctAnswer,
   puzzleId,
+  puzzleDate,
   onShare,
   onReview,
   onClose,
   testID,
 }: TransferResultModalProps) {
+  const { profile, totalIQ } = useAuth();
+
+  // Generate emoji grid for share card
+  const emojiGrid = generateTransferEmojiGrid(score);
+
+  // Perfect score: no hints, no wrong guesses, and won
+  const isPerfectScore = won && score.hintsRevealed === 0 && score.incorrectGuesses === 0;
+
+  // Build share data for image capture
+  const shareData: ResultShareData = {
+    gameMode: 'guess_the_transfer',
+    scoreDisplay: emojiGrid,
+    puzzleDate,
+    displayName: profile?.display_name ?? 'Football Fan',
+    totalIQ,
+    won,
+    isPerfectScore,
+  };
+
+  // Share card content for image capture
+  const shareCardContent = (
+    <ResultShareCard
+      gameMode="guess_the_transfer"
+      resultType={won ? 'win' : 'loss'}
+      scoreDisplay={emojiGrid}
+      puzzleDate={puzzleDate}
+      displayName={shareData.displayName}
+      totalIQ={totalIQ}
+      isPerfectScore={isPerfectScore}
+    />
+  );
+
   return (
     <BaseResultModal
       visible={visible}
@@ -85,6 +125,8 @@ export function TransferResultModal({
       title={won ? 'CORRECT!' : 'GAME OVER'}
       message={getMessage(won, score)}
       onShare={onShare}
+      shareCardContent={shareCardContent}
+      shareData={shareData}
       onReview={onReview}
       onClose={onClose}
       testID={testID}

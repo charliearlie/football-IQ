@@ -1,55 +1,31 @@
 /**
  * Score display utilities for The Grid game mode.
  *
- * Generates emoji grids and shareable text for completed games.
+ * Generates text-based descriptions for sharing results.
  */
 
 import { FilledCell, TheGridScore } from '../types/theGrid.types';
 
 /**
- * Generate an emoji grid showing filled vs empty cells.
- *
- * - 🟢 = Filled cell
- * - ⬜ = Empty cell
+ * Generate a text description showing filled cells.
  *
  * @param cells - Array of cell states
- * @returns 3x3 emoji grid string
- *
- * @example
- * // All filled
- * generateGridEmojiDisplay(allFilled)
- * // "🟢🟢🟢\n🟢🟢🟢\n🟢🟢🟢"
- *
- * // Partial
- * generateGridEmojiDisplay(partial)
- * // "🟢⬜🟢\n⬜🟢⬜\n🟢⬜🟢"
+ * @param score - Score object
+ * @returns Text description like "5 of 9 cells"
  */
-export function generateGridEmojiDisplay(cells: (FilledCell | null)[]): string {
-  const rows: string[] = [];
-
-  for (let row = 0; row < 3; row++) {
-    let rowString = '';
-    for (let col = 0; col < 3; col++) {
-      const cellIndex = row * 3 + col;
-      rowString += cells[cellIndex] !== null ? '🟢' : '⬜';
-    }
-    rows.push(rowString);
-  }
-
-  return rows.join('\n');
+export function generateGridScoreDescription(
+  cells: (FilledCell | null)[],
+  score: TheGridScore
+): string {
+  return `${score.cellsFilled} of 9 cells`;
 }
 
 /**
- * Get result emoji based on completion.
- *
- * @param cellsFilled - Number of cells filled
- * @returns Emoji string
+ * @deprecated Use generateGridScoreDescription instead. Kept for backwards compatibility.
  */
-export function getResultEmoji(cellsFilled: number): string {
-  if (cellsFilled === 9) return '🏆';
-  if (cellsFilled >= 7) return '⭐';
-  if (cellsFilled >= 5) return '👍';
-  return '💪';
+export function generateGridEmojiDisplay(cells: (FilledCell | null)[]): string {
+  const filledCount = cells.filter((c) => c !== null).length;
+  return `${filledCount} of 9 cells`;
 }
 
 /**
@@ -84,10 +60,8 @@ export interface GridScoreDisplayOptions {
  * Football IQ - The Grid
  * 2025-01-15
  *
- * 🏆 Perfect Grid!
- * 🟢🟢🟢
- * 🟢🟢🟢
- * 🟢🟢🟢
+ * Perfect Grid!
+ * 9 of 9 cells
  *
  * Score: 100/100
  * ```
@@ -115,13 +89,12 @@ export function generateTheGridScoreDisplay(
     lines.push('');
   }
 
-  // Result emoji and message
-  const resultEmoji = getResultEmoji(score.cellsFilled);
+  // Result message
   const resultMessage = getResultMessage(score.cellsFilled);
-  lines.push(`${resultEmoji} ${resultMessage}`);
+  lines.push(resultMessage);
 
-  // Emoji grid
-  lines.push(generateGridEmojiDisplay(cells));
+  // Text description
+  lines.push(generateGridScoreDescription(cells, score));
   lines.push('');
 
   // Score

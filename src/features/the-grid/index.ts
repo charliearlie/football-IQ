@@ -50,7 +50,7 @@ export {
 
 export {
   generateGridEmojiDisplay,
-  getResultEmoji,
+  generateGridScoreDescription,
   getResultMessage,
   generateTheGridScoreDisplay,
 } from './utils/scoreDisplay';

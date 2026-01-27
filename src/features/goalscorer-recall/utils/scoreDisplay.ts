@@ -1,44 +1,30 @@
 /**
  * Score display utilities for Goalscorer Recall.
  *
- * Generates emoji grids and formatted text for sharing results.
- *
- * Format: ✅✅✅❌❌
- * - ✅ for each found goal (in chronological order)
- * - ❌ for each missed goal (in chronological order)
+ * Generates text-based descriptions for sharing results.
  */
 
 import type { GoalWithState } from '../types/goalscorerRecall.types';
 
 /**
- * Generate the emoji grid for a goalscorer recall result.
+ * Generate a text description for a goalscorer recall result.
  *
  * @param goals - All goals with their found state
- * @returns Emoji grid string
- *
- * @example
- * // All found
- * generateGoalscorerEmojiGrid(goals)
- * // "✅✅✅✅✅"
- *
- * @example
- * // Partial completion
- * generateGoalscorerEmojiGrid(goals)
- * // "✅✅✅❌❌"
+ * @returns Text description like "3 of 5 found"
+ */
+export function generateGoalscorerScoreDescription(goals: GoalWithState[]): string {
+  // Filter out own goals (they don't count)
+  const scoredGoals = goals.filter((g) => !g.isOwnGoal);
+  const foundCount = scoredGoals.filter((g) => g.found).length;
+  const totalCount = scoredGoals.length;
+  return `${foundCount} of ${totalCount} found`;
+}
+
+/**
+ * @deprecated Use generateGoalscorerScoreDescription instead. Kept for backwards compatibility.
  */
 export function generateGoalscorerEmojiGrid(goals: GoalWithState[]): string {
-  // Sort goals by minute for consistent display
-  const sortedGoals = [...goals].sort((a, b) => a.minute - b.minute);
-
-  // Filter out own goals (they don't count in the display)
-  const scoredGoals = sortedGoals.filter((g) => !g.isOwnGoal);
-
-  // Generate goal emojis
-  const goalEmojis = scoredGoals
-    .map((goal) => (goal.found ? '✅' : '❌'))
-    .join('');
-
-  return goalEmojis;
+  return generateGoalscorerScoreDescription(goals);
 }
 
 /**

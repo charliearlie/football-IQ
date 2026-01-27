@@ -366,6 +366,7 @@ export function TopicalQuizScreen({
           score={state.score}
           answers={state.answers}
           puzzleId={puzzle?.id ?? ""}
+          puzzleDate={puzzle?.puzzle_date ?? ""}
           onShare={shareResult}
           onClose={() => router.back()}
           testID="quiz-result-modal"
