@@ -27,8 +27,8 @@ export default function SupportPage() {
             </h2>
             <div className="text-slate-300 leading-relaxed space-y-4">
               <p>
-                Have a question, found a bug, or want to share feedback? We'd
-                love to hear from you.
+                Have a question, found a bug, or want to share feedback?
+                We&pos;d love to hear from you.
               </p>
               <p>
                 <a
