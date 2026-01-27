@@ -1,7 +1,7 @@
 // Sentry must be imported first for proper instrumentation
 import * as Sentry from "@sentry/react-native";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initDatabase } from "@/lib/database";
@@ -20,6 +20,7 @@ import {
   FirstRunModal,
   SubscriptionSyncProvider,
   ONBOARDING_STORAGE_KEY,
+  useOnboardingLock,
 } from "@/features/auth";
 import {
   PuzzleProvider,
@@ -118,15 +119,19 @@ function PostHogScreenTracker() {
  * AuthGate - Blocks navigation until auth is initialized
  *
  * Shows loading screen while auth state is being established,
- * and displays the FirstRunModal (Briefing) if:
- * - User needs to set display name, OR
- * - User hasn't completed onboarding (AsyncStorage check)
+ * and displays the FirstRunModal (Briefing) if user needs onboarding.
+ *
+ * Uses the "onboarding lock" pattern to prevent race conditions:
+ * Once the modal is shown, external state changes (like profile updates from
+ * real-time subscriptions) cannot close it. Only explicit successful
+ * submission can close the modal.
  */
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isInitialized, isLoading, profile, updateDisplayName, user } = useAuth();
   const [onboardingHydrated, setOnboardingHydrated] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const isMounted = useRef(true);
 
   // Hydrate onboarding state from AsyncStorage
@@ -181,13 +186,43 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }, [isInitialized, isLoading, onboardingHydrated]);
 
   // Determine if user needs to set display name
-  // Use optional chaining so null profile (new user) also triggers welcome modal
   const needsDisplayName = !profile?.display_name;
 
-  // Show briefing if display name is missing AND onboarding not completed
-  // hasCompletedOnboarding takes precedence - once set true in onSubmit callback,
-  // modal hides immediately even before profile refetch completes
-  const showBriefing = !hasCompletedOnboarding && needsDisplayName;
+  // Use the onboarding lock hook to prevent race conditions
+  // Once the modal is shown, it stays visible until explicitly completed
+  const { isOnboardingActive, completeOnboarding } = useOnboardingLock({
+    needsDisplayName,
+    hasCompletedOnboarding,
+    isHydrated: onboardingHydrated,
+  });
+
+  // Atomic submission handler - only closes modal after ALL operations succeed
+  const handleOnboardingSubmit = useCallback(async (displayName: string) => {
+    setSubmissionError(null);
+
+    try {
+      // Step 1: Update display name in Supabase FIRST (critical operation)
+      const { error } = await updateDisplayName(displayName);
+
+      if (error) {
+        // Don't close modal on error - let user retry
+        console.error("[AuthGate] Failed to save display name:", error);
+        setSubmissionError("Failed to save. Please try again.");
+        throw error;
+      }
+
+      // Step 2: Only after Supabase succeeds, persist to AsyncStorage
+      await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
+      setHasCompletedOnboarding(true);
+
+      // Step 3: Unlock the modal (this will hide it)
+      completeOnboarding();
+
+    } catch (error) {
+      // Error already handled above - re-throw for BriefingScreen to handle
+      throw error;
+    }
+  }, [updateDisplayName, completeOnboarding]);
 
   // Block navigation until auth is initialized AND onboarding state is hydrated
   // Allow proceeding if global timeout triggered (failsafe)
@@ -206,16 +241,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
                 <PostHogScreenTracker />
                 <PuzzleToastRenderer />
                 <FirstRunModal
-                  visible={showBriefing}
-                  onSubmit={async (displayName) => {
-                    // Set state and persist FIRST to hide modal immediately
-                    setHasCompletedOnboarding(true);
-                    await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
-
-                    // Then update display name in Supabase
-                    const { error } = await updateDisplayName(displayName);
-                    if (error) throw error;
-                  }}
+                  visible={isOnboardingActive}
+                  onSubmit={handleOnboardingSubmit}
+                  error={submissionError}
                   testID="first-run-modal"
                 />
               </NotificationWrapper>
@@ -235,6 +263,32 @@ export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
   const [rcReady, setRcReady] = useState(false);
   const [adsReady, setAdsReady] = useState(false);
+  const [initTimedOut, setInitTimedOut] = useState(false);
+
+  // Global initialization timeout - prevents black screen if SDKs hang
+  useEffect(() => {
+    const INIT_TIMEOUT_MS = 10000; // 10 seconds max for initialization
+
+    const timeout = setTimeout(() => {
+      const fontsReady = fontsLoaded || fontError;
+      if (!fontsReady || !dbReady || !rcReady || !adsReady) {
+        console.error("[RootLayout] Initialization timeout - forcing app to proceed");
+        Sentry.captureMessage("RootLayout initialization timeout", {
+          level: "error",
+          extra: {
+            fontsLoaded,
+            fontError: !!fontError,
+            dbReady,
+            rcReady,
+            adsReady,
+          },
+        });
+        setInitTimedOut(true);
+      }
+    }, INIT_TIMEOUT_MS);
+
+    return () => clearTimeout(timeout);
+  }, [fontsLoaded, fontError, dbReady, rcReady, adsReady]);
 
   // Initialize local SQLite database
   useEffect(() => {
@@ -327,11 +381,16 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError, dbReady, rcReady, adsReady]);
 
-  if (!fontsLoaded && !fontError) {
+  // Show nothing (splash screen visible) while initializing
+  // But if timeout triggers, proceed anyway to prevent black screen
+  const fontsReady = fontsLoaded || fontError;
+  const sdksReady = dbReady && rcReady && adsReady;
+
+  if (!initTimedOut && !fontsReady) {
     return null;
   }
 
-  if (!dbReady || !rcReady || !adsReady) {
+  if (!initTimedOut && !sdksReady) {
     return null;
   }
 

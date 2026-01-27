@@ -7,6 +7,7 @@ export {
 
 // Hooks
 export { useProfile } from './hooks/useProfile';
+export { useOnboardingLock } from './hooks/useOnboardingLock';
 
 // Services
 export {

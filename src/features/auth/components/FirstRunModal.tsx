@@ -13,6 +13,8 @@ export interface FirstRunModalProps {
   visible: boolean;
   /** Callback when user submits their display name */
   onSubmit: (displayName: string) => Promise<void>;
+  /** External error message to display (e.g., from failed submission) */
+  error?: string | null;
   /** Test ID for testing */
   testID?: string;
 }
@@ -23,7 +25,7 @@ export interface FirstRunModalProps {
  * Wraps BriefingScreen in a non-dismissible full-screen modal.
  * Uses slide animation for a smooth entrance.
  */
-export function FirstRunModal({ visible, onSubmit, testID }: FirstRunModalProps) {
+export function FirstRunModal({ visible, onSubmit, error, testID }: FirstRunModalProps) {
   return (
     <Modal
       visible={visible}
@@ -33,6 +35,7 @@ export function FirstRunModal({ visible, onSubmit, testID }: FirstRunModalProps)
     >
       <BriefingScreen
         onSubmit={onSubmit}
+        externalError={error}
         testID={testID ? `${testID}-content` : undefined}
       />
     </Modal>

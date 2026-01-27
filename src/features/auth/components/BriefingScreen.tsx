@@ -11,7 +11,7 @@
  * - Sentry analytics on completion
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,8 @@ import { WeeklyFixturesGrid } from './WeeklyFixturesGrid';
 export interface BriefingScreenProps {
   /** Callback when user submits their display name */
   onSubmit: (displayName: string) => Promise<void>;
+  /** External error message (e.g., from parent when submission fails) */
+  externalError?: string | null;
   /** Test ID for testing */
   testID?: string;
 }
@@ -46,11 +48,20 @@ const MAX_NAME_LENGTH = 30;
  * Welcomes new users, shows the weekly schedule, and collects
  * their display name for the leaderboard.
  */
-export function BriefingScreen({ onSubmit, testID }: BriefingScreenProps) {
+export function BriefingScreen({ onSubmit, externalError, testID }: BriefingScreenProps) {
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { triggerSuccess, triggerNotification } = useHaptics();
+
+  // Sync external error to local state (e.g., when parent submission fails)
+  useEffect(() => {
+    if (externalError) {
+      setError(externalError);
+      setIsSubmitting(false);
+      triggerNotification('error');
+    }
+  }, [externalError, triggerNotification]);
 
   const trimmedName = displayName.trim();
   const isValid = trimmedName.length >= MIN_NAME_LENGTH;
