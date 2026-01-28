@@ -114,6 +114,44 @@ export async function logOutUser(): Promise<{ error: Error | null }> {
 }
 
 /**
+ * Result of silent restore operation.
+ */
+export interface SilentRestoreResult {
+  /** CustomerInfo if restore was successful */
+  customerInfo: CustomerInfo | null;
+  /** Whether user has premium entitlement after restore */
+  hasPremium: boolean;
+}
+
+/**
+ * Silently attempts to restore purchases from the App Store.
+ *
+ * This is called on app initialization when user is logged in but
+ * isPremium is false. It handles the reinstall scenario where the
+ * user has an active subscription but the local state doesn't know.
+ *
+ * Does not show any UI - silently checks and returns result.
+ * Network errors or no purchases are not treated as errors.
+ *
+ * @returns SilentRestoreResult with premium status
+ */
+export async function silentRestorePurchases(): Promise<SilentRestoreResult> {
+  try {
+    const customerInfo = await Purchases.restorePurchases();
+    const { hasPremium } = checkPremiumEntitlement(customerInfo);
+    console.log(
+      '[SubscriptionSync] Silent restore:',
+      hasPremium ? 'Pro found' : 'No Pro'
+    );
+    return { customerInfo, hasPremium };
+  } catch (error) {
+    // No purchases to restore or network error - not a failure case
+    console.log('[SubscriptionSync] Silent restore - no purchases:', error);
+    return { customerInfo: null, hasPremium: false };
+  }
+}
+
+/**
  * Type for the customer info update listener callback.
  */
 export type CustomerInfoListener = (info: CustomerInfo) => void;

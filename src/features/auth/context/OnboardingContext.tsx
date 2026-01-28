@@ -3,6 +3,10 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { useAuth, ONBOARDING_STORAGE_KEY, FirstRunModal } from '@/features/auth';
+import {
+  isOnboardingCompletedSecure,
+  setOnboardingCompleted,
+} from '../services/SecureIdentityService';
 
 /**
  * Onboarding State Machine
@@ -58,14 +62,30 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       }
 
       // 3. User is ready (or null if anonymous/failed, but initialized)
-      // Check AsyncStorage first
+      // Check SecureStore first (survives reinstall), then AsyncStorage
       try {
+        // First check SecureStore (Keychain/Keystore - survives reinstall)
+        const secureCompleted = await isOnboardingCompletedSecure();
+        if (!isMounted.current) return;
+
+        if (secureCompleted) {
+          // Previously completed (from SecureStore) -> Latch COMPLETED
+          console.log('[Onboarding] Found completed in SecureStore -> COMPLETED');
+          // Also repair AsyncStorage if needed
+          AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true').catch(() => {});
+          setCurrentState('COMPLETED');
+          return;
+        }
+
+        // Then check AsyncStorage (normal case)
         const storageValue = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
         if (!isMounted.current) return;
 
         if (storageValue === 'true') {
-          // Previously completed -> Latch COMPLETED
-          console.log('[Onboarding] Found completed in storage -> COMPLETED');
+          // Previously completed in AsyncStorage -> Latch COMPLETED
+          console.log('[Onboarding] Found completed in AsyncStorage -> COMPLETED');
+          // Also save to SecureStore for future reinstall recovery
+          setOnboardingCompleted().catch(() => {});
           setCurrentState('COMPLETED');
           return;
         }
@@ -134,8 +154,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         }
       }
 
-      // 3. Update Storage
+      // 3. Update Storage (both AsyncStorage and SecureStore)
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+      // Also save to SecureStore for reinstall recovery
+      await setOnboardingCompleted();
 
       // 4. Transition State -> COMPLETED
       setCurrentState('COMPLETED');

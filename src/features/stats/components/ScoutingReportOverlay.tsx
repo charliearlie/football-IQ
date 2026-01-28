@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: 60, // Force clear status bar/notch
     paddingBottom: spacing.sm,
   },
   closeButton: {

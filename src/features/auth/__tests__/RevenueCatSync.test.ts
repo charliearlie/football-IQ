@@ -11,6 +11,7 @@ import {
   identifyUser,
   logOutUser,
   addCustomerInfoListener,
+  silentRestorePurchases,
 } from '../services/SubscriptionSync';
 import { mockPurchases, mockSupabaseFrom } from '../../../../jest-setup';
 
@@ -208,6 +209,59 @@ describe('SubscriptionSync Service', () => {
     });
   });
 });
+
+describe('silentRestorePurchases', () => {
+    it('returns hasPremium: true when restore finds active subscription', async () => {
+      const mockCustomerInfo = {
+        entitlements: {
+          active: {
+            'Football IQ Pro': {
+              identifier: 'Football IQ Pro',
+              isActive: true,
+              expirationDate: null,
+            },
+          },
+        },
+      } as unknown as CustomerInfo;
+      Purchases.restorePurchases.mockResolvedValue(mockCustomerInfo);
+
+      const result = await silentRestorePurchases();
+
+      expect(Purchases.restorePurchases).toHaveBeenCalled();
+      expect(result.hasPremium).toBe(true);
+      expect(result.customerInfo).toBe(mockCustomerInfo);
+    });
+
+    it('returns hasPremium: false when no active subscription found', async () => {
+      const mockCustomerInfo = {
+        entitlements: { active: {} },
+      } as unknown as CustomerInfo;
+      Purchases.restorePurchases.mockResolvedValue(mockCustomerInfo);
+
+      const result = await silentRestorePurchases();
+
+      expect(result.hasPremium).toBe(false);
+      expect(result.customerInfo).toBe(mockCustomerInfo);
+    });
+
+    it('returns hasPremium: false when restore throws error (no purchases)', async () => {
+      Purchases.restorePurchases.mockRejectedValue(new Error('No purchases to restore'));
+
+      const result = await silentRestorePurchases();
+
+      expect(result.hasPremium).toBe(false);
+      expect(result.customerInfo).toBeNull();
+    });
+
+    it('handles network errors gracefully', async () => {
+      Purchases.restorePurchases.mockRejectedValue(new Error('Network error'));
+
+      const result = await silentRestorePurchases();
+
+      expect(result.hasPremium).toBe(false);
+      expect(result.customerInfo).toBeNull();
+    });
+  });
 
 describe('Entitlement Sync Integration', () => {
   it('overwrites existing mock premium when RevenueCat says not premium', () => {

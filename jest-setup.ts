@@ -273,6 +273,17 @@ jest.mock('moti/skeleton', () => {
   };
 });
 
+// Mock expo-secure-store
+const mockSecureStore = {
+  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+};
+
+jest.mock('expo-secure-store', () => mockSecureStore);
+
+export { mockSecureStore };
+
 // Mock expo-notifications
 const mockNotifications = {
   setNotificationHandler: jest.fn(),

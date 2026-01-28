@@ -65,6 +65,14 @@ export function getDatabase(): SQLite.SQLiteDatabase {
 }
 
 /**
+ * Check if the database has been initialized.
+ * Use this to guard operations that require the database.
+ */
+export function isDatabaseReady(): boolean {
+  return db !== null;
+}
+
+/**
  * Run schema migrations based on user_version pragma.
  * Uses incremental versioning for future schema changes.
  */
@@ -366,6 +374,20 @@ export async function getAttemptsByPuzzle(
 }
 
 /**
+ * Get total count of attempts in local database.
+ * Used to detect if SQLite is empty (fresh install/reinstall scenario).
+ *
+ * @returns Total number of attempts stored locally
+ */
+export async function getAttemptCount(): Promise<number> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM attempts'
+  );
+  return result?.count ?? 0;
+}
+
+/**
  * Get all attempts that haven't been synced to Supabase.
  */
 export async function getUnsyncedAttempts(): Promise<ParsedLocalAttempt[]> {
@@ -514,6 +536,37 @@ export async function getCalendarAttempts(): Promise<CalendarAttemptRow[]> {
      ORDER BY p.puzzle_date DESC`
   );
   return rows;
+}
+
+/**
+ * Save an attempt to local storage ONLY if it doesn't already exist.
+ * Uses INSERT OR IGNORE to prevent overwriting existing local data.
+ *
+ * Used during rehydration to avoid overwriting newer local data
+ * with potentially stale Supabase data.
+ *
+ * @param attempt - The attempt to save
+ * @returns true if inserted, false if already existed
+ */
+export async function saveAttemptIfNotExists(attempt: LocalAttempt): Promise<boolean> {
+  const database = getDatabase();
+  const result = await database.runAsync(
+    `INSERT OR IGNORE INTO attempts
+     (id, puzzle_id, completed, score, score_display, metadata, started_at, completed_at, synced)
+     VALUES ($id, $puzzle_id, $completed, $score, $score_display, $metadata, $started_at, $completed_at, $synced)`,
+    {
+      $id: attempt.id,
+      $puzzle_id: attempt.puzzle_id,
+      $completed: attempt.completed,
+      $score: attempt.score,
+      $score_display: attempt.score_display,
+      $metadata: attempt.metadata,
+      $started_at: attempt.started_at,
+      $completed_at: attempt.completed_at,
+      $synced: attempt.synced,
+    }
+  );
+  return result.changes > 0;
 }
 
 /**

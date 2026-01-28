@@ -16,8 +16,18 @@ export {
   identifyUser,
   logOutUser,
   waitForEntitlementActivation,
+  silentRestorePurchases,
   ENTITLEMENT_RETRY_CONFIG,
 } from './services/SubscriptionSync';
+export {
+  storeAuthCredentials,
+  getStoredCredentials,
+  clearStoredCredentials,
+  setOnboardingCompleted,
+  isOnboardingCompletedSecure,
+  updateRefreshToken,
+  SECURE_KEYS,
+} from './services/SecureIdentityService';
 
 // Components
 export { AuthLoadingScreen } from './components/AuthLoadingScreen';
@@ -37,4 +47,6 @@ export type { Profile, AuthState, AuthContextValue } from './types/auth.types';
 export type {
   EntitlementCheckResult,
   EntitlementActivationResult,
+  SilentRestoreResult,
 } from './services/SubscriptionSync';
+export type { StoredCredentials } from './services/SecureIdentityService';

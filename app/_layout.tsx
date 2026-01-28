@@ -29,14 +29,15 @@ import {
 import { PuzzleUpdateToast } from "@/components/PuzzleUpdateToast";
 import { AdProvider } from "@/features/ads";
 import { QuizPrefetchProvider } from "@/features/topical-quiz";
-import { IntegrityGuardProvider } from "@/features/integrity";
+import { IntegrityGuardProvider, RehydrationProvider } from "@/features/integrity";
 import {
   NotificationWrapper,
   initializeNotifications,
 } from "@/features/notifications";
 import { getRevenueCatApiKey } from "@/config/revenueCat";
 // import { SentryErrorFallback } from "@/components";
-import { PostHogProvider, usePostHog } from "posthog-react-native";
+import { usePostHog } from "posthog-react-native";
+import { SafePostHogProvider } from "@/components/SafePostHogProvider";
 
 // Initialize Sentry error monitoring
 // TEMPORARILY DISABLED - testing if Sentry is causing crash
@@ -142,8 +143,9 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
 
   return (
     <IntegrityGuardProvider>
-      <PuzzleProvider>
-        <PuzzleOnboardingProvider>
+      <RehydrationProvider>
+        <PuzzleProvider>
+          <PuzzleOnboardingProvider>
           <QuizPrefetchProvider>
             <AdProvider>
               <NotificationWrapper>
@@ -155,6 +157,7 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
           </QuizPrefetchProvider>
         </PuzzleOnboardingProvider>
       </PuzzleProvider>
+      </RehydrationProvider>
     </IntegrityGuardProvider>
   );
 });
@@ -282,7 +285,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <PostHogProvider
+      <SafePostHogProvider
         apiKey="phc_u3vrkbSBmnx9m6bDDInC3XsFrnETkRAnNgO3iVLDWLE"
         options={{
           host: "https://eu.i.posthog.com",
@@ -340,7 +343,7 @@ export default function RootLayout() {
             </GestureHandlerRootView>
           </AuthOnboardingProvider>
         </SubscriptionSyncProvider>
-      </PostHogProvider>
+      </SafePostHogProvider>
     </AuthProvider>
   );
 }
