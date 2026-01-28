@@ -30,6 +30,7 @@ import {
   checkPremiumEntitlement,
   syncPremiumToSupabase,
   silentRestorePurchases,
+  restorePurchases,
 } from '../services/SubscriptionSync';
 
 /**
@@ -42,6 +43,8 @@ const SILENT_RESTORE_ATTEMPTED_KEY = '@silent_restore_attempted';
 interface SubscriptionSyncContextValue {
   /** Force a sync of current entitlement status */
   forceSync: () => Promise<void>;
+  /** Restore purchases from App Store */
+  restorePurchases: () => Promise<{ success: boolean; hasPremium: boolean }>;
 }
 
 const SubscriptionSyncContext =
@@ -200,6 +203,23 @@ export function SubscriptionSyncProvider({
     }
   }, [handleCustomerInfoUpdate]);
 
+  /**
+   * Manually restore purchases (via Settings).
+   */
+  const handleRestorePurchases = useCallback(async () => {
+    const result = await restorePurchases();
+    
+    if (result.success && result.customerInfo) {
+      // Sync the restored status (handles identity verification)
+      await handleCustomerInfoUpdate(result.customerInfo);
+    }
+    
+    return { 
+      success: result.success, 
+      hasPremium: result.hasPremium 
+    };
+  }, [handleCustomerInfoUpdate]);
+
   // Manage sync lifecycle based on auth state
   useEffect(() => {
     if (!isInitialized) return;
@@ -221,7 +241,12 @@ export function SubscriptionSyncProvider({
   }, [user?.id, isInitialized, startSync, stopSync]);
 
   return (
-    <SubscriptionSyncContext.Provider value={{ forceSync }}>
+    <SubscriptionSyncContext.Provider 
+      value={{ 
+        forceSync, 
+        restorePurchases: handleRestorePurchases 
+      }}
+    >
       {children}
     </SubscriptionSyncContext.Provider>
   );
@@ -230,7 +255,7 @@ export function SubscriptionSyncProvider({
 /**
  * Hook to access subscription sync functionality.
  *
- * @returns Object with forceSync method
+ * @returns Object with forceSync and restorePurchases methods
  * @throws Error if used outside SubscriptionSyncProvider
  */
 export function useSubscriptionSync(): SubscriptionSyncContextValue {

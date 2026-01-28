@@ -124,6 +124,15 @@ export interface SilentRestoreResult {
 }
 
 /**
+ * Checks entitlement status after a restore operation.
+ * Helper for restore functions.
+ */
+function getRestoreResult(customerInfo: CustomerInfo): SilentRestoreResult {
+  const { hasPremium } = checkPremiumEntitlement(customerInfo);
+  return { customerInfo, hasPremium };
+}
+
+/**
  * Silently attempts to restore purchases from the App Store.
  *
  * This is called on app initialization when user is logged in but
@@ -138,16 +147,44 @@ export interface SilentRestoreResult {
 export async function silentRestorePurchases(): Promise<SilentRestoreResult> {
   try {
     const customerInfo = await Purchases.restorePurchases();
-    const { hasPremium } = checkPremiumEntitlement(customerInfo);
+    const result = getRestoreResult(customerInfo);
     console.log(
       '[SubscriptionSync] Silent restore:',
-      hasPremium ? 'Pro found' : 'No Pro'
+      result.hasPremium ? 'Pro found' : 'No Pro'
     );
-    return { customerInfo, hasPremium };
+    return result;
   } catch (error) {
     // No purchases to restore or network error - not a failure case
     console.log('[SubscriptionSync] Silent restore - no purchases:', error);
     return { customerInfo: null, hasPremium: false };
+  }
+}
+
+/**
+ * Explicitly restores purchases from the App Store.
+ * Called when user taps "Restore Purchases" in settings.
+ *
+ * @returns Object with success flag and premium status
+ */
+export async function restorePurchases(): Promise<
+  SilentRestoreResult & { success: boolean; error?: Error }
+> {
+  try {
+    const customerInfo = await Purchases.restorePurchases();
+    const result = getRestoreResult(customerInfo);
+    console.log(
+      '[SubscriptionSync] Manual restore:',
+      result.hasPremium ? 'Pro found' : 'No Pro'
+    );
+    return { ...result, success: true };
+  } catch (error) {
+    console.error('[SubscriptionSync] Manual restore failed:', error);
+    return {
+      customerInfo: null,
+      hasPremium: false,
+      success: false,
+      error: error as Error,
+    };
   }
 }
 
@@ -166,7 +203,10 @@ export type CustomerInfoListener = (info: CustomerInfo) => void;
 export function addCustomerInfoListener(
   listener: CustomerInfoListener
 ): () => void {
-  return Purchases.addCustomerInfoUpdateListener(listener);
+  Purchases.addCustomerInfoUpdateListener(listener);
+  return () => {
+    Purchases.removeCustomerInfoUpdateListener(listener);
+  };
 }
 
 /**

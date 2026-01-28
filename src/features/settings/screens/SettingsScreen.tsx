@@ -27,7 +27,7 @@ import {
   getPermissionStatus,
   requestPermissions,
 } from '@/features/notifications';
-import { useOnboardingContext } from '@/features/puzzles';
+import { useOnboardingContext, usePuzzleContext } from '@/features/puzzles';
 import { SettingsRow } from '../components/SettingsRow';
 import { SettingsSection } from '../components/SettingsSection';
 import { RateAppModal } from '../components/RateAppModal';
@@ -51,11 +51,14 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   // Auth context for user data and sign out
   const { session, signOut } = useAuth();
 
-  // Subscription sync for restoring purchases after data deletion
-  const { forceSync } = useSubscriptionSync();
+  // Subscription sync for restoring purchases
+  const { forceSync, restorePurchases } = useSubscriptionSync();
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Onboarding context for resetting intro screens
   const { resetAllIntros } = useOnboardingContext();
+  // Puzzle context for refreshing local state after data operations
+  const { refreshLocalPuzzles } = usePuzzleContext();
 
   // Get app version from expo config
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
@@ -80,6 +83,34 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   /**
+   * Handle Restore Purchases - explicitly triggers restore with RevenueCat
+   */
+  const handleRestorePurchases = useCallback(async () => {
+    if (isRestoring) return;
+    
+    setIsRestoring(true);
+    try {
+      const { success, hasPremium } = await restorePurchases();
+      
+      if (success) {
+        if (hasPremium) {
+          Alert.alert('Success', 'Pro status restored successfully!');
+        } else {
+          Alert.alert('Restore Complete', 'No active subscriptions were found.');
+        }
+      } else {
+        // Error handled in service, but we show generic alert
+        Alert.alert('Error', 'Failed to restore purchases. Please try again.');
+      }
+    } catch (error) {
+      console.error('Restore purchases error:', error);
+      Alert.alert('Error', 'An unexpected error occurred.');
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [isRestoring, restorePurchases]);
+
+  /**
    * Clear attempts for a specific game mode
    */
   const handleClearAttempts = useCallback(async (gameMode: string, displayName: string) => {
@@ -94,6 +125,8 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
           onPress: async () => {
             try {
               const count = await deleteAttemptsByGameMode(gameMode);
+              // Refresh local state so UI updates immediately (back to "Play" state)
+              await refreshLocalPuzzles();
               Alert.alert('Success', `Deleted ${count} ${displayName} attempts.`);
             } catch (error) {
               Alert.alert('Error', 'Failed to delete attempts.');
@@ -103,7 +136,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         },
       ]
     );
-  }, []);
+  }, [refreshLocalPuzzles]);
 
   /**
    * Send a test notification (5 seconds from now)
@@ -309,6 +342,16 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Subscription Section */}
+        <SettingsSection title="Subscription">
+          <SettingsRow
+            icon={<RotateCcw size={20} color={colors.pitchGreen} strokeWidth={2} />}
+            label={isRestoring ? "Restoring..." : "Restore Purchases"}
+            onPress={handleRestorePurchases}
+            testID={testID ? `${testID}-restore-purchases-row` : undefined}
+          />
+        </SettingsSection>
+        
         {/* Legal Section */}
         <SettingsSection title="Legal">
           <SettingsRow
