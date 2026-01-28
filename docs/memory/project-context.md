@@ -287,6 +287,7 @@ Wordle-style "How You Compare" bar chart in result modals.
 
 ### Settings
 Fourth tab with Privacy Policy, Terms, Rate App, and secret dev menu (7 taps on version).
+- **Dev menu**: Test Daily Reminder, Test Streak Saver, Reset Game Intros, Clear Data buttons
 - **Files**: `src/features/settings/`, `app/(tabs)/settings.tsx`
 
 ### Submit Game Ideas
@@ -299,11 +300,14 @@ User-submitted game mode ideas with Pro subscription reward incentive.
 
 ### Local Notifications
 Push-style local notifications to maximize DAU and protect streaks.
+- **Notification IDs**: Stable numeric strings (`101`=Daily, `102`=Streak, `103`=Ad-hoc CMS reserved)
 - **Daily Kick-off** (08:30): Morning reminder if user hasn't played, rotating messages
-- **Streak Saver** (20:00): Evening alert if `streak > 0 AND gamesPlayedToday === 0`
+- **Streak Saver** (20:30): Evening alert 12h after Daily (configurable offset), if `streak > 0 AND gamesPlayedToday === 0`
 - **Perfect Day**: Full-screen confetti celebration when all daily puzzles completed
 - **Scheduling**: Uses True-Time system (`getTimeDriftMs()`) for accurate timing
-- **Permission Flow**: Custom modal shown after first puzzle completion
+- **Permission Flow**: Custom modal after first puzzle completion with 3 benefits (daily reminders, streak alerts, live challenges)
+- **Test Notifications**: Available in Settings dev menu (7-tap version) for verifying Daily/Streak triggers
+- **Cancellation**: Both reminders cancelled immediately when user completes any puzzle
 - **Files**: `src/features/notifications/`
 
 ### Review Mode

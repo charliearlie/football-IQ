@@ -10,7 +10,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
-import { Bell, Flame, Trophy } from 'lucide-react-native';
+import { Bell, Flame, Trophy, Zap } from 'lucide-react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { useHaptics } from '@/hooks/useHaptics';
 import { colors, spacing, textStyles, borderRadius, fonts, fontWeights } from '@/theme';
@@ -77,22 +77,26 @@ export function NotificationPermissionModal({
             </Animated.View>
 
             {/* Title */}
-            <Text style={styles.title}>Don't Lose Your Streak!</Text>
+            <Text style={styles.title}>Don't Break Your Streak!</Text>
 
             {/* Subtitle */}
             <Text style={styles.subtitle}>
-              Enable notifications to stay in the game
+              Stay in the game with timely reminders
             </Text>
 
             {/* Benefits */}
             <View style={styles.benefitsContainer}>
               <BenefitItem
-                icon={<Flame size={20} color={colors.cardYellow} />}
-                text="Streak reminders before it's too late"
+                icon={<Trophy size={20} color={colors.cardYellow} />}
+                text="Daily briefing reminders each morning"
               />
               <BenefitItem
-                icon={<Trophy size={20} color={colors.cardYellow} />}
-                text="Daily puzzle alerts each morning"
+                icon={<Flame size={20} color={colors.cardYellow} />}
+                text="Streak-at-risk alerts before it's too late"
+              />
+              <BenefitItem
+                icon={<Zap size={20} color={colors.cardYellow} />}
+                text="Live ad-hoc challenges from our scouts"
               />
             </View>
 

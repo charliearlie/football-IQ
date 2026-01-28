@@ -40,9 +40,18 @@ describe('notificationService', () => {
   });
 
   describe('NOTIFICATION_IDS', () => {
-    it('exports expected notification IDs', () => {
-      expect(NOTIFICATION_IDS.DAILY_KICKOFF).toBe('daily_kickoff');
-      expect(NOTIFICATION_IDS.STREAK_SAVER).toBe('streak_saver');
+    it('exports expected numeric notification IDs', () => {
+      // Numeric IDs allow precise overwriting without clearing entire queue
+      expect(NOTIFICATION_IDS.DAILY_KICKOFF).toBe('101');
+      expect(NOTIFICATION_IDS.STREAK_SAVER).toBe('102');
+      expect(NOTIFICATION_IDS.AD_HOC_CMS).toBe('103');
+    });
+
+    it('uses stable numeric strings for ID format', () => {
+      // IDs should be numeric strings, not actual numbers
+      expect(typeof NOTIFICATION_IDS.DAILY_KICKOFF).toBe('string');
+      expect(typeof NOTIFICATION_IDS.STREAK_SAVER).toBe('string');
+      expect(typeof NOTIFICATION_IDS.AD_HOC_CMS).toBe('string');
     });
   });
 
@@ -321,6 +330,105 @@ describe('notificationService', () => {
       const result = await getScheduledNotifications();
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('Notification Cancellation Scenarios', () => {
+    describe('when user completes a puzzle', () => {
+      it('cancels Daily notification using correct ID', async () => {
+        await cancelNotification(NOTIFICATION_IDS.DAILY_KICKOFF);
+
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('101');
+      });
+
+      it('cancels Streak Saver notification using correct ID', async () => {
+        await cancelNotification(NOTIFICATION_IDS.STREAK_SAVER);
+
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('102');
+      });
+
+      it('can cancel both notifications independently', async () => {
+        await cancelNotification(NOTIFICATION_IDS.DAILY_KICKOFF);
+        await cancelNotification(NOTIFICATION_IDS.STREAK_SAVER);
+
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenCalledTimes(2);
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenNthCalledWith(1, '101');
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenNthCalledWith(2, '102');
+      });
+    });
+
+    describe('notification ID stability', () => {
+      it('schedules notifications with stable numeric IDs for overwriting', async () => {
+        const futureDate = new Date(Date.now() + 60000);
+
+        // Schedule Daily
+        await scheduleNotification({
+          id: NOTIFICATION_IDS.DAILY_KICKOFF,
+          title: 'Daily Test',
+          body: 'Test body',
+          triggerDate: futureDate,
+        });
+
+        // Verify it uses the numeric ID
+        expect(mockNotifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            identifier: '101',
+          })
+        );
+
+        jest.clearAllMocks();
+
+        // Schedule Streak Saver
+        await scheduleNotification({
+          id: NOTIFICATION_IDS.STREAK_SAVER,
+          title: 'Streak Test',
+          body: 'Test body',
+          triggerDate: futureDate,
+          priority: 'high',
+        });
+
+        // Verify it uses the numeric ID
+        expect(mockNotifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            identifier: '102',
+          })
+        );
+      });
+
+      it('overwrites existing notification with same ID', async () => {
+        const futureDate = new Date(Date.now() + 60000);
+
+        // First schedule
+        await scheduleNotification({
+          id: NOTIFICATION_IDS.DAILY_KICKOFF,
+          title: 'First',
+          body: 'First body',
+          triggerDate: futureDate,
+        });
+
+        // Should cancel existing before scheduling
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('101');
+
+        jest.clearAllMocks();
+
+        // Second schedule with same ID
+        await scheduleNotification({
+          id: NOTIFICATION_IDS.DAILY_KICKOFF,
+          title: 'Second',
+          body: 'Second body',
+          triggerDate: futureDate,
+        });
+
+        // Should cancel again (overwrite behavior)
+        expect(mockNotifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('101');
+        expect(mockNotifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            content: expect.objectContaining({
+              title: 'Second',
+            }),
+          })
+        );
+      });
     });
   });
 });
