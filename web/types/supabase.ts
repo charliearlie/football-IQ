@@ -300,6 +300,111 @@ export type Database = {
           },
         ]
       }
+      players: {
+        Row: {
+          id: string
+          name: string
+          search_name: string
+          scout_rank: number
+          birth_year: number | null
+          position_category: string | null
+          nationality_code: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          search_name: string
+          scout_rank?: number
+          birth_year?: number | null
+          position_category?: string | null
+          nationality_code?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          search_name?: string
+          scout_rank?: number
+          birth_year?: number | null
+          position_category?: string | null
+          nationality_code?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clubs: {
+        Row: {
+          id: string
+          name: string
+          search_name: string
+          country_code: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          search_name: string
+          country_code?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          search_name?: string
+          country_code?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      player_appearances: {
+        Row: {
+          id: number
+          player_id: string
+          club_id: string
+          start_year: number | null
+          end_year: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          player_id: string
+          club_id: string
+          start_year?: number | null
+          end_year?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          player_id?: string
+          club_id?: string
+          start_year?: number | null
+          end_year?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_appearances_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_appearances_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

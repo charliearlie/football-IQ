@@ -131,8 +131,8 @@ export function CareerPathScreen({
     answer,
     totalSteps,
     revealNext,
-    submitGuess,
-    setCurrentGuess,
+    submitPlayerGuess,
+    submitTextGuess,
     shareResult,
     flatListRef,
     isVictoryRevealing,
@@ -515,9 +515,8 @@ export function CareerPathScreen({
             />
           ) : (
             <ActionZone
-              currentGuess={state.currentGuess}
-              onGuessChange={setCurrentGuess}
-              onSubmit={submitGuess}
+              onPlayerSelect={submitPlayerGuess}
+              onTextSubmit={submitTextGuess}
               onRevealNext={revealNext}
               canRevealMore={canRevealMore}
               shouldShake={state.lastGuessIncorrect}

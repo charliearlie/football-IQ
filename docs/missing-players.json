@@ -1,0 +1,667 @@
+[
+  {
+    "id": 11450,
+    "name": "Ahmed El Mohamady",
+    "nation": "Egypt",
+    "pos": "DEF",
+    "date_of_birth": "1987-09-09"
+  },
+  {
+    "id": 12116,
+    "name": "Ahmed Hegazy",
+    "nation": "Egypt",
+    "pos": "DEF",
+    "date_of_birth": "1991-01-25"
+  },
+  {
+    "id": 10841,
+    "name": "Alberto Méndez",
+    "nation": "Germany",
+    "pos": "MID",
+    "date_of_birth": "1974-10-24"
+  },
+  {
+    "id": 13408,
+    "name": "Alejo Veliz",
+    "nation": "Argentina",
+    "pos": "ATT",
+    "date_of_birth": "2003-09-19"
+  },
+  {
+    "id": 13541,
+    "name": "Aleksandar Rodic",
+    "nation": "Slovenia",
+    "pos": "ATT",
+    "date_of_birth": "1979-12-26"
+  },
+  {
+    "id": 9494,
+    "name": "Ally Samatta",
+    "nation": "Tanzania",
+    "pos": "ATT",
+    "date_of_birth": "1992-12-23"
+  },
+  {
+    "id": 14058,
+    "name": "André",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "2001-07-16"
+  },
+  {
+    "id": 12892,
+    "name": "Andrew Irving",
+    "nation": "Scotland",
+    "pos": "MID",
+    "date_of_birth": "2000-05-13"
+  },
+  {
+    "id": 13183,
+    "name": "Andrew O'Brien",
+    "nation": "Ireland",
+    "pos": "DEF",
+    "date_of_birth": "1979-06-29"
+  },
+  {
+    "id": 11789,
+    "name": "Andy Barrowman",
+    "nation": "Scotland",
+    "pos": "ATT",
+    "date_of_birth": "1984-11-27"
+  },
+  {
+    "id": 11433,
+    "name": "Andy Cole",
+    "nation": "England",
+    "pos": "ATT",
+    "date_of_birth": "1971-10-15"
+  },
+  {
+    "id": 14081,
+    "name": "Anthony Folan",
+    "nation": "Ireland",
+    "pos": "MID",
+    "date_of_birth": "1978-09-18"
+  },
+  {
+    "id": 10127,
+    "name": "Antonio Luna",
+    "nation": "Spain",
+    "pos": "DEF",
+    "date_of_birth": "1991-03-17"
+  },
+  {
+    "id": 10210,
+    "name": "Bo-kyung Kim",
+    "nation": "Korea, South",
+    "pos": "MID",
+    "date_of_birth": "1989-10-06"
+  },
+  {
+    "id": 10593,
+    "name": "Boris Zivkovic",
+    "nation": "Croatia",
+    "pos": "DEF",
+    "date_of_birth": "1975-11-15"
+  },
+  {
+    "id": 10424,
+    "name": "Bosingwa",
+    "nation": "Portugal",
+    "pos": "DEF",
+    "date_of_birth": "1982-08-24"
+  },
+  {
+    "id": 9803,
+    "name": "Cabral",
+    "nation": "Switzerland",
+    "pos": "MID",
+    "date_of_birth": "1988-10-22"
+  },
+  {
+    "id": 12760,
+    "name": "Dan Ballard",
+    "nation": "Northern Ireland",
+    "pos": "DEF",
+    "date_of_birth": "1999-09-22"
+  },
+  {
+    "id": 13851,
+    "name": "Dan Chesters",
+    "nation": "England",
+    "pos": "MID",
+    "date_of_birth": "2002-04-04"
+  },
+  {
+    "id": 14226,
+    "name": "Dan Petrescu",
+    "nation": "Romania",
+    "pos": "DEF",
+    "date_of_birth": "1967-12-22"
+  },
+  {
+    "id": 11211,
+    "name": "Daniel Gore",
+    "nation": "England",
+    "pos": "MID",
+    "date_of_birth": "2004-09-26"
+  },
+  {
+    "id": 10929,
+    "name": "Daniel Osvaldo",
+    "nation": "Italy",
+    "pos": "ATT",
+    "date_of_birth": "1986-01-12"
+  },
+  {
+    "id": 12600,
+    "name": "Danny Lafferty",
+    "nation": "Northern Ireland",
+    "pos": "DEF",
+    "date_of_birth": "1989-05-18"
+  },
+  {
+    "id": 12748,
+    "name": "Denílson",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "1988-02-16"
+  },
+  {
+    "id": 12450,
+    "name": "Dimitrios Giannoulis",
+    "nation": "Greece",
+    "pos": "DEF",
+    "date_of_birth": "1995-10-17"
+  },
+  {
+    "id": 11477,
+    "name": "Djordje Petrovic",
+    "nation": "Serbia",
+    "pos": "GK",
+    "date_of_birth": "1999-10-08"
+  },
+  {
+    "id": 13958,
+    "name": "Do-heon Kim",
+    "nation": "Korea, South",
+    "pos": "MID",
+    "date_of_birth": "1982-07-14"
+  },
+  {
+    "id": 11509,
+    "name": "Ederson",
+    "nation": "Brazil",
+    "pos": "GK",
+    "date_of_birth": "1993-08-17"
+  },
+  {
+    "id": 14003,
+    "name": "El-Hadji Diouf",
+    "nation": "Senegal",
+    "pos": "ATT",
+    "date_of_birth": "1981-01-15"
+  },
+  {
+    "id": 13689,
+    "name": "Fabri",
+    "nation": "Spain",
+    "pos": "GK",
+    "date_of_birth": "1987-12-31"
+  },
+  {
+    "id": 13458,
+    "name": "Fede Bessone",
+    "nation": "Argentina",
+    "pos": "DEF",
+    "date_of_birth": "1984-01-23"
+  },
+  {
+    "id": 11695,
+    "name": "Florentino",
+    "nation": "Portugal",
+    "pos": "MID",
+    "date_of_birth": "1999-08-19"
+  },
+  {
+    "id": 10909,
+    "name": "Fredrik Stoor Siekkinen",
+    "nation": "Sweden",
+    "pos": "DEF",
+    "date_of_birth": "1984-02-28"
+  },
+  {
+    "id": 12874,
+    "name": "Futre",
+    "nation": "Portugal",
+    "pos": "ATT",
+    "date_of_birth": "1966-02-28"
+  },
+  {
+    "id": 11442,
+    "name": "Georgios Georgiadis",
+    "nation": "Greece",
+    "pos": "ATT",
+    "date_of_birth": "1972-03-08"
+  },
+  {
+    "id": 9740,
+    "name": "Geovanni",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "1980-01-11"
+  },
+  {
+    "id": 10384,
+    "name": "Greg Goodridge",
+    "nation": "Barbados",
+    "pos": "MID",
+    "date_of_birth": "1971-07-10"
+  },
+  {
+    "id": 9540,
+    "name": "Guly",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "1981-12-31"
+  },
+  {
+    "id": 9277,
+    "name": "Hannibal",
+    "nation": "Tunisia",
+    "pos": "MID",
+    "date_of_birth": "2003-01-21"
+  },
+  {
+    "id": 11976,
+    "name": "Ibrahim Bá",
+    "nation": "France",
+    "pos": "MID",
+    "date_of_birth": "1973-11-12"
+  },
+  {
+    "id": 13700,
+    "name": "Jamie Phillips",
+    "nation": "Scotland",
+    "pos": "MID",
+    "date_of_birth": "1991-07-05"
+  },
+  {
+    "id": 11195,
+    "name": "Jan Mucha",
+    "nation": "Slovakia",
+    "pos": "GK",
+    "date_of_birth": "1982-12-05"
+  },
+  {
+    "id": 12174,
+    "name": "Ji-soo Kim",
+    "nation": "Korea, South",
+    "pos": "DEF",
+    "date_of_birth": "2004-12-24"
+  },
+  {
+    "id": 11367,
+    "name": "João Gomes",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "2001-02-12"
+  },
+  {
+    "id": 11142,
+    "name": "Joe Knight",
+    "nation": "England",
+    "pos": "MID",
+    "date_of_birth": "2005-09-21"
+  },
+  {
+    "id": 9902,
+    "name": "Jóhann Berg Gudmundsson",
+    "nation": "Iceland",
+    "pos": "ATT",
+    "date_of_birth": "1990-10-27"
+  },
+  {
+    "id": 9515,
+    "name": "John Barnes",
+    "nation": "England",
+    "pos": "MID",
+    "date_of_birth": "1963-11-07"
+  },
+  {
+    "id": 13724,
+    "name": "Jonathan Bewers",
+    "nation": "England",
+    "pos": "DEF",
+    "date_of_birth": "1982-09-10"
+  },
+  {
+    "id": 10782,
+    "name": "José Crespo",
+    "nation": "Spain",
+    "pos": "DEF",
+    "date_of_birth": "1987-02-09"
+  },
+  {
+    "id": 12317,
+    "name": "José Pozo",
+    "nation": "Spain",
+    "pos": "MID",
+    "date_of_birth": "1996-03-15"
+  },
+  {
+    "id": 9392,
+    "name": "Jovan Bosancic",
+    "nation": "Serbia",
+    "pos": "MID",
+    "date_of_birth": "1970-08-07"
+  },
+  {
+    "id": 10936,
+    "name": "Juanmi",
+    "nation": "Spain",
+    "pos": "ATT",
+    "date_of_birth": "1993-05-20"
+  },
+  {
+    "id": 10368,
+    "name": "Kell Watts",
+    "nation": "England",
+    "pos": "DEF",
+    "date_of_birth": "1999-11-03"
+  },
+  {
+    "id": 12077,
+    "name": "Kléberson",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "1979-06-19"
+  },
+  {
+    "id": 12304,
+    "name": "Ladislav Krejci",
+    "nation": "Czech Republic",
+    "pos": "DEF",
+    "date_of_birth": "1999-04-20"
+  },
+  {
+    "id": 13474,
+    "name": "Laurén",
+    "nation": "Cameroon",
+    "pos": "DEF",
+    "date_of_birth": "1977-01-19"
+  },
+  {
+    "id": 12744,
+    "name": "Lazar Markovic",
+    "nation": "Serbia",
+    "pos": "ATT",
+    "date_of_birth": "1994-03-02"
+  },
+  {
+    "id": 9896,
+    "name": "Luís Guilherme",
+    "nation": "Brazil",
+    "pos": "ATT",
+    "date_of_birth": "2006-02-09"
+  },
+  {
+    "id": 13233,
+    "name": "Mads Andersen",
+    "nation": "Denmark",
+    "pos": "DEF",
+    "date_of_birth": "1997-12-27"
+  },
+  {
+    "id": 10930,
+    "name": "Marc Roca",
+    "nation": "Spain",
+    "pos": "MID",
+    "date_of_birth": "1996-11-26"
+  },
+  {
+    "id": 13587,
+    "name": "Marçal",
+    "nation": "Brazil",
+    "pos": "DEF",
+    "date_of_birth": "1989-02-19"
+  },
+  {
+    "id": 9477,
+    "name": "Matheus França",
+    "nation": "Brazil",
+    "pos": "MID",
+    "date_of_birth": "2004-04-01"
+  },
+  {
+    "id": 10813,
+    "name": "Matt Lawrence",
+    "nation": "England",
+    "pos": "DEF",
+    "date_of_birth": "1974-06-19"
+  },
+  {
+    "id": 10328,
+    "name": "Mesca",
+    "nation": "Guinea-Bissau",
+    "pos": "MID",
+    "date_of_birth": "1993-05-06"
+  },
+  {
+    "id": 13881,
+    "name": "Míchel Madera",
+    "nation": "Spain",
+    "pos": "MID",
+    "date_of_birth": "1985-11-08"
+  },
+  {
+    "id": 9954,
+    "name": "Milan Jovanovic",
+    "nation": "Serbia",
+    "pos": "ATT",
+    "date_of_birth": "1981-04-18"
+  },
+  {
+    "id": 11076,
+    "name": "Nélson",
+    "nation": "Portugal",
+    "pos": "DEF",
+    "date_of_birth": "1971-11-05"
+  },
+  {
+    "id": 12403,
+    "name": "Odeluga Offiah",
+    "nation": "England",
+    "pos": "DEF",
+    "date_of_birth": "2002-10-26"
+  },
+  {
+    "id": 11304,
+    "name": "Oleg Luzhnyi",
+    "nation": "Ukraine",
+    "pos": "DEF",
+    "date_of_birth": "1968-08-05"
+  },
+  {
+    "id": 10074,
+    "name": "Pablo Barrera",
+    "nation": "Mexico",
+    "pos": "ATT",
+    "date_of_birth": "1987-06-21"
+  },
+  {
+    "id": 9922,
+    "name": "Patrick McCarthy",
+    "nation": "Ireland",
+    "pos": "DEF",
+    "date_of_birth": "1983-05-31"
+  },
+  {
+    "id": 9475,
+    "name": "Porfírio",
+    "nation": "Portugal",
+    "pos": "ATT",
+    "date_of_birth": "1973-09-28"
+  },
+  {
+    "id": 12700,
+    "name": "Radek Cerny",
+    "nation": "Czech Republic",
+    "pos": "GK",
+    "date_of_birth": "1974-02-18"
+  },
+  {
+    "id": 10874,
+    "name": "Rob Green",
+    "nation": "England",
+    "pos": "GK",
+    "date_of_birth": "1980-01-18"
+  },
+  {
+    "id": 14052,
+    "name": "Rob Hall",
+    "nation": "England",
+    "pos": "ATT",
+    "date_of_birth": "1993-10-20"
+  },
+  {
+    "id": 10827,
+    "name": "Rob Milsom",
+    "nation": "England",
+    "pos": "DEF",
+    "date_of_birth": "1987-01-02"
+  },
+  {
+    "id": 13445,
+    "name": "Robert Wolleaston",
+    "nation": "England",
+    "pos": "MID",
+    "date_of_birth": "1979-12-21"
+  },
+  {
+    "id": 12455,
+    "name": "Roberto",
+    "nation": "Spain",
+    "pos": "GK",
+    "date_of_birth": "1986-02-10"
+  },
+  {
+    "id": 12837,
+    "name": "Seok-yeong Yun",
+    "nation": "Korea, South",
+    "pos": "DEF",
+    "date_of_birth": "1990-02-13"
+  },
+  {
+    "id": 13944,
+    "name": "Shay Logan",
+    "nation": "England",
+    "pos": "DEF",
+    "date_of_birth": "1988-01-29"
+  },
+  {
+    "id": 11810,
+    "name": "Sokratis",
+    "nation": "Greece",
+    "pos": "DEF",
+    "date_of_birth": "1988-06-09"
+  },
+  {
+    "id": 11497,
+    "name": "Stephen Robinson",
+    "nation": "Northern Ireland",
+    "pos": "MID",
+    "date_of_birth": "1974-12-10"
+  },
+  {
+    "id": 11792,
+    "name": "Steve McMillan",
+    "nation": "Scotland",
+    "pos": "DEF",
+    "date_of_birth": "1976-01-19"
+  },
+  {
+    "id": 10404,
+    "name": "Sven Peter Markstedt",
+    "nation": "Sweden",
+    "pos": "DEF",
+    "date_of_birth": "1972-01-11"
+  },
+  {
+    "id": 10737,
+    "name": "Thomas Sörensen",
+    "nation": "Denmark",
+    "pos": "GK",
+    "date_of_birth": "1976-06-12"
+  },
+  {
+    "id": 13039,
+    "name": "Tie Li",
+    "nation": "China",
+    "pos": "MID",
+    "date_of_birth": "1977-05-18"
+  },
+  {
+    "id": 10907,
+    "name": "Tom Cannon",
+    "nation": "Ireland",
+    "pos": "ATT",
+    "date_of_birth": "2002-12-28"
+  },
+  {
+    "id": 13261,
+    "name": "Trond Soltvedt",
+    "nation": "Norway",
+    "pos": "MID",
+    "date_of_birth": "1967-02-15"
+  },
+  {
+    "id": 11514,
+    "name": "Ulises de la Cruz",
+    "nation": "Ecuador",
+    "pos": "DEF",
+    "date_of_birth": "1974-02-08"
+  },
+  {
+    "id": 14316,
+    "name": "Varela",
+    "nation": "Portugal",
+    "pos": "ATT",
+    "date_of_birth": "1985-02-02"
+  },
+  {
+    "id": 11041,
+    "name": "Wálter López",
+    "nation": "Uruguay",
+    "pos": "DEF",
+    "date_of_birth": "1985-10-15"
+  },
+  {
+    "id": 10300,
+    "name": "Weifeng Li",
+    "nation": "China",
+    "pos": "DEF",
+    "date_of_birth": "1978-12-01"
+  },
+  {
+    "id": 10156,
+    "name": "Won-hee Cho",
+    "nation": "Korea, South",
+    "pos": "MID",
+    "date_of_birth": "1983-04-17"
+  },
+  {
+    "id": 9579,
+    "name": "Yegor Yarmolyuk",
+    "nation": "Ukraine",
+    "pos": "MID",
+    "date_of_birth": "2004-03-01"
+  },
+  {
+    "id": 9644,
+    "name": "Zhi Zheng",
+    "nation": "China",
+    "pos": "MID",
+    "date_of_birth": "1980-08-20"
+  }
+]

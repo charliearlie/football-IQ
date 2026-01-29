@@ -33,6 +33,9 @@ Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 | `user_streaks` | Yes | Streak tracking per game mode |
 | `content_reports` | Yes | User error reports for puzzle content |
 | `game_submissions` | Yes | User-submitted game mode ideas |
+| `players` | Yes (SELECT) | Wikidata player graph (QID PK) |
+| `clubs` | Yes (SELECT) | Club identity (QID PK) |
+| `player_appearances` | Yes (SELECT) | Player ↔ Club junction with years |
 | `agent_runs` | Blocked | AI agent logs (admin-only) |
 | `match_data` | Blocked | Football match data (admin-only) |
 
@@ -44,11 +47,12 @@ sync_queue (id, table_name, record_id, action, payload, created_at)
 unlocked_puzzles (puzzle_id, unlocked_at)  -- Ad unlocks (permanent)
 puzzle_catalog (id, game_mode, puzzle_date, difficulty)  -- Archive metadata
 player_database (id, external_id, name, search_name, clubs, nationalities, is_active)
+player_search_cache (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
 ```
 
 ### Migrations
-**Supabase:** 001-009 + 012 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert)
-**SQLite:** v1-v5 (base schema, catalog, unlocks, player database, puzzle updated_at)
+**Supabase:** 001-009 + 012 + 019 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph)
+**SQLite:** v1-v7 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache)
 
 ## Authentication
 

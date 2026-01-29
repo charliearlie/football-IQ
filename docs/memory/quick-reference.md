@@ -10,9 +10,42 @@ daily_puzzles    - Puzzles (RLS: 3-tier access)
 profiles         - User profiles (RLS: read all, update own)
 puzzle_attempts  - Attempts (RLS: owner-only)
 user_streaks     - Streaks (RLS: owner-only)
+players          - Wikidata player graph (RLS: SELECT, QID PK)
+clubs            - Club identity (RLS: SELECT, QID PK)
+player_appearances - Player ↔ Club (RLS: SELECT)
 agent_runs       - AI logs (RLS: blocked, admin-only)
 match_data       - Match data (RLS: blocked, admin-only)
 ```
+
+## Oracle Search (Wikidata Integration)
+```typescript
+// Hybrid search: local SQLite → debounced Supabase Oracle
+import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
+searchPlayersHybrid('ronaldo', (results) => { /* UnifiedPlayer[] */ });
+
+// Direct Oracle RPC (used internally by HybridSearchEngine)
+import { searchPlayersOracle, validatePlayerClub } from '@/services/oracle';
+const players = await searchPlayersOracle('messi', 10);
+const valid = await validatePlayerClub('Q11571', 'Q8682');
+```
+
+### Key Types
+```typescript
+interface UnifiedPlayer {
+  id: string;                    // QID or local ID
+  name: string;
+  nationality_code: string | null;
+  birth_year: number | null;
+  position_category: string | null;
+  source: 'local' | 'oracle';
+  relevance_score: number;
+}
+```
+
+### Admin: Player Scout (`/player-scout`)
+- Batch-resolves player names via Wikidata SPARQL
+- Fetches career clubs (P54 property)
+- Upserts to `players`, `clubs`, `player_appearances`
 
 ## 3-Tier Puzzle Access
 ```

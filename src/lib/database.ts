@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -205,8 +205,29 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     console.log('[Database] Migration v6 complete');
   }
 
-  // Future migrations would go here:
-  // if (currentVersion < 7) { ... }
+  // Migration v7: Add player_search_cache table for Oracle autocomplete
+  // Mirrors Supabase `players` table for offline-first search
+  if (currentVersion < 7) {
+    console.log('[Database] Running migration v7: Player search cache');
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS player_search_cache (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        search_name TEXT NOT NULL,
+        scout_rank INTEGER NOT NULL DEFAULT 0,
+        birth_year INTEGER,
+        position_category TEXT,
+        nationality_code TEXT,
+        synced_at TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_player_cache_search
+        ON player_search_cache (search_name);
+
+      PRAGMA user_version = 7;
+    `);
+    console.log('[Database] Migration v7 complete');
+  }
 }
 
 // ============ PUZZLE OPERATIONS ============

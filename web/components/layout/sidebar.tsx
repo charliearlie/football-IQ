@@ -8,13 +8,15 @@ import {
   LayoutDashboard,
   Trophy,
   Settings,
-  LogOut
+  LogOut,
+  Globe,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 const navigation = [
   { name: "Calendar", href: "/calendar", icon: Calendar },
+  { name: "Player Scout", href: "/player-scout", icon: Globe },
 ];
 
 export function Sidebar() {
