@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          key: string
+          value: Json
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: Json
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_runs: {
         Row: {
           agent_name: string
@@ -544,6 +562,20 @@ export type Database = {
           club_qid: string
         }
         Returns: boolean
+      }
+      get_elite_index_delta: {
+        Args: {
+          client_version?: number
+        }
+        Returns: {
+          server_version: number
+          has_updates: boolean
+          updated_players: Json
+        }[]
+      }
+      bump_elite_index_version: {
+        Args: Record<string, never>
+        Returns: number
       }
     }
     Enums: {

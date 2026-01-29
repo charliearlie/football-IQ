@@ -47,15 +47,22 @@ function buildBatchLookupQuery(names: string[]): string {
     .join(" ");
 
   // Search both rdfs:label (primary name) and skos:altLabel (aliases/nicknames)
+  // Nationality: prefer P1532 (country for sport) over P27 (citizenship)
+  // to distinguish England/Scotland/Wales/NIR from generic "United Kingdom".
+  // Fetches the nation label for mapping through NATION_TO_ISO.
   return `
-    SELECT ?player ?playerLabel ?birthDate ?nationalityCode ?positionLabel ?sitelinks WHERE {
+    SELECT ?player ?playerLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
       VALUES ?searchLabel { ${values} }
       { ?player rdfs:label ?searchLabel }
       UNION
       { ?player skos:altLabel ?searchLabel }
       ?player wdt:P106 wd:Q937857 .
       OPTIONAL { ?player wdt:P569 ?birthDate }
-      OPTIONAL { ?player wdt:P27/wdt:P298 ?nationalityCode }
+      OPTIONAL {
+        { ?player wdt:P1532 ?nationality }
+        UNION
+        { ?player wdt:P27 ?nationality . FILTER NOT EXISTS { ?player wdt:P1532 [] } }
+      }
       OPTIONAL { ?player wdt:P413 ?position }
       ?player wikibase:sitelinks ?sitelinks .
       SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
@@ -135,6 +142,65 @@ const POSITION_MAP: Record<string, string> = {
   "centre-forward": "Forward",
 };
 
+/**
+ * Map a Wikidata nationality entity label to ISO code.
+ * Handles GB home nations (England → GB-ENG, etc.)
+ * and standard countries (France → FR, etc.)
+ */
+const NATION_LABEL_TO_ISO: Record<string, string> = {
+  england: "GB-ENG", scotland: "GB-SCT", wales: "GB-WLS", "northern ireland": "GB-NIR",
+  afghanistan: "AF", albania: "AL", algeria: "DZ", andorra: "AD", angola: "AO",
+  "antigua and barbuda": "AG", argentina: "AR", armenia: "AM", australia: "AU", austria: "AT",
+  azerbaijan: "AZ", bahrain: "BH", bangladesh: "BD", barbados: "BB", belarus: "BY",
+  belgium: "BE", benin: "BJ", bermuda: "BM", bolivia: "BO",
+  "bosnia and herzegovina": "BA", botswana: "BW", brazil: "BR", bulgaria: "BG",
+  "burkina faso": "BF", burundi: "BI", cameroon: "CM", canada: "CA", "cape verde": "CV",
+  "central african republic": "CF", chad: "TD", chile: "CL", china: "CN", colombia: "CO",
+  comoros: "KM", congo: "CG", "democratic republic of the congo": "CD", "costa rica": "CR",
+  croatia: "HR", cuba: "CU", "curaçao": "CW", curacao: "CW", cyprus: "CY",
+  "czech republic": "CZ", czechia: "CZ", denmark: "DK", "dominican republic": "DO",
+  ecuador: "EC", egypt: "EG", "el salvador": "SV", "equatorial guinea": "GQ",
+  eritrea: "ER", estonia: "EE", ethiopia: "ET", "faroe islands": "FO", fiji: "FJ",
+  finland: "FI", france: "FR", gabon: "GA", gambia: "GM", georgia: "GE", germany: "DE",
+  ghana: "GH", gibraltar: "GI", greece: "GR", grenada: "GD", guatemala: "GT",
+  guinea: "GN", "guinea-bissau": "GW", guyana: "GY", haiti: "HT", honduras: "HN",
+  "hong kong": "HK", hungary: "HU", iceland: "IS", india: "IN", indonesia: "ID",
+  iran: "IR", iraq: "IQ", ireland: "IE", "republic of ireland": "IE", israel: "IL",
+  italy: "IT", "ivory coast": "CI", "côte d'ivoire": "CI", jamaica: "JM", japan: "JP",
+  jordan: "JO", kazakhstan: "KZ", kenya: "KE", kosovo: "XK", kuwait: "KW",
+  latvia: "LV", lebanon: "LB", liberia: "LR", libya: "LY", liechtenstein: "LI",
+  lithuania: "LT", luxembourg: "LU", "north macedonia": "MK", madagascar: "MG",
+  malawi: "MW", malaysia: "MY", mali: "ML", malta: "MT", mauritania: "MR",
+  mauritius: "MU", mexico: "MX", moldova: "MD", montenegro: "ME", morocco: "MA",
+  mozambique: "MZ", namibia: "NA", nepal: "NP", netherlands: "NL", "new zealand": "NZ",
+  nicaragua: "NI", niger: "NE", nigeria: "NG", norway: "NO", oman: "OM", pakistan: "PK",
+  palestine: "PS", panama: "PA", paraguay: "PY", peru: "PE", philippines: "PH",
+  poland: "PL", portugal: "PT", qatar: "QA", romania: "RO", russia: "RU", rwanda: "RW",
+  "saint kitts and nevis": "KN", "saint lucia": "LC", samoa: "WS", "san marino": "SM",
+  "saudi arabia": "SA", senegal: "SN", serbia: "RS", "serbia and montenegro": "RS",
+  seychelles: "SC", "sierra leone": "SL", singapore: "SG", slovakia: "SK", slovenia: "SI",
+  somalia: "SO", "south africa": "ZA", "south korea": "KR", "korea republic": "KR",
+  spain: "ES", "sri lanka": "LK", sudan: "SD", suriname: "SR", sweden: "SE",
+  switzerland: "CH", syria: "SY", taiwan: "TW", tanzania: "TZ", thailand: "TH",
+  togo: "TG", "trinidad and tobago": "TT", tunisia: "TN", turkey: "TR", "türkiye": "TR",
+  uganda: "UG", ukraine: "UA", "united arab emirates": "AE",
+  "united kingdom": "GB", "united states of america": "US", "united states": "US",
+  uruguay: "UY", uzbekistan: "UZ", venezuela: "VE", vietnam: "VN", zambia: "ZM",
+  zimbabwe: "ZW",
+  // Historical / dissolved states
+  "soviet union": "RU", czechoslovakia: "CZ", yugoslavia: "RS",
+  "federal republic of yugoslavia": "RS", "socialist federal republic of yugoslavia": "RS",
+  "west germany": "DE", rhodesia: "ZW", "zimbabwe rhodesia": "ZW",
+  "french guiana": "GF", "kingdom of the netherlands": "NL", "kingdom of denmark": "DK",
+  "netherlands antilles": "NL", "people's republic of china": "CN", "the gambia": "GM",
+  "commonwealth of independent states": "RU", "united kingdom of great britain and ireland": "GB",
+};
+
+function mapNationLabelToISO(label: string | undefined): string | null {
+  if (!label) return null;
+  return NATION_LABEL_TO_ISO[label.toLowerCase().trim()] ?? null;
+}
+
 function categorizePosition(label: string | undefined): string | null {
   if (!label) return null;
   const lower = label.toLowerCase().trim();
@@ -165,10 +231,14 @@ async function searchWikidataEntity(name: string): Promise<string | null> {
  */
 async function verifyAndFetchPlayer(qid: string, originalName: string): Promise<ResolvedPlayer | null> {
   const query = `
-    SELECT ?playerLabel ?birthDate ?nationalityCode ?positionLabel ?sitelinks WHERE {
+    SELECT ?playerLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
       wd:${qid} wdt:P106 wd:Q937857 .
       OPTIONAL { wd:${qid} wdt:P569 ?birthDate }
-      OPTIONAL { wd:${qid} wdt:P27/wdt:P298 ?nationalityCode }
+      OPTIONAL {
+        { wd:${qid} wdt:P1532 ?nationality }
+        UNION
+        { wd:${qid} wdt:P27 ?nationality . FILTER NOT EXISTS { wd:${qid} wdt:P1532 [] } }
+      }
       OPTIONAL { wd:${qid} wdt:P413 ?position }
       wd:${qid} wikibase:sitelinks ?sitelinks .
       SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
@@ -183,7 +253,7 @@ async function verifyAndFetchPlayer(qid: string, originalName: string): Promise<
       qid,
       name: b.playerLabel?.value ?? originalName,
       birthYear: extractYear(b.birthDate?.value),
-      nationalityCode: b.nationalityCode?.value ?? null,
+      nationalityCode: mapNationLabelToISO(b.nationalityLabel?.value),
       positionCategory: categorizePosition(b.positionLabel?.value),
       sitelinks: parseInt(b.sitelinks?.value ?? "0", 10),
     };
@@ -265,7 +335,7 @@ export async function resolvePlayerBatch(
       qid: extractQid(playerUri),
       name,
       birthYear: extractYear(b.birthDate?.value),
-      nationalityCode: b.nationalityCode?.value ?? null,
+      nationalityCode: mapNationLabelToISO(b.nationalityLabel?.value),
       positionCategory: categorizePosition(b.positionLabel?.value),
       sitelinks: parseInt(b.sitelinks?.value ?? "0", 10),
     });

@@ -21,7 +21,7 @@ export function buildPlayerLookupQuery(names: string[]): string {
     })
     .join(' ');
 
-  return `SELECT ?player ?playerLabel ?birthDate ?nationalityCode ?positionLabel ?sitelinks WHERE {
+  return `SELECT ?player ?playerLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
   VALUES ?searchName { ${valuesEntries} }
 
   ?player rdfs:label ?searchName .
@@ -29,8 +29,9 @@ export function buildPlayerLookupQuery(names: string[]): string {
 
   OPTIONAL { ?player wdt:P569 ?birthDate . }
   OPTIONAL {
-    ?player wdt:P27 ?nationality .
-    ?nationality wdt:P298 ?nationalityCode .
+    { ?player wdt:P1532 ?nationality }
+    UNION
+    { ?player wdt:P27 ?nationality . FILTER NOT EXISTS { ?player wdt:P1532 [] } }
   }
   OPTIONAL { ?player wdt:P413 ?position . }
 
@@ -86,7 +87,7 @@ export function buildBatchPlayerLookupQuery(
     })
     .join(' ');
 
-  return `SELECT ?player ?playerLabel ?birthDate ?nationalityCode ?positionLabel ?sitelinks WHERE {
+  return `SELECT ?player ?playerLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
   VALUES ?searchName { ${valuesEntries} }
 
   ?player rdfs:label ?searchName .
@@ -94,8 +95,9 @@ export function buildBatchPlayerLookupQuery(
 
   OPTIONAL { ?player wdt:P569 ?birthDate . }
   OPTIONAL {
-    ?player wdt:P27 ?nationality .
-    ?nationality wdt:P298 ?nationalityCode .
+    { ?player wdt:P1532 ?nationality }
+    UNION
+    { ?player wdt:P27 ?nationality . FILTER NOT EXISTS { ?player wdt:P1532 [] } }
   }
   OPTIONAL { ?player wdt:P413 ?position . }
 

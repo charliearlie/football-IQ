@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 9;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -227,6 +227,59 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
       PRAGMA user_version = 7;
     `);
     console.log('[Database] Migration v7 complete');
+  }
+
+  // Migration v8: Seed Elite Index from bundled JSON asset
+  // Pre-populates player_search_cache with ~4,900 elite players for instant autocomplete.
+  // Uses _metadata table to track version for future delta syncs.
+  if (currentVersion < 8) {
+    console.log('[Database] Running migration v8: Seed Elite Index');
+
+    // Create metadata table for version tracking
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS _metadata (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    // Only seed if not already seeded (idempotency guard for partial migration recovery)
+    const seeded = await database.getFirstAsync<{ value: string }>(
+      "SELECT value FROM _metadata WHERE key = 'elite_index_version'"
+    );
+
+    if (!seeded) {
+      const eliteIndex = require('../../assets/data/elite-index.json');
+      await seedEliteIndex(database, eliteIndex.players);
+
+      await database.runAsync(
+        "INSERT INTO _metadata (key, value) VALUES ('elite_index_version', $version)",
+        { $version: String(eliteIndex.version) }
+      );
+      console.log(`[Database] Seeded ${eliteIndex.players.length} elite players`);
+    }
+
+    await database.execAsync('PRAGMA user_version = 8');
+    console.log('[Database] Migration v8 complete');
+  }
+
+  // Migration v9: Re-seed Elite Index with corrected nationality codes
+  // Fixes 3-letter ISO codes → 2-letter, and GB home nation subdivision codes (GB-ENG, GB-SCT, etc.)
+  if (currentVersion < 9) {
+    console.log('[Database] Running migration v9: Re-seed Elite Index (nationality fix)');
+
+    const eliteIndex = require('../../assets/data/elite-index.json');
+    await seedEliteIndex(database, eliteIndex.players);
+
+    await database.runAsync(
+      "INSERT OR REPLACE INTO _metadata (key, value, updated_at) VALUES ('elite_index_version', $version, datetime('now'))",
+      { $version: String(eliteIndex.version) }
+    );
+    console.log(`[Database] Re-seeded ${eliteIndex.players.length} elite players with corrected nationalities`);
+
+    await database.execAsync('PRAGMA user_version = 9');
+    console.log('[Database] Migration v9 complete');
   }
 }
 
@@ -1229,6 +1282,188 @@ function parsePlayer(row: LocalPlayer): ParsedPlayer {
   };
 }
 
+// ============ ELITE INDEX OPERATIONS ============
+
+/** Row shape returned by searchPlayerCache */
+export interface CachedPlayer {
+  id: string;
+  name: string;
+  scout_rank: number;
+  birth_year: number | null;
+  position_category: string | null;
+  nationality_code: string | null;
+}
+
+/**
+ * Search player_search_cache by name.
+ * Returns players sorted by scout_rank (popularity).
+ * Used by HybridSearchEngine for local-first search.
+ *
+ * @param query - Search query (minimum 3 characters)
+ * @param limit - Maximum results (default: 10)
+ */
+export async function searchPlayerCache(
+  query: string,
+  limit: number = 10
+): Promise<CachedPlayer[]> {
+  if (!query || query.length < 3) return [];
+
+  const database = getDatabase();
+  const normalizedQuery = query
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+  return database.getAllAsync<CachedPlayer>(
+    `SELECT id, name, scout_rank, birth_year, position_category, nationality_code
+     FROM player_search_cache
+     WHERE search_name LIKE $pattern
+     ORDER BY scout_rank DESC, name ASC
+     LIMIT $limit`,
+    {
+      $pattern: `%${normalizedQuery}%`,
+      $limit: limit * 2, // Fetch extra for better ranking after client-side sort
+    }
+  );
+}
+
+/**
+ * Get elite index version from _metadata.
+ * Used by SyncService to check for updates.
+ *
+ * @returns Current local elite index version, or 0 if not seeded
+ */
+export async function getEliteIndexVersion(): Promise<number> {
+  try {
+    const database = getDatabase();
+    const result = await database.getFirstAsync<{ value: string }>(
+      "SELECT value FROM _metadata WHERE key = 'elite_index_version'"
+    );
+    return result ? parseInt(result.value, 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Update the local elite index version in _metadata.
+ * Called by SyncService after a successful delta sync.
+ */
+export async function setEliteIndexVersion(version: number): Promise<void> {
+  const database = getDatabase();
+  await database.runAsync(
+    `INSERT OR REPLACE INTO _metadata (key, value, updated_at)
+     VALUES ('elite_index_version', $version, datetime('now'))`,
+    { $version: String(version) }
+  );
+}
+
+/** Maximum players per batch for elite index seeding */
+const ELITE_BATCH_SIZE = 50;
+
+/**
+ * Seed elite players into player_search_cache.
+ * Uses batched INSERT for performance (~100 batches for 4,900 players).
+ */
+async function seedEliteIndex(
+  database: SQLite.SQLiteDatabase,
+  players: Array<{
+    id: string;
+    name: string;
+    search_name: string;
+    scout_rank: number;
+    birth_year: number | null;
+    position_category: string | null;
+    nationality_code: string | null;
+  }>
+): Promise<void> {
+  const syncedAt = new Date().toISOString();
+
+  for (let i = 0; i < players.length; i += ELITE_BATCH_SIZE) {
+    const batch = players.slice(i, i + ELITE_BATCH_SIZE);
+
+    const placeholders = batch
+      .map((_, idx) => {
+        const base = idx * 8;
+        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
+      })
+      .join(', ');
+
+    const params: Record<string, string | number | null> = {};
+    batch.forEach((player, idx) => {
+      const base = idx * 8;
+      params[`$${base + 1}`] = player.id;
+      params[`$${base + 2}`] = player.name;
+      params[`$${base + 3}`] = player.search_name;
+      params[`$${base + 4}`] = player.scout_rank;
+      params[`$${base + 5}`] = player.birth_year;
+      params[`$${base + 6}`] = player.position_category;
+      params[`$${base + 7}`] = player.nationality_code;
+      params[`$${base + 8}`] = syncedAt;
+    });
+
+    await database.runAsync(
+      `INSERT OR REPLACE INTO player_search_cache
+       (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
+       VALUES ${placeholders}`,
+      params
+    );
+  }
+}
+
+/**
+ * Batch upsert players into player_search_cache.
+ * Used by SyncService for delta updates.
+ */
+export async function upsertPlayerCache(
+  players: Array<{
+    id: string;
+    name: string;
+    search_name: string;
+    scout_rank: number;
+    birth_year: number | null;
+    position_category: string | null;
+    nationality_code: string | null;
+  }>
+): Promise<void> {
+  if (players.length === 0) return;
+
+  const database = getDatabase();
+  const syncedAt = new Date().toISOString();
+
+  for (let i = 0; i < players.length; i += ELITE_BATCH_SIZE) {
+    const batch = players.slice(i, i + ELITE_BATCH_SIZE);
+
+    const placeholders = batch
+      .map((_, idx) => {
+        const base = idx * 8;
+        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
+      })
+      .join(', ');
+
+    const params: Record<string, string | number | null> = {};
+    batch.forEach((player, idx) => {
+      const base = idx * 8;
+      params[`$${base + 1}`] = player.id;
+      params[`$${base + 2}`] = player.name;
+      params[`$${base + 3}`] = player.search_name;
+      params[`$${base + 4}`] = player.scout_rank;
+      params[`$${base + 5}`] = player.birth_year;
+      params[`$${base + 6}`] = player.position_category;
+      params[`$${base + 7}`] = player.nationality_code;
+      params[`$${base + 8}`] = syncedAt;
+    });
+
+    await database.runAsync(
+      `INSERT OR REPLACE INTO player_search_cache
+       (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
+       VALUES ${placeholders}`,
+      params
+    );
+  }
+}
+
 // ============ UTILITY FUNCTIONS ============
 
 /**
@@ -1301,6 +1536,7 @@ export async function clearAllLocalData(): Promise<void> {
     DELETE FROM puzzle_catalog;
     DELETE FROM unlocked_puzzles;
     DELETE FROM player_database;
+    DELETE FROM player_search_cache;
     DELETE FROM sync_queue;
   `);
 }

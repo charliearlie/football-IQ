@@ -319,6 +319,23 @@ const NATION_TO_ISO: Record<string, string> = {
   yemen: 'YE',
   zambia: 'ZM',
   zimbabwe: 'ZW',
+  // Historical / alternative names from Wikidata
+  'soviet union': 'RU',
+  czechoslovakia: 'CZ',
+  yugoslavia: 'RS',
+  'federal republic of yugoslavia': 'RS',
+  'socialist federal republic of yugoslavia': 'RS',
+  'west germany': 'DE',
+  rhodesia: 'ZW',
+  'zimbabwe rhodesia': 'ZW',
+  'french guiana': 'GF',
+  'kingdom of the netherlands': 'NL',
+  'kingdom of denmark': 'DK',
+  'netherlands antilles': 'NL',
+  "people's republic of china": 'CN',
+  'the gambia': 'GM',
+  'commonwealth of independent states': 'RU',
+  'united kingdom of great britain and ireland': 'GB',
 };
 
 /**
@@ -375,7 +392,7 @@ function extractQID(uri: string): string {
 /**
  * Parse SPARQL player lookup response into WikidataPlayerData array.
  *
- * Expected bindings: player, playerLabel, birthDate?, nationalityCode?,
+ * Expected bindings: player, playerLabel, birthDate?, nationalityLabel?,
  * positionLabel?, sitelinks
  */
 export function parseSPARQLPlayerResults(
@@ -392,7 +409,7 @@ export function parseSPARQLPlayerResults(
         birth_year: binding.birthDate
           ? extractBirthYear(binding.birthDate.value)
           : null,
-        nationality_code: binding.nationalityCode?.value ?? null,
+        nationality_code: mapNationToISO(binding.nationalityLabel?.value ?? '') ?? null,
         position_category: binding.positionLabel
           ? categorizeWikidataPosition(binding.positionLabel.value)
           : null,

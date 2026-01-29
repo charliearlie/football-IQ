@@ -30,7 +30,7 @@ describe('buildPlayerLookupQuery', () => {
 
     // Must include optional fields
     expect(query).toContain('?birthDate');
-    expect(query).toContain('?nationalityCode');
+    expect(query).toContain('?nationalityLabel');
     expect(query).toContain('?positionLabel');
   });
 

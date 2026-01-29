@@ -5,6 +5,7 @@ import {
   FlatList,
   Text,
   Pressable,
+  Keyboard,
   StyleSheet,
   Platform,
 } from 'react-native';
@@ -106,6 +107,7 @@ export function PlayerAutocomplete({
       setIsOpen(false);
       setResults([]);
       selectedRef.current = true;
+      Keyboard.dismiss();
       onSelect(player);
     },
     [onSelect]
@@ -119,6 +121,7 @@ export function PlayerAutocomplete({
       return;
     }
     // User typed without selecting from dropdown — submit as text
+    Keyboard.dismiss();
     onSubmitText(query.trim());
   }, [query, isGameOver, onSubmitText]);
 
@@ -229,20 +232,20 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: '100%',
+    bottom: '100%',
     left: 0,
     right: 0,
-    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
     backgroundColor: colors.stadiumNavy,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.glassBorder,
-    maxHeight: 200,
+    maxHeight: 300,
     zIndex: 1000,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
       },

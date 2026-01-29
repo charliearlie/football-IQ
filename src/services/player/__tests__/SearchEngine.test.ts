@@ -113,8 +113,23 @@ describe('countryCodeToEmoji', () => {
   });
 
   it('handles lowercase codes', () => {
-    expect(countryCodeToEmoji('gb')).toBe('🇬🇧');
     expect(countryCodeToEmoji('de')).toBe('🇩🇪');
+    expect(countryCodeToEmoji('fr')).toBe('🇫🇷');
+  });
+
+  it('returns empty string for plain GB (Union Jack never shown)', () => {
+    expect(countryCodeToEmoji('GB')).toBe('');
+    expect(countryCodeToEmoji('gb')).toBe('');
+  });
+
+  it('converts GB subdivision codes to home nation flags', () => {
+    // England, Scotland, Wales use black flag + tag sequences
+    expect(countryCodeToEmoji('GB-ENG')).not.toBe('');
+    expect(countryCodeToEmoji('GB-SCT')).not.toBe('');
+    expect(countryCodeToEmoji('GB-WLS')).not.toBe('');
+    expect(countryCodeToEmoji('GB-NIR')).not.toBe('');
+    // Should not produce the GB flag
+    expect(countryCodeToEmoji('GB-ENG')).not.toBe('🇬🇧');
   });
 
   it('returns empty string for invalid codes', () => {

@@ -5,6 +5,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initDatabase } from "@/lib/database";
+import { syncEliteIndex } from "@/services/player/SyncService";
 import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -200,7 +201,13 @@ export default function RootLayout() {
   // Initialize local SQLite database
   useEffect(() => {
     initDatabase()
-      .then(() => setDbReady(true))
+      .then(() => {
+        setDbReady(true);
+        // Background: check for Elite Index updates (non-blocking, weekly throttle)
+        syncEliteIndex().catch((err: unknown) =>
+          console.warn("[EliteIndex] Background sync failed:", err)
+        );
+      })
       .catch((error) => {
         console.error("Database initialization failed:", error);
         // Continue in degraded mode - app can still work with network

@@ -255,7 +255,7 @@ describe('parseSPARQLPlayerResults', () => {
             player: { type: 'uri', value: 'http://www.wikidata.org/entity/Q11571' },
             playerLabel: { type: 'literal', value: 'Cristiano Ronaldo' },
             birthDate: { type: 'literal', value: '1985-02-05T00:00:00Z', datatype: 'http://www.w3.org/2001/XMLSchema#dateTime' },
-            nationalityCode: { type: 'literal', value: 'PT' },
+            nationalityLabel: { type: 'literal', value: 'Portugal' },
             positionLabel: { type: 'literal', value: 'association football forward' },
             sitelinks: { type: 'literal', value: '207', datatype: 'http://www.w3.org/2001/XMLSchema#integer' },
           },

@@ -109,28 +109,40 @@ export function levenshteinDistance(a: string, b: string): number {
 }
 
 /**
- * Convert ISO 3166-1 alpha-2 country code to emoji flag.
- * Uses regional indicator symbols (U+1F1E6 to U+1F1FF).
+ * GB subdivision codes → tag sequences for home nation flags.
+ * These use the black flag emoji + tag characters (U+E0067 etc.)
+ * to render 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🏴󠁧󠁢󠁳󠁣󠁴󠁿 🏴󠁧󠁢󠁷󠁬󠁳󠁿.
+ */
+const GB_SUBDIVISION_FLAGS: Record<string, string> = {
+  'GB-ENG': '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F', // 🏴󠁧󠁢󠁥󠁮󠁧󠁿
+  'GB-SCT': '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74\uDB40\uDC7F', // 🏴󠁧󠁢󠁳󠁣󠁴󠁿
+  'GB-WLS': '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73\uDB40\uDC7F', // 🏴󠁧󠁢󠁷󠁬󠁳󠁿
+  'GB-NIR': '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC6E\uDB40\uDC69\uDB40\uDC72\uDB40\uDC7F', // placeholder — no official emoji, uses custom tag sequence
+};
+
+/**
+ * Convert country code to emoji flag.
  *
- * Each letter A-Z maps to regional indicator symbol letters.
- * Two regional indicator symbols combine to form a flag emoji.
+ * Supports:
+ * - ISO 3166-1 alpha-2 codes (e.g., "BR" → 🇧🇷)
+ * - GB subdivision codes (e.g., "GB-ENG" → 🏴󠁧󠁢󠁥󠁮󠁧󠁿)
  *
- * @param code - ISO 3166-1 alpha-2 code (e.g., "BR", "FR", "AR")
- * @returns Emoji flag string (e.g., "🇧🇷", "🇫🇷", "🇦🇷")
- * @returns Empty string if code is invalid (not exactly 2 characters)
- *
- * @example
- * countryCodeToEmoji("BR") // "🇧🇷"
- * countryCodeToEmoji("FR") // "🇫🇷"
- * countryCodeToEmoji("gb") // "🇬🇧" (lowercase works)
- * countryCodeToEmoji("ABC") // "" (invalid)
+ * @param code - Country code (alpha-2 or GB-ENG/GB-SCT/GB-WLS/GB-NIR)
+ * @returns Emoji flag string, or empty string if invalid
  */
 export function countryCodeToEmoji(code: string): string {
-  if (!code || code.length !== 2) {
-    return '';
-  }
+  if (!code) return '';
 
+  // Check GB subdivision codes first
   const upperCode = code.toUpperCase();
+  const subdivisionFlag = GB_SUBDIVISION_FLAGS[upperCode];
+  if (subdivisionFlag) return subdivisionFlag;
+
+  // Never show Union Jack — only home nation flags are acceptable
+  if (upperCode === 'GB') return '';
+
+  // Standard 2-letter ISO code
+  if (code.length !== 2) return '';
 
   // Regional Indicator Symbol Letter A is U+1F1E6
   // ASCII 'A' is 65, so offset is 0x1F1E6 - 65 = 127397

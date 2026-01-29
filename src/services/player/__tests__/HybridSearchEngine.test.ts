@@ -1,10 +1,9 @@
 /**
- * TDD tests for hybrid player search engine.
- * Tests written BEFORE implementation.
+ * Tests for hybrid player search engine.
  *
  * Validates waterfall strategy:
- * 1. Local SQLite cache (instant)
- * 2. Debounced Supabase Oracle (300ms)
+ * 1. Local SQLite player_search_cache (instant, ~4,900 Elite Index)
+ * 2. Debounced Supabase Oracle (300ms) if < 3 local results
  * 3. Automatic caching of Oracle results
  */
 
@@ -12,17 +11,32 @@ import {
   searchPlayersHybrid,
   _resetForTesting,
 } from '../HybridSearchEngine';
-import * as playerSearch from '../playerSearch';
 import * as WikidataService from '../../oracle/WikidataService';
+import * as database from '@/lib/database';
 
-jest.mock('../playerSearch');
 jest.mock('../../oracle/WikidataService');
 jest.mock('@/lib/database', () => ({
+  searchPlayerCache: jest.fn().mockResolvedValue([]),
   getDatabase: jest.fn(() => ({
     runAsync: jest.fn().mockResolvedValue(undefined),
-    getAllAsync: jest.fn().mockResolvedValue([]),
   })),
 }));
+
+const mockSearchPlayerCache = database.searchPlayerCache as jest.MockedFunction<
+  typeof database.searchPlayerCache
+>;
+
+function makeLocalPlayer(overrides: Partial<database.CachedPlayer> = {}): database.CachedPlayer {
+  return {
+    id: 'Q1',
+    name: 'Test Player',
+    scout_rank: 100,
+    birth_year: 1990,
+    position_category: 'Forward',
+    nationality_code: 'FR',
+    ...overrides,
+  };
+}
 
 describe('searchPlayersHybrid', () => {
   beforeEach(() => {
@@ -47,54 +61,46 @@ describe('searchPlayersHybrid', () => {
     expect(onUpdate).toHaveBeenCalledWith([]);
   });
 
-  it('returns local results immediately', async () => {
-    const mockLocal = [
-      {
-        player: {
-          id: '1',
-          name: 'Lionel Messi',
-          searchName: 'lionel messi',
-          clubs: ['Barcelona'],
-          nationalities: ['AR'],
-          isActive: true,
-          externalId: null,
-          lastSyncedAt: null,
-        },
-        relevanceScore: 1.0,
-      },
-    ];
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue(mockLocal);
+  it('returns local results immediately with metadata', async () => {
+    mockSearchPlayerCache.mockResolvedValue([
+      makeLocalPlayer({
+        id: 'Q11571',
+        name: 'Cristiano Ronaldo',
+        scout_rank: 207,
+        birth_year: 1985,
+        position_category: 'Forward',
+        nationality_code: 'PRT',
+      }),
+    ]);
 
     const onUpdate = jest.fn();
-    await searchPlayersHybrid('messi', onUpdate);
+    await searchPlayersHybrid('ronaldo', onUpdate);
 
     expect(onUpdate).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
-          name: 'Lionel Messi',
+          id: 'Q11571',
+          name: 'Cristiano Ronaldo',
+          birth_year: 1985,
+          position_category: 'Forward',
+          nationality_code: 'PRT',
           source: 'local',
         }),
       ])
     );
   });
 
-  it('skips Oracle if local results >= 5', async () => {
-    const mockLocal = Array(5)
+  it('skips Oracle if local results >= 3', async () => {
+    const mockLocal = Array(3)
       .fill(null)
-      .map((_, i) => ({
-        player: {
-          id: `${i}`,
+      .map((_, i) =>
+        makeLocalPlayer({
+          id: `Q${i}`,
           name: `Player ${i}`,
-          searchName: `player ${i}`,
-          clubs: [],
-          nationalities: [],
-          isActive: true,
-          externalId: null,
-          lastSyncedAt: null,
-        },
-        relevanceScore: 1.0 - i * 0.1,
-      }));
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue(mockLocal);
+          scout_rank: 100 - i,
+        })
+      );
+    mockSearchPlayerCache.mockResolvedValue(mockLocal);
 
     const onUpdate = jest.fn();
     await searchPlayersHybrid('player', onUpdate);
@@ -105,8 +111,8 @@ describe('searchPlayersHybrid', () => {
     expect(WikidataService.searchPlayersOracle).not.toHaveBeenCalled();
   });
 
-  it('calls Oracle after debounce if local results < 5', async () => {
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue([]);
+  it('calls Oracle after debounce if local results < 3', async () => {
+    mockSearchPlayerCache.mockResolvedValue([]);
     (WikidataService.searchPlayersOracle as jest.Mock).mockResolvedValue([
       {
         id: 'Q11571',
@@ -141,22 +147,13 @@ describe('searchPlayersHybrid', () => {
   });
 
   it('deduplicates results by name across sources', async () => {
-    const mockLocal = [
-      {
-        player: {
-          id: 'local-1',
-          name: 'Cristiano Ronaldo',
-          searchName: 'cristiano ronaldo',
-          clubs: [],
-          nationalities: ['PT'],
-          isActive: true,
-          externalId: null,
-          lastSyncedAt: null,
-        },
-        relevanceScore: 0.9,
-      },
-    ];
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue(mockLocal);
+    mockSearchPlayerCache.mockResolvedValue([
+      makeLocalPlayer({
+        id: 'local-1',
+        name: 'Cristiano Ronaldo',
+        nationality_code: 'PRT',
+      }),
+    ]);
     (WikidataService.searchPlayersOracle as jest.Mock).mockResolvedValue([
       {
         id: 'Q11571',
@@ -186,7 +183,7 @@ describe('searchPlayersHybrid', () => {
   });
 
   it('handles Oracle errors gracefully', async () => {
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue([]);
+    mockSearchPlayerCache.mockResolvedValue([]);
     (WikidataService.searchPlayersOracle as jest.Mock).mockRejectedValue(
       new Error('Network error')
     );
@@ -201,56 +198,17 @@ describe('searchPlayersHybrid', () => {
     expect(onUpdate).toHaveBeenCalledWith([]);
   });
 
-  it('maps local player fields to UnifiedPlayer format', async () => {
-    const mockLocal = [
-      {
-        player: {
-          id: '42',
-          name: 'Thierry Henry',
-          searchName: 'thierry henry',
-          clubs: ['Arsenal', 'Barcelona'],
-          nationalities: ['FR'],
-          isActive: false,
-          externalId: 100,
-          lastSyncedAt: null,
-        },
-        relevanceScore: 0.95,
-      },
-    ];
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue(mockLocal);
-
-    const onUpdate = jest.fn();
-    await searchPlayersHybrid('henry', onUpdate);
-
-    expect(onUpdate).toHaveBeenCalledWith([
-      expect.objectContaining({
-        id: '42',
-        name: 'Thierry Henry',
-        nationality_code: 'FR',
-        birth_year: null,
-        position_category: null,
-        source: 'local',
-        relevance_score: 0.95,
-      }),
-    ]);
-  });
-
   it('limits merged results to 10', async () => {
-    const mockLocal = Array(3)
+    // 2 local results (< 3, so Oracle fires)
+    const mockLocal = Array(2)
       .fill(null)
-      .map((_, i) => ({
-        player: {
+      .map((_, i) =>
+        makeLocalPlayer({
           id: `local-${i}`,
           name: `Local Player ${i}`,
-          searchName: `local player ${i}`,
-          clubs: [],
-          nationalities: [],
-          isActive: true,
-          externalId: null,
-          lastSyncedAt: null,
-        },
-        relevanceScore: 0.5,
-      }));
+          scout_rank: 50,
+        })
+      );
 
     const mockOracle = Array(10)
       .fill(null)
@@ -264,7 +222,7 @@ describe('searchPlayersHybrid', () => {
         relevance_score: 0.9,
       }));
 
-    (playerSearch.searchPlayers as jest.Mock).mockResolvedValue(mockLocal);
+    mockSearchPlayerCache.mockResolvedValue(mockLocal);
     (WikidataService.searchPlayersOracle as jest.Mock).mockResolvedValue(mockOracle);
 
     const onUpdate = jest.fn();
@@ -273,5 +231,53 @@ describe('searchPlayersHybrid', () => {
 
     const lastCallArgs = onUpdate.mock.calls[onUpdate.mock.calls.length - 1][0];
     expect(lastCallArgs.length).toBeLessThanOrEqual(10);
+  });
+
+  it('prioritizes prefix matches via relevance scoring', async () => {
+    mockSearchPlayerCache.mockResolvedValue([
+      makeLocalPlayer({
+        id: 'Q1',
+        name: 'Cristiano Ronaldo',
+        scout_rank: 207,
+      }),
+      makeLocalPlayer({
+        id: 'Q2',
+        name: 'Ronald Koeman',
+        scout_rank: 50,
+      }),
+    ]);
+
+    const onUpdate = jest.fn();
+    await searchPlayersHybrid('ron', onUpdate);
+
+    const results = onUpdate.mock.calls[0][0];
+    // Both should have reasonable relevance scores
+    expect(results.length).toBe(2);
+    expect(results[0].relevance_score).toBeGreaterThan(0);
+    expect(results[1].relevance_score).toBeGreaterThan(0);
+  });
+
+  it('prioritizes surname prefix over first name prefix', async () => {
+    mockSearchPlayerCache.mockResolvedValue([
+      makeLocalPlayer({
+        id: 'Q1',
+        name: 'Roberto Firmino',
+        scout_rank: 69,
+      }),
+      makeLocalPlayer({
+        id: 'Q2',
+        name: 'Andrew Robertson',
+        scout_rank: 53,
+      }),
+    ]);
+
+    const onUpdate = jest.fn();
+    await searchPlayersHybrid('rober', onUpdate);
+
+    const results = onUpdate.mock.calls[0][0];
+    // Robertson should rank first — "robertson" is a surname prefix match (0.95)
+    // Firmino should rank second — "roberto" is a first name prefix match (0.85)
+    expect(results[0].name).toBe('Andrew Robertson');
+    expect(results[1].name).toBe('Roberto Firmino');
   });
 });

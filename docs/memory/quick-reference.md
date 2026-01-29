@@ -17,16 +17,29 @@ agent_runs       - AI logs (RLS: blocked, admin-only)
 match_data       - Match data (RLS: blocked, admin-only)
 ```
 
-## Oracle Search (Wikidata Integration)
+## Elite Index Search (Wikidata Integration)
+
+### Local-First Hybrid Search
 ```typescript
-// Hybrid search: local SQLite → debounced Supabase Oracle
+// Hybrid search: local Elite Index (~4,900 players) → debounced Supabase Oracle
 import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
-searchPlayersHybrid('ronaldo', (results) => { /* UnifiedPlayer[] */ });
+searchPlayersHybrid('ronaldo', (results) => {
+  // UnifiedPlayer[] — instant local results, Oracle fallback if <3 matches
+});
 
 // Direct Oracle RPC (used internally by HybridSearchEngine)
 import { searchPlayersOracle, validatePlayerClub } from '@/services/oracle';
 const players = await searchPlayersOracle('messi', 10);
 const valid = await validatePlayerClub('Q11571', 'Q8682');
+```
+
+### Elite Index Sync
+```typescript
+import { syncEliteIndex } from '@/services/player/SyncService';
+
+// Background sync (throttled to weekly, non-blocking)
+const result = await syncEliteIndex();
+// { success: true, updatedCount: 42, serverVersion: 2 }
 ```
 
 ### Key Types
@@ -41,6 +54,11 @@ interface UnifiedPlayer {
   relevance_score: number;
 }
 ```
+
+### Data Sources
+- **Elite Index**: ~4,900 players bundled as `assets/data/elite-index.json`
+- **Oracle Cache**: Auto-populated from Supabase RPC when Oracle results selected
+- **Sync**: Weekly check, delta download via `get_elite_index_delta` RPC
 
 ### Admin: Player Scout (`/player-scout`)
 - Batch-resolves player names via Wikidata SPARQL
