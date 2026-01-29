@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { PlayerAutocomplete } from '../components/PlayerAutocomplete';
+import { PlayerAutocomplete } from '@/components/PlayerAutocomplete';
 import * as HybridSearchEngine from '@/services/player/HybridSearchEngine';
 import { UnifiedPlayer } from '@/services/oracle/types';
 

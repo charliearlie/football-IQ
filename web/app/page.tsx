@@ -3,6 +3,9 @@ import { Hero, PlayableCareerPath, WeeklyFixtures, Footer } from "@/components/l
 import { FALLBACK_CAREER_PUZZLE } from "@/lib/constants";
 import type { CareerPathContent } from "@/types/careerPath";
 
+/** Revalidate every hour so the daily puzzle updates without a redeploy */
+export const revalidate = 3600;
+
 export default async function LandingPage() {
   // Fetch today's career_path puzzle using admin client (bypasses RLS)
   const supabase = await createAdminClient();

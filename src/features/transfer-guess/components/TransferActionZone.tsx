@@ -1,30 +1,14 @@
-import { useEffect, useRef } from 'react';
-import { View, TextInput, Text, StyleSheet, Platform, Pressable } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-  withSpring,
-} from 'react-native-reanimated';
+import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { Lightbulb } from 'lucide-react-native';
-import { ElevatedButton, ErrorFlashOverlay } from '@/components';
-import { colors, spacing, fonts, borderRadius, textStyles } from '@/theme';
-
-/** Spring configuration for shake recovery */
-const SHAKE_SPRING = {
-  damping: 8,
-  stiffness: 400,
-  mass: 0.3,
-};
+import { PlayerAutocomplete } from '@/components';
+import { colors, spacing, fonts, textStyles } from '@/theme';
+import { UnifiedPlayer } from '@/services/oracle/types';
 
 export interface TransferActionZoneProps {
-  /** Current guess text */
-  currentGuess: string;
-  /** Handler for guess text changes */
-  onGuessChange: (text: string) => void;
-  /** Handler for submitting a guess */
-  onSubmit: () => void;
+  /** Called when user selects a player from autocomplete dropdown */
+  onPlayerSelect: (player: UnifiedPlayer) => void;
+  /** Called when user submits typed text without selecting */
+  onTextSubmit: (text: string) => void;
   /** Handler for revealing a hint */
   onRevealHint: () => void;
   /** Handler for giving up */
@@ -37,8 +21,6 @@ export interface TransferActionZoneProps {
   shouldShake: boolean;
   /** Whether the game is over */
   isGameOver: boolean;
-  /** Number of incorrect guesses made */
-  incorrectGuesses: number;
   /** Test ID for testing */
   testID?: string;
 }
@@ -48,51 +30,21 @@ export interface TransferActionZoneProps {
  *
  * Layout:
  * - Guesses remaining indicator (caption)
- * - Input field + Submit button (inline row)
+ * - PlayerAutocomplete (inline input + submit button with dropdown)
  * - "Reveal Hint" text link with lightbulb icon (amber, subtle)
  * - "Give Up" button (red, shown when all hints revealed)
  */
 export function TransferActionZone({
-  currentGuess,
-  onGuessChange,
-  onSubmit,
+  onPlayerSelect,
+  onTextSubmit,
   onRevealHint,
   onGiveUp,
   canRevealHint,
   guessesRemaining,
   shouldShake,
   isGameOver,
-  incorrectGuesses,
   testID,
 }: TransferActionZoneProps) {
-  const inputRef = useRef<TextInput>(null);
-  const shakeX = useSharedValue(0);
-
-  useEffect(() => {
-    if (shouldShake) {
-      // Blur input to dismiss keyboard so player can see hints
-      inputRef.current?.blur();
-
-      shakeX.value = withSequence(
-        withTiming(-10, { duration: 50 }),
-        withTiming(10, { duration: 50 }),
-        withTiming(-10, { duration: 50 }),
-        withTiming(10, { duration: 50 }),
-        withSpring(0, SHAKE_SPRING)
-      );
-    }
-  }, [shouldShake, shakeX]);
-
-  const shakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shakeX.value }],
-  }));
-
-  const handleSubmit = () => {
-    if (currentGuess.trim() && !isGameOver) {
-      onSubmit();
-    }
-  };
-
   // Show Give Up button when all hints are revealed (replaces hint link)
   const showGiveUp = !canRevealHint && !isGameOver;
 
@@ -105,37 +57,14 @@ export function TransferActionZone({
         </Text>
       </View>
 
-      {/* Input + Submit inline row */}
-      <View style={styles.inputRow}>
-        <Animated.View style={[styles.inputContainer, shakeStyle]}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            value={currentGuess}
-            onChangeText={onGuessChange}
-            placeholder="Enter player name..."
-            placeholderTextColor={colors.textSecondary}
-            editable={!isGameOver}
-            autoCapitalize="words"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={handleSubmit}
-            testID={`${testID}-input`}
-          />
-          <ErrorFlashOverlay
-            active={shouldShake}
-            style={{ borderRadius: borderRadius.xl }}
-            testID={`${testID}-error-flash`}
-          />
-        </Animated.View>
-        <ElevatedButton
-          title="Submit"
-          onPress={handleSubmit}
-          disabled={isGameOver || !currentGuess.trim()}
-          size="medium"
-          testID={`${testID}-submit`}
-        />
-      </View>
+      {/* Autocomplete input (handles shake + error flash internally) */}
+      <PlayerAutocomplete
+        onSelect={onPlayerSelect}
+        onSubmitText={onTextSubmit}
+        shouldShake={shouldShake}
+        isGameOver={isGameOver}
+        testID={testID ? `${testID}-autocomplete` : undefined}
+      />
 
       {/* Reveal Hint - subtle text link (costly action) */}
       {canRevealHint && !isGameOver && (
@@ -186,29 +115,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  inputContainer: {
-    flex: 1,
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    borderColor: colors.glassBorder,
-    backgroundColor: colors.glassBackground,
-    overflow: 'hidden',
-    justifyContent: 'center',
-  },
-  input: {
-    fontFamily: fonts.headline,
-    fontSize: 18,
-    color: colors.floodlightWhite,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    letterSpacing: 0.5,
-    textAlignVertical: 'center',
   },
   hintLink: {
     flexDirection: 'row',

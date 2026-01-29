@@ -28,6 +28,12 @@ export {
   type PlayerResultItemProps,
 } from './PlayerSearchOverlay';
 
+// Player Autocomplete
+export {
+  PlayerAutocomplete,
+  type PlayerAutocompleteProps,
+} from './PlayerAutocomplete';
+
 // Feedback components
 export {
   ErrorFlashOverlay,
