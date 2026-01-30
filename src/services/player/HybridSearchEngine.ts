@@ -164,7 +164,8 @@ export async function searchPlayersHybrid(
       await cacheOracleResults(oracleResults);
     } catch (error) {
       console.error('[HybridSearchEngine] Oracle search failed:', error);
-      // Don't re-call onUpdate — keep showing local results
+      // Re-invoke callback so consumers can finalize loading state
+      onUpdate(topLocal);
     }
   }, DEBOUNCE_MS);
 }

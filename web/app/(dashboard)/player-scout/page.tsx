@@ -117,7 +117,12 @@ export default function PlayerScoutPage() {
       // Fetch and save career
       const career = await fetchPlayerCareer(player.qid);
       if (career.length > 0) {
-        await saveCareerToSupabase(player.qid, career);
+        const careerResult = await saveCareerToSupabase(player.qid, career);
+        if (!careerResult.success) {
+          setWikiStatus("error");
+          setWikiMessage(`Resolved ${player.name} (${player.qid}) but career save failed: ${careerResult.error}`);
+          return;
+        }
       }
 
       setWikiStatus("success");
@@ -177,6 +182,7 @@ export default function PlayerScoutPage() {
     let totalResolved = 0;
     let totalFailed = 0;
     const allResolved: ResolvedPlayer[] = [];
+    const allFailed: string[] = [];
 
     for (let i = 0; i < totalBatches; i++) {
       if (abortRef.current) {
@@ -193,6 +199,7 @@ export default function PlayerScoutPage() {
         totalResolved += resolved.length;
         totalFailed += failed.length;
         allResolved.push(...resolved);
+        allFailed.push(...failed);
 
         setProgress({
           current: (i + 1) * BATCH_SIZE,
@@ -228,9 +235,6 @@ export default function PlayerScoutPage() {
     }
 
     // Phase 1.5: Fuzzy retry for failed names via Wikidata search API
-    const allFailed = names.filter(
-      (n) => !allResolved.some((r) => r.name.toLowerCase() === n.toLowerCase())
-    );
     if (allFailed.length > 0 && !abortRef.current) {
       addLog("info", `Phase 1.5: Fuzzy retry for ${allFailed.length} failed names...`);
       let fuzzyResolved = 0;

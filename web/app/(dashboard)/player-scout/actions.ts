@@ -48,7 +48,7 @@ export interface BatchResult {
 
 function buildBatchLookupQuery(names: string[]): string {
   const values = names
-    .map((n) => `"${n.replace(/"/g, '\\"')}"@en`)
+    .map((n) => `"${n.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"@en`)
     .join(" ");
 
   // Search both rdfs:label (primary name) and skos:altLabel (aliases/nicknames)

@@ -459,7 +459,7 @@ export async function searchPlayersForForm(
     const { data, error } = await supabase
       .from("players")
       .select("id, name, birth_year, scout_rank")
-      .ilike("search_name", `%${normalized}%`)
+      .ilike("search_name", `%${normalized.replace(/([%_\\])/g, "\\$1")}%`)
       .order("scout_rank", { ascending: false })
       .limit(10);
 

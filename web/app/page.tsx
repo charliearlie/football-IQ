@@ -73,7 +73,7 @@ export default async function LandingPage() {
       </div>
 
       {/* Playable Demo Section - Rephrased to be "Taste" */}
-      <section id="demo" className="py-24 bg-stadium-navy relative border-t border-white/5">
+      <section className="py-24 bg-stadium-navy relative border-t border-white/5">
         <div className="container mx-auto px-4 text-center mb-12">
             <span className="text-pitch-green font-bebas text-xl tracking-wider mb-2 block">NO DOWNLOAD REQUIRED</span>
             <h2 className="font-bebas text-5xl text-floodlight">TRY ONE RIGHT NOW</h2>
