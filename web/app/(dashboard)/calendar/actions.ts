@@ -5,10 +5,9 @@ import { createAdminClient } from "@/lib/supabase/server";
 import type { GameMode, PuzzleStatus } from "@/lib/constants";
 import { validateContent } from "@/lib/schemas";
 import type { TablesInsert, TablesUpdate, Json, DailyPuzzle } from "@/types/supabase";
-import type { CareerScoutResult, OracleResult, OracleSuggestion, ContentMetadata, OracleTheme } from "@/types/ai";
-import type { ContentReport, ContentReportInsert, ReportType, ReportStatus } from "@/types/supabase";
+import type { CareerScoutResult, OracleSuggestion, OracleTheme } from "@/types/ai";
+import type { ContentReport, ContentReportInsert, ReportType } from "@/types/supabase";
 import {
-  getRequirementsForDate,
   getMissingPuzzlesForWeek,
   isPremiumOnDate,
 } from "@/lib/scheduler";

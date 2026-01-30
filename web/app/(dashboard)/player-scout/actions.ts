@@ -3,8 +3,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 
 const WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql";
-const BATCH_SIZE = 50;
-const DELAY_MS = 1500; // Wikidata rate limit: ~1 req/s, be conservative
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -521,20 +519,33 @@ export async function getAllPlayerQids(): Promise<{ qid: string; name: string }[
 
 /**
  * Get player QIDs that have NO career entries (no rows in player_appearances).
+ * Uses paginated fetch of DISTINCT player_ids to build the exclusion set,
+ * since Supabase caps unpaginated queries at 1,000 rows.
  */
 export async function getPlayersWithoutCareers(): Promise<{ qid: string; name: string }[]> {
   const supabase = await createAdminClient();
+
+  // Paginate through player_appearances to get ALL player_ids that have careers
+  const hasCareer = new Set<string>();
+  const APP_PAGE = 1000;
+  let appOffset = 0;
+  while (true) {
+    const { data } = await supabase
+      .from("player_appearances")
+      .select("player_id")
+      .order("player_id")
+      .range(appOffset, appOffset + APP_PAGE - 1);
+
+    if (!data || data.length === 0) break;
+    for (const r of data) hasCareer.add(r.player_id);
+    if (data.length < APP_PAGE) break;
+    appOffset += APP_PAGE;
+  }
+
+  // Paginate through all players, filtering out those with careers
   const allPlayers: { qid: string; name: string }[] = [];
   const PAGE_SIZE = 1000;
   let offset = 0;
-
-  // Get all player IDs that DO have appearances
-  const { data: withCareers } = await supabase
-    .from("player_appearances")
-    .select("player_id");
-  const hasCareer = new Set((withCareers ?? []).map((r) => r.player_id));
-
-  // Paginate through all players, filtering out those with careers
   while (true) {
     const { data } = await supabase
       .from("players")

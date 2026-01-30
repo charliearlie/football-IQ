@@ -30,7 +30,7 @@ export function GameModeDot({
   hasContent,
   status,
   isBonus,
-  isScheduled,
+
   isExtra,
   hasPendingReport,
   pendingReportCount,

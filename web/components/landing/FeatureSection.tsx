@@ -30,7 +30,7 @@ export function FeatureSection() {
                 ALWAYS <span className="text-pitch-green">UP TO DATE</span>
               </h2>
               <p className="text-slate-300 text-lg leading-relaxed">
-                Our database isn't just a static list. We use advanced <span className="text-white font-semibold">Agentic AI</span> to track careers, transfers, and stats in real-time.
+                Our database isn&apos;t just a static list. We use advanced <span className="text-white font-semibold">Agentic AI</span> to track careers, transfers, and stats in real-time.
               </p>
               <p className="text-slate-300 text-lg leading-relaxed mt-4">
                 Missed a player? Our community can submit suggestions directly in the app, ensuring no cult hero is left behind.

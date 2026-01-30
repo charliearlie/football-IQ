@@ -31,7 +31,7 @@ import {
   type GameMode,
   type PuzzleStatus,
 } from "@/lib/constants";
-import type { DailyPuzzle, ContentReport } from "@/types/supabase";
+import type { DailyPuzzle } from "@/types/supabase";
 import {
   contentSchemaMap,
   getDefaultContent,
@@ -154,7 +154,6 @@ export function PuzzleEditorModal({
     reports,
     pendingCount,
     resolve: resolveReport,
-    isLoading: isLoadingReports,
   } = useReportsForPuzzle(puzzle?.id ?? null);
 
   // Extract metadata from puzzle content

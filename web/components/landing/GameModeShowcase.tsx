@@ -43,7 +43,7 @@ export function GameModeShowcase() {
             DAILY <span className="text-pitch-green">CHALLENGES</span>. ENDLESS <span className="text-pitch-green">TRIVIA</span>.
           </h2>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            We've taken the football quiz formats you know and love, and perfected them for mobile. 
+            We&apos;ve taken the football quiz formats you know and love, and perfected them for mobile.
             Miss a day? You can play the last 7 days from our archive for free.
           </p>
         </div>

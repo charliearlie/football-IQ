@@ -238,7 +238,7 @@ export function QuickViewSheet({
       mandatoryModes: GAME_MODES.filter((mode) => isRequiredOnDate(mode, dateObj)),
       optionalModes: GAME_MODES.filter((mode) => !isRequiredOnDate(mode, dateObj)),
     };
-  }, [day?.date]);
+  }, [day]);
 
   if (!day) return null;
 

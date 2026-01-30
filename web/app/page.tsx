@@ -77,7 +77,7 @@ export default async function LandingPage() {
             <span className="text-pitch-green font-bebas text-xl tracking-wider mb-2 block">NO DOWNLOAD REQUIRED</span>
             <h2 className="font-bebas text-5xl text-floodlight">TRY ONE RIGHT NOW</h2>
             <p className="text-slate-400 mt-4 max-w-xl mx-auto">
-               Here is today's Career Path puzzle. Can you solve it before downloading?
+               Here is today&apos;s Career Path puzzle. Can you solve it before downloading?
             </p>
         </div>
         <PlayableCareerPath

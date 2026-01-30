@@ -10,7 +10,6 @@ import {
   XCircle,
   Users,
   Globe,
-  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,6 @@ import {
   getAllPlayerQids,
   getPlayersWithoutCareers,
   type ResolvedPlayer,
-  type CareerEntry,
 } from "./actions";
 
 const BATCH_SIZE = 50;
@@ -321,7 +319,8 @@ export default function PlayerScoutPage() {
   }, [namesInput, fetchCareers, addLog, loadPlayerCount]);
 
   // ─── Phase 2 Only: Fetch Careers for All Existing Players ─────────────────
-  const runCareersOnly = useCallback(async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _runCareersOnly = useCallback(async () => {
     setStatus("running");
     abortRef.current = false;
     setLogs([]);
