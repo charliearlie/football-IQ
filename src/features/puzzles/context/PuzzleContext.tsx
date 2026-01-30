@@ -16,6 +16,7 @@ import { syncPuzzlesFromSupabase } from '../services/puzzleSyncService';
 import { syncAttemptsToSupabase } from '../services/attemptSyncService';
 import { syncCatalogFromSupabase } from '@/features/archive/services/catalogSyncService';
 import { performLightSync } from '../services/puzzleLightSyncService';
+import { useRehydration } from '@/features/integrity';
 import {
   PuzzleContextValue,
   SyncStatus,
@@ -211,6 +212,16 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     }
     hydrate();
   }, [refreshLocalPuzzles]);
+
+  // Listen for rehydration completion (from fresh install logic)
+  // This ensures the UI updates immediately after data is restored
+  const { status: rehydrationStatus } = useRehydration();
+  useEffect(() => {
+    if (rehydrationStatus === 'complete') {
+      console.log('[PuzzleContext] Rehydration complete, refreshing local puzzles');
+      refreshLocalPuzzles();
+    }
+  }, [rehydrationStatus, refreshLocalPuzzles]);
 
   // Auto-sync when user becomes available (or changes)
   useEffect(() => {

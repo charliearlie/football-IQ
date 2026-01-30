@@ -14,16 +14,9 @@ import {
   FORMATION_POSITIONS,
 } from "../puzzle-defaults";
 import {
-  careerPathContentSchema,
-  transferGuessContentSchema,
-  goalscorerRecallContentSchema,
-  theGridContentSchema,
-  topicalQuizContentSchema,
-  topTensContentSchema,
   startingXIContentSchema,
-  contentSchemaMap,
 } from "../puzzle-schemas";
-import { GAME_MODES, type GameMode } from "@/lib/constants";
+import { GAME_MODES } from "@/lib/constants";
 
 // Mock crypto.randomUUID for consistent test results
 beforeEach(() => {

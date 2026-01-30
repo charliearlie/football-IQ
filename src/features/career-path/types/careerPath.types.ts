@@ -34,6 +34,8 @@ export interface CareerStep {
 export interface CareerPathContent {
   /** The correct player name */
   answer: string;
+  /** Wikidata QID for the correct player (e.g., "Q11571") */
+  answer_qid?: string;
   /** Array of career steps (3-20 items) */
   career_steps: CareerStep[];
 }

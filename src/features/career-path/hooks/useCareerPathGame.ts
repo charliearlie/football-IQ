@@ -6,6 +6,7 @@ import { usePuzzleContext } from '@/features/puzzles';
 import { useAuth } from '@/features/auth';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { LocalAttempt } from '@/types/database';
+import { UnifiedPlayer } from '@/services/oracle/types';
 import {
   CareerPathState,
   CareerPathAction,
@@ -183,6 +184,10 @@ export function useCareerPathGame(
     return puzzleContent?.answer ?? '';
   }, [puzzleContent]);
 
+  const answerQid = useMemo(() => {
+    return puzzleContent?.answer_qid ?? null;
+  }, [puzzleContent]);
+
   const totalSteps = careerSteps.length;
 
   // Derived state for game progression
@@ -291,6 +296,67 @@ export function useCareerPathGame(
     triggerError,
   ]);
 
+  /**
+   * Process a guess result (shared logic for all submit paths).
+   */
+  const processGuessResult = useCallback(
+    (isMatch: boolean, guessLabel: string) => {
+      if (isMatch) {
+        const gameScore = calculateScore(totalSteps, state.revealedCount, true);
+        dispatch({ type: 'CORRECT_GUESS', payload: gameScore });
+        triggerSuccess();
+      } else {
+        const wasLastChance = state.revealedCount >= totalSteps;
+        if (wasLastChance) {
+          const gameScore = calculateScore(totalSteps, state.revealedCount, false);
+          dispatch({ type: 'GAME_LOST', payload: gameScore });
+          triggerError();
+        } else {
+          dispatch({ type: 'INCORRECT_GUESS', payload: guessLabel });
+          triggerError();
+        }
+      }
+    },
+    [state.revealedCount, totalSteps, triggerSuccess, triggerError]
+  );
+
+  /**
+   * Submit a player selected from the autocomplete dropdown.
+   * Uses QID exact match if answer_qid is available, otherwise fuzzy name match.
+   */
+  const submitPlayerGuess = useCallback(
+    (player: UnifiedPlayer) => {
+      if (state.gameStatus !== 'playing') return;
+
+      let isMatch: boolean;
+      if (answerQid && player.id.startsWith('Q')) {
+        // QID exact match
+        isMatch = player.id === answerQid;
+      } else {
+        // Fallback to fuzzy name match
+        isMatch = validateGuess(player.name, answer).isMatch;
+      }
+
+      processGuessResult(isMatch, player.name);
+    },
+    [state.gameStatus, answerQid, answer, processGuessResult]
+  );
+
+  /**
+   * Submit typed text without selecting from dropdown.
+   * Always uses fuzzy name matching.
+   */
+  const submitTextGuess = useCallback(
+    (text: string) => {
+      const guess = text.trim();
+      if (!guess || state.gameStatus !== 'playing') return;
+
+      const { isMatch } = validateGuess(guess, answer);
+      processGuessResult(isMatch, guess);
+    },
+    [state.gameStatus, answer, processGuessResult]
+  );
+
   // Set current guess text
   const setCurrentGuess = useCallback((text: string) => {
     dispatch({ type: 'SET_CURRENT_GUESS', payload: text });
@@ -361,6 +427,8 @@ export function useCareerPathGame(
     // Actions
     revealNext,
     submitGuess,
+    submitPlayerGuess,
+    submitTextGuess,
     setCurrentGuess,
     resetGame,
     shareResult,

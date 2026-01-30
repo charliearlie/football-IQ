@@ -22,6 +22,11 @@ interface NotificationWrapperProps {
 /**
  * Inner component that renders the notification modals.
  * Must be a child of NotificationProvider.
+ *
+ * IMPORTANT: Uses completedPuzzlesToday from context instead of
+ * recalculating locally. The previous implementation incorrectly
+ * calculated completedCount as todaysPuzzles.length (total puzzles)
+ * instead of actual completed count.
  */
 function NotificationModals() {
   const {
@@ -30,16 +35,11 @@ function NotificationModals() {
     dismissPermissionModal,
     isPerfectDayCelebrating,
     dismissPerfectDayCelebration,
+    completedPuzzlesToday, // Use context value, not local calculation
   } = useNotifications();
 
-  // Get stats for Perfect Day card
+  // Get stats for Perfect Day card (streak count only)
   const { stats } = useUserStats();
-  const { puzzles } = usePuzzleContext();
-
-  // Calculate completed count from puzzles context
-  const today = getAuthorizedDateUnsafe();
-  const todaysPuzzles = puzzles.filter((p) => p.puzzle_date === today);
-  const completedCount = todaysPuzzles.length;
 
   return (
     <>
@@ -51,7 +51,7 @@ function NotificationModals() {
       />
       <PerfectDayCelebration
         visible={isPerfectDayCelebrating}
-        puzzleCount={completedCount}
+        puzzleCount={completedPuzzlesToday}
         streakCount={stats.currentStreak}
         onDismiss={dismissPerfectDayCelebration}
         onShare={async () => {
@@ -74,6 +74,12 @@ function NotificationModals() {
  *   </NotificationWrapper>
  * </PuzzleProvider>
  * ```
+ *
+ * Data Flow:
+ * - stats.gamesPlayedToday: Count of completed puzzle attempts for today
+ *   (from useUserStats, queries completed=1 attempts)
+ * - completedPuzzlesToday: Same value, passed explicitly for clarity
+ * - totalPuzzlesToday: Total puzzles available for today's date
  */
 export function NotificationWrapper({ children }: NotificationWrapperProps) {
   const { stats, isLoading: statsLoading } = useUserStats();
@@ -84,7 +90,7 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
   // Calculate today's puzzles count from context
   const today = getAuthorizedDateUnsafe();
   const todaysPuzzles = puzzles.filter((p) => p.puzzle_date === today);
-  const totalPuzzles = todaysPuzzles.length;
+  const totalPuzzlesToday = todaysPuzzles.length;
 
   // Don't render provider until stats are loaded
   if (statsLoading) {
@@ -96,8 +102,8 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
       currentStreak={stats.currentStreak}
       gamesPlayedToday={stats.gamesPlayedToday}
       totalGamesPlayed={stats.totalGamesPlayed}
-      completedCount={stats.gamesPlayedToday}
-      totalPuzzles={totalPuzzles}
+      completedPuzzlesToday={stats.gamesPlayedToday}
+      totalPuzzlesToday={totalPuzzlesToday}
     >
       {children}
       <NotificationModals />

@@ -29,6 +29,7 @@ export const careerStepSchema = z.object({
 
 export const careerPathContentSchema = z.object({
   answer: z.string().min(1, "Player name required"),
+  answer_qid: z.string().optional(),
   career_steps: z
     .array(careerStepSchema)
     .min(3, "At least 3 career steps required")

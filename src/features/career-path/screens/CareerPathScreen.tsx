@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Pressable,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -131,8 +132,8 @@ export function CareerPathScreen({
     answer,
     totalSteps,
     revealNext,
-    submitGuess,
-    setCurrentGuess,
+    submitPlayerGuess,
+    submitTextGuess,
     shareResult,
     flatListRef,
     isVictoryRevealing,
@@ -148,6 +149,21 @@ export function CareerPathScreen({
 
   // Report error sheet state
   const [showReportSheet, setShowReportSheet] = useState(false);
+
+  // Track keyboard visibility to hide ad banner when typing
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () =>
+      setKeyboardVisible(true),
+    );
+    const hideSub = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardVisible(false),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Extract metadata from puzzle content for scouting provenance
   const scoutedAt = useMemo(() => {
@@ -515,9 +531,8 @@ export function CareerPathScreen({
             />
           ) : (
             <ActionZone
-              currentGuess={state.currentGuess}
-              onGuessChange={setCurrentGuess}
-              onSubmit={submitGuess}
+              onPlayerSelect={submitPlayerGuess}
+              onTextSubmit={submitTextGuess}
               onRevealNext={revealNext}
               canRevealMore={canRevealMore}
               shouldShake={state.lastGuessIncorrect}
@@ -534,8 +549,8 @@ export function CareerPathScreen({
           testID="scouting-disclaimer"
         />
 
-        {/* Banner Ad (non-premium only) */}
-        <AdBanner testID="career-path-ad-banner" />
+        {/* Banner Ad (non-premium only) — hidden when keyboard is open to free space */}
+        {!keyboardVisible && <AdBanner testID="career-path-ad-banner" />}
 
         {/* Help Modal */}
         <GameIntroModal

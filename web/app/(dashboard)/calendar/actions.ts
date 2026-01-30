@@ -5,10 +5,9 @@ import { createAdminClient } from "@/lib/supabase/server";
 import type { GameMode, PuzzleStatus } from "@/lib/constants";
 import { validateContent } from "@/lib/schemas";
 import type { TablesInsert, TablesUpdate, Json, DailyPuzzle } from "@/types/supabase";
-import type { CareerScoutResult, OracleResult, OracleSuggestion, ContentMetadata, OracleTheme } from "@/types/ai";
-import type { ContentReport, ContentReportInsert, ReportType, ReportStatus } from "@/types/supabase";
+import type { CareerScoutResult, OracleSuggestion, OracleTheme } from "@/types/ai";
+import type { ContentReport, ContentReportInsert, ReportType } from "@/types/supabase";
 import {
-  getRequirementsForDate,
   getMissingPuzzlesForWeek,
   isPremiumOnDate,
 } from "@/lib/scheduler";
@@ -427,6 +426,181 @@ export async function upsertPuzzle(
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// PLAYER DATABASE SEARCH (for career path form)
+// ============================================================================
+
+const WIKIDATA_SPARQL = "https://query.wikidata.org/sparql";
+const QID_PATTERN = /^Q\d+$/;
+
+/**
+ * Search players in our database by name.
+ * Used by the career path form to find players and auto-populate careers.
+ */
+export async function searchPlayersForForm(
+  query: string
+): Promise<ActionResult<{ id: string; name: string; birth_year: number | null; scout_rank: number }[]>> {
+  try {
+    if (!query || query.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    const supabase = await createAdminClient();
+    const normalized = query
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+    const { data, error } = await supabase
+      .from("players")
+      .select("id, name, birth_year, scout_rank")
+      .ilike("search_name", `%${normalized.replace(/([%_\\])/g, "\\$1")}%`)
+      .order("scout_rank", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data ?? [] };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Search failed",
+    };
+  }
+}
+
+/**
+ * Fetch a player's career from Wikidata SPARQL and format for the career path form.
+ */
+export async function fetchCareerForForm(
+  playerQid: string,
+  playerName: string
+): Promise<ActionResult<{ answer: string; answer_qid: string; career_steps: { type: "club"; text: string; year: string; apps: null; goals: null }[] }>> {
+  try {
+    if (!QID_PATTERN.test(playerQid)) {
+      return { success: false, error: `Invalid Wikidata QID: ${playerQid}` };
+    }
+
+    const query = `
+      SELECT ?club ?clubLabel ?startYear ?endYear WHERE {
+        wd:${playerQid} p:P54 ?stmt .
+        ?stmt ps:P54 ?club .
+        ?club wdt:P31/wdt:P279* wd:Q476028 .
+        OPTIONAL { ?stmt pq:P580 ?start }
+        OPTIONAL { ?stmt pq:P582 ?end }
+        BIND(YEAR(?start) AS ?startYear)
+        BIND(YEAR(?end) AS ?endYear)
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+      }
+      ORDER BY ?startYear
+    `;
+
+    const url = `${WIKIDATA_SPARQL}?query=${encodeURIComponent(query)}&format=json`;
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/sparql-results+json",
+        "User-Agent": "FootballIQ-Admin/1.0",
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: `Wikidata error: ${response.status}` };
+    }
+
+    const json = await response.json();
+    const bindings = (json.results?.bindings ?? []) as Record<string, { value?: string }>[];
+
+    const steps = bindings
+      .filter((b) => b.club?.value?.match(/Q\d+$/))
+      .map((b) => {
+        const startYear = b.startYear?.value;
+        const endYear = b.endYear?.value;
+        let year = "";
+        if (startYear && endYear) {
+          year = startYear === endYear ? startYear : `${startYear}-${endYear}`;
+        } else if (startYear) {
+          year = `${startYear}-`;
+        } else if (endYear) {
+          year = `-${endYear}`;
+        }
+
+        return {
+          type: "club" as const,
+          text: b.clubLabel?.value ?? "Unknown",
+          year,
+          apps: null,
+          goals: null,
+        };
+      });
+
+    if (steps.length === 0) {
+      return { success: false, error: "No career data found on Wikidata for this player" };
+    }
+
+    return {
+      success: true,
+      data: {
+        answer: playerName,
+        answer_qid: playerQid,
+        career_steps: steps,
+      },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to fetch career",
+    };
+  }
+}
+
+/**
+ * Check if a player already has a career path puzzle (career_path or career_path_pro).
+ * Returns matching puzzles so the admin can see the date and mode.
+ */
+export async function checkDuplicateAnswer(
+  playerName: string
+): Promise<ActionResult<{ puzzle_date: string | null; game_mode: string }[]>> {
+  try {
+    if (!playerName.trim()) {
+      return { success: true, data: [] };
+    }
+
+    const supabase = await createAdminClient();
+    const { data, error } = await supabase
+      .from("daily_puzzles")
+      .select("content, puzzle_date, game_mode")
+      .in("game_mode", ["career_path", "career_path_pro"]);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const stripDiacritics = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const normalized = stripDiacritics(playerName);
+    const duplicates = (data ?? [])
+      .filter((p) => {
+        const content = p.content as { answer?: string } | null;
+        return content?.answer ? stripDiacritics(content.answer) === normalized : false;
+      })
+      .map((p) => ({
+        puzzle_date: p.puzzle_date,
+        game_mode: p.game_mode,
+      }));
+
+    return { success: true, data: duplicates };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Duplicate check failed",
     };
   }
 }

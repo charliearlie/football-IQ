@@ -4,7 +4,7 @@ import * as React from "react";
 import { Popover, PopoverContent, PopoverAnchor } from "./popover";
 import { Input } from "./input";
 import { cn } from "@/lib/utils";
-import { countries, searchCountries, type Country } from "@/lib/countries";
+import { searchCountries, type Country } from "@/lib/countries";
 
 interface CountryAutocompleteProps {
   value: string;

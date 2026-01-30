@@ -108,7 +108,7 @@ export function RecallResultModal({
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="guess_the_goalscorers"
-        userScore={score.points}
+        userScore={score.scorersFound}
         maxSteps={score.totalScorers}
       />
     </BaseResultModal>

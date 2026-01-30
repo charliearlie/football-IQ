@@ -106,7 +106,7 @@ function IQCard({ data }: { data: IQCardData }) {
 
       {/* Footer */}
       <View style={styles.cardFooter}>
-        <Text style={styles.footerText}>football-iq.app</Text>
+        <Text style={styles.footerText}>football-iq-phi.vercel.app</Text>
       </View>
     </View>
   );
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: spacing.lg,
+    top: 60, // Increased to clear notch/status bar
     right: spacing.lg,
     zIndex: 1,
   },

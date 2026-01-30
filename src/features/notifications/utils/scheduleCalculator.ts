@@ -8,11 +8,34 @@
 
 import { getTimeDriftMs, isTimeTampered } from '@/lib/time';
 
-// Notification times (24-hour format)
-const MORNING_HOUR = 8;
-const MORNING_MINUTE = 30;
-const EVENING_HOUR = 20;
-const EVENING_MINUTE = 0;
+/**
+ * Notification schedule configuration.
+ * Centralizes timing constants for easy modification and testing.
+ */
+export interface NotificationScheduleConfig {
+  dailyReminder: { hour: number; minute: number };
+  streakSaverOffsetHours: number; // Hours after daily reminder
+}
+
+/**
+ * Default notification schedule.
+ * - Daily Reminder: 08:30
+ * - Streak Saver: 12 hours after daily = 20:30
+ */
+export const DEFAULT_SCHEDULE_CONFIG: NotificationScheduleConfig = {
+  dailyReminder: { hour: 8, minute: 30 },
+  streakSaverOffsetHours: 12,
+};
+
+// Derived timing values (for backward compatibility)
+const MORNING_HOUR = DEFAULT_SCHEDULE_CONFIG.dailyReminder.hour;
+const MORNING_MINUTE = DEFAULT_SCHEDULE_CONFIG.dailyReminder.minute;
+
+// Calculate streak saver time from offset
+const streakSaverHour =
+  (MORNING_HOUR + DEFAULT_SCHEDULE_CONFIG.streakSaverOffsetHours) % 24;
+const EVENING_HOUR = streakSaverHour;
+const EVENING_MINUTE = MORNING_MINUTE; // Same minute as daily (XX:30)
 
 /**
  * Calculate the next occurrence of a specific local time.

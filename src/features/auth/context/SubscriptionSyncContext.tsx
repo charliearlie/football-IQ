@@ -20,6 +20,7 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CustomerInfo } from 'react-native-purchases';
 import { useAuth } from './AuthContext';
 import {
@@ -28,11 +29,22 @@ import {
   addCustomerInfoListener,
   checkPremiumEntitlement,
   syncPremiumToSupabase,
+  silentRestorePurchases,
+  restorePurchases,
 } from '../services/SubscriptionSync';
+
+/**
+ * Key to track if we've attempted silent restore for this install.
+ * Gets cleared on reinstall (AsyncStorage is deleted), so we'll
+ * only attempt restore once per install lifecycle.
+ */
+const SILENT_RESTORE_ATTEMPTED_KEY = '@silent_restore_attempted';
 
 interface SubscriptionSyncContextValue {
   /** Force a sync of current entitlement status */
   forceSync: () => Promise<void>;
+  /** Restore purchases from App Store */
+  restorePurchases: () => Promise<{ success: boolean; hasPremium: boolean }>;
 }
 
 const SubscriptionSyncContext =
@@ -96,6 +108,7 @@ export function SubscriptionSyncProvider({
 
   /**
    * Start subscription sync for authenticated user.
+   * Includes silent restore for reinstall scenario.
    */
   const startSync = useCallback(
     async (userId: string) => {
@@ -111,7 +124,49 @@ export function SubscriptionSyncProvider({
 
       // Initial sync of current entitlement status
       if (customerInfo) {
-        await handleCustomerInfoUpdate(customerInfo);
+        const { hasPremium } = checkPremiumEntitlement(customerInfo);
+
+        // REINSTALL SCENARIO: If not premium, try silent restore ONCE per install
+        // This recovers Pro status from App Store after reinstall
+        // We only attempt once to avoid triggering Apple ID prompts on every launch
+        if (!hasPremium) {
+          let alreadyAttempted = false;
+          try {
+            alreadyAttempted = !!(await AsyncStorage.getItem(SILENT_RESTORE_ATTEMPTED_KEY));
+          } catch (e) {
+            console.warn('[SubscriptionSync] Failed to read silent restore flag:', e);
+          }
+
+          if (!alreadyAttempted) {
+            console.log(
+              '[SubscriptionSync] No premium detected, attempting silent restore (first time this install)...'
+            );
+            // Mark as attempted BEFORE calling to prevent double-attempts
+            try {
+              await AsyncStorage.setItem(SILENT_RESTORE_ATTEMPTED_KEY, 'true');
+            } catch (e) {
+              console.warn('[SubscriptionSync] Failed to write silent restore flag:', e);
+            }
+
+            const restoreResult = await silentRestorePurchases();
+
+            if (restoreResult.hasPremium && restoreResult.customerInfo) {
+              console.log('[SubscriptionSync] Silent restore found Pro status');
+              await handleCustomerInfoUpdate(restoreResult.customerInfo);
+            } else {
+              // No Pro found - sync current (non-premium) status
+              console.log('[SubscriptionSync] Silent restore found no Pro status');
+              await handleCustomerInfoUpdate(customerInfo);
+            }
+          } else {
+            // Already attempted this install - just sync current status
+            console.log('[SubscriptionSync] Silent restore already attempted, skipping');
+            await handleCustomerInfoUpdate(customerInfo);
+          }
+        } else {
+          // Already premium - sync normally
+          await handleCustomerInfoUpdate(customerInfo);
+        }
       }
 
       // Start listening for changes
@@ -157,6 +212,23 @@ export function SubscriptionSyncProvider({
     }
   }, [handleCustomerInfoUpdate]);
 
+  /**
+   * Manually restore purchases (via Settings).
+   */
+  const handleRestorePurchases = useCallback(async () => {
+    const result = await restorePurchases();
+    
+    if (result.success && result.customerInfo) {
+      // Sync the restored status (handles identity verification)
+      await handleCustomerInfoUpdate(result.customerInfo);
+    }
+    
+    return { 
+      success: result.success, 
+      hasPremium: result.hasPremium 
+    };
+  }, [handleCustomerInfoUpdate]);
+
   // Manage sync lifecycle based on auth state
   useEffect(() => {
     if (!isInitialized) return;
@@ -178,7 +250,12 @@ export function SubscriptionSyncProvider({
   }, [user?.id, isInitialized, startSync, stopSync]);
 
   return (
-    <SubscriptionSyncContext.Provider value={{ forceSync }}>
+    <SubscriptionSyncContext.Provider 
+      value={{ 
+        forceSync, 
+        restorePurchases: handleRestorePurchases 
+      }}
+    >
       {children}
     </SubscriptionSyncContext.Provider>
   );
@@ -187,7 +264,7 @@ export function SubscriptionSyncProvider({
 /**
  * Hook to access subscription sync functionality.
  *
- * @returns Object with forceSync method
+ * @returns Object with forceSync and restorePurchases methods
  * @throws Error if used outside SubscriptionSyncProvider
  */
 export function useSubscriptionSync(): SubscriptionSyncContextValue {

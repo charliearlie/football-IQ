@@ -153,13 +153,13 @@ describe('scheduleCalculator', () => {
   });
 
   describe('getEveningTriggerTime', () => {
-    it('returns 20:00 trigger time', () => {
+    it('returns 20:30 trigger time (12 hours after morning 08:30)', () => {
       jest.setSystemTime(new Date('2025-01-15T06:00:00'));
 
       const result = getEveningTriggerTime();
 
       expect(result?.getHours()).toBe(20);
-      expect(result?.getMinutes()).toBe(0);
+      expect(result?.getMinutes()).toBe(30); // 08:30 + 12 hours = 20:30
     });
 
     it('returns null when time is tampered', () => {
@@ -170,7 +170,7 @@ describe('scheduleCalculator', () => {
       expect(result).toBeNull();
     });
 
-    it('schedules for tomorrow if past 20:00', () => {
+    it('schedules for tomorrow if past 20:30', () => {
       jest.setSystemTime(new Date('2025-01-15T21:00:00'));
 
       const result = getEveningTriggerTime();
@@ -200,7 +200,7 @@ describe('scheduleCalculator', () => {
   });
 
   describe('isPastEveningTime', () => {
-    it('returns true when past evening time', () => {
+    it('returns true when past evening time (20:30)', () => {
       jest.setSystemTime(new Date('2025-01-15T21:00:00'));
 
       expect(isPastEveningTime()).toBe(true);
@@ -212,8 +212,15 @@ describe('scheduleCalculator', () => {
       expect(isPastEveningTime()).toBe(false);
     });
 
-    it('returns true when exactly at evening time', () => {
-      jest.setSystemTime(new Date('2025-01-15T20:00:01'));
+    it('returns false when between morning and evening (20:00)', () => {
+      // 20:00 is before the new 20:30 evening time
+      jest.setSystemTime(new Date('2025-01-15T20:00:00'));
+
+      expect(isPastEveningTime()).toBe(false);
+    });
+
+    it('returns true when past 20:30', () => {
+      jest.setSystemTime(new Date('2025-01-15T20:30:01'));
 
       expect(isPastEveningTime()).toBe(true);
     });

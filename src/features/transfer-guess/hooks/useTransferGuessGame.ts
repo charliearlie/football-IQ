@@ -5,6 +5,7 @@ import { usePuzzleContext } from '@/features/puzzles';
 import { useAuth } from '@/features/auth';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 import { validateGuess } from '@/lib/validation';
+import { UnifiedPlayer } from '@/services/oracle/types';
 import {
   TransferGuessState,
   TransferGuessAction,
@@ -34,7 +35,6 @@ function createInitialState(): TransferGuessState {
     hintsRevealed: 0,
     guesses: [],
     gameStatus: 'playing',
-    currentGuess: '',
     lastGuessIncorrect: false,
     score: null,
     attemptSaved: false,
@@ -62,7 +62,6 @@ function transferGuessReducer(
       return {
         ...state,
         guesses: [...state.guesses, action.payload],
-        currentGuess: '',
         lastGuessIncorrect: true,
         // Note: Does NOT reveal hints (unlike Career Path)
       };
@@ -71,15 +70,8 @@ function transferGuessReducer(
       return {
         ...state,
         gameStatus: 'won',
-        currentGuess: '',
         lastGuessIncorrect: false,
         score: action.payload,
-      };
-
-    case 'SET_CURRENT_GUESS':
-      return {
-        ...state,
-        currentGuess: action.payload,
       };
 
     case 'CLEAR_SHAKE':
@@ -154,7 +146,7 @@ function transferGuessReducer(
  *
  * @example
  * ```tsx
- * const { state, content, submitGuess, revealHint, giveUp, shareResult } = useTransferGuessGame(puzzle);
+ * const { state, submitPlayerGuess, submitTextGuess, revealHint, giveUp, shareResult } = useTransferGuessGame(puzzle);
  * ```
  */
 export function useTransferGuessGame(
@@ -240,37 +232,45 @@ export function useTransferGuessGame(
     }
   }, [canRevealHint, triggerSelection]);
 
-  // Submit a guess with fuzzy matching
-  const submitGuess = useCallback(() => {
-    const guess = state.currentGuess.trim();
-    if (!guess || state.gameStatus !== 'playing') return;
+  // Process the result of a guess (shared by both submission paths)
+  const processGuessResult = useCallback(
+    (isMatch: boolean, guessLabel: string) => {
+      if (isMatch) {
+        const gameScore = calculateTransferScore(
+          state.hintsRevealed,
+          state.guesses.length,
+          true
+        );
+        dispatch({ type: 'CORRECT_GUESS', payload: gameScore });
+        triggerSuccess();
+      } else {
+        dispatch({ type: 'INCORRECT_GUESS', payload: guessLabel });
+        triggerError();
+      }
+    },
+    [state.hintsRevealed, state.guesses.length, triggerSuccess, triggerError]
+  );
 
-    // Use fuzzy matching for validation (reused from Career Path)
-    const { isMatch } = validateGuess(guess, answer);
+  // Submit a player selected from the autocomplete dropdown
+  const submitPlayerGuess = useCallback(
+    (player: UnifiedPlayer) => {
+      if (state.gameStatus !== 'playing') return;
+      const { isMatch } = validateGuess(player.name, answer);
+      processGuessResult(isMatch, player.name);
+    },
+    [state.gameStatus, answer, processGuessResult]
+  );
 
-    if (isMatch) {
-      // Calculate score on correct guess
-      const gameScore = calculateTransferScore(
-        state.hintsRevealed,
-        state.guesses.length,
-        true
-      );
-      dispatch({ type: 'CORRECT_GUESS', payload: gameScore });
-      triggerSuccess();
-    } else {
-      // Record incorrect guess (no hint reveal penalty)
-      dispatch({ type: 'INCORRECT_GUESS', payload: guess });
-      triggerError();
-    }
-  }, [
-    state.currentGuess,
-    state.gameStatus,
-    state.hintsRevealed,
-    state.guesses.length,
-    answer,
-    triggerSuccess,
-    triggerError,
-  ]);
+  // Submit typed text without selecting from dropdown
+  const submitTextGuess = useCallback(
+    (text: string) => {
+      const guess = text.trim();
+      if (!guess || state.gameStatus !== 'playing') return;
+      const { isMatch } = validateGuess(guess, answer);
+      processGuessResult(isMatch, guess);
+    },
+    [state.gameStatus, answer, processGuessResult]
+  );
 
   // Give up
   const giveUp = useCallback(() => {
@@ -284,11 +284,6 @@ export function useTransferGuessGame(
     dispatch({ type: 'GIVE_UP', payload: gameScore });
     triggerError();
   }, [state.gameStatus, state.hintsRevealed, state.guesses.length, triggerError]);
-
-  // Set current guess text
-  const setCurrentGuess = useCallback((text: string) => {
-    dispatch({ type: 'SET_CURRENT_GUESS', payload: text });
-  }, []);
 
   // Reset the game
   const resetGame = useCallback(() => {
@@ -354,9 +349,9 @@ export function useTransferGuessGame(
 
     // Actions
     revealHint,
-    submitGuess,
+    submitPlayerGuess,
+    submitTextGuess,
     giveUp,
-    setCurrentGuess,
     resetGame,
     shareResult,
   };

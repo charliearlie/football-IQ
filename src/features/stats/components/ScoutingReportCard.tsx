@@ -180,7 +180,7 @@ export function ScoutingReportCard({ data, testID }: ScoutingReportCardProps) {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>football-iq.app</Text>
+        <Text style={styles.footerText}>football-iq-phi.vercel.app</Text>
       </View>
     </View>
   );

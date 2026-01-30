@@ -91,6 +91,7 @@ export function GoalscorerRecallScreen({
     isReady: isOnboardingReady,
     completeIntro,
   } = useOnboarding("guess_the_goalscorers");
+
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Use puzzleId if provided, otherwise fall back to game mode lookup
@@ -98,6 +99,34 @@ export function GoalscorerRecallScreen({
   const { puzzle, isLoading } = useStablePuzzle(
     puzzleId ?? "guess_the_goalscorers",
   );
+
+  const {
+    state,
+    timeRemaining,
+    totalScorers,
+    foundScorersCount,
+    homeGoals,
+    awayGoals,
+    startGame,
+    submitGuess,
+    setCurrentGuess,
+    giveUp,
+    resetGame,
+  } = useGoalscorerRecallGame(puzzle);
+
+  // Auto-start game for returning users (skip intro)
+  // MUST be at top level before any conditional returns
+  useEffect(() => {
+    if (
+      !isReviewMode &&
+      !!puzzle &&
+      !shouldShowIntro &&
+      state.gameStatus === "idle" &&
+      isOnboardingReady
+    ) {
+      startGame();
+    }
+  }, [isReviewMode, puzzle, shouldShowIntro, state.gameStatus, isOnboardingReady, startGame]);
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -167,19 +196,7 @@ export function GoalscorerRecallScreen({
     ),
   }));
 
-  const {
-    state,
-    timeRemaining,
-    totalScorers,
-    foundScorersCount,
-    homeGoals,
-    awayGoals,
-    startGame,
-    submitGuess,
-    setCurrentGuess,
-    giveUp,
-    resetGame,
-  } = useGoalscorerRecallGame(puzzle);
+
 
   // Track when a new goal is found for animation
   const handleGuessCorrect = () => {
@@ -272,6 +289,8 @@ export function GoalscorerRecallScreen({
       />
     );
   }
+
+
 
   // Review mode: Show all scorers with found/missed status
   if (isReviewMode) {

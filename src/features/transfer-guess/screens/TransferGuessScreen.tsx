@@ -98,9 +98,9 @@ export function TransferGuessScreen({
     guessesRemaining,
     isGameOver,
     revealHint,
-    submitGuess,
+    submitPlayerGuess,
+    submitTextGuess,
     giveUp,
-    setCurrentGuess,
     shareResult,
   } = useTransferGuessGame(puzzle, isFocused);
 
@@ -293,16 +293,14 @@ export function TransferGuessScreen({
       {/* Action Zone (hidden when game is over) */}
       {!isGameOver && (
         <TransferActionZone
-          currentGuess={state.currentGuess}
-          onGuessChange={setCurrentGuess}
-          onSubmit={submitGuess}
+          onPlayerSelect={submitPlayerGuess}
+          onTextSubmit={submitTextGuess}
           onRevealHint={revealHint}
           onGiveUp={giveUp}
           canRevealHint={canRevealHint}
           guessesRemaining={guessesRemaining}
           shouldShake={state.lastGuessIncorrect}
           isGameOver={isGameOver}
-          incorrectGuesses={state.guesses.length}
           testID="action-zone"
         />
       )}

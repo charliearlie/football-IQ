@@ -10,9 +10,60 @@ daily_puzzles    - Puzzles (RLS: 3-tier access)
 profiles         - User profiles (RLS: read all, update own)
 puzzle_attempts  - Attempts (RLS: owner-only)
 user_streaks     - Streaks (RLS: owner-only)
+players          - Wikidata player graph (RLS: SELECT, QID PK)
+clubs            - Club identity (RLS: SELECT, QID PK)
+player_appearances - Player ↔ Club (RLS: SELECT)
 agent_runs       - AI logs (RLS: blocked, admin-only)
 match_data       - Match data (RLS: blocked, admin-only)
 ```
+
+## Elite Index Search (Wikidata Integration)
+
+### Local-First Hybrid Search
+```typescript
+// Hybrid search: local Elite Index (~4,900 players) → debounced Supabase Oracle
+import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
+searchPlayersHybrid('ronaldo', (results) => {
+  // UnifiedPlayer[] — instant local results, Oracle fallback if <3 matches
+});
+
+// Direct Oracle RPC (used internally by HybridSearchEngine)
+import { searchPlayersOracle, validatePlayerClub } from '@/services/oracle';
+const players = await searchPlayersOracle('messi', 10);
+const valid = await validatePlayerClub('Q11571', 'Q8682');
+```
+
+### Elite Index Sync
+```typescript
+import { syncEliteIndex } from '@/services/player/SyncService';
+
+// Background sync (throttled to weekly, non-blocking)
+const result = await syncEliteIndex();
+// { success: true, updatedCount: 42, serverVersion: 2 }
+```
+
+### Key Types
+```typescript
+interface UnifiedPlayer {
+  id: string;                    // QID or local ID
+  name: string;
+  nationality_code: string | null;
+  birth_year: number | null;
+  position_category: string | null;
+  source: 'local' | 'oracle';
+  relevance_score: number;
+}
+```
+
+### Data Sources
+- **Elite Index**: ~4,900 players bundled as `assets/data/elite-index.json`
+- **Oracle Cache**: Auto-populated from Supabase RPC when Oracle results selected
+- **Sync**: Weekly check, delta download via `get_elite_index_delta` RPC
+
+### Admin: Player Scout (`/player-scout`)
+- Batch-resolves player names via Wikidata SPARQL
+- Fetches career clubs (P54 property)
+- Upserts to `players`, `clubs`, `player_appearances`
 
 ## 3-Tier Puzzle Access
 ```
@@ -1630,6 +1681,7 @@ import {
   initializeNotifications,
   scheduleNotification,
   cancelNotification,
+  NOTIFICATION_IDS,
   getMorningMessage,
   getStreakSaverMessage,
   getMorningTriggerTime,
@@ -1645,6 +1697,8 @@ const {
   dismissPermissionModal,  // Close modal without granting
   isPerfectDayCelebrating, // true when Perfect Day modal showing
   dismissPerfectDayCelebration,   // Close celebration modal
+  completedPuzzlesToday,   // Number of puzzles completed today
+  totalPuzzlesToday,       // Total puzzles available today
 } = useNotifications();
 
 // Provider usage (in app/_layout.tsx, inside PuzzleProvider)
@@ -1655,19 +1709,24 @@ const {
   </NotificationWrapper>
 </PuzzleProvider>
 
+// Notification IDs (stable numeric strings for precise overwriting)
+NOTIFICATION_IDS.DAILY_KICKOFF  // '101' - Morning reminder
+NOTIFICATION_IDS.STREAK_SAVER   // '102' - Streak at risk
+NOTIFICATION_IDS.AD_HOC_CMS     // '103' - Reserved for CMS pushes (future)
+
 // Notification service (low-level)
 await initializeNotifications();  // Set handler, create channel
 const status = await requestPermissions();  // Request system permissions
 
 await scheduleNotification({
-  id: 'daily_kickoff',
+  id: NOTIFICATION_IDS.DAILY_KICKOFF,
   title: 'Daily Kick-off!',
   body: 'Your new puzzles are ready.',
   triggerDate: getMorningTriggerTime(),  // 08:30 local
   priority: 'default',
 });
 
-await cancelNotification('streak_saver');
+await cancelNotification(NOTIFICATION_IDS.STREAK_SAVER);
 
 // Message rotation (rotates by day-of-year)
 const morning = getMorningMessage();
@@ -1678,34 +1737,45 @@ const streakSaver = getStreakSaverMessage(5);
 
 // Schedule calculation (integrates with True-Time for drift adjustment)
 getMorningTriggerTime();   // Date for 08:30 local (or null if in past)
-getEveningTriggerTime();   // Date for 20:00 local (or null if in past)
+getEveningTriggerTime();   // Date for 20:30 local (12h offset from morning)
+
+// Schedule configuration
+import { DEFAULT_SCHEDULE_CONFIG } from '@/features/notifications';
+// { dailyReminder: { hour: 8, minute: 30 }, streakSaverOffsetHours: 12 }
 ```
 
-**Notification IDs (stable):**
-- `daily_kickoff` - Morning reminder at 08:30
-- `streak_saver` - Evening alert at 20:00
+**Notification IDs (stable numeric strings):**
+- `'101'` (`DAILY_KICKOFF`) - Morning reminder at 08:30
+- `'102'` (`STREAK_SAVER`) - Evening alert at 20:30 (08:30 + 12h offset)
+- `'103'` (`AD_HOC_CMS`) - Reserved for remote CMS pushes (future)
 
 **Scheduling Logic:**
 - Morning: Scheduled if `gamesPlayedToday === 0`
 - Evening: Scheduled if `currentStreak > 0 AND gamesPlayedToday === 0`
-- Both cancelled when user plays a game
+- Both cancelled immediately when user completes any puzzle (with Sentry breadcrumb)
 - Rescheduled at midnight via `onMidnight()` subscription
 
 **Permission Flow:**
 - Triggered after `totalGamesPlayed === 1` (first puzzle completion)
-- Custom modal shown before system dialog for higher acceptance
+- Custom modal with 3 benefits: daily reminders, streak alerts, live challenges
 - `hasAskedPermission` prevents re-prompting declined users
 
 **Perfect Day Detection:**
-- Triggered when `completedCount === totalPuzzles && totalPuzzles > 0`
+- Triggered when `completedPuzzlesToday === totalPuzzlesToday && totalPuzzlesToday > 0`
 - Only fires once per date (tracked in AsyncStorage)
 - Includes confetti animation and unique haptic pattern
+
+**Test Notifications (Settings Dev Menu):**
+- Hidden behind 7-tap version dev menu in Settings
+- "Test Morning Notification" and "Test Streak Saver Notification" buttons for verifying scheduling
 
 **Files:**
 - Context: `src/features/notifications/context/NotificationContext.tsx`
 - Service: `src/features/notifications/services/notificationService.ts`
+- Schedule: `src/features/notifications/utils/scheduleCalculator.ts`
 - Components: `src/features/notifications/components/`
 - Types: `src/features/notifications/types.ts`
+- Tests: `src/features/notifications/__tests__/`
 
 ## Command Centre (CMS)
 

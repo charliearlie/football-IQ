@@ -61,14 +61,14 @@ interface NotificationProviderProps {
   children: React.ReactNode;
   /** Current streak count from useUserStats */
   currentStreak: number;
-  /** Games played today from useUserStats */
+  /** Games played today from useUserStats (completed attempts) */
   gamesPlayedToday: number;
   /** Total games played (for first completion detection) */
   totalGamesPlayed: number;
-  /** Number of puzzles completed today */
-  completedCount: number;
+  /** Number of puzzles completed today (same as gamesPlayedToday, explicit naming) */
+  completedPuzzlesToday: number;
   /** Total number of puzzles available today */
-  totalPuzzles: number;
+  totalPuzzlesToday: number;
 }
 
 export function NotificationProvider({
@@ -76,8 +76,8 @@ export function NotificationProvider({
   currentStreak,
   gamesPlayedToday,
   totalGamesPlayed,
-  completedCount,
-  totalPuzzles,
+  completedPuzzlesToday,
+  totalPuzzlesToday,
 }: NotificationProviderProps) {
   // Permission state
   const [permissionStatus, setPermissionStatus] =
@@ -93,7 +93,7 @@ export function NotificationProvider({
   const hasInitialized = useRef(false);
   const lastScheduledDate = useRef<string | null>(null);
   const prevTotalGamesPlayed = useRef(totalGamesPlayed);
-  const prevCompletedCount = useRef(completedCount);
+  const prevCompletedCount = useRef(completedPuzzlesToday);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
@@ -231,10 +231,17 @@ export function NotificationProvider({
 
     // If user just started playing (0 -> 1+), cancel scheduled notifications
     if (gamesPlayedToday > 0) {
+      console.log('[Notifications] Cancelling reminders - user completed a puzzle today');
+      Sentry.addBreadcrumb({
+        category: 'notifications',
+        message: 'Cancelled reminders - puzzle completed',
+        level: 'info',
+        data: { gamesPlayedToday, completedPuzzlesToday },
+      });
       cancelNotification(NOTIFICATION_IDS.DAILY_KICKOFF);
       cancelNotification(NOTIFICATION_IDS.STREAK_SAVER);
     }
-  }, [isSupported, permissionStatus, gamesPlayedToday]);
+  }, [isSupported, permissionStatus, gamesPlayedToday, completedPuzzlesToday]);
 
   // ============================================================================
   // First Puzzle Completion -> Show Permission Modal
@@ -268,9 +275,9 @@ export function NotificationProvider({
 
     const today = getAuthorizedDateUnsafe();
     const isPerfectDay =
-      totalPuzzles > 0 && completedCount === totalPuzzles;
+      totalPuzzlesToday > 0 && completedPuzzlesToday === totalPuzzlesToday;
     const alreadyShownToday = perfectDayShownDates.includes(today);
-    const justCompleted = completedCount > prevCompletedCount.current;
+    const justCompleted = completedPuzzlesToday > prevCompletedCount.current;
 
     // Trigger celebration if:
     // 1. All puzzles completed
@@ -288,8 +295,8 @@ export function NotificationProvider({
       );
     }
 
-    prevCompletedCount.current = completedCount;
-  }, [isSupported, completedCount, totalPuzzles, perfectDayShownDates]);
+    prevCompletedCount.current = completedPuzzlesToday;
+  }, [isSupported, completedPuzzlesToday, totalPuzzlesToday, perfectDayShownDates]);
 
   // ============================================================================
   // App State Monitoring (re-evaluate on foreground)
@@ -386,6 +393,8 @@ export function NotificationProvider({
       triggerPerfectDayCelebration,
       isPerfectDayCelebrating,
       dismissPerfectDayCelebration,
+      completedPuzzlesToday,
+      totalPuzzlesToday,
     }),
     [
       permissionStatus,
@@ -396,6 +405,8 @@ export function NotificationProvider({
       triggerPerfectDayCelebration,
       isPerfectDayCelebrating,
       dismissPerfectDayCelebration,
+      completedPuzzlesToday,
+      totalPuzzlesToday,
     ]
   );
 

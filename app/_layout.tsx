@@ -5,6 +5,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initDatabase } from "@/lib/database";
+import { syncEliteIndex } from "@/services/player/SyncService";
 import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -29,14 +30,15 @@ import {
 import { PuzzleUpdateToast } from "@/components/PuzzleUpdateToast";
 import { AdProvider } from "@/features/ads";
 import { QuizPrefetchProvider } from "@/features/topical-quiz";
-import { IntegrityGuardProvider } from "@/features/integrity";
+import { IntegrityGuardProvider, RehydrationProvider } from "@/features/integrity";
 import {
   NotificationWrapper,
   initializeNotifications,
 } from "@/features/notifications";
 import { getRevenueCatApiKey } from "@/config/revenueCat";
 // import { SentryErrorFallback } from "@/components";
-import { PostHogProvider, usePostHog } from "posthog-react-native";
+import { usePostHog } from "posthog-react-native";
+import { SafePostHogProvider } from "@/components/SafePostHogProvider";
 
 // Initialize Sentry error monitoring
 // TEMPORARILY DISABLED - testing if Sentry is causing crash
@@ -142,8 +144,9 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
 
   return (
     <IntegrityGuardProvider>
-      <PuzzleProvider>
-        <PuzzleOnboardingProvider>
+      <RehydrationProvider>
+        <PuzzleProvider>
+          <PuzzleOnboardingProvider>
           <QuizPrefetchProvider>
             <AdProvider>
               <NotificationWrapper>
@@ -155,6 +158,7 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
           </QuizPrefetchProvider>
         </PuzzleOnboardingProvider>
       </PuzzleProvider>
+      </RehydrationProvider>
     </IntegrityGuardProvider>
   );
 });
@@ -197,7 +201,13 @@ export default function RootLayout() {
   // Initialize local SQLite database
   useEffect(() => {
     initDatabase()
-      .then(() => setDbReady(true))
+      .then(() => {
+        setDbReady(true);
+        // Background: check for Elite Index updates (non-blocking, weekly throttle)
+        syncEliteIndex().catch((err: unknown) =>
+          console.warn("[EliteIndex] Background sync failed:", err)
+        );
+      })
       .catch((error) => {
         console.error("Database initialization failed:", error);
         // Continue in degraded mode - app can still work with network
@@ -282,7 +292,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <PostHogProvider
+      <SafePostHogProvider
         apiKey="phc_u3vrkbSBmnx9m6bDDInC3XsFrnETkRAnNgO3iVLDWLE"
         options={{
           host: "https://eu.i.posthog.com",
@@ -340,7 +350,7 @@ export default function RootLayout() {
             </GestureHandlerRootView>
           </AuthOnboardingProvider>
         </SubscriptionSyncProvider>
-      </PostHogProvider>
+      </SafePostHogProvider>
     </AuthProvider>
   );
 }

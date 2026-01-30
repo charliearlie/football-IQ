@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GAME_MODE_DISPLAY_NAMES, type GameMode } from "@/lib/constants";
+import { GAME_MODE_DISPLAY_NAMES } from "@/lib/constants";
 import type { ConflictInfo, AvailableSlot } from "@/lib/displacement";
 
 export type ConflictResolution =

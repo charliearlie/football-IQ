@@ -33,6 +33,10 @@ Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 | `user_streaks` | Yes | Streak tracking per game mode |
 | `content_reports` | Yes | User error reports for puzzle content |
 | `game_submissions` | Yes | User-submitted game mode ideas |
+| `players` | Yes (SELECT) | Wikidata player graph (QID PK) |
+| `clubs` | Yes (SELECT) | Club identity (QID PK) |
+| `player_appearances` | Yes (SELECT) | Player ↔ Club junction with years |
+| `app_config` | Yes (SELECT) | App versioning (Elite Index version) |
 | `agent_runs` | Blocked | AI agent logs (admin-only) |
 | `match_data` | Blocked | Football match data (admin-only) |
 
@@ -44,11 +48,13 @@ sync_queue (id, table_name, record_id, action, payload, created_at)
 unlocked_puzzles (puzzle_id, unlocked_at)  -- Ad unlocks (permanent)
 puzzle_catalog (id, game_mode, puzzle_date, difficulty)  -- Archive metadata
 player_database (id, external_id, name, search_name, clubs, nationalities, is_active)
+player_search_cache (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
+_metadata (key, value, updated_at)  -- Version tracking (Elite Index version)
 ```
 
 ### Migrations
-**Supabase:** 001-009 + 012 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert)
-**SQLite:** v1-v5 (base schema, catalog, unlocks, player database, puzzle updated_at)
+**Supabase:** 001-009 + 012 + 019-020 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync)
+**SQLite:** v1-v8 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding)
 
 ## Authentication
 
@@ -112,6 +118,37 @@ All game modes use `src/lib/validation.ts` for player name matching:
 - Case insensitive, accent normalization (Özil = Ozil)
 - Partial name matching (surname only: "Messi" = "Lionel Messi")
 - Typo tolerance via Dice coefficient (threshold: 0.85)
+
+### Elite Index (Player Search)
+Pre-bundled database of ~4,900 elite players for instant autocomplete across all game modes.
+
+**Architecture:**
+1. **Bundled Asset**: `assets/data/elite-index.json` (~783 KB) exported from Supabase `players` table
+2. **Seeding**: SQLite migration v8 loads JSON into `player_search_cache` on first launch
+3. **Local Search**: `searchPlayerCache()` — LIKE on search_name, ORDER BY scout_rank DESC
+4. **Oracle Fallback**: If < 3 local results, debounced (300ms) Supabase RPC for niche players
+5. **Auto-Cache**: Oracle results upserted into `player_search_cache` for future searches
+6. **Delta Sync**: Weekly background check via `SyncService` — downloads deltas when server version bumps
+
+**Search Flow:**
+```
+User types 3+ chars → searchPlayerCache() (instant, ~4,900 players)
+  ↓ (if < 3 results)
+300ms debounce → searchPlayersOracle() via Supabase RPC
+  ↓
+Merge + dedupe → sort by relevance + scout_rank
+  ↓
+Cache Oracle results to player_search_cache
+```
+
+**Zero-Spoiler**: Only flag, birth year, position shown. No club history in autocomplete.
+
+**Files:**
+- `assets/data/elite-index.json` — Bundled player data
+- `src/lib/database.ts` — Migration v8, `searchPlayerCache()`, `getEliteIndexVersion()`
+- `src/services/player/HybridSearchEngine.ts` — Local + Oracle waterfall
+- `src/services/player/SyncService.ts` — Weekly delta sync
+- `supabase/migrations/020_player_sync.sql` — `app_config` table + `get_elite_index_delta` RPC
 
 ### Access Control (3-Tier)
 | Tier | User Type | Puzzle Access |
@@ -287,6 +324,7 @@ Wordle-style "How You Compare" bar chart in result modals.
 
 ### Settings
 Fourth tab with Privacy Policy, Terms, Rate App, and secret dev menu (7 taps on version).
+- **Dev menu**: Test Daily Reminder, Test Streak Saver, Reset Game Intros, Clear Data buttons
 - **Files**: `src/features/settings/`, `app/(tabs)/settings.tsx`
 
 ### Submit Game Ideas
@@ -299,11 +337,14 @@ User-submitted game mode ideas with Pro subscription reward incentive.
 
 ### Local Notifications
 Push-style local notifications to maximize DAU and protect streaks.
+- **Notification IDs**: Stable numeric strings (`101`=Daily, `102`=Streak, `103`=Ad-hoc CMS reserved)
 - **Daily Kick-off** (08:30): Morning reminder if user hasn't played, rotating messages
-- **Streak Saver** (20:00): Evening alert if `streak > 0 AND gamesPlayedToday === 0`
+- **Streak Saver** (20:30): Evening alert 12h after Daily (configurable offset), if `streak > 0 AND gamesPlayedToday === 0`
 - **Perfect Day**: Full-screen confetti celebration when all daily puzzles completed
 - **Scheduling**: Uses True-Time system (`getTimeDriftMs()`) for accurate timing
-- **Permission Flow**: Custom modal shown after first puzzle completion
+- **Permission Flow**: Custom modal after first puzzle completion with 3 benefits (daily reminders, streak alerts, live challenges)
+- **Test Notifications**: Available in Settings dev menu (7-tap version) for verifying Daily/Streak triggers
+- **Cancellation**: Both reminders cancelled immediately when user completes any puzzle
 - **Files**: `src/features/notifications/`
 
 ### Review Mode

@@ -7,7 +7,7 @@
 /**
  * Types of notifications the app can send
  */
-export type NotificationType = 'daily_kickoff' | 'streak_saver';
+export type NotificationType = '101' | '102' | '103';
 
 /**
  * Permission status for notifications
@@ -34,6 +34,10 @@ export interface NotificationContextValue {
   isPerfectDayCelebrating: boolean;
   /** Dismiss the Perfect Day celebration */
   dismissPerfectDayCelebration: () => void;
+  /** Number of puzzles completed today (for Perfect Day celebration) */
+  completedPuzzlesToday: number;
+  /** Total puzzles available today */
+  totalPuzzlesToday: number;
 }
 
 /**

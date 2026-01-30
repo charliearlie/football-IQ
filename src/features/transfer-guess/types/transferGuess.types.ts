@@ -45,8 +45,6 @@ export interface TransferGuessState {
   guesses: string[];
   /** Current game status */
   gameStatus: GameStatus;
-  /** Current text in the guess input */
-  currentGuess: string;
   /** Triggers shake animation when true */
   lastGuessIncorrect: boolean;
   /** Final score (set when game ends) */
@@ -76,7 +74,6 @@ export type TransferGuessAction =
   | { type: 'REVEAL_HINT' }
   | { type: 'CORRECT_GUESS'; payload: TransferGuessScore }
   | { type: 'INCORRECT_GUESS'; payload: string }
-  | { type: 'SET_CURRENT_GUESS'; payload: string }
   | { type: 'CLEAR_SHAKE' }
   | { type: 'GAME_LOST'; payload: TransferGuessScore }
   | { type: 'GIVE_UP'; payload: TransferGuessScore }

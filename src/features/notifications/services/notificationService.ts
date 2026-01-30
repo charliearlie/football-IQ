@@ -10,10 +10,12 @@ import * as Sentry from '@sentry/react-native';
 import { Platform } from 'react-native';
 import type { NotificationType, PermissionStatus } from '../types';
 
-// Notification IDs (stable for cancellation)
+// Notification IDs (stable numeric IDs for precise overwriting)
+// Using numeric strings allows overwriting specific notifications without clearing the entire queue
 export const NOTIFICATION_IDS = {
-  DAILY_KICKOFF: 'daily_kickoff',
-  STREAK_SAVER: 'streak_saver',
+  DAILY_KICKOFF: '101',    // Daily morning reminder (08:30)
+  STREAK_SAVER: '102',     // Streak at risk reminder (20:30)
+  AD_HOC_CMS: '103',       // Reserved for CMS push notifications (future)
 } as const;
 
 // Android notification channel

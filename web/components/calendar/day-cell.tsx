@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { GameModeDot } from "./game-mode-dot";
 import type { CalendarDay } from "@/hooks/use-calendar-data";
 import type { GameMode } from "@/lib/constants";
-import type { PendingReportCount } from "@/hooks/use-reports";
 
 interface DayCellProps {
   day: CalendarDay;

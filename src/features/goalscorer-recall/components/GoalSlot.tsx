@@ -69,6 +69,20 @@ export function GoalSlot({ goal, isJustFound = false, isMissed = false }: GoalSl
     return null;
   };
 
+  // Format scorer name (e.g., "Steven Gerrard" -> "S. Gerrard")
+  const formatScorerName = (name: string): string => {
+    const parts = name.trim().split(' ');
+    if (parts.length < 2) return name;
+    
+    // Check if first part is a known exception (e.g. "De", "Van", "Di")
+    // If so, we might want to keep it, but for now simple initial logic is usually sufficient
+    // or just abbreviate the first name.
+    
+    const firstName = parts[0];
+    const rest = parts.slice(1).join(' ');
+    return `${firstName.charAt(0)}. ${rest}`;
+  };
+
   return (
     <Animated.View
       style={[
@@ -99,11 +113,11 @@ export function GoalSlot({ goal, isJustFound = false, isMissed = false }: GoalSl
                 isOwnGoal && styles.ownGoalText,
                 isMissed && !isOwnGoal && styles.missedText,
               ]}
-              numberOfLines={2}
+              numberOfLines={1}
               adjustsFontSizeToFit
-              minimumFontScale={0.8}
+              minimumFontScale={0.85}
             >
-              {scorer}
+              {formatScorerName(scorer)}
               {isOwnGoal && <Text style={styles.ownGoalLabel}> (OG)</Text>}
             </Text>
           </Animated.View>
@@ -123,8 +137,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    padding: spacing.sm,
-    marginVertical: spacing.xs,
+    paddingVertical: 6, // Reduced from standard spacing
+    paddingHorizontal: spacing.sm,
+    marginVertical: 2, // Reduced margin
   },
   foundContainer: {
     backgroundColor: 'rgba(88, 204, 2, 0.1)',
@@ -142,10 +157,11 @@ const styles = StyleSheet.create({
   minuteBadge: {
     backgroundColor: colors.cardYellow,
     borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    minWidth: 44,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 40,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   missedBadge: {
     backgroundColor: colors.redCard,
@@ -161,12 +177,12 @@ const styles = StyleSheet.create({
   },
   scorerContainer: {
     flex: 1,
-    marginLeft: spacing.md,
+    marginLeft: spacing.sm, // Reduced spacing
   },
   scorerName: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.semiBold,
-    fontSize: 16,
+    fontSize: 15, // Slightly reduced from 16
     color: colors.floodlightWhite,
   },
   missedText: {
@@ -184,7 +200,7 @@ const styles = StyleSheet.create({
   placeholder: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.regular,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.floodlightWhite,
     opacity: 0.4,
   },

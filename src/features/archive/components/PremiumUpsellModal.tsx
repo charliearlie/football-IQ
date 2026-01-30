@@ -18,6 +18,7 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, {
   SlideInDown,
@@ -109,6 +110,8 @@ export function PremiumUpsellModal({
   mode = 'upsell',
   testID,
 }: PremiumUpsellModalProps) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768; // Standard iPad breakpoint
   const [state, setState] = useState<ModalState>('loading');
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
@@ -296,7 +299,7 @@ export function PremiumUpsellModal({
 
         <Animated.View
           entering={SlideInDown.springify().damping(15).stiffness(100)}
-          style={styles.modal}
+          style={[styles.modal, isTablet && styles.modalTablet]}
         >
           {/* Close Button */}
           <Pressable
@@ -682,6 +685,9 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     maxHeight: '85%',
     position: 'relative',
+  },
+  modalTablet: {
+    maxWidth: 600,
   },
   scrollContent: {
     width: '100%',
