@@ -117,10 +117,16 @@ export function GoalscorerRecallScreen({
   // Auto-start game for returning users (skip intro)
   // MUST be at top level before any conditional returns
   useEffect(() => {
-    if (!shouldShowIntro && state.gameStatus === "idle" && isOnboardingReady) {
+    if (
+      !isReviewMode &&
+      !!puzzle &&
+      !shouldShowIntro &&
+      state.gameStatus === "idle" &&
+      isOnboardingReady
+    ) {
       startGame();
     }
-  }, [shouldShowIntro, state.gameStatus, isOnboardingReady, startGame]);
+  }, [isReviewMode, puzzle, shouldShowIntro, state.gameStatus, isOnboardingReady, startGame]);
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
   const scrollRef = useRef<ScrollView>(null);
 

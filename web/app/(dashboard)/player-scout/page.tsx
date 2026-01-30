@@ -319,8 +319,7 @@ export default function PlayerScoutPage() {
   }, [namesInput, fetchCareers, addLog, loadPlayerCount]);
 
   // ─── Phase 2 Only: Fetch Careers for All Existing Players ─────────────────
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _runCareersOnly = useCallback(async () => {
+  const runCareersOnly = useCallback(async () => {
     setStatus("running");
     abortRef.current = false;
     setLogs([]);
@@ -611,6 +610,15 @@ export default function PlayerScoutPage() {
             >
               <Globe className="h-4 w-4 mr-2" />
               Fetch Missing Careers
+            </Button>
+            <Button
+              onClick={runCareersOnly}
+              disabled={status === "running"}
+              variant="outline"
+              className="border-pitch-green/30 text-pitch-green hover:bg-pitch-green/10"
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              Refresh All Careers
             </Button>
             {status === "running" && (
               <Button variant="destructive" onClick={handleAbort}>

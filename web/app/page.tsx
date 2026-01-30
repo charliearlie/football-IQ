@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { MarketingHero } from "@/components/landing/MarketingHero";
 import { GameModeShowcase } from "@/components/landing/GameModeShowcase";
@@ -87,9 +88,9 @@ export default async function LandingPage() {
         <div className="text-center mt-12 bg-white/5 p-8 rounded-2xl max-w-2xl mx-auto border border-white/10">
             <h3 className="font-bebas text-3xl text-floodlight mb-2">FINISHED?</h3>
             <p className="text-slate-400 mb-6">Unlock 7 more game modes and track your stats in the full app.</p>
-            <button className="px-8 py-3 bg-pitch-green text-stadium-navy font-bebas text-xl rounded-lg hover:bg-pitch-green/90 transition-colors shadow-lg hover:shadow-pitch-green/20">
+            <Link href="/download" className="inline-block px-8 py-3 bg-pitch-green text-stadium-navy font-bebas text-xl rounded-lg hover:bg-pitch-green/90 transition-colors shadow-lg hover:shadow-pitch-green/20">
                 GET THE FULL EXPERIENCE
-            </button>
+            </Link>
         </div>
       </section>
 

@@ -68,6 +68,7 @@ export function PlayerAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const selectedRef = useRef(false);
+  const requestTokenRef = useRef(0);
   const shakeX = useSharedValue(0);
   const focusProgress = useSharedValue(0);
   const borderFlash = useSharedValue(0);
@@ -130,17 +131,27 @@ export function PlayerAutocomplete({
     selectedRef.current = false;
 
     if (text.length < 3) {
+      requestTokenRef.current++;
       setIsOpen(false);
       setResults([]);
       setIsSearching(false);
       return;
     }
 
+    const token = ++requestTokenRef.current;
     setIsOpen(true);
     setIsSearching(true);
+
+    let callbackCount = 0;
     searchPlayersHybrid(text, (newResults) => {
+      if (token !== requestTokenRef.current) return;
+      callbackCount++;
       setResults(newResults);
-      setIsSearching(false);
+      // First callback delivers local results; second delivers Oracle-merged results.
+      // Stop searching when Oracle completes (2nd call) or won't fire (≥3 local hits).
+      if (callbackCount > 1 || newResults.length >= 3) {
+        setIsSearching(false);
+      }
     });
   }, []);
 

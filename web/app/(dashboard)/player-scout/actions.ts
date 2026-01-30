@@ -3,6 +3,13 @@
 import { createAdminClient } from "@/lib/supabase/server";
 
 const WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql";
+const QID_PATTERN = /^Q\d+$/;
+
+function assertValidQid(qid: string): void {
+  if (!QID_PATTERN.test(qid)) {
+    throw new Error(`Invalid Wikidata QID: ${qid}`);
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +56,7 @@ function buildBatchLookupQuery(names: string[]): string {
   // to distinguish England/Scotland/Wales/NIR from generic "United Kingdom".
   // Fetches the nation label for mapping through NATION_TO_ISO.
   return `
-    SELECT ?player ?playerLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
+    SELECT ?player ?playerLabel ?searchLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
       VALUES ?searchLabel { ${values} }
       { ?player rdfs:label ?searchLabel }
       UNION
@@ -70,6 +77,7 @@ function buildBatchLookupQuery(names: string[]): string {
 }
 
 function buildCareerQuery(qid: string): string {
+  assertValidQid(qid);
   return `
     SELECT ?club ?clubLabel ?startYear ?endYear ?clubCountryCode WHERE {
       wd:${qid} p:P54 ?stmt .
@@ -108,9 +116,9 @@ async function executeSparql(query: string): Promise<Record<string, unknown>[]> 
 
 // ─── Data Mapping ─────────────────────────────────────────────────────────────
 
-function extractQid(uri: string): string {
+function extractQid(uri: string): string | null {
   const match = uri.match(/Q\d+$/);
-  return match ? match[0] : uri;
+  return match ? match[0] : null;
 }
 
 function extractYear(dateStr: string | undefined): number | null {
@@ -228,6 +236,7 @@ async function searchWikidataEntity(name: string): Promise<string | null> {
  * and extract birth year, nationality, position, sitelinks.
  */
 async function verifyAndFetchPlayer(qid: string, originalName: string): Promise<ResolvedPlayer | null> {
+  assertValidQid(qid);
   const query = `
     SELECT ?playerLabel ?birthDate ?nationalityLabel ?positionLabel ?sitelinks WHERE {
       wd:${qid} wdt:P106 wd:Q937857 .
@@ -318,19 +327,30 @@ export async function resolvePlayerBatch(
 
   const resolved: ResolvedPlayer[] = [];
   const foundNames = new Set<string>();
+  // Track all matched search labels (including alt-labels) for failed-list comparison
+  const matchedSearchLabels = new Set<string>();
 
   for (const b of bindings as Record<string, { value?: string }>[] ) {
     const playerUri = b.player?.value;
     const name = b.playerLabel?.value;
+    const searchLabel = b.searchLabel?.value;
     if (!playerUri || !name) continue;
+
+    // Record the search label that produced this match (may differ from playerLabel for alt-label matches)
+    if (searchLabel) {
+      matchedSearchLabels.add(searchLabel.toLowerCase());
+    }
 
     // Skip duplicates (keep highest sitelinks, which comes first due to ORDER BY)
     const nameLower = name.toLowerCase();
     if (foundNames.has(nameLower)) continue;
     foundNames.add(nameLower);
 
+    const qid = extractQid(playerUri);
+    if (!qid) continue;
+
     resolved.push({
-      qid: extractQid(playerUri),
+      qid,
       name,
       birthYear: extractYear(b.birthDate?.value),
       nationalityCode: mapNationLabelToISO(b.nationalityLabel?.value),
@@ -339,9 +359,9 @@ export async function resolvePlayerBatch(
     });
   }
 
-  // Find names that weren't resolved
-  const resolvedNamesLower = new Set(resolved.map((p) => p.name.toLowerCase()));
-  const failed = names.filter((n) => !resolvedNamesLower.has(n.toLowerCase()));
+  // Find names that weren't resolved — check against matched search labels
+  // (not playerLabel) so alt-label matches aren't reported as failures
+  const failed = names.filter((n) => !matchedSearchLabels.has(n.toLowerCase()));
 
   return { resolved, failed };
 }
@@ -364,13 +384,19 @@ export async function fetchPlayerCareer(qid: string): Promise<CareerEntry[]> {
   const query = buildCareerQuery(qid);
   const bindings = await executeSparql(query);
 
-  return (bindings as Record<string, { value?: string }>[]).map((b) => ({
-    clubQid: extractQid(b.club?.value ?? ""),
-    clubName: b.clubLabel?.value ?? "Unknown",
-    clubCountryCode: b.clubCountryCode?.value ?? null,
-    startYear: b.startYear?.value ? parseInt(b.startYear.value, 10) : null,
-    endYear: b.endYear?.value ? parseInt(b.endYear.value, 10) : null,
-  })).filter((e) => e.clubQid.startsWith("Q"));
+  return (bindings as Record<string, { value?: string }>[])
+    .map((b) => {
+      const clubQid = extractQid(b.club?.value ?? "");
+      if (!clubQid) return null;
+      return {
+        clubQid,
+        clubName: b.clubLabel?.value ?? "Unknown",
+        clubCountryCode: b.clubCountryCode?.value ?? null,
+        startYear: b.startYear?.value ? parseInt(b.startYear.value, 10) : null,
+        endYear: b.endYear?.value ? parseInt(b.endYear.value, 10) : null,
+      };
+    })
+    .filter((e): e is NonNullable<typeof e> => e !== null);
 }
 
 /**
@@ -439,10 +465,14 @@ export async function saveCareerToSupabase(
   }
 
   // Delete existing appearances for this player, then insert fresh
-  await supabase
+  const { error: deleteError } = await supabase
     .from("player_appearances")
     .delete()
     .eq("player_id", playerQid);
+
+  if (deleteError) {
+    return { success: false, error: `Appearances delete: ${deleteError.message}` };
+  }
 
   const appearanceRows = career.map((c) => ({
     player_id: playerQid,
@@ -485,7 +515,7 @@ export async function searchExistingPlayers(
   const { data } = await supabase
     .from("players")
     .select("id, name, scout_rank")
-    .ilike("search_name", `%${query.toLowerCase()}%`)
+    .ilike("search_name", `%${query.toLowerCase().replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")}%`)
     .limit(20)
     .order("scout_rank", { ascending: false });
   return data ?? [];

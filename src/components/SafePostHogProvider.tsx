@@ -9,10 +9,10 @@ interface SafePostHogProviderProps {
 }
 
 class PostHogErrorBoundary extends React.Component<
-  { children: React.ReactNode },
+  { children: React.ReactNode; fallback: React.ReactNode },
   { hasError: boolean }
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -27,8 +27,7 @@ class PostHogErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      // Fallback: render children without PostHog (analytics disabled)
-      return this.props.children;
+      return this.props.fallback;
     }
     return this.props.children;
   }
@@ -41,7 +40,7 @@ export function SafePostHogProvider({
   autocapture,
 }: SafePostHogProviderProps) {
   return (
-    <PostHogErrorBoundary>
+    <PostHogErrorBoundary fallback={children}>
       <PostHogProvider
         apiKey={apiKey}
         options={options}

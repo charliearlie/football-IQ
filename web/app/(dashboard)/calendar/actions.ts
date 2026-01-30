@@ -435,6 +435,7 @@ export async function upsertPuzzle(
 // ============================================================================
 
 const WIKIDATA_SPARQL = "https://query.wikidata.org/sparql";
+const QID_PATTERN = /^Q\d+$/;
 
 /**
  * Search players in our database by name.
@@ -483,6 +484,10 @@ export async function fetchCareerForForm(
   playerName: string
 ): Promise<ActionResult<{ answer: string; answer_qid: string; career_steps: { type: "club"; text: string; year: string; apps: null; goals: null }[] }>> {
   try {
+    if (!QID_PATTERN.test(playerQid)) {
+      return { success: false, error: `Invalid Wikidata QID: ${playerQid}` };
+    }
+
     const query = `
       SELECT ?club ?clubLabel ?startYear ?endYear WHERE {
         wd:${playerQid} p:P54 ?stmt .
@@ -503,6 +508,7 @@ export async function fetchCareerForForm(
         Accept: "application/sparql-results+json",
         "User-Agent": "FootballIQ-Admin/1.0",
       },
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!response.ok) {
@@ -577,11 +583,13 @@ export async function checkDuplicateAnswer(
       return { success: false, error: error.message };
     }
 
-    const normalized = playerName.toLowerCase().trim();
+    const stripDiacritics = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const normalized = stripDiacritics(playerName);
     const duplicates = (data ?? [])
       .filter((p) => {
         const content = p.content as { answer?: string } | null;
-        return content?.answer?.toLowerCase().trim() === normalized;
+        return content?.answer ? stripDiacritics(content.answer) === normalized : false;
       })
       .map((p) => ({
         puzzle_date: p.puzzle_date,

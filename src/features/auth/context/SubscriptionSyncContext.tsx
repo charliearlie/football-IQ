@@ -130,14 +130,23 @@ export function SubscriptionSyncProvider({
         // This recovers Pro status from App Store after reinstall
         // We only attempt once to avoid triggering Apple ID prompts on every launch
         if (!hasPremium) {
-          const alreadyAttempted = await AsyncStorage.getItem(SILENT_RESTORE_ATTEMPTED_KEY);
+          let alreadyAttempted = false;
+          try {
+            alreadyAttempted = !!(await AsyncStorage.getItem(SILENT_RESTORE_ATTEMPTED_KEY));
+          } catch (e) {
+            console.warn('[SubscriptionSync] Failed to read silent restore flag:', e);
+          }
 
           if (!alreadyAttempted) {
             console.log(
               '[SubscriptionSync] No premium detected, attempting silent restore (first time this install)...'
             );
             // Mark as attempted BEFORE calling to prevent double-attempts
-            await AsyncStorage.setItem(SILENT_RESTORE_ATTEMPTED_KEY, 'true');
+            try {
+              await AsyncStorage.setItem(SILENT_RESTORE_ATTEMPTED_KEY, 'true');
+            } catch (e) {
+              console.warn('[SubscriptionSync] Failed to write silent restore flag:', e);
+            }
 
             const restoreResult = await silentRestorePurchases();
 

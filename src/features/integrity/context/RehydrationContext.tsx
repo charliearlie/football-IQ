@@ -72,8 +72,8 @@ export function RehydrationProvider({ children }: RehydrationProviderProps) {
   const [attemptsRestored, setAttemptsRestored] = useState(0);
   const [error, setError] = useState<Error | null>(null);
 
-  // Prevent double-execution
-  const hasChecked = useRef(false);
+  // Track which user ID we last ran rehydration for
+  const lastCheckedUserIdRef = useRef<string | null>(null);
 
   /**
    * Check if rehydration is needed and perform it.
@@ -141,23 +141,24 @@ export function RehydrationProvider({ children }: RehydrationProviderProps) {
    * Retry rehydration (for error recovery).
    */
   const retryRehydration = useCallback(async () => {
-    hasChecked.current = false;
+    lastCheckedUserIdRef.current = null;
     await checkAndRehydrate();
   }, [checkAndRehydrate]);
 
-  // Run rehydration check once auth is ready
+  // Run rehydration check once auth is ready, and re-run if user changes
   useEffect(() => {
     if (!isInitialized) {
       return;
     }
 
-    if (hasChecked.current) {
+    const currentUserId = user?.id ?? null;
+    if (lastCheckedUserIdRef.current === currentUserId) {
       return;
     }
 
-    hasChecked.current = true;
+    lastCheckedUserIdRef.current = currentUserId;
     checkAndRehydrate();
-  }, [isInitialized, checkAndRehydrate]);
+  }, [isInitialized, user?.id, checkAndRehydrate]);
 
   const value: RehydrationContextValue = {
     status,
