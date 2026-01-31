@@ -106,3 +106,83 @@ export function buildBatchPlayerLookupQuery(
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }`;
 }
+
+/**
+ * Build a SPARQL query to fetch achievements for a specific player.
+ *
+ * Fetches two Wikidata properties:
+ * - P166 (award received): Individual awards like Ballon d'Or, Golden Boot
+ * - P1344 (participant in): Tournament participations (World Cup, Champions League)
+ *
+ * Qualifiers extracted:
+ * - P585 (point in time): Year the award/participation occurred
+ * - P54 (member of sports team): Club context for the achievement
+ *
+ * @param qid - Wikidata QID (e.g., "Q615" for Messi)
+ * @returns SPARQL query string
+ */
+export function buildAchievementQuery(qid: string): string {
+  return `SELECT ?achievement ?achievementLabel ?year ?club ?clubLabel WHERE {
+  {
+    # P166: Award received (individual awards)
+    wd:${qid} p:P166 ?awardStatement .
+    ?awardStatement ps:P166 ?achievement .
+    OPTIONAL {
+      ?awardStatement pq:P585 ?pointInTime .
+      BIND(YEAR(?pointInTime) AS ?year)
+    }
+    OPTIONAL { ?awardStatement pq:P54 ?club . }
+  }
+  UNION
+  {
+    # P1344: Participant in (tournament editions)
+    wd:${qid} p:P1344 ?participantStatement .
+    ?participantStatement ps:P1344 ?event .
+
+    # Resolve event to its parent competition (P361 = part of)
+    ?event wdt:P361 ?achievement .
+
+    OPTIONAL {
+      ?event wdt:P580 ?startTime .
+      BIND(YEAR(?startTime) AS ?year)
+    }
+    OPTIONAL { ?participantStatement pq:P54 ?club . }
+  }
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+ORDER BY ?year`;
+}
+
+/**
+ * Parse raw SPARQL achievement results into structured data.
+ *
+ * @param bindings - Raw SPARQL result bindings
+ * @returns Array of parsed achievement entries
+ */
+export interface ParsedAchievement {
+  achievementQid: string;
+  achievementLabel: string;
+  year: number | null;
+  clubQid: string | null;
+  clubLabel: string | null;
+}
+
+export function parseSPARQLAchievementResults(
+  bindings: Array<Record<string, { type: string; value: string }>>
+): ParsedAchievement[] {
+  return bindings.map((binding) => {
+    const achievementUri = binding.achievement?.value ?? '';
+    const achievementQid = achievementUri.split('/').pop() ?? '';
+    const clubUri = binding.club?.value ?? '';
+    const clubQid = clubUri ? clubUri.split('/').pop() ?? null : null;
+
+    return {
+      achievementQid,
+      achievementLabel: binding.achievementLabel?.value ?? '',
+      year: binding.year?.value ? parseInt(binding.year.value, 10) : null,
+      clubQid,
+      clubLabel: binding.clubLabel?.value ?? null,
+    };
+  });
+}

@@ -10,9 +10,11 @@ daily_puzzles    - Puzzles (RLS: 3-tier access)
 profiles         - User profiles (RLS: read all, update own)
 puzzle_attempts  - Attempts (RLS: owner-only)
 user_streaks     - Streaks (RLS: owner-only)
-players          - Wikidata player graph (RLS: SELECT, QID PK)
+players          - Wikidata player graph + stats_cache JSONB (RLS: SELECT, QID PK)
 clubs            - Club identity (RLS: SELECT, QID PK)
 player_appearances - Player ↔ Club (RLS: SELECT)
+achievements     - Curated football achievements (RLS: SELECT, Wikidata QID PK)
+player_achievements - Player ↔ Achievement with year/club (RLS: SELECT)
 agent_runs       - AI logs (RLS: blocked, admin-only)
 match_data       - Match data (RLS: blocked, admin-only)
 ```
@@ -60,10 +62,40 @@ interface UnifiedPlayer {
 - **Oracle Cache**: Auto-populated from Supabase RPC when Oracle results selected
 - **Sync**: Weekly check, delta download via `get_elite_index_delta` RPC
 
+### Stats Cache (Achievement Validation)
+```typescript
+import { getPlayerStatsCache } from '@/lib/database';
+
+// Get pre-calculated achievement totals for Grid validation
+const stats = await getPlayerStatsCache('Q11571');
+// { ballon_dor_count: 8, ucl_titles: 4, world_cup_titles: 1, ... }
+
+// Used by Grid validation for trophy/stat categories
+import { checkTrophyMatch, checkStatMatch } from '@/features/the-grid/utils/achievementMapping';
+
+checkTrophyMatch('Champions League', stats);  // true if ucl_titles > 0
+checkStatMatch("5+ Ballon d'Ors", stats);     // true if ballon_dor_count >= 5
+```
+
+### Seasonal Sync Scheduler
+```typescript
+import { getSyncPeriod, getSyncIntervalMs } from '@/services/sync/SyncScheduler';
+
+getSyncPeriod(new Date('2026-01-15'));  // 'weekly' (January = transfer window)
+getSyncPeriod(new Date('2026-03-15'));  // 'monthly' (quiet period)
+getSyncIntervalMs(new Date('2026-06-01'));  // 604800000 (7 days, awards season)
+getSyncIntervalMs(new Date('2026-10-01'));  // 2592000000 (30 days, quiet)
+
+// Weekly sync months: January, May, June, August
+// Monthly sync months: all others
+```
+
 ### Admin: Player Scout (`/player-scout`)
 - Batch-resolves player names via Wikidata SPARQL
 - Fetches career clubs (P54 property)
-- Upserts to `players`, `clubs`, `player_appearances`
+- Fetches achievements (P166 + P1344 properties) filtered through curated whitelist
+- Upserts to `players`, `clubs`, `player_appearances`, `achievements`, `player_achievements`
+- Recalculates `stats_cache` via `calculate_player_stats()` RPC
 
 ## 3-Tier Puzzle Access
 ```
@@ -595,7 +627,8 @@ const result = await validateCellWithDB('player-123', 4, gridContent);
 // Supported category types:
 // - 'club': Uses didPlayerPlayFor()
 // - 'nation': Uses hasNationality() with name→code mapping
-// - 'stat'/'trophy': Not yet supported (returns false)
+// - 'trophy': Uses stats_cache via checkTrophyMatch() (e.g., "Champions League" → ucl_titles > 0)
+// - 'stat': Uses stats_cache via checkStatMatch() (e.g., "5+ Ballon d'Ors" → ballon_dor_count >= 5)
 ```
 
 ## Topical Quiz Game

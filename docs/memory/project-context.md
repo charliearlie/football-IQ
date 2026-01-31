@@ -36,6 +36,8 @@ Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
 | `players` | Yes (SELECT) | Wikidata player graph (QID PK) |
 | `clubs` | Yes (SELECT) | Club identity (QID PK) |
 | `player_appearances` | Yes (SELECT) | Player ↔ Club junction with years |
+| `achievements` | Yes (SELECT) | Curated football achievements (Wikidata QID PK) |
+| `player_achievements` | Yes (SELECT) | Player ↔ Achievement junction with year/club |
 | `app_config` | Yes (SELECT) | App versioning (Elite Index version) |
 | `agent_runs` | Blocked | AI agent logs (admin-only) |
 | `match_data` | Blocked | Football match data (admin-only) |
@@ -48,13 +50,13 @@ sync_queue (id, table_name, record_id, action, payload, created_at)
 unlocked_puzzles (puzzle_id, unlocked_at)  -- Ad unlocks (permanent)
 puzzle_catalog (id, game_mode, puzzle_date, difficulty)  -- Archive metadata
 player_database (id, external_id, name, search_name, clubs, nationalities, is_active)
-player_search_cache (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
+player_search_cache (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, stats_cache, synced_at)
 _metadata (key, value, updated_at)  -- Version tracking (Elite Index version)
 ```
 
 ### Migrations
-**Supabase:** 001-009 + 012 + 019-020 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync)
-**SQLite:** v1-v8 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding)
+**Supabase:** 001-009 + 012 + 019-022 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync, achievements + stats_cache)
+**SQLite:** v1-v10 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding, stats_cache column)
 
 ## Authentication
 
@@ -128,7 +130,7 @@ Pre-bundled database of ~4,900 elite players for instant autocomplete across all
 3. **Local Search**: `searchPlayerCache()` — LIKE on search_name, ORDER BY scout_rank DESC
 4. **Oracle Fallback**: If < 3 local results, debounced (300ms) Supabase RPC for niche players
 5. **Auto-Cache**: Oracle results upserted into `player_search_cache` for future searches
-6. **Delta Sync**: Weekly background check via `SyncService` — downloads deltas when server version bumps
+6. **Delta Sync**: Calendar-aware background check via `SyncService` + `SyncScheduler` — weekly during transfer windows/awards season (Jan, May-Jun, Aug), monthly otherwise — downloads deltas including `stats_cache` when server version bumps
 
 **Search Flow:**
 ```
@@ -147,8 +149,10 @@ Cache Oracle results to player_search_cache
 - `assets/data/elite-index.json` — Bundled player data
 - `src/lib/database.ts` — Migration v8, `searchPlayerCache()`, `getEliteIndexVersion()`
 - `src/services/player/HybridSearchEngine.ts` — Local + Oracle waterfall
-- `src/services/player/SyncService.ts` — Weekly delta sync
+- `src/services/player/SyncService.ts` — Calendar-aware delta sync (delegates to SyncScheduler)
+- `src/services/sync/SyncScheduler.ts` — Seasonal sync frequency (weekly in Jan/May-Jun/Aug, monthly otherwise)
 - `supabase/migrations/020_player_sync.sql` — `app_config` table + `get_elite_index_delta` RPC
+- `supabase/migrations/022_achievements.sql` — Achievements schema, stats_cache, calculate_player_stats RPC
 
 ### Access Control (3-Tier)
 | Tier | User Type | Puzzle Access |
@@ -234,8 +238,8 @@ Fill 3x3 matrix with players matching row (Y-axis) and column (X-axis) criteria.
 **Categories**: `club`, `nation`, `stat`, `trophy`
 **Scoring**: `cellsFilled === 9 ? 100 : Math.round((cellsFilled / 9) × 100)`
 **Display**: 3x3 grid of `✅` filled / `❌` empty
-**Validation**: Uses `player_database` SQLite table for club/nation checks
-**Files**: `src/features/the-grid/`
+**Validation**: Uses `player_database` SQLite table for club/nation checks; `stats_cache` for trophy/stat checks
+**Files**: `src/features/the-grid/`, `src/features/the-grid/utils/achievementMapping.ts`
 
 *Note: Legacy Tic Tac Toe (`tic_tac_toe`) still exists for archive review but replaced by The Grid for daily play.*
 

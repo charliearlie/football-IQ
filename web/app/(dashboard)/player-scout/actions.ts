@@ -595,3 +595,246 @@ export async function getPlayersWithoutCareers(): Promise<{ qid: string; name: s
 
   return allPlayers;
 }
+
+// ─── Achievement Fetching & Sync ─────────────────────────────────────────────
+
+/**
+ * Curated whitelist of Wikidata achievement QIDs.
+ * Mirrors src/services/oracle/achievementMappings.ts — kept in sync manually.
+ * Only QIDs in this set are accepted from SPARQL results.
+ */
+const KNOWN_ACHIEVEMENT_QIDS: Record<string, { name: string; category: "Individual" | "Club" | "International" }> = {
+  // Individual Awards
+  Q166177:  { name: "Ballon d'Or", category: "Individual" },
+  Q324867:  { name: "FIFA World Cup Golden Boot", category: "Individual" },
+  Q201171:  { name: "FIFA World Cup Golden Ball", category: "Individual" },
+  Q731002:  { name: "European Golden Shoe", category: "Individual" },
+  Q739698:  { name: "FIFA World Player of the Year", category: "Individual" },
+  Q55640043:{ name: "The Best FIFA Men's Player", category: "Individual" },
+  Q180966:  { name: "UEFA Men's Player of the Year", category: "Individual" },
+  Q753297:  { name: "PFA Players' Player of the Year", category: "Individual" },
+  Q729027:  { name: "Premier League Golden Boot", category: "Individual" },
+  Q1056498: { name: "Pichichi Trophy", category: "Individual" },
+  Q282131:  { name: "Capocannoniere", category: "Individual" },
+  Q281498:  { name: "Torjägerkanone", category: "Individual" },
+  Q381926:  { name: "UEFA Champions League Top Scorer", category: "Individual" },
+  Q57082987: { name: "Kopa Trophy", category: "Individual" },
+  Q71081525: { name: "Yashin Trophy", category: "Individual" },
+  Q113543997: { name: "Gerd Müller Trophy", category: "Individual" },
+  Q1534839: { name: "Golden Boy", category: "Individual" },
+  // Club Competitions
+  Q18756:   { name: "UEFA Champions League", category: "Club" },
+  Q19570:   { name: "UEFA Europa League", category: "Club" },
+  Q9448:    { name: "Premier League", category: "Club" },
+  Q82595:   { name: "La Liga", category: "Club" },
+  Q35572:   { name: "Serie A", category: "Club" },
+  Q36362:   { name: "Bundesliga", category: "Club" },
+  Q13394:   { name: "Ligue 1", category: "Club" },
+  Q1532919: { name: "Eredivisie", category: "Club" },
+  Q140112:  { name: "Primeira Liga", category: "Club" },
+  Q155223:  { name: "FA Cup", category: "Club" },
+  Q181944:  { name: "Copa del Rey", category: "Club" },
+  Q47258:   { name: "DFB-Pokal", category: "Club" },
+  Q186893:  { name: "Coppa Italia", category: "Club" },
+  Q192564:  { name: "Coupe de France", category: "Club" },
+  Q272478:  { name: "EFL Cup", category: "Club" },
+  Q899515:  { name: "FIFA Club World Cup", category: "Club" },
+  Q669471:  { name: "UEFA Super Cup", category: "Club" },
+  Q3455498: { name: "Community Shield", category: "Club" },
+  Q19894:   { name: "Scottish Premiership", category: "Club" },
+  Q838333:  { name: "Süper Lig", category: "Club" },
+  Q630104:  { name: "MLS Cup", category: "Club" },
+  Q187453:  { name: "Copa Libertadores", category: "Club" },
+  Q212629:  { name: "Brasileirão Serie A", category: "Club" },
+  Q223170:  { name: "Argentine Primera División", category: "Club" },
+  Q215160:  { name: "Belgian Pro League", category: "Club" },
+  // International Competitions
+  Q19317:   { name: "FIFA World Cup", category: "International" },
+  Q18278:   { name: "UEFA European Championship", category: "International" },
+  Q48413:   { name: "Copa América", category: "International" },
+  Q132387:  { name: "Africa Cup of Nations", category: "International" },
+  Q170444:  { name: "AFC Asian Cup", category: "International" },
+  Q215946:  { name: "CONCACAF Gold Cup", category: "International" },
+  Q870911:  { name: "UEFA Nations League", category: "International" },
+  Q151460:  { name: "FIFA Confederations Cup", category: "International" },
+  Q23810:   { name: "Olympic Games Football", category: "International" },
+  Q218688:  { name: "FIFA U-20 World Cup", category: "International" },
+};
+
+export interface AchievementEntry {
+  achievementQid: string;
+  name: string;
+  category: "Individual" | "Club" | "International";
+  year: number | null;
+  clubQid: string | null;
+  clubName: string | null;
+}
+
+/**
+ * Fetch achievements for a player from Wikidata via SPARQL.
+ * Queries P166 (award received) and P1344 (participant in → competition edition).
+ * Filters results through the curated ACHIEVEMENT_MAP whitelist.
+ */
+export async function fetchPlayerAchievements(
+  qid: string
+): Promise<AchievementEntry[]> {
+  assertValidQid(qid);
+
+  const query = `
+    SELECT ?achievement ?achievementLabel ?year ?club ?clubLabel WHERE {
+      {
+        wd:${qid} p:P166 ?stmt .
+        ?stmt ps:P166 ?achievement .
+        OPTIONAL { ?stmt pq:P585 ?date }
+        OPTIONAL { ?stmt pq:P54 ?club }
+        BIND(YEAR(?date) AS ?year)
+      }
+      UNION
+      {
+        wd:${qid} p:P1344 ?stmt .
+        ?stmt ps:P1344 ?edition .
+        ?edition wdt:P361 ?achievement .
+        OPTIONAL { ?stmt pq:P585 ?date }
+        OPTIONAL { ?edition wdt:P580 ?startDate }
+        OPTIONAL { ?stmt pq:P54 ?club }
+        BIND(COALESCE(YEAR(?date), YEAR(?startDate)) AS ?year)
+      }
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+    }
+    ORDER BY ?year
+  `;
+
+  const bindings = await executeSparql(query);
+  const results: AchievementEntry[] = [];
+  const seen = new Set<string>();
+
+  for (const b of bindings as Record<string, { value?: string }>[]) {
+    const achievementUri = b.achievement?.value;
+    if (!achievementUri) continue;
+
+    const achievementQid = extractQid(achievementUri);
+    if (!achievementQid || !(achievementQid in KNOWN_ACHIEVEMENT_QIDS)) continue;
+
+    const year = b.year?.value ? parseInt(b.year.value, 10) : null;
+    const dedupeKey = `${achievementQid}-${year ?? "null"}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    const def = KNOWN_ACHIEVEMENT_QIDS[achievementQid];
+    const clubUri = b.club?.value;
+    const clubQid = clubUri ? extractQid(clubUri) : null;
+
+    results.push({
+      achievementQid,
+      name: def.name,
+      category: def.category,
+      year,
+      clubQid,
+      clubName: b.clubLabel?.value ?? null,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Save fetched achievements to Supabase.
+ * Upserts clubs referenced by achievements, then replaces all
+ * player_achievements for this player, and recalculates stats_cache.
+ */
+export async function saveAchievementsToSupabase(
+  playerQid: string,
+  achievements: AchievementEntry[]
+): Promise<{ success: boolean; count: number; statsCache?: Record<string, number>; error?: string }> {
+  const supabase = await createAdminClient();
+
+  // Upsert any clubs referenced by achievements
+  const clubRows = achievements
+    .filter((a) => a.clubQid && a.clubName)
+    .map((a) => ({
+      id: a.clubQid!,
+      name: a.clubName!,
+      search_name: a.clubName!
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim(),
+    }));
+
+  const uniqueClubs = [...new Map(clubRows.map((c) => [c.id, c])).values()];
+  if (uniqueClubs.length > 0) {
+    const { error: clubError } = await supabase
+      .from("clubs")
+      .upsert(uniqueClubs, { onConflict: "id" });
+    if (clubError) {
+      return { success: false, count: 0, error: `Clubs: ${clubError.message}` };
+    }
+  }
+
+  // Delete existing achievements for this player, then insert fresh
+  const { error: deleteError } = await supabase
+    .from("player_achievements")
+    .delete()
+    .eq("player_id", playerQid);
+
+  if (deleteError) {
+    return { success: false, count: 0, error: `Delete: ${deleteError.message}` };
+  }
+
+  if (achievements.length > 0) {
+    const rows = achievements.map((a) => ({
+      player_id: playerQid,
+      achievement_id: a.achievementQid,
+      year: a.year,
+      club_id: a.clubQid,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("player_achievements")
+      .insert(rows);
+
+    if (insertError) {
+      return { success: false, count: 0, error: `Insert: ${insertError.message}` };
+    }
+  }
+
+  // Recalculate stats_cache via the database function
+  // (trigger should handle this, but call explicitly to get the result)
+  const { data: statsData, error: statsError } = await supabase
+    .rpc("calculate_player_stats", { target_player_id: playerQid });
+
+  if (statsError) {
+    console.error("[saveAchievements] stats_cache calc failed:", statsError.message);
+  }
+
+  // Bump elite index version so mobile clients pick up changes
+  const { error: bumpError } = await supabase
+    .rpc("bump_elite_index_version");
+
+  if (bumpError) {
+    console.error("[saveAchievements] version bump failed:", bumpError.message);
+  }
+
+  return {
+    success: true,
+    count: achievements.length,
+    statsCache: statsData ?? undefined,
+  };
+}
+
+/**
+ * Full sync: fetch achievements from Wikidata and save to Supabase.
+ * Convenience wrapper combining fetch + save for the CMS button.
+ */
+export async function syncPlayerAchievements(
+  playerQid: string
+): Promise<{ success: boolean; count: number; statsCache?: Record<string, number>; error?: string }> {
+  try {
+    assertValidQid(playerQid);
+    const achievements = await fetchPlayerAchievements(playerQid);
+    return await saveAchievementsToSupabase(playerQid, achievements);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, count: 0, error: message };
+  }
+}

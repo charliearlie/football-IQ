@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -280,6 +280,17 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 
     await database.execAsync('PRAGMA user_version = 9');
     console.log('[Database] Migration v9 complete');
+  }
+
+  // Migration v10: Add stats_cache column for pre-calculated achievement totals
+  // Enables instant Grid validation for trophy/stat categories without graph queries
+  if (currentVersion < 10) {
+    console.log('[Database] Running migration v10: Add stats_cache to player_search_cache');
+    await database.execAsync(`
+      ALTER TABLE player_search_cache ADD COLUMN stats_cache TEXT DEFAULT '{}';
+      PRAGMA user_version = 10;
+    `);
+    console.log('[Database] Migration v10 complete');
   }
 }
 
@@ -1292,6 +1303,7 @@ export interface CachedPlayer {
   birth_year: number | null;
   position_category: string | null;
   nationality_code: string | null;
+  stats_cache?: string | null;
 }
 
 /**
@@ -1326,6 +1338,33 @@ export async function searchPlayerCache(
       $limit: limit * 2, // Fetch extra for better ranking after client-side sort
     }
   );
+}
+
+/**
+ * Get pre-calculated achievement stats for a player.
+ * Returns the parsed stats_cache JSONB from player_search_cache.
+ * Used by Grid validation to check trophy/stat categories instantly.
+ *
+ * @param playerId - Wikidata QID (e.g., "Q615")
+ * @returns Flat map of achievement counts, or empty object if not found
+ */
+export async function getPlayerStatsCache(
+  playerId: string
+): Promise<Record<string, number>> {
+  try {
+    const database = getDatabase();
+    const row = await database.getFirstAsync<{ stats_cache: string | null }>(
+      'SELECT stats_cache FROM player_search_cache WHERE id = $id',
+      { $id: playerId }
+    );
+
+    if (!row?.stats_cache) return {};
+
+    const parsed = JSON.parse(row.stats_cache);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -1415,6 +1454,7 @@ async function seedEliteIndex(
 /**
  * Batch upsert players into player_search_cache.
  * Used by SyncService for delta updates.
+ * Supports optional stats_cache for pre-calculated achievement totals.
  */
 export async function upsertPlayerCache(
   players: Array<{
@@ -1425,6 +1465,7 @@ export async function upsertPlayerCache(
     birth_year: number | null;
     position_category: string | null;
     nationality_code: string | null;
+    stats_cache?: Record<string, number> | string | null;
   }>
 ): Promise<void> {
   if (players.length === 0) return;
@@ -1437,14 +1478,14 @@ export async function upsertPlayerCache(
 
     const placeholders = batch
       .map((_, idx) => {
-        const base = idx * 8;
-        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
+        const base = idx * 9;
+        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9})`;
       })
       .join(', ');
 
     const params: Record<string, string | number | null> = {};
     batch.forEach((player, idx) => {
-      const base = idx * 8;
+      const base = idx * 9;
       params[`$${base + 1}`] = player.id;
       params[`$${base + 2}`] = player.name;
       params[`$${base + 3}`] = player.search_name;
@@ -1453,11 +1494,15 @@ export async function upsertPlayerCache(
       params[`$${base + 6}`] = player.position_category;
       params[`$${base + 7}`] = player.nationality_code;
       params[`$${base + 8}`] = syncedAt;
+      // stats_cache: serialize object to JSON string, pass through strings, default to '{}'
+      const sc = player.stats_cache;
+      params[`$${base + 9}`] =
+        sc == null ? '{}' : typeof sc === 'string' ? sc : JSON.stringify(sc);
     });
 
     await database.runAsync(
       `INSERT OR REPLACE INTO player_search_cache
-       (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
+       (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at, stats_cache)
        VALUES ${placeholders}`,
       params
     );

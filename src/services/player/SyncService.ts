@@ -5,22 +5,23 @@
  * Checks server version against local version and downloads
  * new/updated players when an update is available.
  *
+ * Uses SyncScheduler for calendar-aware sync frequency:
+ * - Weekly during transfer windows and awards season (Jan, May-Jun, Aug)
+ * - Monthly heartbeat during quieter periods
+ *
  * Runs non-blocking in the background on app mount.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import {
   getEliteIndexVersion,
   setEliteIndexVersion,
   upsertPlayerCache,
 } from '@/lib/database';
-
-/** AsyncStorage key for last sync check timestamp */
-const LAST_SYNC_CHECK_KEY = '@elite_index_last_sync_check';
-
-/** Minimum interval between sync checks (7 days in ms) */
-const SYNC_CHECK_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+import {
+  isSyncCheckDue,
+  recordSyncCheck,
+} from '@/services/sync/SyncScheduler';
 
 export interface SyncResult {
   success: boolean;
@@ -29,28 +30,13 @@ export interface SyncResult {
   error?: string;
 }
 
-/**
- * Check if an Elite Index sync check is due.
- * Throttled to once per 7 days to avoid unnecessary network calls.
- */
-export async function isSyncCheckDue(): Promise<boolean> {
-  try {
-    const lastCheck = await AsyncStorage.getItem(LAST_SYNC_CHECK_KEY);
-    if (lastCheck) {
-      const elapsed = Date.now() - new Date(lastCheck).getTime();
-      if (elapsed < SYNC_CHECK_INTERVAL_MS) {
-        return false;
-      }
-    }
-    return true;
-  } catch {
-    return true; // Default to checking if AsyncStorage fails
-  }
-}
+// Re-export scheduler utilities for consumers that need them
+export { getSyncPeriod, getSyncIntervalMs } from '@/services/sync/SyncScheduler';
 
 /**
  * Sync Elite Index delta from server.
  * Downloads new/updated players and upserts them into local cache.
+ * Includes stats_cache for pre-calculated achievement totals.
  *
  * Non-blocking — safe to call from app mount without awaiting.
  *
@@ -58,7 +44,7 @@ export async function isSyncCheckDue(): Promise<boolean> {
  */
 export async function syncEliteIndex(): Promise<SyncResult> {
   try {
-    // Throttle: skip if checked recently
+    // Throttle: skip if checked recently (calendar-aware frequency)
     const due = await isSyncCheckDue();
     if (!due) {
       return { success: true, updatedCount: 0, serverVersion: 0 };
@@ -72,7 +58,7 @@ export async function syncEliteIndex(): Promise<SyncResult> {
     });
 
     // Record check timestamp regardless of outcome
-    await AsyncStorage.setItem(LAST_SYNC_CHECK_KEY, new Date().toISOString());
+    await recordSyncCheck();
 
     if (error) {
       console.error('[SyncService] RPC failed:', error.message);
@@ -94,7 +80,7 @@ export async function syncEliteIndex(): Promise<SyncResult> {
       };
     }
 
-    // Parse and upsert delta players
+    // Parse and upsert delta players (now includes stats_cache)
     const players = (result.updated_players ?? []) as Array<{
       id: string;
       name: string;
@@ -103,6 +89,7 @@ export async function syncEliteIndex(): Promise<SyncResult> {
       birth_year: number | null;
       position_category: string | null;
       nationality_code: string | null;
+      stats_cache?: Record<string, number> | null;
     }>;
 
     await upsertPlayerCache(players);

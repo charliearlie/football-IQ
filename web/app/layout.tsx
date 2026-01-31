@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Football IQ - Daily Football Puzzles",
   description:
     "Test your football knowledge with daily puzzles. Career Path, Transfer Guess, Goalscorer Recall and more. Download the free app today!",
+  icons: {
+    icon: "/images/favicon.png",
+  },
   openGraph: {
     title: "Football IQ - Prove Your Football IQ",
     description: "Daily puzzles to test your football knowledge",

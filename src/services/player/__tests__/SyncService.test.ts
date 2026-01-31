@@ -2,18 +2,23 @@
  * Tests for Elite Index Sync Service.
  *
  * Validates:
- * - Throttling (7-day interval between checks)
- * - Delta download and upsert
+ * - Calendar-aware throttling via SyncScheduler
+ * - Delta download and upsert (including stats_cache)
  * - Error handling
  */
 
-import { isSyncCheckDue, syncEliteIndex } from '../SyncService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncEliteIndex } from '../SyncService';
+import {
+  isSyncCheckDue,
+  recordSyncCheck,
+} from '@/services/sync/SyncScheduler';
 
-// Mock dependencies
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn().mockResolvedValue(null),
-  setItem: jest.fn().mockResolvedValue(undefined),
+// Mock SyncScheduler
+jest.mock('@/services/sync/SyncScheduler', () => ({
+  isSyncCheckDue: jest.fn().mockResolvedValue(true),
+  recordSyncCheck: jest.fn().mockResolvedValue(undefined),
+  getSyncPeriod: jest.fn().mockReturnValue('weekly'),
+  getSyncIntervalMs: jest.fn().mockReturnValue(7 * 24 * 60 * 60 * 1000),
 }));
 
 const mockRpc = jest.fn();
@@ -38,34 +43,9 @@ describe('SyncService', () => {
     jest.clearAllMocks();
   });
 
-  describe('isSyncCheckDue', () => {
-    it('returns true on first check (no stored timestamp)', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-      expect(await isSyncCheckDue()).toBe(true);
-    });
-
-    it('returns false if checked within 7 days', async () => {
-      const recentDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // 1 day ago
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(recentDate.toISOString());
-      expect(await isSyncCheckDue()).toBe(false);
-    });
-
-    it('returns true if last check was over 7 days ago', async () => {
-      const oldDate = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000); // 8 days ago
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(oldDate.toISOString());
-      expect(await isSyncCheckDue()).toBe(true);
-    });
-
-    it('returns true if AsyncStorage throws', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockRejectedValue(new Error('Storage error'));
-      expect(await isSyncCheckDue()).toBe(true);
-    });
-  });
-
   describe('syncEliteIndex', () => {
     it('skips if sync check not due', async () => {
-      const recentDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(recentDate.toISOString());
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(false);
 
       const result = await syncEliteIndex();
       expect(result.success).toBe(true);
@@ -74,7 +54,7 @@ describe('SyncService', () => {
     });
 
     it('returns early if server has no updates', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(true);
       mockRpc.mockResolvedValue({
         data: [{ has_updates: false, server_version: 1, updated_players: [] }],
         error: null,
@@ -88,8 +68,8 @@ describe('SyncService', () => {
       });
     });
 
-    it('downloads and upserts delta players', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+    it('downloads and upserts delta players with stats_cache', async () => {
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(true);
       const mockPlayers = [
         {
           id: 'Q999',
@@ -99,6 +79,7 @@ describe('SyncService', () => {
           birth_year: 2000,
           position_category: 'Forward',
           nationality_code: 'FR',
+          stats_cache: { ucl_titles: 2 },
         },
       ];
 
@@ -123,8 +104,8 @@ describe('SyncService', () => {
       expect(mockSetEliteIndexVersion).toHaveBeenCalledWith(2);
     });
 
-    it('records check timestamp on successful check', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+    it('records check timestamp via SyncScheduler', async () => {
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(true);
       mockRpc.mockResolvedValue({
         data: [{ has_updates: false, server_version: 1, updated_players: [] }],
         error: null,
@@ -132,14 +113,11 @@ describe('SyncService', () => {
 
       await syncEliteIndex();
 
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        '@elite_index_last_sync_check',
-        expect.any(String)
-      );
+      expect(recordSyncCheck).toHaveBeenCalled();
     });
 
     it('handles RPC errors gracefully', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(true);
       mockRpc.mockResolvedValue({
         data: null,
         error: { message: 'Network error' },
@@ -151,7 +129,7 @@ describe('SyncService', () => {
     });
 
     it('handles unexpected exceptions gracefully', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(true);
       mockRpc.mockRejectedValue(new Error('Connection refused'));
 
       const result = await syncEliteIndex();
@@ -160,7 +138,7 @@ describe('SyncService', () => {
     });
 
     it('calls RPC with correct local version', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+      (isSyncCheckDue as jest.Mock).mockResolvedValue(true);
       mockGetEliteIndexVersion.mockResolvedValue(3);
       mockRpc.mockResolvedValue({
         data: [{ has_updates: false, server_version: 3, updated_players: [] }],

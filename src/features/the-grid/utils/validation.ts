@@ -8,6 +8,8 @@
 import { validateGuess } from '@/lib/validation';
 import { TheGridContent, GridCategory, CellIndex } from '../types/theGrid.types';
 import { didPlayerPlayFor, hasNationality, getPlayerById } from '@/services/player';
+import { getPlayerStatsCache } from '@/lib/database';
+import { checkTrophyMatch, checkStatMatch } from './achievementMapping';
 
 /**
  * Mapping of country names to ISO 3166-1 alpha-2 codes.
@@ -268,12 +270,15 @@ async function checkCategoryMatch(
       return hasNationality(playerId, code);
     }
 
-    case 'stat':
-    case 'trophy':
-      // Not yet supported - would require additional database fields
-      // For now, these categories will always fail DB validation
-      // and should rely on valid_answers fallback
-      return false;
+    case 'trophy': {
+      const trophyStats = await getPlayerStatsCache(playerId);
+      return checkTrophyMatch(category.value, trophyStats);
+    }
+
+    case 'stat': {
+      const statStats = await getPlayerStatsCache(playerId);
+      return checkStatMatch(category.value, statStats);
+    }
 
     default:
       return false;
