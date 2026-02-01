@@ -292,6 +292,34 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     `);
     console.log('[Database] Migration v10 complete');
   }
+
+  // Migration v11: Add is_elite column for tiered on-device storage
+  // Top 5,000 players by scout_rank keep full stats_cache; others keep only name + qid to save space
+  if (currentVersion < 11) {
+    console.log('[Database] Running migration v11: Add is_elite to player_search_cache');
+    await database.execAsync(`
+      ALTER TABLE player_search_cache ADD COLUMN is_elite INTEGER DEFAULT 0;
+    `);
+
+    // Mark top 5000 by scout_rank as elite
+    await database.execAsync(`
+      UPDATE player_search_cache SET is_elite = 1
+      WHERE id IN (
+        SELECT id FROM player_search_cache
+        ORDER BY scout_rank DESC
+        LIMIT 5000
+      );
+    `);
+
+    // Clear stats_cache for non-elite players to save space
+    await database.execAsync(`
+      UPDATE player_search_cache SET stats_cache = '{}'
+      WHERE is_elite = 0;
+    `);
+
+    await database.execAsync('PRAGMA user_version = 11');
+    console.log('[Database] Migration v11 complete');
+  }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -1456,6 +1484,62 @@ async function seedEliteIndex(
  * Used by SyncService for delta updates.
  * Supports optional stats_cache for pre-calculated achievement totals.
  */
+/**
+ * Update is_elite for recently synced players using a threshold approach.
+ * Queries the 5000th-highest scout_rank once, then sets is_elite and
+ * clears stats_cache only for the provided player IDs — no full-table scan.
+ *
+ * @param playerIds - QIDs of players that were just upserted in this sync delta
+ */
+export async function recalculateEliteStatus(playerIds?: string[]): Promise<void> {
+  const database = getDatabase();
+
+  // Find the scout_rank at position 5000 (the elite cutoff)
+  const threshold = await database.getFirstAsync<{ scout_rank: number }>(
+    `SELECT scout_rank FROM player_search_cache
+     ORDER BY scout_rank DESC
+     LIMIT 1 OFFSET 4999`
+  );
+
+  // If fewer than 5000 players exist, everyone is elite
+  const cutoff = threshold?.scout_rank ?? 0;
+
+  if (playerIds && playerIds.length > 0) {
+    // Only update the delta rows — avoids touching the whole table
+    for (let i = 0; i < playerIds.length; i += ELITE_BATCH_SIZE) {
+      const batch = playerIds.slice(i, i + ELITE_BATCH_SIZE);
+      const placeholders = batch.map((_, idx) => `$${idx + 1}`).join(', ');
+      const params: Record<string, string | number> = {};
+      batch.forEach((id, idx) => { params[`$${idx + 1}`] = id; });
+
+      // Mark elite/non-elite based on threshold
+      await database.runAsync(
+        `UPDATE player_search_cache
+         SET is_elite = CASE WHEN scout_rank >= ${cutoff} THEN 1 ELSE 0 END
+         WHERE id IN (${placeholders})`,
+        params
+      );
+
+      // Clear stats_cache for newly non-elite players in this batch
+      await database.runAsync(
+        `UPDATE player_search_cache
+         SET stats_cache = '{}'
+         WHERE id IN (${placeholders}) AND is_elite = 0`,
+        params
+      );
+    }
+  } else {
+    // Full recalc fallback (migration or manual trigger)
+    await database.execAsync(
+      `UPDATE player_search_cache
+       SET is_elite = CASE WHEN scout_rank >= ${cutoff} THEN 1 ELSE 0 END`
+    );
+    await database.execAsync(
+      `UPDATE player_search_cache SET stats_cache = '{}' WHERE is_elite = 0`
+    );
+  }
+}
+
 export async function upsertPlayerCache(
   players: Array<{
     id: string;

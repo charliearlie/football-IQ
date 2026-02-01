@@ -17,6 +17,7 @@ import {
   getEliteIndexVersion,
   setEliteIndexVersion,
   upsertPlayerCache,
+  recalculateEliteStatus,
 } from '@/lib/database';
 import {
   isSyncCheckDue,
@@ -93,6 +94,7 @@ export async function syncEliteIndex(): Promise<SyncResult> {
     }>;
 
     await upsertPlayerCache(players);
+    await recalculateEliteStatus(players.map((p) => p.id));
     await setEliteIndexVersion(result.server_version);
 
     console.log(
