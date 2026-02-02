@@ -29,7 +29,6 @@ export function getTransferGuessDefaults(): TransferGuessContent {
     answer: "",
     from_club: "",
     to_club: "",
-    year: new Date().getFullYear(),
     fee: "",
     hints: ["", "", ""],
   };

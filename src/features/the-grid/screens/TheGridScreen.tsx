@@ -12,8 +12,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/theme';
@@ -155,11 +153,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
       onHelpPress={() => setShowHelpModal(true)}
       testID="the-grid-screen"
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
+      <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -170,7 +164,6 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
 
           {/* Instructions */}
           <View style={styles.instructionsContainer}>
-            <Text style={styles.instructionsTitle}>THE GRID</Text>
             <Text style={styles.instructionsText}>
               {isReviewMode
                 ? 'Review your completed game'
@@ -178,65 +171,65 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
             </Text>
           </View>
 
-        {/* The Grid Board */}
-        <View style={styles.boardContainer}>
-          <TheGridBoard
-            content={gridContent}
-            cells={displayCells}
-            selectedCell={isReviewMode ? null : state.selectedCell}
-            onCellPress={isReviewMode ? () => {} : selectCell}
-            disabled={isReviewMode || state.gameStatus === 'complete'}
-            testID="the-grid-board"
-          />
-        </View>
-
-        {/* Progress indicator */}
-        {!isReviewMode && state.gameStatus === 'playing' && (
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>
-              {state.cells.filter((c) => c !== null).length}/9 cells filled
-            </Text>
+          {/* The Grid Board */}
+          <View style={styles.boardContainer}>
+            <TheGridBoard
+              content={gridContent}
+              cells={displayCells}
+              selectedCell={isReviewMode ? null : state.selectedCell}
+              onCellPress={isReviewMode ? () => {} : selectCell}
+              disabled={isReviewMode || state.gameStatus === 'complete'}
+              testID="the-grid-board"
+            />
           </View>
-        )}
 
-        {/* Review mode score display */}
-        {isReviewMode && attempt && (
-          <View style={styles.reviewScoreContainer}>
-            <Text style={styles.reviewScoreLabel}>Final Score</Text>
-            <Text style={styles.reviewScoreValue}>
-              {typeof attempt.score === 'number' ? attempt.score : 0}
-              <Text style={styles.reviewScoreMax}>/100</Text>
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+          {/* Progress indicator */}
+          {!isReviewMode && state.gameStatus === 'playing' && (
+            <View style={styles.progressContainer}>
+              <Text style={styles.progressText}>
+                {state.cells.filter((c) => c !== null).length}/9 cells filled
+              </Text>
+            </View>
+          )}
 
-      {/* Result Modal */}
-      <TheGridResultModal
-        visible={showResultModal}
-        score={state.score}
-        cells={state.cells}
-        puzzleId={puzzle?.id ?? ''}
-        onClose={() => {
-          setShowResultModal(false);
-          router.back();
-        }}
-        onShare={handleShare}
-        testID="result-modal"
-      />
+          {/* Review mode score display */}
+          {isReviewMode && attempt && (
+            <View style={styles.reviewScoreContainer}>
+              <Text style={styles.reviewScoreLabel}>Final Score</Text>
+              <Text style={styles.reviewScoreValue}>
+                {typeof attempt.score === 'number' ? attempt.score : 0}
+                <Text style={styles.reviewScoreMax}>/100</Text>
+              </Text>
+            </View>
+          )}
+        </ScrollView>
 
-      {/* Player Search Overlay - opens when cell is selected */}
-      <PlayerSearchOverlay
-        visible={!isReviewMode && state.selectedCell !== null && state.gameStatus === 'playing'}
-        onSelectPlayer={handleSelectPlayer}
-        onClose={deselectCell}
-        title={
-          selectedCellCategories
-            ? `${selectedCellCategories.row.value} & ${selectedCellCategories.col.value}`
-            : 'Search Players'
-        }
-        testID="player-search-overlay"
-      />
+        {/* Result Modal */}
+        <TheGridResultModal
+          visible={showResultModal}
+          score={state.score}
+          cells={state.cells}
+          puzzleId={puzzle?.id ?? ''}
+          onClose={() => {
+            setShowResultModal(false);
+            router.back();
+          }}
+          onShare={handleShare}
+          testID="result-modal"
+        />
+
+        {/* Player Search Overlay - opens when cell is selected */}
+        <PlayerSearchOverlay
+          visible={!isReviewMode && state.selectedCell !== null && state.gameStatus === 'playing'}
+          onSelectPlayer={handleSelectPlayer}
+          onClose={deselectCell}
+          title={
+            selectedCellCategories
+              ? `${selectedCellCategories.row.value} & ${selectedCellCategories.col.value}`
+              : 'Search Players'
+          }
+          testID="player-search-overlay"
+        />
 
         {/* Ad Banner (non-premium users) */}
         <AdBanner testID="the-grid-ad-banner" />
@@ -248,7 +241,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           onClose={() => setShowHelpModal(false)}
           testID="the-grid-help-modal"
         />
-      </KeyboardAvoidingView>
+      </View>
     </GameContainer>
   );
 }
@@ -291,14 +284,9 @@ const styles = StyleSheet.create({
   },
   instructionsContainer: {
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
     paddingHorizontal: spacing.md,
-  },
-  instructionsTitle: {
-    fontFamily: fonts.headline,
-    fontSize: 32,
-    color: colors.floodlightWhite,
-    marginBottom: spacing.xs,
   },
   instructionsText: {
     fontFamily: fonts.body,

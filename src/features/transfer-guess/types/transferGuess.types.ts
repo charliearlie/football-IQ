@@ -22,11 +22,9 @@ export interface TransferGuessContent {
   from_club: string;
   /** Destination club name */
   to_club: string;
-  /** Transfer year */
-  year: number;
   /** Transfer fee display (e.g., "€80M", "Free", "Undisclosed") */
   fee: string;
-  /** Array of 3 hints: [year (YYYY), position (ATT/MID/DEF/GK), nation (emoji flag)] */
+  /** Array of 3 hints: [year (YYYY), position (ATT/MID/DEF/GK), nation (ISO code, e.g. "BR", "GB-ENG")] */
   hints: [string, string, string];
 }
 
@@ -84,7 +82,7 @@ export type TransferGuessAction =
 
 /**
  * Hint category labels for display.
- * Order: Year (transfer year), Position (ATT/MID/DEF/GK), Nation (emoji flag)
+ * Order: Year (transfer year), Position (ATT/MID/DEF/GK), Nation (ISO country code)
  */
 export const HINT_LABELS = ['Year', 'Position', 'Nation'] as const;
 export type HintLabel = (typeof HINT_LABELS)[number];

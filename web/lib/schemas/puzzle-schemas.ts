@@ -47,7 +47,6 @@ export const transferGuessContentSchema = z.object({
   answer: z.string().min(1, "Player name required"),
   from_club: z.string().min(1, "Origin club required"),
   to_club: z.string().min(1, "Destination club required"),
-  year: z.coerce.number().int().min(1900).max(2030),
   fee: z.string().min(1, "Transfer fee required"),
   hints: z.tuple([
     z.string().min(1, "Transfer year hint required"),

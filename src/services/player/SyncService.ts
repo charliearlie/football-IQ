@@ -18,6 +18,7 @@ import {
   setEliteIndexVersion,
   upsertPlayerCache,
   recalculateEliteStatus,
+  upsertClubColors,
 } from '@/lib/database';
 import {
   isSyncCheckDue,
@@ -115,5 +116,47 @@ export async function syncEliteIndex(): Promise<SyncResult> {
       serverVersion: 0,
       error: message,
     };
+  }
+}
+
+/**
+ * Sync club colors from server.
+ * One-time fetch — club colors rarely change.
+ * Stores results in local club_colors SQLite table.
+ */
+export async function syncClubColors(): Promise<{
+  success: boolean;
+  count: number;
+  error?: string;
+}> {
+  try {
+    // RPC not yet in generated Supabase types — use type assertion
+    const { data, error } = await (supabase.rpc as CallableFunction)('get_club_colors');
+
+    if (error) {
+      console.error('[SyncService] Club colors RPC failed:', (error as { message: string }).message);
+      return { success: false, count: 0, error: (error as { message: string }).message };
+    }
+
+    const clubs = ((data as unknown) ?? []) as Array<{
+      id: string;
+      name: string;
+      primary_color: string;
+      secondary_color: string;
+    }>;
+
+    if (clubs.length === 0) {
+      console.log('[SyncService] No club colors returned');
+      return { success: true, count: 0 };
+    }
+
+    await upsertClubColors(clubs);
+    console.log(`[SyncService] Synced ${clubs.length} club colors`);
+
+    return { success: true, count: clubs.length };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[SyncService] Club color sync failed:', message);
+    return { success: false, count: 0, error: message };
   }
 }

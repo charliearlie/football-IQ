@@ -16,6 +16,10 @@ export type CategoryType = 'club' | 'nation' | 'stat' | 'trophy';
 export interface GridCategory {
   type: CategoryType;
   value: string; // e.g., "Real Madrid", "France", "100+ Goals", "Champions League"
+  /** Club primary color (HEX) — enriched at runtime for club categories */
+  primaryColor?: string;
+  /** Club secondary color (HEX) — enriched at runtime for club categories */
+  secondaryColor?: string;
 }
 
 /**

@@ -5,11 +5,11 @@
  * Uses reducer pattern for predictable state updates.
  */
 
-import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useReducer, useEffect, useCallback, useRef, useMemo, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { ParsedLocalPuzzle } from '@/types/database';
-import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
+import { saveAttempt, getAttemptByPuzzleId, getClubColorByName } from '@/lib/database';
 import { usePuzzleContext } from '@/features/puzzles';
 import { useAuth } from '@/features/auth';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -18,6 +18,7 @@ import {
   TheGridAction,
   TheGridContent,
   TheGridScore,
+  GridCategory,
   FilledCell,
   CellIndex,
   createInitialState,
@@ -140,10 +141,55 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
   stateRef.current = state;
 
   // Parse puzzle content
-  const gridContent = useMemo(() => {
+  const parsedContent = useMemo(() => {
     if (!puzzle) return null;
     return parseTheGridContent(puzzle.content);
   }, [puzzle]);
+
+  // Enrich club categories with colors from local cache
+  const [gridContent, setGridContent] = useState<TheGridContent | null>(parsedContent);
+  useEffect(() => {
+    if (!parsedContent) {
+      setGridContent(null);
+      return;
+    }
+
+    // Capture non-null reference for async closure
+    const content = parsedContent;
+    let cancelled = false;
+
+    async function enrichColors() {
+      const enrichAxis = async (axis: [GridCategory, GridCategory, GridCategory]) => {
+        const enriched = await Promise.all(
+          axis.map(async (cat) => {
+            if (cat.type === 'club' && !cat.primaryColor) {
+              const clubColors = await getClubColorByName(cat.value);
+              if (clubColors) {
+                return { ...cat, primaryColor: clubColors.primary_color, secondaryColor: clubColors.secondary_color };
+              }
+            }
+            return cat;
+          })
+        );
+        return enriched as [GridCategory, GridCategory, GridCategory];
+      };
+
+      const [xAxis, yAxis] = await Promise.all([
+        enrichAxis(content.xAxis),
+        enrichAxis(content.yAxis),
+      ]);
+
+      if (!cancelled) {
+        setGridContent({ ...content, xAxis, yAxis });
+      }
+    }
+
+    // Set parsed content immediately, then enrich async
+    setGridContent(content);
+    enrichColors();
+
+    return () => { cancelled = true; };
+  }, [parsedContent]);
 
   // Get categories for selected cell
   const selectedCellCategories = useMemo(() => {

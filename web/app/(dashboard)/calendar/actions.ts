@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { GameMode, PuzzleStatus } from "@/lib/constants";
 import { validateContent } from "@/lib/schemas";
+import { getEmojiForCode } from "@/lib/countries";
 import type { TablesInsert, TablesUpdate, Json, DailyPuzzle } from "@/types/supabase";
 import type { CareerScoutResult, OracleSuggestion, OracleTheme } from "@/types/ai";
 import type { ContentReport, ContentReportInsert, ReportType } from "@/types/supabase";
@@ -340,6 +341,17 @@ export async function upsertPuzzle(
         success: false,
         error: `Validation failed: ${JSON.stringify(errors.fieldErrors)}`,
       };
+    }
+
+    // Convert ISO country code → emoji for transfer guess nationality hint
+    // The CMS stores ISO codes internally, but the DB must store emoji for
+    // backwards compatibility with deployed mobile app versions.
+    if (input.game_mode === "guess_the_transfer") {
+      const content = validation.data as { hints: [string, string, string] };
+      const emoji = getEmojiForCode(content.hints[2]);
+      if (emoji) {
+        content.hints[2] = emoji;
+      }
     }
 
     const supabase = await createAdminClient();

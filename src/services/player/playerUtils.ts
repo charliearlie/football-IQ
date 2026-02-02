@@ -123,6 +123,8 @@ const GB_SUBDIVISION_FLAGS: Record<string, string> = {
 /**
  * Convert country code to emoji flag.
  *
+ * @deprecated Use `FlagIcon` component from `@/components/FlagIcon` for SVG flag rendering.
+ *
  * Supports:
  * - ISO 3166-1 alpha-2 codes (e.g., "BR" → 🇧🇷)
  * - GB subdivision codes (e.g., "GB-ENG" → 🏴󠁧󠁢󠁥󠁮󠁧󠁿)

@@ -26,9 +26,8 @@ const transferGuessData = {
   answer: "Neymar",
   from_club: "Barcelona",
   to_club: "PSG",
-  year: 2017,
   fee: "€222M",
-  hints: ["Brazilian", "Forward", "World record fee"],
+  hints: ["2017", "ATT", "BR"],
 };
 
 const goalscorerRecallData = {
@@ -239,9 +238,8 @@ describe("TransferGuessPreview", () => {
     expect(screen.getByText("PSG")).toBeInTheDocument();
   });
 
-  it("renders year and fee", () => {
+  it("renders fee", () => {
     render(<TransferGuessPreview content={transferGuessData} />);
-    expect(screen.getByText("2017")).toBeInTheDocument();
     expect(screen.getByText("€222M")).toBeInTheDocument();
   });
 
@@ -254,9 +252,9 @@ describe("TransferGuessPreview", () => {
 
   it("renders hint values", () => {
     render(<TransferGuessPreview content={transferGuessData} />);
-    expect(screen.getByText("Brazilian")).toBeInTheDocument();
-    expect(screen.getByText("Forward")).toBeInTheDocument();
-    expect(screen.getByText("World record fee")).toBeInTheDocument();
+    expect(screen.getByText("2017")).toBeInTheDocument();
+    expect(screen.getByText("ATT")).toBeInTheDocument();
+    // Nationality hint (BR) renders as FlagIcon SVG, not text
   });
 
   it("renders answer when present", () => {

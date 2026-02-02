@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 12;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -319,6 +319,45 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 
     await database.execAsync('PRAGMA user_version = 11');
     console.log('[Database] Migration v11 complete');
+  }
+
+  // Migration v12: Club colors cache for Vector Shield rendering
+  if (currentVersion < 12) {
+    console.log('[Database] Running migration v12: Club colors cache');
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS club_colors (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        primary_color TEXT NOT NULL,
+        secondary_color TEXT NOT NULL,
+        synced_at TEXT
+      );
+    `);
+
+    // Seed from bundled elite-index.json if it contains club_colors
+    try {
+      const eliteIndex = require('../../assets/data/elite-index.json');
+      if (Array.isArray(eliteIndex.club_colors) && eliteIndex.club_colors.length > 0) {
+        for (const club of eliteIndex.club_colors) {
+          await database.runAsync(
+            `INSERT OR REPLACE INTO club_colors (id, name, primary_color, secondary_color, synced_at)
+             VALUES ($id, $name, $primary, $secondary, datetime('now'))`,
+            {
+              $id: club.id,
+              $name: club.name,
+              $primary: club.primary_color,
+              $secondary: club.secondary_color,
+            }
+          );
+        }
+        console.log(`[Database] Seeded ${eliteIndex.club_colors.length} club colors from bundle`);
+      }
+    } catch {
+      console.log('[Database] No bundled club colors to seed');
+    }
+
+    await database.execAsync('PRAGMA user_version = 12');
+    console.log('[Database] Migration v12 complete');
   }
 }
 
@@ -1640,6 +1679,65 @@ function parseAttempt(row: LocalAttempt): ParsedLocalAttempt {
  */
 export function stringifyContent(content: unknown): string {
   return JSON.stringify(content);
+}
+
+// ============ CLUB COLORS ============
+
+export interface ClubColor {
+  id: string;
+  name: string;
+  primary_color: string;
+  secondary_color: string;
+}
+
+/**
+ * Upsert club colors into local cache.
+ */
+export async function upsertClubColors(
+  clubs: ClubColor[]
+): Promise<void> {
+  if (clubs.length === 0) return;
+  const database = getDatabase();
+  const syncedAt = new Date().toISOString();
+
+  for (const club of clubs) {
+    await database.runAsync(
+      `INSERT OR REPLACE INTO club_colors (id, name, primary_color, secondary_color, synced_at)
+       VALUES ($id, $name, $primary, $secondary, $synced)`,
+      {
+        $id: club.id,
+        $name: club.name,
+        $primary: club.primary_color,
+        $secondary: club.secondary_color,
+        $synced: syncedAt,
+      }
+    );
+  }
+}
+
+/**
+ * Get all club colors from local cache.
+ */
+export async function getClubColors(): Promise<ClubColor[]> {
+  const database = getDatabase();
+  return database.getAllAsync<ClubColor>(
+    'SELECT id, name, primary_color, secondary_color FROM club_colors'
+  );
+}
+
+/**
+ * Get club colors by club name (case-insensitive LIKE match).
+ * Used by Grid CategoryHeader to enrich club categories with shield colors.
+ */
+export async function getClubColorByName(
+  clubName: string
+): Promise<ClubColor | null> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<ClubColor>(
+    'SELECT id, name, primary_color, secondary_color FROM club_colors WHERE name LIKE $pattern',
+    { $pattern: `%${clubName}%` }
+  );
+  return result ?? null;
 }
 
 /**
