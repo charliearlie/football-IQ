@@ -15,6 +15,7 @@ import { useReviewMode } from '@/hooks';
 import { colors, spacing, textStyles, layout } from '@/theme';
 import {
   GameContainer,
+  ConfirmationModal,
   ReviewModeBanner,
   ReviewModeActionZone,
 } from '@/components';
@@ -60,6 +61,7 @@ export function TopTensScreen({
   // Onboarding state - show intro for first-time users
   const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('top_tens');
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'top_tens');
   const {
@@ -94,6 +96,19 @@ export function TopTensScreen({
   const handleClose = useCallback(() => {
     router.back();
   }, [router]);
+
+  const handleGiveUpPress = useCallback(() => {
+    setShowGiveUpModal(true);
+  }, []);
+
+  const handleGiveUpConfirm = useCallback(() => {
+    setShowGiveUpModal(false);
+    giveUp();
+  }, [giveUp]);
+
+  const handleGiveUpCancel = useCallback(() => {
+    setShowGiveUpModal(false);
+  }, []);
 
   // Onboarding loading state (prevent flash)
   if (!isOnboardingReady) {
@@ -264,12 +279,21 @@ export function TopTensScreen({
         currentGuess={state.currentGuess}
         onGuessChange={setCurrentGuess}
         onSubmit={submitGuess}
-        onGiveUp={giveUp}
+        onGiveUp={handleGiveUpPress}
         foundCount={state.foundCount}
         shouldShake={state.lastGuessIncorrect}
         showDuplicate={state.lastGuessDuplicate}
         isGameOver={isGameOver || isClimbing}
         testID="action-zone"
+      />
+
+      {/* Give Up Confirmation Modal */}
+      <ConfirmationModal
+        visible={showGiveUpModal}
+        confirmLabel="Reveal Answers"
+        onConfirm={handleGiveUpConfirm}
+        onCancel={handleGiveUpCancel}
+        testID="give-up-modal"
       />
 
       {/* Banner Ad (non-premium only) */}

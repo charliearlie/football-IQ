@@ -91,6 +91,7 @@ export type CareerPathAction =
   | { type: 'SET_CURRENT_GUESS'; payload: string }
   | { type: 'CLEAR_SHAKE' }
   | { type: 'GAME_LOST'; payload: GameScore }
+  | { type: 'GIVE_UP'; payload: GameScore }
   | { type: 'ATTEMPT_SAVED' }
   | { type: 'RESET' }
   | { type: 'SET_ATTEMPT_ID'; payload: string }

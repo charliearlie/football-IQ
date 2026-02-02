@@ -24,6 +24,7 @@ import { useReviewMode } from "@/hooks";
 import { colors, spacing, textStyles, layout } from "@/theme";
 import {
   GameContainer,
+  ConfirmationModal,
   ReviewAnswerSection,
   ReviewGuessesSection,
   ReviewModeActionZone,
@@ -131,9 +132,11 @@ export function CareerPathScreen({
     careerSteps,
     answer,
     totalSteps,
+    allCluesRevealed,
     revealNext,
     submitPlayerGuess,
     submitTextGuess,
+    giveUp,
     shareResult,
     flatListRef,
     isVictoryRevealing,
@@ -149,6 +152,9 @@ export function CareerPathScreen({
 
   // Report error sheet state
   const [showReportSheet, setShowReportSheet] = useState(false);
+
+  // Give up confirmation modal state
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
   // Track keyboard visibility to hide ad banner when typing
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -240,6 +246,20 @@ export function CareerPathScreen({
       });
     }
   }, [state.revealedCount]);
+
+  // Give up handlers
+  const handleGiveUpPress = useCallback(() => {
+    setShowGiveUpModal(true);
+  }, []);
+
+  const handleGiveUpConfirm = useCallback(() => {
+    setShowGiveUpModal(false);
+    giveUp();
+  }, [giveUp]);
+
+  const handleGiveUpCancel = useCallback(() => {
+    setShowGiveUpModal(false);
+  }, []);
 
   // Report error handlers
   const handleOpenReportSheet = useCallback(() => {
@@ -538,6 +558,8 @@ export function CareerPathScreen({
               shouldShake={state.lastGuessIncorrect}
               isGameOver={isGameOver}
               onFocus={handleInputFocus}
+              onGiveUp={handleGiveUpPress}
+              allCluesRevealed={allCluesRevealed}
               testID="action-zone"
             />
           ))}
@@ -558,6 +580,14 @@ export function CareerPathScreen({
           visible={showHelpModal}
           onClose={() => setShowHelpModal(false)}
           testID="career-path-help-modal"
+        />
+
+        {/* Give Up Confirmation Modal */}
+        <ConfirmationModal
+          visible={showGiveUpModal}
+          onConfirm={handleGiveUpConfirm}
+          onCancel={handleGiveUpCancel}
+          testID="give-up-modal"
         />
 
         {/* Report Error Sheet */}

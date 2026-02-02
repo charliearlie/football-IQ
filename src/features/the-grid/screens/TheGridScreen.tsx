@@ -5,18 +5,20 @@
  * Players fill a 3x3 grid by naming footballers who satisfy both row and column criteria.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/theme';
 import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { GameContainer } from '@/components/GameContainer';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { ReviewModeBanner } from '@/components/ReviewMode';
 import { PlayerSearchOverlay } from '@/components/PlayerSearchOverlay';
 import { AdBanner } from '@/features/ads';
@@ -59,18 +61,34 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     selectCell,
     deselectCell,
     submitPlayerSelection,
+    giveUp,
     shareResult,
   } = useTheGridGame(puzzle);
 
   // Modal visibility
   const [showResultModal, setShowResultModal] = useState(false);
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
-  // Show result modal when game completes
+  // Show result modal when game completes or player gives up
   useEffect(() => {
-    if (state.gameStatus === 'complete' && state.attemptSaved && !isReviewMode) {
+    if ((state.gameStatus === 'complete' || state.gameStatus === 'gave_up') && state.attemptSaved && !isReviewMode) {
       setShowResultModal(true);
     }
   }, [state.gameStatus, state.attemptSaved, isReviewMode]);
+
+  // Give up handlers
+  const handleGiveUpPress = useCallback(() => {
+    setShowGiveUpModal(true);
+  }, []);
+
+  const handleGiveUpConfirm = useCallback(() => {
+    setShowGiveUpModal(false);
+    giveUp();
+  }, [giveUp]);
+
+  const handleGiveUpCancel = useCallback(() => {
+    setShowGiveUpModal(false);
+  }, []);
 
   // Parse review mode cells from attempt metadata with defensive type checking
   const reviewCells: (FilledCell | null)[] | null = React.useMemo(() => {
@@ -178,17 +196,27 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
               cells={displayCells}
               selectedCell={isReviewMode ? null : state.selectedCell}
               onCellPress={isReviewMode ? () => {} : selectCell}
-              disabled={isReviewMode || state.gameStatus === 'complete'}
+              disabled={isReviewMode || state.gameStatus !== 'playing'}
               testID="the-grid-board"
             />
           </View>
 
-          {/* Progress indicator */}
+          {/* Progress indicator + Give up */}
           {!isReviewMode && state.gameStatus === 'playing' && (
             <View style={styles.progressContainer}>
               <Text style={styles.progressText}>
                 {state.cells.filter((c) => c !== null).length}/9 cells filled
               </Text>
+              <Pressable
+                onPress={handleGiveUpPress}
+                style={({ pressed }) => [
+                  styles.giveUpLink,
+                  pressed && styles.giveUpLinkPressed,
+                ]}
+                testID="the-grid-giveup"
+              >
+                <Text style={styles.giveUpText}>Give up</Text>
+              </Pressable>
             </View>
           )}
 
@@ -215,7 +243,17 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
             router.back();
           }}
           onShare={handleShare}
+          gaveUp={state.gameStatus === 'gave_up'}
           testID="result-modal"
+        />
+
+        {/* Give Up Confirmation Modal */}
+        <ConfirmationModal
+          visible={showGiveUpModal}
+          confirmLabel="Reveal Answers"
+          onConfirm={handleGiveUpConfirm}
+          onCancel={handleGiveUpCancel}
+          testID="give-up-modal"
         />
 
         {/* Player Search Overlay - opens when cell is selected */}
@@ -306,6 +344,18 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  giveUpLink: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  giveUpLinkPressed: {
+    opacity: 0.7,
+  },
+  giveUpText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.redCard,
   },
   reviewScoreContainer: {
     alignItems: 'center',

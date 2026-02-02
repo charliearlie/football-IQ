@@ -8,7 +8,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { Trophy, Star, X } from 'lucide-react-native';
+import { Trophy, Star, X, XCircle } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { GlassCard } from '@/components/GlassCard';
 import { ElevatedButton } from '@/components/ElevatedButton';
@@ -25,6 +25,8 @@ export interface TheGridResultModalProps {
   puzzleId: string;
   onClose: () => void;
   onShare: () => void;
+  /** Whether the player gave up (affects title/icon) */
+  gaveUp?: boolean;
   testID?: string;
 }
 
@@ -38,11 +40,12 @@ export function TheGridResultModal({
   puzzleId,
   onClose,
   onShare,
+  gaveUp = false,
   testID,
 }: TheGridResultModalProps) {
   if (!score) return null;
 
-  const isPerfect = score.cellsFilled === 9;
+  const isPerfect = score.cellsFilled === 9 && !gaveUp;
   const resultMessage = getResultMessage(score.cellsFilled);
 
   // Normalize The Grid score to 0-100 (cells filled out of 9)
@@ -70,7 +73,9 @@ export function TheGridResultModal({
           <GlassCard style={styles.card}>
             {/* Result icon */}
             <View style={styles.iconContainer}>
-              {isPerfect ? (
+              {gaveUp ? (
+                <XCircle size={48} color={colors.redCard} />
+              ) : isPerfect ? (
                 <Trophy size={48} color={colors.cardYellow} />
               ) : (
                 <Star size={48} color={colors.pitchGreen} />
@@ -79,7 +84,7 @@ export function TheGridResultModal({
 
             {/* Title */}
             <Text style={styles.title}>
-              {isPerfect ? 'Perfect Grid!' : 'Game Complete'}
+              {gaveUp ? 'Game Over' : isPerfect ? 'Perfect Grid!' : 'Game Complete'}
             </Text>
 
             {/* Result message */}

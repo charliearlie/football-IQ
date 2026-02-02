@@ -99,6 +99,13 @@ function careerPathReducer(
         score: action.payload,
       };
 
+    case 'GIVE_UP':
+      return {
+        ...state,
+        gameStatus: 'lost',
+        score: action.payload,
+      };
+
     case 'ATTEMPT_SAVED':
       return {
         ...state,
@@ -357,6 +364,14 @@ export function useCareerPathGame(
     [state.gameStatus, answer, processGuessResult]
   );
 
+  // Give up - surrender the game voluntarily
+  const giveUp = useCallback(() => {
+    if (state.gameStatus !== 'playing') return;
+    const gameScore = calculateScore(totalSteps, state.revealedCount, false);
+    dispatch({ type: 'GIVE_UP', payload: gameScore });
+    triggerError();
+  }, [state.gameStatus, totalSteps, state.revealedCount, triggerError]);
+
   // Set current guess text
   const setCurrentGuess = useCallback((text: string) => {
     dispatch({ type: 'SET_CURRENT_GUESS', payload: text });
@@ -430,6 +445,7 @@ export function useCareerPathGame(
     submitPlayerGuess,
     submitTextGuess,
     setCurrentGuess,
+    giveUp,
     resetGame,
     shareResult,
     completeVictoryReveal,

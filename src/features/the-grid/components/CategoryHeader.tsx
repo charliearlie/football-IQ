@@ -1,25 +1,23 @@
 /**
  * CategoryHeader Component
  *
- * Displays a category icon and label for grid headers.
- * Uses ClubShield for club categories with colors,
- * FlagIcon for nation categories, and Lucide icons as fallbacks.
+ * Displays a category label for grid headers.
+ * Nation categories show an SVG flag instead of text.
+ * Club categories show only the name (no icon).
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Shield, TrendingUp, Trophy, Flag, LucideIcon } from 'lucide-react-native';
+import { TrendingUp, Trophy, Flag, LucideIcon } from 'lucide-react-native';
 import { colors, fonts } from '@/theme';
-import { ClubShield } from '@/components/ClubShield';
 import { FlagIcon } from '@/components/FlagIcon';
 import { GridCategory, CategoryType } from '../types/theGrid.types';
 import { COUNTRY_NAME_TO_CODE } from '../utils/countryMapping';
 
 /**
- * Fallback icon mapping for category types.
+ * Fallback icon mapping for category types (used when no special rendering applies).
  */
-const FALLBACK_ICONS: Record<CategoryType, LucideIcon> = {
-  club: Shield,
+const FALLBACK_ICONS: Partial<Record<CategoryType, LucideIcon>> = {
   nation: Flag,
   stat: TrendingUp,
   trophy: Trophy,
@@ -43,37 +41,8 @@ export interface CategoryHeaderProps {
 }
 
 /**
- * Render the appropriate icon for a category.
- */
-function renderCategoryIcon(category: GridCategory, testID?: string) {
-  // Club with colors → Vector Shield
-  if (category.type === 'club' && category.primaryColor && category.secondaryColor) {
-    return (
-      <ClubShield
-        primaryColor={category.primaryColor}
-        secondaryColor={category.secondaryColor}
-        size={18}
-        testID={testID}
-      />
-    );
-  }
-
-  // Nation → SVG Flag (try to resolve country name to code)
-  if (category.type === 'nation') {
-    const code = COUNTRY_NAME_TO_CODE[category.value.toLowerCase()];
-    if (code) {
-      return <FlagIcon code={code} size={14} testID={testID} />;
-    }
-  }
-
-  // Fallback → Lucide icon
-  const FallbackIcon = FALLBACK_ICONS[category.type];
-  const iconColor = CATEGORY_COLORS[category.type];
-  return <FallbackIcon size={16} color={iconColor} />;
-}
-
-/**
  * CategoryHeader - Displays icon + label for a grid category.
+ * Club: name only (no icon). Nation: flag only (no name). Others: icon + name.
  */
 export function CategoryHeader({
   category,
@@ -84,19 +53,37 @@ export function CategoryHeader({
     ? styles.containerHorizontal
     : styles.containerVertical;
 
+  // Nation → try to resolve to a flag code
+  const nationCode =
+    category.type === 'nation'
+      ? COUNTRY_NAME_TO_CODE[category.value.toLowerCase()]
+      : undefined;
+
+  // Determine what to render
+  const showFlagOnly = category.type === 'nation' && !!nationCode;
+  const showIcon = category.type !== 'club' && !showFlagOnly;
+  const showLabel = !showFlagOnly;
+
   return (
     <View style={containerStyle} testID={testID}>
-      <View testID={testID ? `${testID}-icon` : undefined}>
-        {renderCategoryIcon(category, testID ? `${testID}-icon-inner` : undefined)}
-      </View>
-      <Text
-        style={styles.label}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.7}
-      >
-        {category.value}
-      </Text>
+      {showFlagOnly && (
+        <FlagIcon code={nationCode!} size={24} testID={testID ? `${testID}-flag` : undefined} />
+      )}
+      {showIcon && (() => {
+        const FallbackIcon = FALLBACK_ICONS[category.type];
+        if (!FallbackIcon) return null;
+        return <FallbackIcon size={16} color={CATEGORY_COLORS[category.type]} />;
+      })()}
+      {showLabel && (
+        <Text
+          style={styles.label}
+          numberOfLines={category.type === 'club' ? 1 : 2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {category.value}
+        </Text>
+      )}
     </View>
   );
 }
@@ -119,7 +106,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.headline,
-    fontSize: 10,
+    fontSize: 11,
     color: colors.floodlightWhite,
     textAlign: 'center',
     marginTop: 2,

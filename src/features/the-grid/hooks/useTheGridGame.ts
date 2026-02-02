@@ -97,6 +97,15 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
         currentGuess: '',
       };
 
+    case 'GIVE_UP':
+      return {
+        ...state,
+        gameStatus: 'gave_up',
+        score: action.payload,
+        selectedCell: null,
+        currentGuess: '',
+      };
+
     case 'SET_ATTEMPT_ID':
       return {
         ...state,
@@ -244,9 +253,9 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     }
   }, [state.cells, state.gameStatus, triggerCompletion]);
 
-  // Save attempt on game complete
+  // Save attempt on game complete or give up
   useEffect(() => {
-    if (state.gameStatus !== 'complete' || state.attemptSaved || !puzzle) return;
+    if ((state.gameStatus !== 'complete' && state.gameStatus !== 'gave_up') || state.attemptSaved || !puzzle) return;
 
     // Capture puzzle reference for async function
     const currentPuzzle = puzzle;
@@ -257,6 +266,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
       const metadata: TheGridAttemptMetadata = {
         cellsFilled: stateRef.current.score.cellsFilled,
         cells: stateRef.current.cells,
+        ...(stateRef.current.gameStatus === 'gave_up' && { gaveUp: true }),
       };
 
       const scoreDisplay = generateTheGridScoreDisplay(
@@ -459,6 +469,13 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     [state.selectedCell, gridContent, triggerSuccess, triggerError]
   );
 
+  const giveUp = useCallback(() => {
+    if (state.gameStatus !== 'playing') return;
+    const filledCount = countFilledCells(state.cells);
+    const score = calculateGridScore(filledCount);
+    dispatch({ type: 'GIVE_UP', payload: score });
+  }, [state.gameStatus, state.cells]);
+
   const shareResult = useCallback(async (): Promise<ShareResult> => {
     if (!state.score) {
       return { success: false, method: 'clipboard', error: new Error('No score to share') };
@@ -480,6 +497,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     setCurrentGuess,
     submitGuess,
     submitPlayerSelection,
+    giveUp,
     shareResult,
     resetGame,
   };

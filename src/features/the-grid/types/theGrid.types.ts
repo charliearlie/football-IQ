@@ -72,7 +72,7 @@ export interface TheGridState {
   /** Current guess text in input */
   currentGuess: string;
   /** Game status */
-  gameStatus: 'playing' | 'complete';
+  gameStatus: 'playing' | 'complete' | 'gave_up';
   /** Score when game completes */
   score: TheGridScore | null;
   /** Unique attempt ID for persistence */
@@ -102,6 +102,7 @@ export type TheGridAction =
   | { type: 'INCORRECT_GUESS' }
   | { type: 'CLEAR_INCORRECT' }
   | { type: 'GAME_COMPLETE'; payload: TheGridScore }
+  | { type: 'GIVE_UP'; payload: TheGridScore }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
   | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload }
   | { type: 'MARK_ATTEMPT_SAVED' }
@@ -210,4 +211,5 @@ function isValidGridCategory(value: unknown): value is GridCategory {
 export interface TheGridAttemptMetadata {
   cellsFilled: number;
   cells?: (FilledCell | null)[];
+  gaveUp?: boolean;
 }
