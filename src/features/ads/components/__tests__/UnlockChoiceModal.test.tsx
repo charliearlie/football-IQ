@@ -25,13 +25,17 @@ jest.mock('expo-haptics', () => ({
 // Mock Lucide icons
 jest.mock('lucide-react-native', () => ({
   Unlock: 'Unlock',
-  Crown: 'Crown',
   Play: 'Play',
   X: 'X',
   Check: 'Check',
   AlertCircle: 'AlertCircle',
   Loader2: 'Loader2',
   ArrowRight: 'ArrowRight',
+}));
+
+// Mock ProBadge
+jest.mock('@/components/ProBadge', () => ({
+  ProBadge: 'ProBadge',
 }));
 
 describe('UnlockChoiceModal', () => {

@@ -7,7 +7,8 @@
 
 import React, { memo } from 'react';
 import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
-import { Crown, Grid3X3 } from 'lucide-react-native';
+import { Grid3X3 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { BriefingFixture } from '../constants/briefingSchedule';
@@ -62,7 +63,7 @@ function FixtureCardComponent({ fixture, testID }: FixtureCardProps) {
         {/* Premium badge */}
         {isPremium && (
           <View style={styles.premiumBadge}>
-            <Crown size={7} color={colors.stadiumNavy} strokeWidth={2.5} />
+            <ProBadge size={7} color={colors.stadiumNavy} />
           </View>
         )}
       </View>

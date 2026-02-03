@@ -8,7 +8,8 @@
 
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Crown, ChevronRight, X } from "lucide-react-native";
+import { ChevronRight, X } from "lucide-react-native";
+import { ProBadge } from "@/components/ProBadge";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { GlassCard } from "@/components/GlassCard";
@@ -70,13 +71,9 @@ export function PremiumUpsellBanner({
           </Pressable>
 
           <View style={styles.content}>
-            {/* Crown Icon */}
+            {/* Pro Badge Icon */}
             <View style={styles.iconContainer}>
-              <Crown
-                size={28}
-                color={colors.stadiumNavy}
-                fill={colors.cardYellow}
-              />
+              <ProBadge size={28} color={colors.stadiumNavy} />
             </View>
 
             {/* Text Content */}

@@ -13,7 +13,6 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,13 +27,12 @@ import Purchases, {
   PURCHASES_ERROR_CODE,
 } from 'react-native-purchases';
 import {
-  Crown,
   Archive,
   Sparkles,
-  TrendingUp,
   X,
   Check,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
@@ -58,7 +56,6 @@ type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 const BENEFITS = [
   { icon: Archive, text: 'Full Archive', description: 'Access all past puzzles' },
   { icon: Sparkles, text: 'Ad-Free', description: 'No interruptions' },
-  { icon: TrendingUp, text: 'Exclusive Stats', description: 'Track your progress' },
 ];
 
 export default function PremiumModalScreen() {
@@ -156,20 +153,6 @@ export default function PremiumModalScreen() {
 
         if (!isMountedRef.current) return;
 
-        // DEBUG: Show what RevenueCat returned after purchase (remove after debugging)
-        const debugInfo = {
-          appUserID: customerInfo.originalAppUserId,
-          activeEntitlements: Object.keys(customerInfo.entitlements.active),
-          allEntitlements: Object.keys(customerInfo.entitlements.all),
-          purchasedProducts: customerInfo.allPurchasedProductIdentifiers,
-          activeSubscriptions: customerInfo.activeSubscriptions,
-        };
-        Alert.alert(
-          'DEBUG: Purchase Result',
-          JSON.stringify(debugInfo, null, 2),
-          [{ text: 'OK' }]
-        );
-
         // Wait for entitlement with retry logic (handles RevenueCat timing issues)
         const result = await waitForEntitlementActivation(customerInfo);
 
@@ -223,20 +206,6 @@ export default function PremiumModalScreen() {
       const customerInfo = await Purchases.restorePurchases();
 
       if (!isMountedRef.current) return;
-
-      // DEBUG: Show what RevenueCat returned (remove after debugging)
-      const debugInfo = {
-        appUserID: customerInfo.originalAppUserId,
-        activeEntitlements: Object.keys(customerInfo.entitlements.active),
-        allEntitlements: Object.keys(customerInfo.entitlements.all),
-        purchasedProducts: customerInfo.allPurchasedProductIdentifiers,
-        activeSubscriptions: customerInfo.activeSubscriptions,
-      };
-      Alert.alert(
-        'DEBUG: Restore Result',
-        JSON.stringify(debugInfo, null, 2),
-        [{ text: 'OK' }]
-      );
 
       // Wait for entitlement with retry logic
       const result = await waitForEntitlementActivation(customerInfo);
@@ -293,7 +262,7 @@ export default function PremiumModalScreen() {
   const isPurchasing = state === 'purchasing';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Confetti active={state === 'success'} />
 
       {/* Header with close button - disabled during purchase */}
@@ -323,7 +292,7 @@ export default function PremiumModalScreen() {
           {state === 'success' ? (
             <Check size={40} color={colors.stadiumNavy} strokeWidth={3} />
           ) : (
-            <Crown size={40} color={colors.stadiumNavy} strokeWidth={2} />
+            <ProBadge size={40} color={colors.stadiumNavy} />
           )}
         </View>
 
@@ -355,13 +324,6 @@ export default function PremiumModalScreen() {
                 </View>
               ))}
             </View>
-
-            {/* Puzzle date info */}
-            {puzzleDate && (
-              <Text style={styles.puzzleInfo}>
-                You tried to access a puzzle from {puzzleDate}
-              </Text>
-            )}
 
             {/* Plans */}
             <Text style={styles.plansTitle}>Choose Your Plan</Text>
@@ -574,21 +536,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.cardYellow,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
   },
   iconContainerSuccess: {
     backgroundColor: colors.pitchGreen,
   },
   title: {
     fontFamily: fonts.headline,
-    fontSize: 36,
+    fontSize: 28,
     letterSpacing: 2,
     color: colors.cardYellow,
     textAlign: 'center',
@@ -598,7 +560,7 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     textAlign: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   content: {
     width: '100%',
@@ -614,8 +576,8 @@ const styles = StyleSheet.create({
   },
   benefitsContainer: {
     width: '100%',
-    marginBottom: spacing.xl,
-    gap: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   benefitRow: {
     flexDirection: 'row',
@@ -623,8 +585,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   benefitIcon: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: borderRadius.lg,
     backgroundColor: 'rgba(250, 204, 21, 0.1)',
     justifyContent: 'center',
@@ -641,12 +603,6 @@ const styles = StyleSheet.create({
   benefitDescription: {
     ...textStyles.caption,
     color: colors.textSecondary,
-  },
-  puzzleInfo: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
   },
   plansTitle: {
     ...textStyles.body,

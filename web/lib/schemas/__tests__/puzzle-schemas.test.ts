@@ -224,9 +224,16 @@ describe("transferGuessContentSchema", () => {
     expect(() => transferGuessContentSchema.parse(withEngland)).not.toThrow();
   });
 
-  it("accepts emoji flag in nationality hint", () => {
-    const withEmoji = { ...validContent, hints: ["2017", "ATT", "🇧🇷"] };
-    expect(() => transferGuessContentSchema.parse(withEmoji)).not.toThrow();
+  it("rejects emoji flag in nationality hint", () => {
+    const invalid = { ...validContent, hints: ["2017", "ATT", "🇧🇷"] };
+    const result = transferGuessContentSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects lowercase country code in nationality hint", () => {
+    const invalid = { ...validContent, hints: ["2017", "ATT", "br"] };
+    const result = transferGuessContentSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
   });
 });
 

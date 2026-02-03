@@ -224,6 +224,10 @@ export default function RootLayout() {
     }
   }, []);
 
+  // SoundService initialization disabled until expo-av native module is linked.
+  // Run `npx expo prebuild` and rebuild to enable.
+  // See src/services/sound/SoundService.ts for the implementation.
+
   // Initialize RevenueCat SDK
   useEffect(() => {
     const initRevenueCat = async () => {

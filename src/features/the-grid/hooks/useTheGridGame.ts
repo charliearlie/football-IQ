@@ -441,18 +441,32 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
 
   /**
    * Submit a player selection from the PlayerSearchOverlay.
-   * Uses database validation instead of pre-defined valid_answers.
+   * Tries name-based valid_answers matching first, then falls back to DB validation.
    *
-   * @param playerId - Player database ID
-   * @param playerName - Player display name (used if valid)
+   * @param playerId - Player ID (QID or local ID)
+   * @param playerName - Player display name
    */
   const submitPlayerSelection = useCallback(
     async (playerId: string, playerName: string) => {
       if (state.selectedCell === null || !gridContent) return;
 
-      const result = await validateCellWithDB(playerId, state.selectedCell, gridContent);
+      // Try name-based matching against valid_answers first
+      const nameResult = validateCellGuess(playerName, state.selectedCell, gridContent);
+      if (nameResult.isValid) {
+        triggerSuccess();
+        dispatch({
+          type: 'CORRECT_GUESS',
+          payload: {
+            cellIndex: state.selectedCell,
+            player: nameResult.matchedPlayer ?? playerName,
+          },
+        });
+        return;
+      }
 
-      if (result.isValid) {
+      // Fall back to DB validation (club history, nationality, trophies, stats)
+      const dbResult = await validateCellWithDB(playerId, state.selectedCell, gridContent);
+      if (dbResult.isValid) {
         triggerSuccess();
         dispatch({
           type: 'CORRECT_GUESS',

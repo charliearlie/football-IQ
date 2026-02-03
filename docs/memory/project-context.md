@@ -217,9 +217,9 @@ Uses `PremiumOnlyGate` wrapper - non-premium users cannot access regardless of p
 ### Transfer Guess
 Identify player from transfer details. Hints revealed voluntarily (not on wrong guess).
 
-**Content**: `{ answer, from_club, to_club, fee, hints: [year, position, nationality_emoji] }`
+**Content**: `{ answer, from_club, to_club, fee, hints: [year, position, nationality_iso_code] }`
 **Visible**: Clubs and fee shown in header. Year is Hint 1 (revealed on request).
-**Nationality**: Stored as emoji flag in DB (e.g. "🇧🇷", "🏴󠁧󠁢󠁥󠁮󠁧󠁿") for backwards compat with deployed mobile app. CMS uses ISO codes internally (e.g. "BR", "GB-ENG") with SVG flags via `country-flag-icons` + custom home nation SVGs, converting code→emoji at save time. Mobile `DossierSlot` handles both formats (ISO → FlagIcon, emoji → text fallback). Once mobile app with FlagIcon is deployed, DB can be migrated to ISO codes.
+**Nationality**: Stored as ISO 3166-1 alpha-2 code (e.g. "BR", "GB-ENG"). Rendered as SVG flag via `country-flag-icons` + custom home nation SVGs. Mobile `DossierSlot` has backwards compat (ISO → FlagIcon, emoji → text fallback for older app versions).
 **Scoring**: 5/3/2/1 points based on hints revealed (0=5pts, 1=3pts, 2=2pts, 3=1pt)
 **Display**: `⚫` hint hidden, `🟡` revealed; `❌` wrong, `✅` correct, `💀` gave up
 **Files**: `src/features/transfer-guess/`

@@ -29,9 +29,13 @@ jest.mock('lucide-react-native', () => ({
   HelpCircle: 'HelpCircle',
   CheckCircle: 'CheckCircle',
   Check: 'Check',
-  Crown: 'Crown',
   Archive: 'Archive',
   ListOrdered: 'ListOrdered',
+}));
+
+// Mock ProBadge
+jest.mock('@/components/ProBadge', () => ({
+  ProBadge: 'ProBadge',
 }));
 
 // Mock react-native-reanimated
@@ -135,7 +139,7 @@ describe('Archive Gating', () => {
   });
 
   describe('UniversalGameCard (Locked state - Velvet Rope)', () => {
-    it('renders premium Unlock button with Crown icon when isLocked is true', () => {
+    it('renders premium Unlock button with ProBadge icon when isLocked is true', () => {
       const puzzle = createMockPuzzle({ isLocked: true });
       const { getByTestId, getByText } = render(
         <UniversalGameCard
@@ -153,7 +157,7 @@ describe('Archive Gating', () => {
       expect(getByText('Unlock')).toBeTruthy();
     });
 
-    it('renders Crown icon on locked cards (Velvet Rope)', () => {
+    it('renders ProBadge icon on locked cards (Velvet Rope)', () => {
       const puzzle = createMockPuzzle({ isLocked: true });
       const { getByTestId } = render(
         <UniversalGameCard

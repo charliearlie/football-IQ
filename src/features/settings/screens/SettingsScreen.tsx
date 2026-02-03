@@ -7,10 +7,10 @@
  * Secret dev menu: Tap version text 7 times to reveal developer options.
  */
 
-import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, FileText, Star, Trash2, Bell, RotateCcw, UserX, Lightbulb } from 'lucide-react-native';
+import { Shield, FileText, Star, Trash2, Bell, BellOff, RotateCcw, UserX, Lightbulb, Volume2, VolumeX } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -59,6 +59,54 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   const { resetAllIntros } = useOnboardingContext();
   // Puzzle context for refreshing local state after data operations
   const { refreshLocalPuzzles } = usePuzzleContext();
+
+  // Notifications toggle — reflects OS permission status
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    getPermissionStatus().then((status) => {
+      setNotificationsEnabled(status === 'granted');
+    });
+  }, []);
+
+  const handleToggleNotifications = useCallback(async (value: boolean) => {
+    if (value) {
+      const status = await requestPermissions();
+      setNotificationsEnabled(status === 'granted');
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please enable notifications in your device settings.'
+        );
+      }
+    } else {
+      Alert.alert(
+        'Disable Notifications',
+        'To turn off notifications, go to Settings > Football IQ > Notifications on your device.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, []);
+
+  // Sound effects toggle (dev only, OFF by default)
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@sound_dev_enabled').then((val) => {
+      setSoundEnabled(val === 'true');
+    });
+  }, []);
+
+  const handleToggleSound = useCallback(async (value: boolean) => {
+    setSoundEnabled(value);
+    await AsyncStorage.setItem('@sound_dev_enabled', value ? 'true' : 'false');
+    Alert.alert(
+      value ? 'Sound Effects Enabled' : 'Sound Effects Disabled',
+      value
+        ? 'Sound effects are now on. Restart the app for changes to take effect.'
+        : 'Sound effects have been turned off.'
+    );
+  }, []);
 
   // Get app version from expo config
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
@@ -351,7 +399,26 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             testID={testID ? `${testID}-restore-purchases-row` : undefined}
           />
         </SettingsSection>
-        
+
+        {/* Notifications Section */}
+        <SettingsSection title="Notifications">
+          <View style={styles.toggleRow} testID={testID ? `${testID}-notif-toggle` : undefined}>
+            <View style={styles.toggleIconContainer}>
+              {notificationsEnabled
+                ? <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
+                : <BellOff size={20} color={colors.textSecondary} strokeWidth={2} />
+              }
+            </View>
+            <Text style={styles.toggleLabel}>Push Notifications</Text>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleToggleNotifications}
+              trackColor={{ false: colors.glassBorder, true: colors.pitchGreen }}
+              thumbColor={colors.floodlightWhite}
+            />
+          </View>
+        </SettingsSection>
+
         {/* Legal Section */}
         <SettingsSection title="Legal">
           <SettingsRow
@@ -401,6 +468,21 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Developer Section (hidden until activated) */}
         {devModeEnabled && (
           <SettingsSection title="Developer">
+            <View style={styles.toggleRow} testID={testID ? `${testID}-sound-toggle` : undefined}>
+              <View style={styles.toggleIconContainer}>
+                {soundEnabled
+                  ? <Volume2 size={20} color={colors.pitchGreen} strokeWidth={2} />
+                  : <VolumeX size={20} color={colors.textSecondary} strokeWidth={2} />
+                }
+              </View>
+              <Text style={styles.toggleLabel}>Sound Effects</Text>
+              <Switch
+                value={soundEnabled}
+                onValueChange={handleToggleSound}
+                trackColor={{ false: colors.glassBorder, true: colors.pitchGreen }}
+                thumbColor={colors.floodlightWhite}
+              />
+            </View>
             <SettingsRow
               icon={<Bell size={20} color={colors.pitchGreen} strokeWidth={2} />}
               label="Test Morning Notification"
@@ -493,5 +575,26 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.textSecondary,
     opacity: 0.6,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.glassBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.glassBorder,
+  },
+  toggleIconContainer: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  toggleLabel: {
+    ...textStyles.body,
+    color: colors.floodlightWhite,
+    flex: 1,
   },
 });

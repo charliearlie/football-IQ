@@ -51,7 +51,7 @@ export const transferGuessContentSchema = z.object({
   hints: z.tuple([
     z.string().min(1, "Transfer year hint required"),
     z.string().min(1, "Position hint required"),
-    z.string().min(1, "Nationality hint required"),
+    z.string().min(1, "Nationality hint required").regex(/^[A-Z]{2}(-[A-Z]{2,3})?$/, "Must be ISO country code (e.g. BR, GB-ENG)"),
   ]),
 });
 

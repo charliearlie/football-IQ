@@ -8,7 +8,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Crown } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import { colors, fonts, borderRadius, spacing } from '@/theme';
 import { triggerHeavy } from '@/lib/haptics';
 
@@ -52,7 +52,7 @@ export function LockedMonthOverlay({
       >
         <View style={styles.content}>
           <View style={styles.iconContainer}>
-            <Crown size={28} color={colors.cardYellow} />
+            <ProBadge size={28} color={colors.cardYellow} />
           </View>
 
           <Text style={styles.title}>Unlock Your Full Legacy</Text>

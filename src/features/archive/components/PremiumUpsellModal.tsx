@@ -32,14 +32,13 @@ import Purchases, {
   PURCHASES_ERROR_CODE,
 } from 'react-native-purchases';
 import {
-  Crown,
   Archive,
   Sparkles,
-  TrendingUp,
   X,
   Check,
   RotateCcw,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
@@ -76,7 +75,6 @@ type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 const CONDENSED_BENEFITS = [
   { icon: Archive, text: 'Full Archive' },
   { icon: Sparkles, text: 'Ad-Free' },
-  { icon: TrendingUp, text: 'Exclusive Stats' },
 ];
 
 interface PremiumUpsellModalProps {
@@ -321,7 +319,7 @@ export function PremiumUpsellModal({
             {state === 'success' ? (
               <Check size={32} color={colors.stadiumNavy} strokeWidth={3} />
             ) : (
-              <Crown size={32} color={colors.stadiumNavy} strokeWidth={2} />
+              <ProBadge size={32} color={colors.stadiumNavy} />
             )}
           </View>
 
@@ -345,7 +343,6 @@ export function PremiumUpsellModal({
                 packages={packages}
                 onSelectPackage={handlePurchase}
                 onRestore={handleRestore}
-                puzzleDate={puzzleDate}
                 testID={testID}
               />
             )}
@@ -391,13 +388,11 @@ function SelectingContent({
   packages,
   onSelectPackage,
   onRestore,
-  puzzleDate,
   testID,
 }: {
   packages: PurchasesPackage[];
   onSelectPackage: (pkg: PurchasesPackage) => void;
   onRestore: () => void;
-  puzzleDate?: string | null;
   testID?: string;
 }) {
   return (
@@ -414,13 +409,6 @@ function SelectingContent({
           </View>
         ))}
       </View>
-
-      {/* Puzzle Date Info */}
-      {puzzleDate && (
-        <Text style={styles.puzzleInfo}>
-          You tried to access a puzzle from {puzzleDate}
-        </Text>
-      )}
 
       <Text style={styles.plansTitle}>Choose Your Plan</Text>
 
@@ -749,12 +737,6 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.floodlightWhite,
     fontWeight: '500',
-  },
-  puzzleInfo: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
   },
   buttonContainer: {
     width: '100%',

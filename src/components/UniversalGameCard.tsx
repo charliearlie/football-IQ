@@ -22,8 +22,8 @@ import {
   Grid3X3,
   HelpCircle,
   Check,
-  Crown,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import { GlassCard } from './GlassCard';
 import { ElevatedButton, ButtonVariant } from './ElevatedButton';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
@@ -126,11 +126,12 @@ const SPRING_CONFIG = {
 /**
  * Get configuration for each game mode.
  */
-function getGameModeConfig(gameMode: GameMode): GameModeConfig {
+function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfig {
   // Check if we have a custom icon for this game mode
   const customIcon = PUZZLE_ICONS[gameMode];
+  const imgStyle = isArchive ? archiveIconImageStyle : iconImageStyle;
   const iconElement = customIcon ? (
-    <Image source={customIcon} style={iconImageStyle} resizeMode="contain" />
+    <Image source={customIcon} style={imgStyle} resizeMode="contain" />
   ) : null;
 
   switch (gameMode) {
@@ -204,6 +205,7 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
  * Style for custom puzzle icon images.
  */
 const iconImageStyle = { width: 32, height: 32 };
+const archiveIconImageStyle = { width: 24, height: 24 };
 
 /**
  * Button props returned by getButtonProps.
@@ -266,7 +268,7 @@ function getHapticType(status: CardStatus, isLocked: boolean, isPremiumLocked: b
  * - resume: "Resume" button (yellow)
  * - done: "Result" button (yellow) with completion badge
  * - locked: Lock button with dimmed appearance (archive only)
- * - premiumLocked: Crown badge with "Unlock" button (premium-only modes)
+ * - premiumLocked: ProBadge with "Unlock" button (premium-only modes)
  */
 export function UniversalGameCard({
   gameMode,
@@ -279,7 +281,8 @@ export function UniversalGameCard({
   isAdUnlocked = false,
   testID,
 }: UniversalGameCardProps) {
-  const config = getGameModeConfig(gameMode);
+  const isArchive = variant === 'archive';
+  const config = getGameModeConfig(gameMode, isArchive);
   const buttonProps = getButtonProps(status);
   const scale = useSharedValue(1);
 
@@ -350,9 +353,10 @@ export function UniversalGameCard({
   }));
 
   // Merge card styles (GlassCard expects ViewStyle, not array)
+  const baseCardStyle = isArchive ? { ...styles.card, ...archiveStyles.card } : styles.card;
   const cardStyle = isLocked || isPremiumLocked
-    ? { ...styles.card, ...styles.lockedCard }
-    : styles.card;
+    ? { ...baseCardStyle, ...styles.lockedCard }
+    : baseCardStyle;
 
   // Check if this is a premium-only mode (Career Path Pro, Top Tens)
   const isProMode = isPremiumOnly;
@@ -369,14 +373,14 @@ export function UniversalGameCard({
           </View>
         )}
         <Pressable
-          style={styles.content}
+          style={[styles.content, isArchive && archiveStyles.content]}
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
         >
           {/* Left: Icon + Title */}
           <View style={styles.left}>
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, isArchive && archiveStyles.iconContainer]}>
               {config.icon}
               {/* Completion badge - small checkmark in corner */}
               {status === 'done' && !isLocked && !isPremiumLocked && (
@@ -386,16 +390,16 @@ export function UniversalGameCard({
               )}
               {/* Premium badge - crown for premium-only modes (except Pro which has sash) */}
               {isPremiumOnly && !isProMode && (
-                <View style={styles.premiumBadge} testID={`${testID}-premium-badge`}>
-                  <Crown size={10} color={colors.stadiumNavy} strokeWidth={2.5} />
+                <View style={[styles.premiumBadge, isArchive && archiveStyles.premiumBadge]} testID={`${testID}-premium-badge`}>
+                  <ProBadge size={10} color={colors.stadiumNavy} />
                 </View>
               )}
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.title} numberOfLines={1}>
+              <Text style={[styles.title, isArchive && archiveStyles.title]} numberOfLines={1}>
                 {config.title}
               </Text>
-              <Text style={styles.subtitle} numberOfLines={1}>
+              <Text style={[styles.subtitle, isArchive && archiveStyles.subtitle]} numberOfLines={1}>
                 {config.subtitle}
               </Text>
             </View>
@@ -413,7 +417,7 @@ export function UniversalGameCard({
                   topColor={colors.cardYellow}
                   shadowColor="#D4A500"
                   hapticType={hapticType}
-                  icon={<Crown size={14} color={colors.stadiumNavy} />}
+                  icon={<ProBadge size={14} color={colors.stadiumNavy} />}
                   testID={`${testID}-unlock`}
                 />
                 {/* Glint overlay */}
@@ -570,5 +574,34 @@ const styles = StyleSheet.create({
     width: 3,
     height: '200%',
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+});
+
+/**
+ * Condensed overrides for archive variant (high-density layout).
+ */
+const archiveStyles = StyleSheet.create({
+  card: {
+    marginBottom: spacing.sm,
+  },
+  content: {
+    paddingVertical: spacing.xs,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    marginRight: spacing.sm,
+  },
+  premiumBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: 14,
+  },
+  subtitle: {
+    fontSize: 11,
   },
 });

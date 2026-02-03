@@ -192,9 +192,9 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
   top_tens: {
     gameMode: 'top_tens',
     displayTitle: 'Top Tens',
-    goal: 'Name all 10 players in the ranking category',
+    goal: 'Name all 10 answers in the ranking category',
     rules: [
-      { text: 'A category is revealed (e.g., Top 10 Premier League scorers)' },
+      { text: 'A category is revealed (e.g., Top 10 Premier League scorers, World Cup host nations, most expensive transfers)' },
       { text: 'Correct guesses slot into their rank position' },
       { text: 'Find all 10 for Hall of Famer status!', highlight: 'Hall of Famer' },
     ],

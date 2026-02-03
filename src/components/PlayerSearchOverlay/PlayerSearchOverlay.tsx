@@ -26,21 +26,18 @@ import Animated, { SlideInDown, FadeIn, FadeOut } from 'react-native-reanimated'
 import { X, Search } from 'lucide-react-native';
 import { GlassCard } from '@/components/GlassCard';
 import { colors, fonts, spacing, borderRadius, textStyles } from '@/theme';
-import { ParsedPlayer, PlayerSearchResult } from '@/types/database';
-import { searchPlayers } from '@/services/player';
-import { PlayerResultItem } from './PlayerResultItem';
+import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
+import { UnifiedPlayer } from '@/services/oracle/types';
+import { FlagIcon } from '@/components/FlagIcon';
 
 /** Minimum characters required for search */
 const MIN_SEARCH_LENGTH = 3;
-
-/** Debounce delay in milliseconds */
-const DEBOUNCE_MS = 200;
 
 export interface PlayerSearchOverlayProps {
   /** Whether the overlay is visible */
   visible: boolean;
   /** Callback when a player is selected */
-  onSelectPlayer: (player: ParsedPlayer) => void;
+  onSelectPlayer: (player: UnifiedPlayer) => void;
   /** Callback when overlay is closed */
   onClose: () => void;
   /** Optional title for the overlay */
@@ -76,10 +73,10 @@ export function PlayerSearchOverlay({
   testID,
 }: PlayerSearchOverlayProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<PlayerSearchResult[]>([]);
+  const [results, setResults] = useState<UnifiedPlayer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const requestTokenRef = useRef(0);
 
   // Combined loading state
   const isLoading = isSearching || externalLoading;
@@ -97,46 +94,32 @@ export function PlayerSearchOverlay({
     }
   }, [visible]);
 
-  // Debounced search
+  // Hybrid search (local Elite Index + Oracle fallback)
   useEffect(() => {
-    // Clear previous debounce
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Don't search for short queries
     if (query.length < MIN_SEARCH_LENGTH) {
+      requestTokenRef.current++;
       setResults([]);
       setIsSearching(false);
       return;
     }
 
+    const token = ++requestTokenRef.current;
     setIsSearching(true);
 
-    // Debounce the search
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const searchResults = await searchPlayers(query);
-        setResults(searchResults);
-      } catch (error) {
-        console.error('Player search failed:', error);
-        setResults([]);
-      } finally {
+    let callbackCount = 0;
+    searchPlayersHybrid(query, (newResults) => {
+      if (token !== requestTokenRef.current) return;
+      callbackCount++;
+      setResults(newResults);
+      if (callbackCount > 1 || newResults.length >= 3) {
         setIsSearching(false);
       }
-    }, DEBOUNCE_MS);
-
-    // Cleanup
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
+    });
   }, [query]);
 
   // Handle player selection
   const handleSelectPlayer = useCallback(
-    (player: ParsedPlayer) => {
+    (player: UnifiedPlayer) => {
       onSelectPlayer(player);
       // Auto-close handled by parent
     },
@@ -181,21 +164,42 @@ export function PlayerSearchOverlay({
     );
   };
 
-  // Render result item
+  // Render result item (zero-spoiler: flag, name, position, birth year)
   const renderItem = useCallback(
-    ({ item }: { item: PlayerSearchResult }) => (
-      <PlayerResultItem
-        player={item.player}
-        onPress={() => handleSelectPlayer(item.player)}
-        testID={`${testID}-result-${item.player.id}`}
-      />
-    ),
+    ({ item }: { item: UnifiedPlayer }) => {
+      const meta = getPlayerMeta(item);
+      return (
+        <Pressable
+          onPress={() => handleSelectPlayer(item)}
+          style={({ pressed }) => [styles.resultItem, pressed && styles.resultItemPressed]}
+          testID={`${testID}-result-${item.id}`}
+        >
+          <View style={styles.resultContent}>
+            {item.nationality_code ? (
+              <View style={styles.resultFlag}>
+                <FlagIcon code={item.nationality_code} size={16} />
+              </View>
+            ) : null}
+            <View style={styles.resultTextGroup}>
+              <Text style={styles.resultName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {meta ? (
+                <Text style={styles.resultMeta} numberOfLines={1}>
+                  {meta}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        </Pressable>
+      );
+    },
     [handleSelectPlayer, testID]
   );
 
   // Key extractor
   const keyExtractor = useCallback(
-    (item: PlayerSearchResult) => item.player.id,
+    (item: UnifiedPlayer) => item.id,
     []
   );
 
@@ -339,6 +343,49 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     textAlign: 'center',
   },
+  resultItem: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xs,
+  },
+  resultItemPressed: {
+    backgroundColor: 'rgba(88, 204, 2, 0.12)',
+  },
+  resultContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  resultFlag: {
+    width: 28,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  resultTextGroup: {
+    flex: 1,
+  },
+  resultName: {
+    fontFamily: fonts.headline,
+    fontSize: 18,
+    color: colors.floodlightWhite,
+    lineHeight: 22,
+  },
+  resultMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    marginTop: 1,
+  },
 });
+
+/** Build metadata string: "Position, b. Year" */
+function getPlayerMeta(player: UnifiedPlayer): string {
+  const parts: string[] = [];
+  if (player.position_category) parts.push(player.position_category);
+  if (player.birth_year) parts.push(`b. ${player.birth_year}`);
+  return parts.join(', ');
+}
 
 export default PlayerSearchOverlay;

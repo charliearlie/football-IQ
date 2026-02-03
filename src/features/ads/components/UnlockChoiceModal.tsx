@@ -30,13 +30,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   Unlock,
-  Crown,
   Play,
   X,
   Check,
   AlertCircle,
   ArrowRight,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { ElevatedButton } from '@/components/ElevatedButton';
@@ -299,7 +299,7 @@ function IdleContent({
     <View style={styles.optionsContainer}>
       <View style={styles.optionCard}>
         <View style={styles.optionHeader}>
-          <Crown size={24} color={colors.cardYellow} />
+          <ProBadge size={24} color={colors.cardYellow} />
           <View style={styles.optionInfo}>
             <Text style={styles.optionTitle}>Go Pro</Text>
             <Text style={styles.optionSubtitle}>

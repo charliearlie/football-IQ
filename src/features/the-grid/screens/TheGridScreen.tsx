@@ -26,7 +26,8 @@ import { useTheGridGame } from '../hooks/useTheGridGame';
 import { TheGridBoard } from '../components/TheGridBoard';
 import { TheGridResultModal } from '../components/TheGridResultModal';
 import { parseTheGridContent, FilledCell, TheGridAttemptMetadata } from '../types/theGrid.types';
-import { ParsedLocalAttempt, ParsedPlayer } from '@/types/database';
+import { ParsedLocalAttempt } from '@/types/database';
+import { UnifiedPlayer } from '@/services/oracle/types';
 
 export interface TheGridScreenProps {
   /** Puzzle ID to play (optional - uses today's puzzle if not provided) */
@@ -108,7 +109,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
   }, [isReviewMode, attempt?.metadata]);
 
   // Handle player selection from overlay
-  const handleSelectPlayer = async (player: ParsedPlayer) => {
+  const handleSelectPlayer = async (player: UnifiedPlayer) => {
     await submitPlayerSelection(player.id, player.name);
   };
 
