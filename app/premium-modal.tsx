@@ -13,6 +13,7 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -280,7 +281,7 @@ export default function PremiumModalScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {/* Icon */}
         <View
@@ -290,9 +291,9 @@ export default function PremiumModalScreen() {
           ]}
         >
           {state === 'success' ? (
-            <Check size={40} color={colors.stadiumNavy} strokeWidth={3} />
+            <Check size={28} color={colors.stadiumNavy} strokeWidth={3} />
           ) : (
-            <ProBadge size={40} color={colors.stadiumNavy} />
+            <ProBadge size={28} color={colors.stadiumNavy} />
           )}
         </View>
 
@@ -315,7 +316,7 @@ export default function PremiumModalScreen() {
               {BENEFITS.map((benefit, index) => (
                 <View key={index} style={styles.benefitRow}>
                   <View style={styles.benefitIcon}>
-                    <benefit.icon size={24} color={colors.cardYellow} />
+                    <benefit.icon size={18} color={colors.cardYellow} />
                   </View>
                   <View style={styles.benefitText}>
                     <Text style={styles.benefitTitle}>{benefit.text}</Text>
@@ -350,6 +351,23 @@ export default function PremiumModalScreen() {
 
             <Text style={styles.planNote}>
               Cancel anytime in your App Store settings.
+            </Text>
+
+            <Text style={styles.legalText}>
+              By subscribing, you agree to our{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL('https://football-iq.app/terms')}
+              >
+                Terms of Use
+              </Text>
+              {' '}and{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL('https://football-iq.app/privacy')}
+              >
+                Privacy Policy
+              </Text>
             </Text>
           </Animated.View>
         )}
@@ -531,26 +549,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing['3xl'],
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.cardYellow,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   iconContainerSuccess: {
     backgroundColor: colors.pitchGreen,
   },
   title: {
     fontFamily: fonts.headline,
-    fontSize: 28,
+    fontSize: 24,
     letterSpacing: 2,
     color: colors.cardYellow,
     textAlign: 'center',
@@ -560,7 +578,7 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   content: {
     width: '100%',
@@ -576,18 +594,18 @@ const styles = StyleSheet.create({
   },
   benefitsContainer: {
     width: '100%',
-    marginBottom: spacing.md,
-    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    gap: spacing.xs,
   },
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   benefitIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.md,
     backgroundColor: 'rgba(250, 204, 21, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -609,7 +627,7 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   planCard: {
     flexDirection: 'row',
@@ -619,8 +637,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 2,
     borderColor: 'transparent',
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
     position: 'relative',
   },
   planCardHighlighted: {
@@ -662,7 +680,7 @@ const styles = StyleSheet.create({
   },
   planPrice: {
     fontFamily: fonts.headline,
-    fontSize: 28,
+    fontSize: 24,
     color: colors.cardYellow,
   },
   planPriceHighlighted: {
@@ -684,13 +702,23 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   restoreContainer: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
   },
   planNote: {
     ...textStyles.caption,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  legalText: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  legalLink: {
+    color: colors.cardYellow,
+    textDecorationLine: 'underline',
   },
   successContainer: {
     alignItems: 'center',

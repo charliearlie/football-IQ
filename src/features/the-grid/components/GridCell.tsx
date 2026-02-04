@@ -1,21 +1,25 @@
 /**
  * GridCell Component
  *
- * Individual cell in The Grid with "Solid Layer" 3D architecture.
+ * Individual cell in The Grid with "Solid Layer" 3D architecture and flip animation.
  * - Empty cells: Appear "sunk" with minimal depth (1px)
  * - Filled cells: Pop up with 3px depth and green background
+ * - Filled + rarity loaded: Flip to reveal "Player Card" with flag + rarity %
  * - Uses two absolute-positioned layers for cross-platform consistency
  */
 
-import React from 'react';
-import { Text, StyleSheet, Pressable, View } from 'react-native';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { Text, StyleSheet, Pressable, View, ActivityIndicator } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  interpolate,
+  interpolateColor,
 } from 'react-native-reanimated';
 import { colors, fonts, borderRadius, depthOffset, spacing } from '@/theme';
 import { triggerSelection, triggerIncomplete } from '@/lib/haptics';
+import { FlagIcon } from '@/components/FlagIcon';
 import { FilledCell, CellIndex } from '../types/theGrid.types';
 
 export interface GridCellProps {
@@ -31,18 +35,37 @@ const CELL_SIZE = 90;
 const EMPTY_DEPTH = depthOffset.sunk; // 1px - sunk effect
 const FILLED_DEPTH = depthOffset.cell; // 3px - pop-up effect
 
-const SPRING_CONFIG = {
+const PRESS_SPRING = {
   damping: 15,
   stiffness: 300,
   mass: 0.5,
 };
 
+// "Trading card" flip - heavy, weighty feel (from PlayerMarker)
+const FLIP_SPRING = {
+  damping: 18,
+  stiffness: 180,
+  mass: 1.2,
+};
+
 /**
- * GridCell - A single cell in the 3x3 grid.
+ * Get color for rarity percentage display.
+ * Lower rarity = more prestigious color.
+ */
+function getRarityColor(rarityPct: number): string {
+  if (rarityPct < 1) return '#FFD700'; // Gold for <1% (legendary)
+  if (rarityPct < 5) return '#A855F7'; // Purple for <5% (epic)
+  if (rarityPct < 20) return '#3B82F6'; // Blue for <20% (rare)
+  return colors.pitchGreen; // Green for common
+}
+
+/**
+ * GridCell - A single cell in the 3x3 grid with flip animation.
  *
  * States:
  * - Empty: Shows "?" with sunk appearance (darker shadow visible at top)
- * - Filled: Shows player name with pop-up green block
+ * - Filled (loading): Shows player name with green background + spinner
+ * - Filled (rarity loaded): Flips to show Player Card (flag + name + rarity %)
  * - Selected: Has yellow border highlight
  */
 export function GridCell({
@@ -54,20 +77,46 @@ export function GridCell({
   testID,
 }: GridCellProps) {
   const isFilled = cell !== null;
+  const hasRarity = cell?.rarityPct !== undefined && !cell.rarityLoading;
+  const wasFilledRef = useRef(isFilled);
+  const wasRarityLoadedRef = useRef(hasRarity);
+
+  // Animation values
   const pressed = useSharedValue(0);
+  const flipProgress = useSharedValue(hasRarity ? 1 : 0);
 
   // Use different depths for empty vs filled cells
   const depth = isFilled ? FILLED_DEPTH : EMPTY_DEPTH;
   const layerHeight = CELL_SIZE;
 
+  // Handle flip animation when rarity loads
+  useEffect(() => {
+    if (hasRarity && !wasRarityLoadedRef.current) {
+      // Delay flip slightly for visual effect
+      const timeout = setTimeout(() => {
+        flipProgress.value = withSpring(1, FLIP_SPRING);
+      }, 200);
+      return () => clearTimeout(timeout);
+    }
+    wasRarityLoadedRef.current = hasRarity;
+  }, [hasRarity, flipProgress]);
+
+  // Reset flip when cell becomes empty (game reset)
+  useEffect(() => {
+    if (!isFilled && wasFilledRef.current) {
+      flipProgress.value = 0;
+    }
+    wasFilledRef.current = isFilled;
+  }, [isFilled, flipProgress]);
+
   const handlePressIn = () => {
     if (!isFilled && !disabled) {
-      pressed.value = withSpring(1, SPRING_CONFIG);
+      pressed.value = withSpring(1, PRESS_SPRING);
     }
   };
 
   const handlePressOut = () => {
-    pressed.value = withSpring(0, SPRING_CONFIG);
+    pressed.value = withSpring(0, PRESS_SPRING);
   };
 
   const handlePress = () => {
@@ -83,10 +132,49 @@ export function GridCell({
     }
   };
 
-  // Animate only translateY on the top layer
-  const animatedTopStyle = useAnimatedStyle(() => ({
+  // Animate only translateY on the top layer (press effect)
+  const animatedPressStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: pressed.value * depth }],
   }));
+
+  // Animated flip style for front face (name only)
+  const animatedFrontStyle = useAnimatedStyle(() => {
+    const rotateY = interpolate(flipProgress.value, [0, 1], [0, 180]);
+    const opacity = interpolate(flipProgress.value, [0, 0.5], [1, 0]);
+
+    return {
+      transform: [{ perspective: 800 }, { rotateY: `${rotateY}deg` }],
+      opacity,
+      backfaceVisibility: 'hidden' as const,
+    };
+  });
+
+  // Animated flip style for back face (player card) - starts rotated 180deg
+  const animatedBackStyle = useAnimatedStyle(() => {
+    const rotateY = interpolate(flipProgress.value, [0, 1], [180, 360]);
+    const opacity = interpolate(flipProgress.value, [0.5, 1], [0, 1]);
+
+    return {
+      transform: [{ perspective: 800 }, { rotateY: `${rotateY}deg` }],
+      opacity,
+      backfaceVisibility: 'hidden' as const,
+    };
+  });
+
+  // Animated background color for flip transition
+  const animatedColorStyle = useAnimatedStyle(() => {
+    const backgroundColor = interpolateColor(
+      flipProgress.value,
+      [0, 0.5, 1],
+      [
+        colors.pitchGreen, // Green (front)
+        'rgba(255, 255, 255, 0.8)', // Mid-transition (whitening)
+        colors.floodlightWhite, // White (back - player card)
+      ]
+    );
+
+    return { backgroundColor };
+  });
 
   // Determine colors based on state
   const getTopColor = () => {
@@ -115,6 +203,17 @@ export function GridCell({
     borderColor: getBorderColor(),
   };
 
+  // Rarity display formatting
+  const rarityText = useMemo(() => {
+    if (!cell?.rarityPct) return '';
+    if (cell.rarityPct < 1) return '<1%';
+    return `${Math.round(cell.rarityPct)}%`;
+  }, [cell?.rarityPct]);
+
+  const rarityColor = useMemo(() => {
+    return cell?.rarityPct !== undefined ? getRarityColor(cell.rarityPct) : colors.pitchGreen;
+  }, [cell?.rarityPct]);
+
   return (
     <Pressable
       onPress={handlePress}
@@ -133,7 +232,7 @@ export function GridCell({
       accessibilityRole="button"
       accessibilityLabel={
         isFilled
-          ? `Cell ${index + 1}: ${cell.player}`
+          ? `Cell ${index + 1}: ${cell.player}${hasRarity ? `, ${rarityText} rarity` : ''}`
           : isSelected
             ? `Cell ${index + 1}: Selected`
             : `Cell ${index + 1}: Empty, tap to select`
@@ -157,28 +256,79 @@ export function GridCell({
       />
 
       {/* Top/Face Layer - Animates down on press */}
-      <Animated.View
-        style={[
-          styles.layer,
-          styles.topLayer,
-          layerStyle,
-          {
-            backgroundColor: getTopColor(),
-          },
-          animatedTopStyle,
-        ]}
-      >
-        {isFilled ? (
-          <Text
-            style={styles.playerName}
-            numberOfLines={2}
-            adjustsFontSizeToFit
-            minimumFontScale={0.6}
-          >
-            {cell.player}
-          </Text>
-        ) : (
-          <Text style={styles.emptyIcon}>?</Text>
+      <Animated.View style={[styles.layer, styles.topLayer, animatedPressStyle]}>
+        {/* Empty state */}
+        {!isFilled && (
+          <View style={[layerStyle, { backgroundColor: getTopColor() }, styles.faceContent]}>
+            <Text style={styles.emptyIcon}>?</Text>
+          </View>
+        )}
+
+        {/* Filled state with flip animation */}
+        {isFilled && (
+          <>
+            {/* Front face (green with name + loading) */}
+            <Animated.View
+              style={[
+                layerStyle,
+                styles.faceContent,
+                styles.flipFace,
+                { backgroundColor: colors.pitchGreen },
+                animatedFrontStyle,
+              ]}
+            >
+              <Text
+                style={styles.playerName}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
+                {cell.player}
+              </Text>
+              {cell.rarityLoading && (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.stadiumNavy}
+                  style={styles.spinner}
+                />
+              )}
+            </Animated.View>
+
+            {/* Back face (player card with flag + rarity) */}
+            <Animated.View
+              style={[
+                layerStyle,
+                styles.faceContent,
+                styles.flipFace,
+                animatedColorStyle,
+                animatedBackStyle,
+              ]}
+            >
+              {/* Flag */}
+              {cell.nationalityCode && (
+                <View style={styles.flagContainer}>
+                  <FlagIcon code={cell.nationalityCode} size={14} />
+                </View>
+              )}
+
+              {/* Player name */}
+              <Text
+                style={styles.cardName}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
+                {cell.player}
+              </Text>
+
+              {/* Rarity percentage */}
+              {hasRarity && (
+                <Text style={[styles.rarityText, { color: rarityColor }]}>
+                  {rarityText}
+                </Text>
+              )}
+            </Animated.View>
+          </>
         )}
       </Animated.View>
     </Pressable>
@@ -204,6 +354,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+  },
+  faceContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flipFace: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   emptyIcon: {
     fontFamily: fonts.headline,
@@ -217,5 +378,30 @@ const styles = StyleSheet.create({
     color: colors.stadiumNavy,
     textAlign: 'center',
     paddingHorizontal: 4,
+  },
+  spinner: {
+    position: 'absolute',
+    bottom: 6,
+  },
+  // Player card (back face) styles
+  flagContainer: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+  },
+  cardName: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.stadiumNavy,
+    textAlign: 'center',
+    paddingHorizontal: 4,
+    marginTop: 2,
+  },
+  rarityText: {
+    fontFamily: fonts.headline,
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 4,
   },
 });

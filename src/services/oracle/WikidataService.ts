@@ -60,3 +60,32 @@ export async function validatePlayerClub(
 
   return data === true;
 }
+
+/**
+ * Validate if a player played for a club identified by name.
+ * Looks up club QID by name, then validates the relationship.
+ *
+ * @param playerQid - Player Wikidata QID (e.g., "Q17333")
+ * @param clubName - Club name (e.g., "Arsenal", "Real Madrid")
+ * @returns true if relationship exists, false otherwise
+ */
+export async function validatePlayerClubByName(
+  playerQid: string,
+  clubName: string
+): Promise<boolean> {
+  // First, find the club QID by name
+  const { data: clubData, error: clubError } = await supabase
+    .from('clubs')
+    .select('id')
+    .ilike('name', `%${clubName}%`)
+    .limit(1)
+    .single();
+
+  if (clubError || !clubData?.id) {
+    console.warn(`[WikidataService] Club not found: "${clubName}"`);
+    return false;
+  }
+
+  // Now validate the player-club relationship
+  return validatePlayerClub(playerQid, clubData.id);
+}

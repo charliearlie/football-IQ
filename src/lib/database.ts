@@ -1435,6 +1435,48 @@ export async function getPlayerStatsCache(
 }
 
 /**
+ * Get player nationality code from search cache.
+ * Used by Grid validation to check nationality criteria.
+ *
+ * @param playerId - Wikidata QID (e.g., "Q615")
+ * @returns ISO 3166-1 alpha-2 code (e.g., "FR"), or null if not found
+ */
+export async function getPlayerNationalityFromCache(
+  playerId: string
+): Promise<string | null> {
+  try {
+    const database = getDatabase();
+    const row = await database.getFirstAsync<{ nationality_code: string | null }>(
+      'SELECT nationality_code FROM player_search_cache WHERE id = $id',
+      { $id: playerId }
+    );
+    return row?.nationality_code ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if a player exists in the search cache.
+ * Used by Grid validation to verify player QID is valid.
+ *
+ * @param playerId - Wikidata QID (e.g., "Q615")
+ * @returns true if player exists in cache
+ */
+export async function playerExistsInCache(playerId: string): Promise<boolean> {
+  try {
+    const database = getDatabase();
+    const row = await database.getFirstAsync<{ id: string }>(
+      'SELECT id FROM player_search_cache WHERE id = $id',
+      { $id: playerId }
+    );
+    return row !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Get elite index version from _metadata.
  * Used by SyncService to check for updates.
  *

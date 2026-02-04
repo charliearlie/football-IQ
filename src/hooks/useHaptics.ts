@@ -117,6 +117,19 @@ export function useHaptics() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }, [isHapticsSupported]);
 
+  /**
+   * Rare find celebration - Special haptic for ultra-rare player picks (<1% rarity)
+   * Uses: Heavy -> Heavy -> Success (impactful double-thump + celebration)
+   */
+  const triggerRareFind = useCallback(async () => {
+    if (!isHapticsSupported) return;
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [isHapticsSupported]);
+
   return {
     // Primitives (keep for backward compatibility)
     triggerLight,
@@ -130,5 +143,6 @@ export function useHaptics() {
     triggerCompletion,
     triggerIncomplete,
     triggerPerfectDay,
+    triggerRareFind,
   };
 }

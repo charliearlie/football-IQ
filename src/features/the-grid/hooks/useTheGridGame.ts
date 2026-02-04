@@ -30,6 +30,8 @@ import { validateCellGuess, getCellCategories, countFilledCells, validateCellWit
 import { calculateGridScore, isGridComplete } from '../utils/scoring';
 import { shareTheGridResult, ShareResult } from '../utils/share';
 import { generateTheGridScoreDisplay } from '../utils/scoreDisplay';
+import { useGridRarity } from './useGridRarity';
+import { triggerRareFind } from '@/lib/haptics';
 
 /**
  * Reducer for The Grid game state.
@@ -65,7 +67,12 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
 
     case 'CORRECT_GUESS': {
       const newCells = [...state.cells];
-      newCells[action.payload.cellIndex] = { player: action.payload.player };
+      newCells[action.payload.cellIndex] = {
+        player: action.payload.player,
+        playerId: action.payload.playerId,
+        nationalityCode: action.payload.nationalityCode,
+        rarityLoading: true, // Start loading rarity
+      };
 
       return {
         ...state,
@@ -74,6 +81,31 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
         currentGuess: '',
         lastGuessIncorrect: false,
       };
+    }
+
+    case 'SET_CELL_RARITY': {
+      const newCells = [...state.cells];
+      const cell = newCells[action.payload.cellIndex];
+      if (cell) {
+        newCells[action.payload.cellIndex] = {
+          ...cell,
+          rarityPct: action.payload.rarityPct,
+          rarityLoading: false,
+        };
+      }
+      return { ...state, cells: newCells };
+    }
+
+    case 'SET_RARITY_LOADING': {
+      const newCells = [...state.cells];
+      const cell = newCells[action.payload.cellIndex];
+      if (cell) {
+        newCells[action.payload.cellIndex] = {
+          ...cell,
+          rarityLoading: action.payload.loading,
+        };
+      }
+      return { ...state, cells: newCells };
     }
 
     case 'INCORRECT_GUESS':
@@ -144,6 +176,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
   const { syncAttempts } = usePuzzleContext();
   const { refreshLocalIQ } = useAuth();
   const { triggerSuccess, triggerError, triggerCompletion } = useHaptics();
+  const { recordSelection, fetchCellRarity } = useGridRarity(puzzle?.id ?? null);
 
   // Keep a ref for async callbacks
   const stateRef = useRef(state);
@@ -443,44 +476,71 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
    * Submit a player selection from the PlayerSearchOverlay.
    * Tries name-based valid_answers matching first, then falls back to DB validation.
    *
+   * Flow:
+   * 1. Local validation (instant) → dispatch CORRECT_GUESS
+   * 2. triggerSuccess() haptic
+   * 3. recordSelection() // fire-and-forget
+   * 4. fetchCellRarity().then() → dispatch SET_CELL_RARITY → optional triggerRareFind
+   *
    * @param playerId - Player ID (QID or local ID)
    * @param playerName - Player display name
+   * @param nationalityCode - Optional ISO nationality code for flag display
    */
   const submitPlayerSelection = useCallback(
-    async (playerId: string, playerName: string) => {
+    async (playerId: string, playerName: string, nationalityCode?: string) => {
       if (state.selectedCell === null || !gridContent) return;
 
-      // Try name-based matching against valid_answers first
-      const nameResult = validateCellGuess(playerName, state.selectedCell, gridContent);
-      if (nameResult.isValid) {
+      const cellIndex = state.selectedCell;
+
+      // Helper to handle post-validation rarity flow
+      const handleCorrectGuess = (displayName: string) => {
         triggerSuccess();
         dispatch({
           type: 'CORRECT_GUESS',
           payload: {
-            cellIndex: state.selectedCell,
-            player: nameResult.matchedPlayer ?? playerName,
+            cellIndex,
+            player: displayName,
+            playerId,
+            nationalityCode,
           },
         });
+
+        // Fire-and-forget: record selection to server
+        recordSelection(cellIndex, playerId, displayName, nationalityCode);
+
+        // Async: fetch rarity and update cell
+        fetchCellRarity(cellIndex, playerId).then((rarityPct) => {
+          if (rarityPct !== null) {
+            dispatch({
+              type: 'SET_CELL_RARITY',
+              payload: { cellIndex, rarityPct },
+            });
+
+            // Special haptic for ultra-rare picks (<1%)
+            if (rarityPct < 1) {
+              triggerRareFind();
+            }
+          }
+        });
+      };
+
+      // Try name-based matching against valid_answers first
+      const nameResult = validateCellGuess(playerName, state.selectedCell, gridContent);
+      if (nameResult.isValid) {
+        handleCorrectGuess(nameResult.matchedPlayer ?? playerName);
         return;
       }
 
       // Fall back to DB validation (club history, nationality, trophies, stats)
       const dbResult = await validateCellWithDB(playerId, state.selectedCell, gridContent);
       if (dbResult.isValid) {
-        triggerSuccess();
-        dispatch({
-          type: 'CORRECT_GUESS',
-          payload: {
-            cellIndex: state.selectedCell,
-            player: playerName,
-          },
-        });
+        handleCorrectGuess(playerName);
       } else {
         triggerError();
         dispatch({ type: 'INCORRECT_GUESS' });
       }
     },
-    [state.selectedCell, gridContent, triggerSuccess, triggerError]
+    [state.selectedCell, gridContent, triggerSuccess, triggerError, recordSelection, fetchCellRarity]
   );
 
   const giveUp = useCallback(() => {

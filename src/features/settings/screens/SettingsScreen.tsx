@@ -76,14 +76,21 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
       if (status !== 'granted') {
         Alert.alert(
           'Permission Required',
-          'Please enable notifications in your device settings.'
+          'Notification permissions can only be changed in iOS Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
         );
       }
     } else {
       Alert.alert(
         'Disable Notifications',
-        'To turn off notifications, go to Settings > Football IQ > Notifications on your device.',
-        [{ text: 'OK' }]
+        'Notification permissions can only be changed in iOS Settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]
       );
     }
   }, []);
@@ -262,14 +269,14 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
    * Handle Privacy Policy row press - opens external URL
    */
   const handlePrivacyPress = useCallback(() => {
-    Linking.openURL('https://football-iq-phi.vercel.app/privacy');
+    Linking.openURL('https://football-iq.app/privacy');
   }, []);
 
   /**
    * Handle Terms of Service row press - opens external URL
    */
   const handleTermsPress = useCallback(() => {
-    Linking.openURL('https://football-iq-phi.vercel.app/terms');
+    Linking.openURL('https://football-iq.app/terms');
   }, []);
 
   /**

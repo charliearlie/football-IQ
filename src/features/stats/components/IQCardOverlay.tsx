@@ -106,7 +106,7 @@ function IQCard({ data }: { data: IQCardData }) {
 
       {/* Footer */}
       <View style={styles.cardFooter}>
-        <Text style={styles.footerText}>football-iq-phi.vercel.app</Text>
+        <Text style={styles.footerText}>football-iq.app</Text>
       </View>
     </View>
   );

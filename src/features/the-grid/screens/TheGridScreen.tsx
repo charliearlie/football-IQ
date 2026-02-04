@@ -110,7 +110,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
 
   // Handle player selection from overlay
   const handleSelectPlayer = async (player: UnifiedPlayer) => {
-    await submitPlayerSelection(player.id, player.name);
+    await submitPlayerSelection(player.id, player.name, player.nationality_code ?? undefined);
   };
 
   // Handle share
@@ -168,7 +168,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
 
   return (
     <GameContainer
-      title="The Grid"
+      title="The Grid (beta)"
       onHelpPress={() => setShowHelpModal(true)}
       testID="the-grid-screen"
     >
@@ -239,6 +239,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           score={state.score}
           cells={state.cells}
           puzzleId={puzzle?.id ?? ''}
+          puzzleDate={puzzle?.puzzle_date ?? ''}
           onClose={() => {
             setShowResultModal(false);
             router.back();
@@ -267,6 +268,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
               ? `${selectedCellCategories.row.value} & ${selectedCellCategories.col.value}`
               : 'Search Players'
           }
+          showError={state.lastGuessIncorrect}
           testID="player-search-overlay"
         />
 

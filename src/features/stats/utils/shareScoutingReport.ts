@@ -17,7 +17,7 @@ import { getTierForPoints } from './tierProgression';
  * This URL will show OG image previews on social platforms.
  */
 export function generateWebShareUrl(userId?: string): string {
-  return `https://football-iq-phi.vercel.app/scout/${userId || 'anonymous'}`;
+  return `https://football-iq.app/scout/${userId || 'anonymous'}`;
 }
 
 /**

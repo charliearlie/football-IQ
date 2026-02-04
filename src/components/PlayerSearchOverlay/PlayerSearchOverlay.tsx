@@ -8,6 +8,7 @@
  * - FlatList results for 3+ char queries
  * - Loading state support for future API integration
  * - Auto-close on player selection
+ * - Visual shake feedback for incorrect guesses
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -22,8 +23,14 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import Animated, { SlideInDown, FadeIn, FadeOut } from 'react-native-reanimated';
-import { X, Search } from 'lucide-react-native';
+import Animated, {
+  SlideInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import { X, Search, AlertCircle } from 'lucide-react-native';
 import { GlassCard } from '@/components/GlassCard';
 import { colors, fonts, spacing, borderRadius, textStyles } from '@/theme';
 import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
@@ -44,6 +51,8 @@ export interface PlayerSearchOverlayProps {
   title?: string;
   /** Whether search is loading (for future API integration) */
   isLoading?: boolean;
+  /** Whether to show error state (incorrect guess) */
+  showError?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -70,6 +79,7 @@ export function PlayerSearchOverlay({
   onClose,
   title = 'Search Players',
   isLoading: externalLoading = false,
+  showError = false,
   testID,
 }: PlayerSearchOverlayProps) {
   const [query, setQuery] = useState('');
@@ -77,6 +87,38 @@ export function PlayerSearchOverlay({
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const requestTokenRef = useRef(0);
+
+  // Shake animation for error feedback
+  const shakeOffset = useSharedValue(0);
+  const errorOpacity = useSharedValue(0);
+
+  // Trigger shake animation when showError changes to true
+  useEffect(() => {
+    if (showError) {
+      // Shake animation
+      shakeOffset.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+      // Show error message
+      errorOpacity.value = withSequence(
+        withTiming(1, { duration: 100 }),
+        withTiming(1, { duration: 2000 }),
+        withTiming(0, { duration: 300 })
+      );
+    }
+  }, [showError, shakeOffset, errorOpacity]);
+
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeOffset.value }],
+  }));
+
+  const errorMessageStyle = useAnimatedStyle(() => ({
+    opacity: errorOpacity.value,
+  }));
 
   // Combined loading state
   const isLoading = isSearching || externalLoading;
@@ -223,19 +265,43 @@ export function PlayerSearchOverlay({
           style={styles.modalContainer}
         >
           <GlassCard style={styles.modal}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>{title}</Text>
-              <Pressable
-                onPress={handleClose}
-                hitSlop={8}
-                testID={`${testID}-close`}
-              >
-                <X size={24} color={colors.textSecondary} />
-              </Pressable>
-            </View>
+            {/* Header with shake animation */}
+            <Animated.View style={shakeStyle}>
+              <View style={styles.header}>
+                <Text style={styles.title}>{title}</Text>
+                <Pressable
+                  onPress={handleClose}
+                  hitSlop={8}
+                  testID={`${testID}-close`}
+                >
+                  <X size={24} color={colors.textSecondary} />
+                </Pressable>
+              </View>
+            </Animated.View>
 
-            {/* Search Input */}
+            {/* Results List (inverted so results appear from bottom) */}
+            <FlatList
+              data={results}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={renderEmptyState}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              inverted={results.length > 0}
+              testID={`${testID}-results`}
+            />
+
+            {/* Error message */}
+            <Animated.View style={[styles.errorContainer, errorMessageStyle]}>
+              <AlertCircle size={14} color={colors.redCard} />
+              <Text style={styles.errorText}>
+                Player doesn&apos;t match criteria
+              </Text>
+            </Animated.View>
+
+            {/* Search Input (fixed at bottom, near keyboard) */}
             <View style={styles.inputContainer}>
               <Search size={20} color={colors.textSecondary} />
               <TextInput
@@ -256,19 +322,6 @@ export function PlayerSearchOverlay({
                 </Pressable>
               )}
             </View>
-
-            {/* Results List */}
-            <FlatList
-              data={results}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              style={styles.list}
-              contentContainerStyle={styles.listContent}
-              ListEmptyComponent={renderEmptyState}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              testID={`${testID}-results`}
-            />
           </GlassCard>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -297,7 +350,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   title: {
     fontFamily: fonts.headline,
@@ -305,13 +358,24 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     letterSpacing: 1,
   },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    minHeight: 20,
+  },
+  errorText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.redCard,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
     gap: spacing.sm,
   },
   input: {
@@ -322,7 +386,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   list: {
-    flexGrow: 0,
     maxHeight: 400,
   },
   listContent: {
@@ -331,6 +394,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 150,
     paddingVertical: spacing.xl,
     gap: spacing.sm,
   },

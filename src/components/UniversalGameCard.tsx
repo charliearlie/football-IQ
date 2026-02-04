@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -22,6 +22,7 @@ import {
   Grid3X3,
   HelpCircle,
   Check,
+  Play,
 } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
 import { GlassCard } from './GlassCard';
@@ -165,7 +166,7 @@ function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfi
       };
     case 'the_grid':
       return {
-        title: 'The Grid',
+        title: 'The Grid (beta)',
         subtitle: 'Fill the matrix',
         icon: <Grid3X3 color={colors.pitchGreen} size={28} />,
         iconColor: colors.pitchGreen,
@@ -261,6 +262,15 @@ function getHapticType(status: CardStatus, isLocked: boolean, isPremiumLocked: b
 }
 
 /**
+ * Get icon for small phone icon-only buttons.
+ */
+function getSmallPhoneButtonIcon(status: CardStatus, isLocked: boolean): React.ReactNode {
+  if (isLocked) return <ProBadge size={14} color={colors.stadiumNavy} />;
+  if (status === 'done') return <Check size={14} color={colors.floodlightWhite} strokeWidth={3} />;
+  return <Play size={14} color={colors.stadiumNavy} fill={colors.stadiumNavy} />;
+}
+
+/**
  * UniversalGameCard - Unified game card for Home and Archive screens.
  *
  * Shows different states:
@@ -281,6 +291,8 @@ export function UniversalGameCard({
   isAdUnlocked = false,
   testID,
 }: UniversalGameCardProps) {
+  const { width } = useWindowDimensions();
+  const isSmallPhone = width < 385; // iPhone 13 Mini/SE breakpoint
   const isArchive = variant === 'archive';
   const config = getGameModeConfig(gameMode, isArchive);
   const buttonProps = getButtonProps(status);
@@ -368,7 +380,7 @@ export function UniversalGameCard({
         {isProMode && (
           <View style={styles.proSashContainer} pointerEvents="none">
             <View style={styles.proSash}>
-              <Text style={styles.proSashText}>PRO</Text>
+              <Text style={[styles.proSashText, isSmallPhone && { fontSize: 8 }]}>PRO</Text>
             </View>
           </View>
         )}
@@ -396,10 +408,18 @@ export function UniversalGameCard({
               )}
             </View>
             <View style={styles.textContainer}>
-              <Text style={[styles.title, isArchive && archiveStyles.title]} numberOfLines={1}>
+              <Text style={[
+                styles.title,
+                isArchive && archiveStyles.title,
+                isSmallPhone && { fontSize: isArchive ? 13 : 17 }
+              ]} numberOfLines={1}>
                 {config.title}
               </Text>
-              <Text style={[styles.subtitle, isArchive && archiveStyles.subtitle]} numberOfLines={1}>
+              <Text style={[
+                styles.subtitle,
+                isArchive && archiveStyles.subtitle,
+                isSmallPhone && { fontSize: isArchive ? 10 : 11 }
+              ]} numberOfLines={1}>
                 {config.subtitle}
               </Text>
             </View>
@@ -411,7 +431,7 @@ export function UniversalGameCard({
               // "Velvet Rope" design: Premium unlock button with glint effect
               <View style={styles.unlockButtonContainer}>
                 <ElevatedButton
-                  title="Unlock"
+                  title={isSmallPhone ? "" : "Unlock"}
                   onPress={onPress}
                   size="small"
                   topColor={colors.cardYellow}
@@ -430,7 +450,7 @@ export function UniversalGameCard({
               // Play button with pulse animation
               <Animated.View style={playButtonAnimatedStyle}>
                 <ElevatedButton
-                  title={buttonProps.title}
+                  title={isSmallPhone ? "" : buttonProps.title}
                   variant={buttonProps.variant}
                   onPress={onPress}
                   size="small"
@@ -438,13 +458,14 @@ export function UniversalGameCard({
                   shadowColor={buttonProps.shadowColor}
                   borderColorOverride={buttonProps.borderColor}
                   hapticType={hapticType}
+                  icon={isSmallPhone ? getSmallPhoneButtonIcon(status, false) : undefined}
                   testID={`${testID}-button`}
                 />
               </Animated.View>
             ) : (
               // Resume/Result button (no pulse)
               <ElevatedButton
-                title={buttonProps.title}
+                title={isSmallPhone ? "" : buttonProps.title}
                 variant={buttonProps.variant}
                 onPress={onPress}
                 size="small"
@@ -452,6 +473,7 @@ export function UniversalGameCard({
                 shadowColor={buttonProps.shadowColor}
                 borderColorOverride={buttonProps.borderColor}
                 hapticType={hapticType}
+                icon={isSmallPhone ? getSmallPhoneButtonIcon(status, false) : undefined}
                 testID={`${testID}-button`}
               />
             )}

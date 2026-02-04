@@ -69,7 +69,7 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
   {
     value: 'the_grid',
-    label: 'The Grid',
+    label: 'The Grid (beta)',
     icon: <Grid3X3 size={18} />,
     iconColor: colors.pitchGreen,
   },

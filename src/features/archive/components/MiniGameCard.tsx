@@ -51,7 +51,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   career_path_pro: 'Career Path Pro',
   guess_the_transfer: 'Transfer Guess',
   guess_the_goalscorers: 'Goalscorer Recall',
-  the_grid: 'The Grid',
+  the_grid: 'The Grid (beta)',
   topical_quiz: 'Quiz',
   top_tens: 'Top Tens',
   starting_xi: 'Starting XI',

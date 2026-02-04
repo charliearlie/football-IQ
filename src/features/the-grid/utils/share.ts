@@ -81,3 +81,24 @@ async function copyToClipboard(text: string): Promise<ShareResult> {
     };
   }
 }
+
+/**
+ * Generate emoji grid for share card.
+ *
+ * Shows a 3x3 grid with ✅ for filled cells and ⬜ for empty.
+ *
+ * @param cells - Array of 9 cell states
+ * @returns Emoji grid string
+ */
+export function generateGridEmojiGrid(cells: (FilledCell | null)[]): string {
+  const rows: string[] = [];
+  for (let row = 0; row < 3; row++) {
+    const rowEmojis: string[] = [];
+    for (let col = 0; col < 3; col++) {
+      const cell = cells[row * 3 + col];
+      rowEmojis.push(cell ? '✅' : '⬜');
+    }
+    rows.push(rowEmojis.join(''));
+  }
+  return rows.join('\n');
+}

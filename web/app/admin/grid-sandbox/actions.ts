@@ -34,6 +34,11 @@ interface ActionResult<T = unknown> {
   error?: string;
 }
 
+// Type alias for Supabase query builder used by fetchAllRows
+type PostgrestQueryBuilder<T> = {
+  range: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>;
+};
+
 // ============================================================================
 // ACTION 1: Search Players (Zero-Spoiler)
 // ============================================================================
@@ -100,12 +105,12 @@ export async function validateCell(
     );
 
     // Also fetch stats_cache for debugging
-    // Note: stats_cache not in generated types yet, cast through any
-    const { data: player } = await (supabase as any)
+    // Note: stats_cache not in generated types yet, cast through unknown
+    const { data: player } = (await supabase
       .from("players")
       .select("stats_cache")
       .eq("id", playerQid)
-      .single();
+      .single()) as { data: { stats_cache: Record<string, number> | null } | null };
 
     return {
       success: true,
@@ -224,18 +229,18 @@ async function getStatsCacheMap(
 ): Promise<Map<string, Record<string, number>>> {
   if (_statsCacheMap) return _statsCacheMap;
 
-  // Note: stats_cache not in generated types yet, cast through any
-  const { data } = await (supabase as any)
+  // Note: stats_cache not in generated types yet, cast through unknown
+  const { data } = (await supabase
     .from("players")
     .select("id, stats_cache")
     .not("stats_cache", "is", null)
-    .limit(10000);
+    .limit(10000)) as { data: Array<{ id: string; stats_cache: Record<string, number> | null }> | null };
 
   const map = new Map<string, Record<string, number>>();
-  for (const p of (data ?? []) as any[]) {
+  for (const p of data ?? []) {
     const cache = p.stats_cache;
     if (cache && typeof cache === "object" && Object.keys(cache).length > 0) {
-      map.set(p.id as string, cache as Record<string, number>);
+      map.set(p.id, cache);
     }
   }
   _statsCacheMap = map;
@@ -260,7 +265,7 @@ async function getPlayerIdsForCriterion(
 
       const clubId = clubs[0].id;
       const appearances = await fetchAllRows<{ player_id: string }>(
-        () => supabase.from("player_appearances").select("player_id").eq("club_id", clubId) as any
+        () => supabase.from("player_appearances").select("player_id").eq("club_id", clubId) as PostgrestQueryBuilder<{ player_id: string }>
       );
 
       return appearances.map((a) => a.player_id);
@@ -271,7 +276,7 @@ async function getPlayerIdsForCriterion(
       if (!code) return [];
 
       const players = await fetchAllRows<{ id: string }>(
-        () => supabase.from("players").select("id").eq("nationality_code", code) as any
+        () => supabase.from("players").select("id").eq("nationality_code", code) as PostgrestQueryBuilder<{ id: string }>
       );
 
       return players.map((p) => p.id);
@@ -445,14 +450,14 @@ async function buildClubPool(
 ): Promise<GridCategory[]> {
   // Paginate through all clubs (IDs are strings — Wikidata QIDs)
   const clubs = await fetchAllRows<{ id: string; name: string }>(
-    () => supabase.from("clubs").select("id, name") as any
+    () => supabase.from("clubs").select("id, name") as PostgrestQueryBuilder<{ id: string; name: string }>
   );
 
   if (!clubs.length) return [];
 
   // Paginate through all appearances
   const appearances = await fetchAllRows<{ club_id: string; player_id: string }>(
-    () => supabase.from("player_appearances").select("club_id, player_id") as any
+    () => supabase.from("player_appearances").select("club_id, player_id") as PostgrestQueryBuilder<{ club_id: string; player_id: string }>
   );
 
   if (!appearances.length) {
@@ -494,7 +499,7 @@ async function buildNationPool(
 ): Promise<GridCategory[]> {
   // Paginate through all players to count by nationality
   const players = await fetchAllRows<{ nationality_code: string | null }>(
-    () => supabase.from("players").select("nationality_code").not("nationality_code", "is", null) as any
+    () => supabase.from("players").select("nationality_code").not("nationality_code", "is", null) as PostgrestQueryBuilder<{ nationality_code: string | null }>
   );
 
   if (!players.length) return [];
@@ -652,11 +657,12 @@ export async function batchSyncAchievements(
     const supabase = await createAdminClient();
 
     // Fetch top players by scout_rank that haven't been synced yet (empty or null stats_cache)
-    const { data: players, error: fetchErr } = await (supabase as any)
+    type PlayerWithStats = { id: string; name: string; stats_cache: Record<string, number> | null };
+    const { data: players, error: fetchErr } = (await supabase
       .from("players")
       .select("id, name, stats_cache")
       .order("scout_rank", { ascending: false })
-      .range(offset, offset + batchSize - 1);
+      .range(offset, offset + batchSize - 1)) as { data: PlayerWithStats[] | null; error: { message: string } | null };
 
     if (fetchErr) {
       return { success: false, error: `Failed to fetch players: ${fetchErr.message}` };
@@ -670,8 +676,8 @@ export async function batchSyncAchievements(
     }
 
     // Filter to players with empty/null stats_cache
-    const unsyncedPlayers = players.filter((p: any) => {
-      const cache = p.stats_cache as Record<string, number> | null;
+    const unsyncedPlayers = players.filter((p) => {
+      const cache = p.stats_cache;
       return !cache || Object.keys(cache).length === 0;
     });
 
@@ -731,19 +737,19 @@ export async function forceSyncAchievements(
     }
 
     // Fetch the updated stats_cache
-    // Note: stats_cache not in generated types yet, cast through any
+    // Note: stats_cache not in generated types yet, cast through unknown
     const supabase = await createAdminClient();
-    const { data: player } = await (supabase as any)
+    const { data: player } = (await supabase
       .from("players")
       .select("stats_cache")
       .eq("id", playerQid)
-      .single();
+      .single()) as { data: { stats_cache: Record<string, number> | null } | null };
 
     return {
       success: true,
       data: {
         count: result.count,
-        statsCache: (player?.stats_cache as Record<string, number>) ?? undefined,
+        statsCache: player?.stats_cache ?? undefined,
       },
     };
   } catch (err) {
@@ -841,14 +847,14 @@ export async function pruneOrphanClubs(): Promise<
 
     // Find orphan clubs (no appearances)
     const allClubs = await fetchAllRows<{ id: string; name: string }>(
-      () => supabase.from("clubs").select("id, name") as any
+      () => supabase.from("clubs").select("id, name") as PostgrestQueryBuilder<{ id: string; name: string }>
     );
 
     const appearances = await fetchAllRows<{ club_id: string }>(
       () =>
         supabase
           .from("player_appearances")
-          .select("club_id") as any
+          .select("club_id") as PostgrestQueryBuilder<{ club_id: string }>
     );
 
     const usedClubIds = new Set(appearances.map((a) => a.club_id));
@@ -931,10 +937,10 @@ export async function getGridSchedule(
     const scheduledDates = new Map<string, string | undefined>();
     for (const row of data ?? []) {
       if (!row.puzzle_date) continue;
-      const content = row.content as Record<string, unknown> | null;
+      const content = row.content as { title?: string } | null;
       scheduledDates.set(
         row.puzzle_date,
-        (content as any)?.title as string | undefined
+        content?.title
       );
     }
 

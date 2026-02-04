@@ -217,17 +217,17 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
 
   the_grid: {
     gameMode: 'the_grid',
-    displayTitle: 'The Grid',
+    displayTitle: 'The Grid (beta)',
     goal: 'Fill the 3x3 grid with players matching each criteria',
     rules: [
       { text: 'Each cell has row AND column criteria to match' },
       { text: 'Search for players who fit both requirements' },
-      { text: 'Rarer answers earn higher IQ', highlight: 'higher IQ' },
+      { text: 'Fill all 9 cells for a perfect score', highlight: 'perfect score' },
     ],
     scoring: {
-      type: 'dynamic',
-      description: 'IQ based on answer rarity - obscure picks earn more',
-      potentialLabel: 'HALL OF FAMER',
+      type: 'fixed',
+      description: '1 point per cell filled (max 9)',
+      potentialLabel: 'PERFECT GRID',
     },
     icon: undefined, // Uses Grid3X3 Lucide icon as fallback
     accentColor: colors.pitchGreen,

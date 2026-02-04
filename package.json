@@ -16,7 +16,7 @@
     "@sentry/react-native": "~6.10.0",
     "@shopify/flash-list": "1.7.3",
     "@supabase/supabase-js": "^2.45.0",
-    "country-flag-icons": "^1.6.12",
+    "cm": "^1.6.12",
     "expo": "~52.0.0",
     "expo-application": "~6.0.2",
     "expo-av": "~15.0.2",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import confetti from "canvas-confetti";
 import type { CareerStep } from "@/types/careerPath";
 import { validateGuess } from "@/lib/validation";
 import { CareerStepCard } from "./CareerStepCard";
@@ -13,6 +14,56 @@ import { cn } from "@/lib/utils";
 interface PlayableCareerPathProps {
   careerSteps: CareerStep[];
   answer: string;
+}
+
+function triggerConfetti() {
+  // Fire confetti from both sides
+  const count = 200;
+  const defaults = {
+    origin: { y: 0.7 },
+    zIndex: 9999,
+  };
+
+  function fire(particleRatio: number, opts: confetti.Options) {
+    confetti({
+      ...defaults,
+      ...opts,
+      particleCount: Math.floor(count * particleRatio),
+    });
+  }
+
+  // Left side burst
+  fire(0.25, {
+    spread: 26,
+    startVelocity: 55,
+    origin: { x: 0.2, y: 0.7 },
+  });
+
+  // Center burst
+  fire(0.2, {
+    spread: 60,
+    origin: { x: 0.5, y: 0.7 },
+  });
+
+  // Right side burst
+  fire(0.25, {
+    spread: 26,
+    startVelocity: 55,
+    origin: { x: 0.8, y: 0.7 },
+  });
+
+  // Extra sparkle
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 25,
+    decay: 0.92,
+    scalar: 1.2,
+  });
+
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 45,
+  });
 }
 
 export function PlayableCareerPath({
@@ -36,6 +87,8 @@ export function PlayableCareerPath({
       setHasWon(true);
       setShowSuccess(true);
       setGameOver(true);
+      // Trigger confetti celebration!
+      triggerConfetti();
     } else {
       // Reveal next step on incorrect guess
       if (revealedCount < careerSteps.length) {
@@ -63,12 +116,17 @@ export function PlayableCareerPath({
     <section id="demo" className="py-16 px-4">
       <div className="max-w-md mx-auto">
         {/* Section header */}
-        <h2 className="font-bebas text-4xl text-center mb-2 tracking-wide">
-          TRY TODAY&apos;S CAREER PATH
-        </h2>
-        <p className="text-center text-muted-foreground mb-8">
-          Guess the player from their career history
-        </p>
+        <div className="text-center mb-8">
+          <span className="inline-block px-3 py-1 rounded-full bg-pitch-green/20 text-pitch-green text-xs font-bold tracking-wide mb-3">
+            🎮 TRY IT NOW
+          </span>
+          <h2 className="font-bebas text-4xl tracking-wide text-shadow-fun">
+            TODAY&apos;S CAREER PATH
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            Guess the player from their career history
+          </p>
+        </div>
 
         {/* Career steps list */}
         <div className="space-y-3 mb-6">
@@ -120,7 +178,7 @@ export function PlayableCareerPath({
         {/* Game over state (won) */}
         {gameOver && hasWon && !showSuccess && (
           <div className="text-center">
-            <p className="text-pitch-green font-semibold mb-2">You got it!</p>
+            <p className="text-pitch-green font-semibold mb-2">You got it! 🎉</p>
             <p className="text-floodlight text-lg font-semibold mb-4">
               {answer}
             </p>

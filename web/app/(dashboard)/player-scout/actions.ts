@@ -772,7 +772,8 @@ export async function saveAchievementsToSupabase(
   }
 
   // Delete existing achievements for this player, then insert fresh
-  const { error: deleteError } = await supabase
+  // Note: player_achievements table not in generated types, cast to allow access
+  const { error: deleteError } = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
     .from("player_achievements")
     .delete()
     .eq("player_id", playerQid);
@@ -789,7 +790,7 @@ export async function saveAchievementsToSupabase(
       club_id: a.clubQid,
     }));
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
       .from("player_achievements")
       .insert(rows);
 
@@ -800,12 +801,15 @@ export async function saveAchievementsToSupabase(
 
   // Recalculate stats_cache via the database function
   // (trigger should handle this, but call explicitly to get the result)
-  const { data: statsData, error: statsError } = await supabase
-    .rpc("calculate_player_stats", { target_player_id: playerQid });
+  // Note: calculate_player_stats RPC not in generated types, cast to allow access
+  const { data: statsData, error: statsError } = (await (supabase as unknown as { rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> })
+    .rpc("calculate_player_stats", { target_player_id: playerQid }));
 
   if (statsError) {
     console.error("[saveAchievements] stats_cache calc failed:", statsError.message);
   }
+
+  const typedStatsData = statsData as Record<string, number> | null;
 
   // Bump elite index version so mobile clients pick up changes
   const { error: bumpError } = await supabase
@@ -818,7 +822,7 @@ export async function saveAchievementsToSupabase(
   return {
     success: true,
     count: achievements.length,
-    statsCache: statsData ?? undefined,
+    statsCache: typedStatsData ?? undefined,
   };
 }
 

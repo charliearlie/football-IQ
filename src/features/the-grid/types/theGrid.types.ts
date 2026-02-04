@@ -43,10 +43,52 @@ export interface TheGridContent {
 export type CellIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 /**
- * A filled cell with player name.
+ * A filled cell with player data and optional rarity info.
  */
 export interface FilledCell {
+  /** Player display name */
   player: string;
+  /** Wikidata QID for rarity lookup */
+  playerId?: string;
+  /** ISO 3166-1 alpha-2 code for flag display */
+  nationalityCode?: string;
+  /** Rarity percentage (0-100), undefined until fetched */
+  rarityPct?: number;
+  /** True while fetching rarity from server */
+  rarityLoading?: boolean;
+}
+
+/**
+ * Rarity data for a single cell returned from server.
+ */
+export interface CellRarityData {
+  cellIndex: number;
+  playerId: string;
+  playerName: string;
+  nationalityCode: string | null;
+  rarityPct: number;
+  selectionCount: number;
+  cellTotal: number;
+}
+
+/**
+ * Grid IQ score calculation result.
+ * Lower rarity = higher IQ (obscure picks rewarded).
+ */
+export interface GridIQScore {
+  /** Sum of (100 - rarityPct) for each filled cell */
+  totalRarityScore: number;
+  /** Maximum possible (9 * 100 = 900) */
+  maxScore: number;
+  /** Normalized 0-100 IQ score */
+  gridIQ: number;
+  /** Per-cell breakdown */
+  cellScores: Array<{
+    cellIndex: number;
+    player: string;
+    rarityPct: number;
+    iqContribution: number;
+  }>;
 }
 
 /**
@@ -98,9 +140,19 @@ export type TheGridAction =
   | { type: 'SELECT_CELL'; payload: CellIndex }
   | { type: 'DESELECT_CELL' }
   | { type: 'SET_CURRENT_GUESS'; payload: string }
-  | { type: 'CORRECT_GUESS'; payload: { cellIndex: CellIndex; player: string } }
+  | {
+      type: 'CORRECT_GUESS';
+      payload: {
+        cellIndex: CellIndex;
+        player: string;
+        playerId?: string;
+        nationalityCode?: string;
+      };
+    }
   | { type: 'INCORRECT_GUESS' }
   | { type: 'CLEAR_INCORRECT' }
+  | { type: 'SET_CELL_RARITY'; payload: { cellIndex: CellIndex; rarityPct: number } }
+  | { type: 'SET_RARITY_LOADING'; payload: { cellIndex: CellIndex; loading: boolean } }
   | { type: 'GAME_COMPLETE'; payload: TheGridScore }
   | { type: 'GIVE_UP'; payload: TheGridScore }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
