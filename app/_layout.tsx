@@ -10,7 +10,10 @@ import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
+import {
+  requestTrackingPermissionsAsync,
+  getTrackingPermissionsAsync,
+} from "expo-tracking-transparency";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Purchases from "react-native-purchases";
 import { colors, fonts } from "@/theme";
@@ -120,6 +123,7 @@ function PostHogScreenTracker() {
 const AuthGate = React.memo(function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading: isOnboardingLoading } = useOnboarding();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const attRequested = useRef(false); // Prevent duplicate ATT requests
 
   // Global timeout failsafe - prevent infinite loading under any circumstances
   useEffect(() => {
@@ -135,6 +139,37 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
 
     return () => clearTimeout(timeout);
   }, [isOnboardingLoading]);
+
+  // ATT Request - runs AFTER app is fully loaded (non-blocking, delayed)
+  // This is separate from SDK initialization to avoid race conditions
+  useEffect(() => {
+    // Only proceed once we're past the loading gate
+    if (isOnboardingLoading && !loadingTimedOut) return;
+    // Only on iOS
+    if (Platform.OS !== "ios") return;
+    // Only request once per app session
+    if (attRequested.current) return;
+    attRequested.current = true;
+
+    // Delay ATT request to ensure UI is stable
+    const timeoutId = setTimeout(async () => {
+      try {
+        const { status } = await getTrackingPermissionsAsync();
+        if (status === "undetermined") {
+          // Only request if not yet determined
+          const { status: newStatus } = await requestTrackingPermissionsAsync();
+          console.log("[ATT] Permission requested, status:", newStatus);
+        } else {
+          console.log("[ATT] Already determined:", status);
+        }
+      } catch (error) {
+        console.warn("[ATT] Request failed:", error);
+        // Non-fatal - app continues normally
+      }
+    }, 1000); // 1 second delay ensures app is stable
+
+    return () => clearTimeout(timeoutId);
+  }, [isOnboardingLoading, loadingTimedOut]);
 
   // Block navigation until auth is initialized AND onboarding state is hydrated
   // Allow proceeding if global timeout triggered (failsafe)
