@@ -19,8 +19,10 @@ export function useAdminStatus(): AdminStatus {
     const checkAdminStatus = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (isStale || !user) {
+        if (isStale) return;
+        if (!user) {
           setIsAdmin(false);
+          setIsLoading(false);
           return;
         }
 

@@ -532,10 +532,16 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
       }
 
       // Fall back to DB validation (club history, nationality, trophies, stats)
-      const dbResult = await validateCellWithDB(playerId, state.selectedCell, gridContent);
-      if (dbResult.isValid) {
-        handleCorrectGuess(playerName);
-      } else {
+      try {
+        const dbResult = await validateCellWithDB(playerId, state.selectedCell, gridContent);
+        if (dbResult.isValid) {
+          handleCorrectGuess(playerName);
+        } else {
+          triggerError();
+          dispatch({ type: 'INCORRECT_GUESS' });
+        }
+      } catch (error) {
+        console.error('[useTheGridGame] DB validation failed:', error);
         triggerError();
         dispatch({ type: 'INCORRECT_GUESS' });
       }

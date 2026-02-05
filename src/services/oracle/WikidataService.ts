@@ -73,16 +73,23 @@ export async function validatePlayerClubByName(
   playerQid: string,
   clubName: string
 ): Promise<boolean> {
-  // First, find the club QID by name
+  // Trim and validate clubName to avoid wildcard/empty matches
+  const trimmedName = clubName?.trim();
+  if (!trimmedName || trimmedName.length < 2) {
+    console.warn(`[WikidataService] Invalid club name: "${clubName}"`);
+    return false;
+  }
+
+  // Use exact case-insensitive match instead of wildcard
   const { data: clubData, error: clubError } = await supabase
     .from('clubs')
     .select('id')
-    .ilike('name', `%${clubName}%`)
+    .ilike('name', trimmedName)
     .limit(1)
     .single();
 
   if (clubError || !clubData?.id) {
-    console.warn(`[WikidataService] Club not found: "${clubName}"`);
+    console.warn(`[WikidataService] Club not found: "${trimmedName}"`);
     return false;
   }
 

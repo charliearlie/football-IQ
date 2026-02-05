@@ -220,15 +220,13 @@ async function countCandidates(
   return smaller.filter((id) => larger.has(id)).length;
 }
 
-// Pre-loaded stats_cache for reuse across multiple criterion checks
-let _statsCacheMap: Map<string, Record<string, number>> | null = null;
-
-/** Load all player stats_cache into memory once per generation. */
-async function getStatsCacheMap(
+/**
+ * Load all player stats_cache into a Map.
+ * Returns a fresh Map each time - callers should cache within their request scope if needed.
+ */
+async function loadStatsCacheMap(
   supabase: Awaited<ReturnType<typeof createAdminClient>>
 ): Promise<Map<string, Record<string, number>>> {
-  if (_statsCacheMap) return _statsCacheMap;
-
   // Note: stats_cache not in generated types yet, cast through unknown
   const { data } = (await supabase
     .from("players")
@@ -243,7 +241,6 @@ async function getStatsCacheMap(
       map.set(p.id, cache);
     }
   }
-  _statsCacheMap = map;
   return map;
 }
 
@@ -287,7 +284,7 @@ async function getPlayerIdsForCriterion(
       if (!key) return [];
 
       // Use in-memory stats_cache map for reliable JSONB filtering
-      const cacheMap = await getStatsCacheMap(supabase);
+      const cacheMap = await loadStatsCacheMap(supabase);
       const results: string[] = [];
       for (const [id, cache] of cacheMap) {
         if ((cache[key] ?? 0) > 0) results.push(id);
@@ -304,7 +301,7 @@ async function getPlayerIdsForCriterion(
       const key = STAT_NAME_TO_KEY[statName];
       if (!key) return [];
 
-      const cacheMap = await getStatsCacheMap(supabase);
+      const cacheMap = await loadStatsCacheMap(supabase);
       const results: string[] = [];
       for (const [id, cache] of cacheMap) {
         if ((cache[key] ?? 0) >= threshold) results.push(id);
@@ -332,9 +329,6 @@ export async function generateGrid(
     debug: PoolDebugInfo;
   }>
 > {
-  // Reset the stats_cache cache for each generation
-  _statsCacheMap = null;
-
   try {
     const supabase = await createAdminClient();
 
@@ -526,7 +520,7 @@ async function buildNationPool(
 async function buildTrophyPool(
   supabase: Awaited<ReturnType<typeof createAdminClient>>
 ): Promise<GridCategory[]> {
-  const cacheMap = await getStatsCacheMap(supabase);
+  const cacheMap = await loadStatsCacheMap(supabase);
 
   if (!cacheMap.size) return [];
 
@@ -777,8 +771,6 @@ export async function validateManualGrid(
     solvability: CellSolvability[];
   }>
 > {
-  _statsCacheMap = null;
-
   try {
     const supabase = await createAdminClient();
     const solvability: CellSolvability[] = [];

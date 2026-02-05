@@ -156,6 +156,12 @@ export function PlayerSearchOverlay({
       if (callbackCount > 1 || newResults.length >= 3) {
         setIsSearching(false);
       }
+    }).catch((error) => {
+      // Only handle error if this is still the current request
+      if (token !== requestTokenRef.current) return;
+      console.error('[PlayerSearchOverlay] Search failed:', error);
+      setResults([]);
+      setIsSearching(false);
     });
   }, [query]);
 

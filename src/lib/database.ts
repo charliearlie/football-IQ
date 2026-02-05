@@ -1583,20 +1583,23 @@ export async function recalculateEliteStatus(playerIds?: string[]): Promise<void
   );
 
   // If fewer than 5000 players exist, everyone is elite
-  const cutoff = threshold?.scout_rank ?? 0;
+  // Coerce to number to ensure it's safe for parameterized queries
+  const cutoff = Number(threshold?.scout_rank ?? 0);
 
   if (playerIds && playerIds.length > 0) {
     // Only update the delta rows — avoids touching the whole table
     for (let i = 0; i < playerIds.length; i += ELITE_BATCH_SIZE) {
       const batch = playerIds.slice(i, i + ELITE_BATCH_SIZE);
+      const cutoffParamIdx = batch.length + 1;
       const placeholders = batch.map((_, idx) => `$${idx + 1}`).join(', ');
       const params: Record<string, string | number> = {};
       batch.forEach((id, idx) => { params[`$${idx + 1}`] = id; });
+      params[`$${cutoffParamIdx}`] = cutoff;
 
       // Mark elite/non-elite based on threshold
       await database.runAsync(
         `UPDATE player_search_cache
-         SET is_elite = CASE WHEN scout_rank >= ${cutoff} THEN 1 ELSE 0 END
+         SET is_elite = CASE WHEN scout_rank >= $${cutoffParamIdx} THEN 1 ELSE 0 END
          WHERE id IN (${placeholders})`,
         params
       );
@@ -1611,12 +1614,14 @@ export async function recalculateEliteStatus(playerIds?: string[]): Promise<void
     }
   } else {
     // Full recalc fallback (migration or manual trigger)
-    await database.execAsync(
+    await database.runAsync(
       `UPDATE player_search_cache
-       SET is_elite = CASE WHEN scout_rank >= ${cutoff} THEN 1 ELSE 0 END`
+       SET is_elite = CASE WHEN scout_rank >= $1 THEN 1 ELSE 0 END`,
+      { $1: cutoff }
     );
-    await database.execAsync(
-      `UPDATE player_search_cache SET stats_cache = '{}' WHERE is_elite = 0`
+    await database.runAsync(
+      `UPDATE player_search_cache SET stats_cache = '{}' WHERE is_elite = 0`,
+      {}
     );
   }
 }
