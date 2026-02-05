@@ -17,6 +17,8 @@ export interface AchievementDefinition {
   category: AchievementCategory;
   /** Key used in the stats_cache JSONB column on the players table */
   statsCacheKey: string;
+  /** Optional aliases for reverse lookup (e.g., "Champions League" for "UEFA Champions League") */
+  aliases?: string[];
 }
 
 /**
@@ -116,11 +118,13 @@ export const ACHIEVEMENT_MAP: Record<string, AchievementDefinition> = {
     name: 'UEFA Champions League',
     category: 'Club',
     statsCacheKey: 'ucl_titles',
+    aliases: ['Champions League', 'UCL'],
   },
   Q19570: {
     name: 'UEFA Europa League',
     category: 'Club',
     statsCacheKey: 'europa_league_titles',
+    aliases: ['Europa League', 'UEL'],
   },
   Q9448: {
     name: 'Premier League',
@@ -186,6 +190,7 @@ export const ACHIEVEMENT_MAP: Record<string, AchievementDefinition> = {
     name: 'EFL Cup',
     category: 'Club',
     statsCacheKey: 'efl_cup_titles',
+    aliases: ['League Cup', 'Carabao Cup', 'Capital One Cup'],
   },
   Q899515: {
     name: 'FIFA Club World Cup',
@@ -243,11 +248,13 @@ export const ACHIEVEMENT_MAP: Record<string, AchievementDefinition> = {
     name: 'FIFA World Cup',
     category: 'International',
     statsCacheKey: 'world_cup_titles',
+    aliases: ['World Cup'],
   },
   Q18278: {
     name: 'UEFA European Championship',
     category: 'International',
     statsCacheKey: 'euros_titles',
+    aliases: ['European Championship', 'Euros', 'Euro'],
   },
   Q48413: {
     name: 'Copa América',
@@ -273,6 +280,7 @@ export const ACHIEVEMENT_MAP: Record<string, AchievementDefinition> = {
     name: 'UEFA Nations League',
     category: 'International',
     statsCacheKey: 'nations_league_titles',
+    aliases: ['Nations League'],
   },
   Q151460: {
     name: 'FIFA Confederations Cup',
@@ -290,6 +298,32 @@ export const ACHIEVEMENT_MAP: Record<string, AchievementDefinition> = {
     statsCacheKey: 'u20_world_cup_titles',
   },
 };
+
+/**
+ * Normalize a string for consistent lookups: trim, collapse whitespace, lowercase.
+ */
+function normalizeString(s: string): string {
+  return s.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/**
+ * Pre-computed reverse lookup map from normalized names/aliases to statsCacheKey.
+ * Built once at module init for O(1) lookups.
+ */
+const NAME_TO_STATS_KEY: Map<string, string> = (() => {
+  const map = new Map<string, string>();
+  for (const def of Object.values(ACHIEVEMENT_MAP)) {
+    // Add canonical name
+    map.set(normalizeString(def.name), def.statsCacheKey);
+    // Add all aliases
+    if (def.aliases) {
+      for (const alias of def.aliases) {
+        map.set(normalizeString(alias), def.statsCacheKey);
+      }
+    }
+  }
+  return map;
+})();
 
 /**
  * Get an achievement definition by QID, or null if not in the whitelist.
@@ -320,14 +354,13 @@ export function getAchievementsByCategory(
  * Reverse lookup: find the stats_cache key for a given human-readable name.
  * Used by Grid validation to map category values like "Champions League"
  * to stats_cache keys like "ucl_titles".
+ *
+ * Normalizes input (trim, collapse whitespace, lowercase) and checks against
+ * both canonical names and aliases for fuzzy matching.
  */
 export function getStatsCacheKeyByName(
   achievementName: string
 ): string | null {
-  for (const def of Object.values(ACHIEVEMENT_MAP)) {
-    if (def.name.toLowerCase() === achievementName.toLowerCase()) {
-      return def.statsCacheKey;
-    }
-  }
-  return null;
+  const normalized = normalizeString(achievementName);
+  return NAME_TO_STATS_KEY.get(normalized) ?? null;
 }

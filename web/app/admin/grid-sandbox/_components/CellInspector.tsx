@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { getValidPlayersForCell } from "../actions";
 import { getFlagEmoji } from "../_lib/types";
 import type { GridCategory, RarityPlayer } from "../_lib/types";
@@ -18,20 +18,42 @@ export function CellInspector({
 }: CellInspectorProps) {
   const [players, setPlayers] = useState<RarityPlayer[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch when criteria change
   useEffect(() => {
-    setError(null);
-    startTransition(async () => {
-      const res = await getValidPlayersForCell(criteriaA, criteriaB);
-      if (res.success && res.data) {
-        setPlayers(res.data);
-      } else {
-        setError(res.error ?? "Failed to load");
+    let isStale = false;
+
+    const fetchPlayers = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const res = await getValidPlayersForCell(criteriaA, criteriaB);
+        if (isStale) return;
+
+        if (res.success && res.data) {
+          setPlayers(res.data);
+        } else {
+          setError(res.error ?? "Failed to load");
+          setPlayers([]);
+        }
+      } catch (err) {
+        if (isStale) return;
+        setError(err instanceof Error ? err.message : "Failed to load");
         setPlayers([]);
+      } finally {
+        if (!isStale) {
+          setIsLoading(false);
+        }
       }
-    });
+    };
+
+    fetchPlayers();
+
+    return () => {
+      isStale = true;
+    };
   }, [cellIndex, criteriaA, criteriaB]);
 
   const typeLabel = (cat: GridCategory) => {
@@ -60,7 +82,7 @@ export function CellInspector({
         </p>
       </div>
 
-      {isPending && (
+      {isLoading && (
         <div className="text-xs text-slate-500 py-4 text-center">
           Loading valid players...
         </div>
@@ -68,13 +90,13 @@ export function CellInspector({
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 
-      {!isPending && !error && players.length === 0 && (
+      {!isLoading && !error && players.length === 0 && (
         <p className="text-xs text-slate-600 py-4 text-center">
           No valid players found for this intersection
         </p>
       )}
 
-      {!isPending && players.length > 0 && (
+      {!isLoading && players.length > 0 && (
         <div className="max-h-80 overflow-y-auto">
           <table className="w-full text-xs">
             <thead>

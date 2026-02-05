@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useAdminStatus } from "@/hooks/use-admin-status";
 
 interface NavItem {
   name: string;
@@ -52,6 +53,12 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { isAdmin } = useAdminStatus();
+
+  // Filter navigation to only show Admin section for admin users
+  const visibleNavigation = navigation.filter(
+    (section) => section.label !== "Admin" || isAdmin
+  );
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -74,7 +81,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-4">
-        {navigation.map((section, sectionIdx) => (
+        {visibleNavigation.map((section, sectionIdx) => (
           <div key={sectionIdx} className="space-y-1">
             {section.label && (
               <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">

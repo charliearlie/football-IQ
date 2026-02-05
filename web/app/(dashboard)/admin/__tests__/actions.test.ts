@@ -45,12 +45,10 @@ const mockQueryBuilder = {
   maybeSingle: vi.fn(() =>
     Promise.resolve({ data: mockSingleData, error: mockError })
   ),
-  then: vi.fn((resolve: (value: { data: unknown; error: unknown; count: number | null }) => void) => {
-    resolve({ data: mockData, error: mockError, count: mockCount });
-  }),
 };
 
 // Make the query builder thenable (so await works)
+// biome-ignore lint/suspicious/noThenProperty: required for mock thenable
 Object.defineProperty(mockQueryBuilder, "then", {
   value: function (
     onFulfilled: (value: { data: unknown[]; error: typeof mockError; count: number }) => void
