@@ -1,37 +1,14 @@
 /**
  * CategoryHeader Component
  *
- * Displays a category label for grid headers.
- * Nation categories show an SVG flag instead of text.
- * Club categories show only the name (no icon).
+ * Stadium Broadcast Edition - clean text-only headers.
+ * Displays category value as uppercase text with broadcast styling.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { TrendingUp, Trophy, Flag, LucideIcon } from 'lucide-react-native';
 import { colors, fonts } from '@/theme';
-import { FlagIcon } from '@/components/FlagIcon';
-import { GridCategory, CategoryType } from '../types/theGrid.types';
-import { COUNTRY_NAME_TO_CODE } from '../utils/countryMapping';
-
-/**
- * Fallback icon mapping for category types (used when no special rendering applies).
- */
-const FALLBACK_ICONS: Partial<Record<CategoryType, LucideIcon>> = {
-  nation: Flag,
-  stat: TrendingUp,
-  trophy: Trophy,
-};
-
-/**
- * Color mapping for category types.
- */
-const CATEGORY_COLORS: Record<CategoryType, string> = {
-  club: colors.cardYellow,
-  nation: colors.pitchGreen,
-  stat: colors.redCard,
-  trophy: colors.cardYellow,
-};
+import { GridCategory } from '../types/theGrid.types';
 
 export interface CategoryHeaderProps {
   category: GridCategory;
@@ -41,8 +18,8 @@ export interface CategoryHeaderProps {
 }
 
 /**
- * CategoryHeader - Displays icon + label for a grid category.
- * Club: name only (no icon). Nation: flag only (no name). Others: icon + name.
+ * CategoryHeader - Text-only label for grid categories.
+ * Clean broadcast style with no icons.
  */
 export function CategoryHeader({
   category,
@@ -53,37 +30,16 @@ export function CategoryHeader({
     ? styles.containerHorizontal
     : styles.containerVertical;
 
-  // Nation → try to resolve to a flag code
-  const nationCode =
-    category.type === 'nation'
-      ? COUNTRY_NAME_TO_CODE[category.value.toLowerCase()]
-      : undefined;
-
-  // Determine what to render
-  const showFlagOnly = category.type === 'nation' && !!nationCode;
-  const showIcon = category.type !== 'club' && !showFlagOnly;
-  const showLabel = !showFlagOnly;
-
   return (
     <View style={containerStyle} testID={testID}>
-      {showFlagOnly && (
-        <FlagIcon code={nationCode!} size={24} testID={testID ? `${testID}-flag` : undefined} />
-      )}
-      {showIcon && (() => {
-        const FallbackIcon = FALLBACK_ICONS[category.type];
-        if (!FallbackIcon) return null;
-        return <FallbackIcon size={16} color={CATEGORY_COLORS[category.type]} />;
-      })()}
-      {showLabel && (
-        <Text
-          style={styles.label}
-          numberOfLines={category.type === 'club' ? 1 : 2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-        >
-          {category.value}
-        </Text>
-      )}
+      <Text
+        style={styles.label}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {category.value}
+      </Text>
     </View>
   );
 }
@@ -106,11 +62,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.headline,
-    fontSize: 11,
-    color: colors.floodlightWhite,
+    fontSize: 12, // Slightly larger for readability
+    color: colors.textSecondary, // Muted white for broadcast look
     textAlign: 'center',
-    marginTop: 2,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1, // More spacing for broadcast look
   },
 });

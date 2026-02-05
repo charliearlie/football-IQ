@@ -1,25 +1,23 @@
 /**
  * GridCell Component
  *
- * Individual cell in The Grid with "Solid Layer" 3D architecture and flip animation.
- * - Empty cells: Appear "sunk" with minimal depth (1px)
- * - Filled cells: Pop up with 3px depth and green background
- * - Filled + rarity loaded: Flip to reveal "Player Card" with flag + rarity %
+ * Individual cell in The Grid with "Solid Layer" 3D architecture.
+ * Stadium Broadcast Edition styling:
+ * - Empty cells: Dark background with "+" icon
+ * - Filled cells: Pitch stripe gradient with player name + rarity badge
  * - Uses two absolute-positioned layers for cross-platform consistency
  */
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Text, StyleSheet, Pressable, View, ActivityIndicator } from 'react-native';
+import Svg, { Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  interpolate,
-  interpolateColor,
 } from 'react-native-reanimated';
 import { colors, fonts, borderRadius, depthOffset, spacing } from '@/theme';
 import { triggerSelection, triggerIncomplete } from '@/lib/haptics';
-import { FlagIcon } from '@/components/FlagIcon';
 import { FilledCell, CellIndex } from '../types/theGrid.types';
 
 export interface GridCellProps {
@@ -41,13 +39,6 @@ const PRESS_SPRING = {
   mass: 0.5,
 };
 
-// "Trading card" flip - heavy, weighty feel (from PlayerMarker)
-const FLIP_SPRING = {
-  damping: 18,
-  stiffness: 180,
-  mass: 1.2,
-};
-
 /**
  * Get color for rarity percentage display.
  * Lower rarity = more prestigious color.
@@ -60,12 +51,11 @@ function getRarityColor(rarityPct: number): string {
 }
 
 /**
- * GridCell - A single cell in the 3x3 grid with flip animation.
+ * GridCell - A single cell in the 3x3 grid.
  *
  * States:
  * - Empty: Shows "?" with sunk appearance (darker shadow visible at top)
- * - Filled (loading): Shows player name with green background + spinner
- * - Filled (rarity loaded): Flips to show Player Card (flag + name + rarity %)
+ * - Filled: Shows player name with green background + rarity percentage
  * - Selected: Has yellow border highlight
  */
 export function GridCell({
@@ -78,36 +68,13 @@ export function GridCell({
 }: GridCellProps) {
   const isFilled = cell !== null;
   const hasRarity = cell?.rarityPct !== undefined && !cell.rarityLoading;
-  const wasFilledRef = useRef(isFilled);
-  const wasRarityLoadedRef = useRef(hasRarity);
 
   // Animation values
   const pressed = useSharedValue(0);
-  const flipProgress = useSharedValue(hasRarity ? 1 : 0);
 
   // Use different depths for empty vs filled cells
   const depth = isFilled ? FILLED_DEPTH : EMPTY_DEPTH;
   const layerHeight = CELL_SIZE;
-
-  // Handle flip animation when rarity loads
-  useEffect(() => {
-    if (hasRarity && !wasRarityLoadedRef.current) {
-      // Delay flip slightly for visual effect
-      const timeout = setTimeout(() => {
-        flipProgress.value = withSpring(1, FLIP_SPRING);
-      }, 200);
-      return () => clearTimeout(timeout);
-    }
-    wasRarityLoadedRef.current = hasRarity;
-  }, [hasRarity, flipProgress]);
-
-  // Reset flip when cell becomes empty (game reset)
-  useEffect(() => {
-    if (!isFilled && wasFilledRef.current) {
-      flipProgress.value = 0;
-    }
-    wasFilledRef.current = isFilled;
-  }, [isFilled, flipProgress]);
 
   const handlePressIn = () => {
     if (!isFilled && !disabled) {
@@ -137,50 +104,11 @@ export function GridCell({
     transform: [{ translateY: pressed.value * depth }],
   }));
 
-  // Animated flip style for front face (name only)
-  const animatedFrontStyle = useAnimatedStyle(() => {
-    const rotateY = interpolate(flipProgress.value, [0, 1], [0, 180]);
-    const opacity = interpolate(flipProgress.value, [0, 0.5], [1, 0]);
-
-    return {
-      transform: [{ perspective: 800 }, { rotateY: `${rotateY}deg` }],
-      opacity,
-      backfaceVisibility: 'hidden' as const,
-    };
-  });
-
-  // Animated flip style for back face (player card) - starts rotated 180deg
-  const animatedBackStyle = useAnimatedStyle(() => {
-    const rotateY = interpolate(flipProgress.value, [0, 1], [180, 360]);
-    const opacity = interpolate(flipProgress.value, [0.5, 1], [0, 1]);
-
-    return {
-      transform: [{ perspective: 800 }, { rotateY: `${rotateY}deg` }],
-      opacity,
-      backfaceVisibility: 'hidden' as const,
-    };
-  });
-
-  // Animated background color for flip transition
-  const animatedColorStyle = useAnimatedStyle(() => {
-    const backgroundColor = interpolateColor(
-      flipProgress.value,
-      [0, 0.5, 1],
-      [
-        colors.pitchGreen, // Green (front)
-        'rgba(255, 255, 255, 0.8)', // Mid-transition (whitening)
-        colors.floodlightWhite, // White (back - player card)
-      ]
-    );
-
-    return { backgroundColor };
-  });
-
   // Determine colors based on state
   const getTopColor = () => {
     if (isSelected && !isFilled) return 'rgba(250, 204, 21, 0.15)'; // Yellow tint for selected empty
-    if (isFilled) return colors.pitchGreen;
-    return 'rgba(255, 255, 255, 0.08)'; // Glass background for empty
+    if (isFilled) return colors.pitchGreen; // Base color (gradient overlay used)
+    return 'rgba(30, 41, 59, 0.8)'; // Dark background for empty cells
   };
 
   const getShadowColor = () => {
@@ -257,78 +185,63 @@ export function GridCell({
 
       {/* Top/Face Layer - Animates down on press */}
       <Animated.View style={[styles.layer, styles.topLayer, animatedPressStyle]}>
-        {/* Empty state */}
+        {/* Empty state - "+" icon on dark background */}
         {!isFilled && (
           <View style={[layerStyle, { backgroundColor: getTopColor() }, styles.faceContent]}>
-            <Text style={styles.emptyIcon}>?</Text>
+            <Text style={styles.emptyIcon}>+</Text>
           </View>
         )}
 
-        {/* Filled state with flip animation */}
+        {/* Filled state - pitch stripe gradient with player name + rarity badge */}
         {isFilled && (
-          <>
-            {/* Front face (green with name + loading) */}
-            <Animated.View
-              style={[
-                layerStyle,
-                styles.faceContent,
-                styles.flipFace,
-                { backgroundColor: colors.pitchGreen },
-                animatedFrontStyle,
-              ]}
+          <View style={[layerStyle, styles.faceContent, styles.filledCell]}>
+            {/* Pitch stripe background using SVG gradient */}
+            <Svg style={StyleSheet.absoluteFill} preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="pitchStripe" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor="#4CB302" />
+                  <Stop offset="0.16" stopColor="#4CB302" />
+                  <Stop offset="0.16" stopColor="#58CC02" />
+                  <Stop offset="0.33" stopColor="#58CC02" />
+                  <Stop offset="0.33" stopColor="#4CB302" />
+                  <Stop offset="0.5" stopColor="#4CB302" />
+                  <Stop offset="0.5" stopColor="#58CC02" />
+                  <Stop offset="0.66" stopColor="#58CC02" />
+                  <Stop offset="0.66" stopColor="#4CB302" />
+                  <Stop offset="0.83" stopColor="#4CB302" />
+                  <Stop offset="0.83" stopColor="#58CC02" />
+                  <Stop offset="1" stopColor="#58CC02" />
+                </LinearGradient>
+              </Defs>
+              <Rect x="0" y="0" width="100%" height="100%" fill="url(#pitchStripe)" />
+            </Svg>
+
+            {/* Player name - broadcast style */}
+            <Text
+              style={styles.playerNameBroadcast}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
             >
-              <Text
-                style={styles.playerName}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.6}
-              >
-                {cell.player}
-              </Text>
-              {cell.rarityLoading && (
-                <ActivityIndicator
-                  size="small"
-                  color={colors.stadiumNavy}
-                  style={styles.spinner}
-                />
-              )}
-            </Animated.View>
+              {cell.player}
+            </Text>
 
-            {/* Back face (player card with flag + rarity) */}
-            <Animated.View
-              style={[
-                layerStyle,
-                styles.faceContent,
-                styles.flipFace,
-                animatedColorStyle,
-                animatedBackStyle,
-              ]}
-            >
-              {/* Flag */}
-              {cell.nationalityCode && (
-                <View style={styles.flagContainer}>
-                  <FlagIcon code={cell.nationalityCode} size={14} />
-                </View>
-              )}
+            {/* Rarity badge - bottom right corner */}
+            {hasRarity && (
+              <View style={[styles.rarityBadge, { backgroundColor: rarityColor }]}>
+                <Text style={styles.rarityBadgeText}>{rarityText}</Text>
+              </View>
+            )}
 
-              {/* Player name */}
-              <Text
-                style={styles.cardName}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.6}
-              >
-                {cell.player}
-              </Text>
-
-              {/* Rarity percentage */}
-              {hasRarity && (
-                <Text style={[styles.rarityText, { color: rarityColor }]}>
-                  {rarityText}
-                </Text>
-              )}
-            </Animated.View>
-          </>
+            {/* Loading spinner (while rarity loads) */}
+            {cell.rarityLoading && (
+              <ActivityIndicator
+                size="small"
+                color={colors.floodlightWhite}
+                style={styles.spinner}
+              />
+            )}
+          </View>
         )}
       </Animated.View>
     </Pressable>
@@ -361,47 +274,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  flipFace: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
+  filledCell: {
+    overflow: 'hidden', // Clip gradient to border radius
   },
   emptyIcon: {
-    fontFamily: fonts.headline,
-    fontSize: 32,
-    color: colors.textSecondary,
-  },
-  playerName: {
     fontFamily: fonts.body,
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.stadiumNavy,
+    fontSize: 28,
+    fontWeight: '300', // Light weight for elegant "+"
+    color: 'rgba(255, 255, 255, 0.4)', // Subtle gray
+  },
+  playerNameBroadcast: {
+    fontFamily: fonts.headline, // Bebas Neue for broadcast feel
+    fontSize: 14,
+    color: colors.floodlightWhite, // White text on green
     textAlign: 'center',
-    paddingHorizontal: 4,
+    textTransform: 'uppercase',
+    paddingHorizontal: 6,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  spinner: {
+  rarityBadge: {
     position: 'absolute',
-    bottom: 6,
+    bottom: 4,
+    right: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  // Player card (back face) styles
-  flagContainer: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-  },
-  cardName: {
+  rarityBadgeText: {
     fontFamily: fonts.body,
     fontSize: 10,
     fontWeight: '700',
     color: colors.stadiumNavy,
-    textAlign: 'center',
-    paddingHorizontal: 4,
-    marginTop: 2,
   },
-  rarityText: {
-    fontFamily: fonts.headline,
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 4,
+  spinner: {
+    position: 'absolute',
+    bottom: 6,
   },
 });

@@ -15,7 +15,8 @@ import {
   Pressable,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { colors, fonts, spacing } from '@/theme';
+import { Flag } from 'lucide-react-native';
+import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { GameContainer } from '@/components/GameContainer';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
@@ -205,18 +206,21 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           {/* Progress indicator + Give up */}
           {!isReviewMode && state.gameStatus === 'playing' && (
             <View style={styles.progressContainer}>
-              <Text style={styles.progressText}>
-                {state.cells.filter((c) => c !== null).length}/9 cells filled
-              </Text>
+              <View style={styles.progressBadge}>
+                <Text style={styles.progressBadgeText}>
+                  PROGRESS: {state.cells.filter((c) => c !== null).length} / 9 COMPLETED
+                </Text>
+              </View>
               <Pressable
                 onPress={handleGiveUpPress}
                 style={({ pressed }) => [
-                  styles.giveUpLink,
-                  pressed && styles.giveUpLinkPressed,
+                  styles.giveUpButton,
+                  pressed && styles.giveUpButtonPressed,
                 ]}
                 testID="the-grid-giveup"
               >
-                <Text style={styles.giveUpText}>Give up</Text>
+                <Flag size={14} color={colors.redCard} />
+                <Text style={styles.giveUpButtonText}>GIVE UP</Text>
               </Pressable>
             </View>
           )}
@@ -343,22 +347,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.lg,
   },
-  progressText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
+  progressBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius['2xl'],
   },
-  giveUpLink: {
+  progressBadgeText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  giveUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     marginTop: spacing.md,
     paddingVertical: spacing.sm,
   },
-  giveUpLinkPressed: {
+  giveUpButtonPressed: {
     opacity: 0.7,
   },
-  giveUpText: {
-    fontFamily: fonts.body,
+  giveUpButtonText: {
+    fontFamily: fonts.headline,
     fontSize: 14,
     color: colors.redCard,
+    letterSpacing: 1,
   },
   reviewScoreContainer: {
     alignItems: 'center',
