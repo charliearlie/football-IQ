@@ -123,9 +123,9 @@ describe("TransferGuessForm", () => {
   it("renders hint fields", () => {
     renderWithForm(<TransferGuessForm />, { gameMode: "guess_the_transfer" });
 
-    expect(screen.getByPlaceholderText(/belgian/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/2019, 2023/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/ATT, MID/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/ballon d'or/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/search country/i)).toBeInTheDocument();
   });
 
   it("renders with initial content", () => {
@@ -137,18 +137,6 @@ describe("TransferGuessForm", () => {
     expect(screen.getByDisplayValue("Neymar")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Barcelona")).toBeInTheDocument();
     expect(screen.getByDisplayValue("PSG")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("2017")).toBeInTheDocument();
-  });
-
-  it("allows year input", async () => {
-    const user = userEvent.setup();
-    renderWithForm(<TransferGuessForm />, { gameMode: "guess_the_transfer" });
-
-    const yearInput = screen.getByLabelText(/transfer year/i);
-    await user.clear(yearInput);
-    await user.type(yearInput, "2023");
-
-    expect(screen.getByDisplayValue("2023")).toBeInTheDocument();
   });
 });
 

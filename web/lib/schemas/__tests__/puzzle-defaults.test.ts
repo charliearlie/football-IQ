@@ -63,14 +63,8 @@ describe("getTransferGuessDefaults", () => {
     expect(defaults).toHaveProperty("answer", "");
     expect(defaults).toHaveProperty("from_club", "");
     expect(defaults).toHaveProperty("to_club", "");
-    expect(defaults).toHaveProperty("year");
     expect(defaults).toHaveProperty("fee", "");
     expect(defaults).toHaveProperty("hints");
-  });
-
-  it("returns current year as default", () => {
-    const defaults = getTransferGuessDefaults();
-    expect(defaults.year).toBe(new Date().getFullYear());
   });
 
   it("returns exactly 3 empty hints", () => {
@@ -305,7 +299,6 @@ describe("getDefaultContent", () => {
       expect(defaults).toHaveProperty("answer");
       expect(defaults).toHaveProperty("from_club");
       expect(defaults).toHaveProperty("to_club");
-      expect(defaults).toHaveProperty("year");
       expect(defaults).toHaveProperty("fee");
       expect(defaults).toHaveProperty("hints");
     });

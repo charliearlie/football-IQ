@@ -8,11 +8,16 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Overview",
   "/dashboard/calendar": "Master Calendar",
   "/dashboard/settings": "Settings",
+  "/admin/career-path": "Career Path Admin",
+  "/admin/guess-the-transfer": "Transfer Guess Admin",
+  "/admin/starting-xi": "Starting XI Admin",
+  "/admin/goalscorer-recall": "Goalscorer Recall Admin",
+  "/admin/the-grid": "The Grid Admin",
 };
 
 export function Header() {
   const pathname = usePathname();
-  const title = pageTitles[pathname] || "Dashboard";
+  const title = pageTitles[pathname] || (pathname.startsWith("/admin") ? "Admin" : "Dashboard");
 
   return (
     <header className="h-16 border-b border-white/10 bg-stadium-navy/50 backdrop-blur-sm">

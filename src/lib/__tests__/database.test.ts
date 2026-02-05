@@ -71,8 +71,8 @@ describe('database', () => {
     });
 
     it('skips migration if already at current version', async () => {
-      // Arrange - version 3 is current SCHEMA_VERSION
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 3 });
+      // Arrange - version 10 is current SCHEMA_VERSION
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 10 });
 
       // Act
       await initDatabase();
@@ -83,7 +83,7 @@ describe('database', () => {
 
     it('returns same instance on subsequent calls', async () => {
       // Arrange
-      mockDb.getFirstAsync.mockResolvedValue({ user_version: 3 });
+      mockDb.getFirstAsync.mockResolvedValue({ user_version: 10 });
 
       // Act
       const db1 = await initDatabase();

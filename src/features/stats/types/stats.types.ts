@@ -26,7 +26,7 @@ export const GAME_MODE_DISPLAY: Record<
   career_path_pro: { displayName: 'Career Path Pro', skillName: 'Expert Deduction' },
   guess_the_transfer: { displayName: 'Transfer Guess', skillName: 'Market Knowledge' },
   guess_the_goalscorers: { displayName: 'Goalscorer Recall', skillName: 'Rapid Recall' },
-  the_grid: { displayName: 'The Grid', skillName: 'Pattern Recognition' },
+  the_grid: { displayName: 'The Grid (beta)', skillName: 'Pattern Recognition' },
   topical_quiz: { displayName: 'Topical Quiz', skillName: 'Current Affairs' },
   top_tens: { displayName: 'Top Tens', skillName: 'Deep Knowledge' },
   starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },

@@ -192,9 +192,9 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
   top_tens: {
     gameMode: 'top_tens',
     displayTitle: 'Top Tens',
-    goal: 'Name all 10 players in the ranking category',
+    goal: 'Name all 10 answers in the ranking category',
     rules: [
-      { text: 'A category is revealed (e.g., Top 10 Premier League scorers)' },
+      { text: 'A category is revealed (e.g., Top 10 Premier League scorers, World Cup host nations, most expensive transfers)' },
       { text: 'Correct guesses slot into their rank position' },
       { text: 'Find all 10 for Hall of Famer status!', highlight: 'Hall of Famer' },
     ],
@@ -217,17 +217,17 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
 
   the_grid: {
     gameMode: 'the_grid',
-    displayTitle: 'The Grid',
+    displayTitle: 'The Grid (beta)',
     goal: 'Fill the 3x3 grid with players matching each criteria',
     rules: [
       { text: 'Each cell has row AND column criteria to match' },
       { text: 'Search for players who fit both requirements' },
-      { text: 'Rarer answers earn higher IQ', highlight: 'higher IQ' },
+      { text: 'Fill all 9 cells for a perfect score', highlight: 'perfect score' },
     ],
     scoring: {
-      type: 'dynamic',
-      description: 'IQ based on answer rarity - obscure picks earn more',
-      potentialLabel: 'HALL OF FAMER',
+      type: 'fixed',
+      description: '1 point per cell filled (max 9)',
+      potentialLabel: 'PERFECT GRID',
     },
     icon: undefined, // Uses Grid3X3 Lucide icon as fallback
     accentColor: colors.pitchGreen,

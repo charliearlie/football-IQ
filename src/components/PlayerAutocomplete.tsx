@@ -24,7 +24,7 @@ import { ElevatedButton, ErrorFlashOverlay } from '@/components';
 import { colors, spacing, fonts, fontWeights, borderRadius } from '@/theme';
 import { useHaptics } from '@/hooks/useHaptics';
 import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
-import { countryCodeToEmoji } from '@/services/player/playerUtils';
+import { FlagIcon } from '@/components/FlagIcon';
 import { UnifiedPlayer } from '@/services/oracle/types';
 
 /** Spring configuration for shake recovery */
@@ -252,7 +252,6 @@ export function PlayerAutocomplete({
               data={results}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => {
-                const flag = getPlayerFlag(item);
                 const meta = getPlayerMeta(item);
                 return (
                   <Pressable
@@ -264,8 +263,10 @@ export function PlayerAutocomplete({
                     testID={testID ? `${testID}-result-${item.id}` : undefined}
                   >
                     <View style={styles.resultContent}>
-                      {flag ? (
-                        <Text style={styles.resultFlag}>{flag}</Text>
+                      {item.nationality_code ? (
+                        <View style={styles.resultFlag}>
+                          <FlagIcon code={item.nationality_code} size={16} />
+                        </View>
                       ) : null}
                       <View style={styles.resultTextGroup}>
                         <Text style={styles.resultName} numberOfLines={1}>
@@ -289,13 +290,6 @@ export function PlayerAutocomplete({
       )}
     </View>
   );
-}
-
-/** Extract flag emoji for display */
-function getPlayerFlag(player: UnifiedPlayer): string {
-  return player.nationality_code
-    ? countryCodeToEmoji(player.nationality_code)
-    : '';
 }
 
 /** Build metadata string: "Position, b. Year" */
@@ -380,9 +374,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   resultFlag: {
-    fontSize: 20,
     width: 28,
-    textAlign: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   resultTextGroup: {
     flex: 1,

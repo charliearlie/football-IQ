@@ -11,6 +11,7 @@ import {
   Search,
   Database,
   AlertTriangle,
+  Trophy,
   X,
 } from "lucide-react";
 
@@ -46,6 +47,7 @@ import {
   fetchCareerForForm,
   checkDuplicateAnswer,
 } from "@/app/(dashboard)/calendar/actions";
+import { syncPlayerAchievements } from "@/app/(dashboard)/player-scout/actions";
 
 interface FormValues {
   content: CareerPathContent;
@@ -59,7 +61,8 @@ interface PlayerResult {
 }
 
 export function CareerPathForm() {
-  const { control, setValue } = useFormContext<FormValues>();
+  const { control, setValue, watch } = useFormContext<FormValues>();
+  const answerQid = watch("content.answer_qid");
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -88,6 +91,13 @@ export function CareerPathForm() {
   const [stepConfidences, setStepConfidences] = useState<ConfidenceLevel[]>(
     []
   );
+
+  // Achievement sync state
+  const [isSyncingAchievements, setIsSyncingAchievements] = useState(false);
+  const [achievementResult, setAchievementResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -371,6 +381,77 @@ export function CareerPathForm() {
           </div>
         )}
       </div>
+
+      {/* Sync Achievements */}
+      {answerQid && (
+        <div className="glass-card p-4 border-l-4 border-purple-500">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="h-4 w-4 text-purple-500" />
+            <h3 className="font-semibold text-white">Trophy Cabinet</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Fetch achievements from Wikidata and update the stats cache for Grid
+            validation
+          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              onClick={async () => {
+                setIsSyncingAchievements(true);
+                setAchievementResult(null);
+                try {
+                  const result = await syncPlayerAchievements(answerQid);
+                  if (result.success) {
+                    setAchievementResult({
+                      success: true,
+                      message: `Synced ${result.count} achievement${result.count !== 1 ? "s" : ""}`,
+                    });
+                  } else {
+                    setAchievementResult({
+                      success: false,
+                      message: result.error ?? "Sync failed",
+                    });
+                  }
+                } catch (err) {
+                  setAchievementResult({
+                    success: false,
+                    message:
+                      err instanceof Error ? err.message : "Unknown error",
+                  });
+                } finally {
+                  setIsSyncingAchievements(false);
+                }
+              }}
+              disabled={isSyncingAchievements}
+              className="bg-purple-500 hover:bg-purple-600 text-white font-medium"
+            >
+              {isSyncingAchievements ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Syncing...
+                </>
+              ) : (
+                "Sync Achievements"
+              )}
+            </Button>
+            <span className="text-xs text-muted-foreground font-mono">
+              {answerQid}
+            </span>
+          </div>
+          {achievementResult && (
+            <p
+              className={cn(
+                "text-sm mt-2",
+                achievementResult.success
+                  ? "text-green-400"
+                  : "text-red-400"
+              )}
+            >
+              {achievementResult.message}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Duplicate Warning */}
       {duplicateWarning && duplicateWarning.length > 0 && (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { useReviewMode } from "@/hooks";
 import { colors, spacing, textStyles, layout } from "@/theme";
 import {
   GameContainer,
+  ConfirmationModal,
   ReviewAnswerSection,
   ReviewGuessesSection,
   ReviewModeActionZone,
@@ -84,6 +85,9 @@ export function TransferGuessScreen({
   // State for controlling the result modal visibility (must be before early returns)
   const [showResultModal, setShowResultModal] = useState(false);
 
+  // Give up confirmation modal state
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
+
   // Use puzzleId if provided, otherwise fall back to game mode lookup
   // useStablePuzzle caches the puzzle to prevent background sync from disrupting gameplay
   const { puzzle, isLoading } = useStablePuzzle(
@@ -103,6 +107,20 @@ export function TransferGuessScreen({
     giveUp,
     shareResult,
   } = useTransferGuessGame(puzzle, isFocused);
+
+  // Give up handlers
+  const handleGiveUpPress = useCallback(() => {
+    setShowGiveUpModal(true);
+  }, []);
+
+  const handleGiveUpConfirm = useCallback(() => {
+    setShowGiveUpModal(false);
+    giveUp();
+  }, [giveUp]);
+
+  const handleGiveUpCancel = useCallback(() => {
+    setShowGiveUpModal(false);
+  }, []);
 
   // Fetch saved attempt data for review mode
   const { metadata: reviewMetadata, isLoading: isReviewLoading } =
@@ -296,7 +314,7 @@ export function TransferGuessScreen({
           onPlayerSelect={submitPlayerGuess}
           onTextSubmit={submitTextGuess}
           onRevealHint={revealHint}
-          onGiveUp={giveUp}
+          onGiveUp={handleGiveUpPress}
           canRevealHint={canRevealHint}
           guessesRemaining={guessesRemaining}
           shouldShake={state.lastGuessIncorrect}
@@ -304,6 +322,14 @@ export function TransferGuessScreen({
           testID="action-zone"
         />
       )}
+
+      {/* Give Up Confirmation Modal */}
+      <ConfirmationModal
+        visible={showGiveUpModal}
+        onConfirm={handleGiveUpConfirm}
+        onCancel={handleGiveUpCancel}
+        testID="give-up-modal"
+      />
 
       {/* Banner Ad (non-premium only) */}
       <AdBanner testID="transfer-guess-ad-banner" />

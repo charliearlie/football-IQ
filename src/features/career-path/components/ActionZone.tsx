@@ -19,6 +19,10 @@ export interface ActionZoneProps {
   isGameOver: boolean;
   /** Callback when input gains focus (for scroll-to-latest behavior) */
   onFocus?: () => void;
+  /** Called when user taps give up (only shown when all clues revealed) */
+  onGiveUp?: () => void;
+  /** Whether all career steps have been revealed */
+  allCluesRevealed?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -40,6 +44,8 @@ export function ActionZone({
   shouldShake,
   isGameOver,
   onFocus,
+  onGiveUp,
+  allCluesRevealed,
   testID,
 }: ActionZoneProps) {
   return (
@@ -65,6 +71,20 @@ export function ActionZone({
         >
           <ChevronRight size={18} color={colors.amber} />
           <Text style={styles.revealText}>Reveal next step</Text>
+        </Pressable>
+      )}
+
+      {/* Give Up - shown only when all clues revealed */}
+      {allCluesRevealed && !isGameOver && onGiveUp && (
+        <Pressable
+          onPress={onGiveUp}
+          style={({ pressed }) => [
+            styles.revealLink,
+            pressed && styles.revealLinkPressed,
+          ]}
+          testID={testID ? `${testID}-giveup` : undefined}
+        >
+          <Text style={styles.giveUpText}>Give up</Text>
         </Pressable>
       )}
     </View>
@@ -94,5 +114,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.amber,
+  },
+  giveUpText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.redCard,
   },
 });

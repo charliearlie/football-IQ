@@ -3,11 +3,21 @@
  *
  * Uses shared fuzzy matching from @/lib/validation and
  * database lookups for player-club/nationality validation.
+ *
+ * Validation priority:
+ * 1. Name matching against valid_answers (instant, local)
+ * 2. Database validation via player_search_cache + Oracle (club checks)
  */
 
 import { validateGuess } from '@/lib/validation';
 import { TheGridContent, GridCategory, CellIndex } from '../types/theGrid.types';
-import { didPlayerPlayFor, hasNationality, getPlayerById } from '@/services/player';
+import {
+  getPlayerStatsCache,
+  getPlayerNationalityFromCache,
+  playerExistsInCache,
+} from '@/lib/database';
+import { validatePlayerClubByName } from '@/services/oracle/WikidataService';
+import { checkTrophyMatch, checkStatMatch } from './achievementMapping';
 
 /**
  * Mapping of country names to ISO 3166-1 alpha-2 codes.
@@ -191,36 +201,34 @@ export interface DBValidationResult {
 }
 
 /**
- * Validate a player selection for a cell using the local database.
+ * Validate a player selection for a cell using cached data + Oracle.
  *
  * Checks if the player satisfies both row and column criteria:
- * - For 'club' type: checks didPlayerPlayFor()
- * - For 'nation' type: checks hasNationality()
- * - For 'stat'/'trophy' types: not yet supported (returns false)
+ * - For 'club' type: queries Oracle via validatePlayerClubByName()
+ * - For 'nation' type: checks player_search_cache.nationality_code
+ * - For 'trophy'/'stat' types: checks player_search_cache.stats_cache
  *
- * @param playerId - Player database ID from selection
+ * @param playerId - Wikidata QID from selection (e.g., "Q17333")
  * @param cellIndex - Cell index (0-8)
  * @param content - The Grid puzzle content
  * @returns Validation result with matched criteria details
  *
  * @example
- * // Player who played for Real Madrid and is Brazilian
- * await validateCellWithDB('player-1', 0, content)
+ * // Thierry Henry (Q17333) for Arsenal × France
+ * await validateCellWithDB('Q17333', 0, content)
  * // { isValid: true, matchedCriteria: { row: true, col: true } }
- *
- * // Player who only played for Real Madrid (not Brazilian)
- * await validateCellWithDB('player-2', 0, content)
- * // { isValid: false, matchedCriteria: { row: false, col: true } }
  */
 export async function validateCellWithDB(
   playerId: string,
   cellIndex: CellIndex,
   content: TheGridContent
 ): Promise<DBValidationResult> {
-  // Check if player exists
-  const player = await getPlayerById(playerId);
-  if (!player) {
-    return { isValid: false };
+  // Check if player exists in cache (validates QID is known)
+  const exists = await playerExistsInCache(playerId);
+  if (!exists) {
+    // Player not in local cache - still attempt validation via Oracle
+    // This allows validation for players fetched from Oracle but not yet cached
+    console.log(`[Grid] Player ${playerId} not in cache, attempting Oracle validation`);
   }
 
   // Get row and column categories for this cell
@@ -247,7 +255,7 @@ export async function validateCellWithDB(
 /**
  * Check if a player matches a single category criterion.
  *
- * @param playerId - Player database ID
+ * @param playerId - Wikidata QID (e.g., "Q17333")
  * @param category - Grid category to check
  * @returns true if player matches the category
  */
@@ -257,23 +265,33 @@ async function checkCategoryMatch(
 ): Promise<boolean> {
   switch (category.type) {
     case 'club':
-      return didPlayerPlayFor(playerId, category.value);
+      // Query Oracle to validate player-club relationship
+      return validatePlayerClubByName(playerId, category.value);
 
     case 'nation': {
-      const code = COUNTRY_NAME_TO_CODE[category.value];
-      if (!code) {
-        console.warn(`Unknown country name: ${category.value}`);
+      const expectedCode = COUNTRY_NAME_TO_CODE[category.value];
+      if (!expectedCode) {
+        console.warn(`[Grid] Unknown country name: ${category.value}`);
         return false;
       }
-      return hasNationality(playerId, code);
+      // Check nationality from local cache
+      const playerNationality = await getPlayerNationalityFromCache(playerId);
+      if (!playerNationality) {
+        console.warn(`[Grid] No nationality found for player ${playerId}`);
+        return false;
+      }
+      return playerNationality.toUpperCase() === expectedCode.toUpperCase();
     }
 
-    case 'stat':
-    case 'trophy':
-      // Not yet supported - would require additional database fields
-      // For now, these categories will always fail DB validation
-      // and should rely on valid_answers fallback
-      return false;
+    case 'trophy': {
+      const trophyStats = await getPlayerStatsCache(playerId);
+      return checkTrophyMatch(category.value, trophyStats);
+    }
+
+    case 'stat': {
+      const statStats = await getPlayerStatsCache(playerId);
+      return checkStatMatch(category.value, statStats);
+    }
 
     default:
       return false;

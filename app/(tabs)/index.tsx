@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lightbulb } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import { colors, textStyles, spacing } from '@/theme';
 import {
   StreakHeader,
@@ -144,7 +145,15 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Fixed Header */}
       <View style={styles.header}>
-        <Text style={textStyles.h1}>Football IQ</Text>
+        <View style={styles.headerTitle}>
+          <Text style={textStyles.h1}>Football IQ</Text>
+          {isPremium && (
+            <>
+              <Text style={[textStyles.h1, styles.proText]}>Pro</Text>
+              <ProBadge size={20} style={{ marginLeft: 6 }} />
+            </>
+          )}
+        </View>
         <Pressable
           onPress={handleSubmitIdeaPress}
           style={styles.headerButton}
@@ -258,6 +267,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
+  },
+  headerTitle: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  proText: {
+    color: colors.cardYellow,
+    marginLeft: 4,
   },
   headerButton: {
     width: 40,

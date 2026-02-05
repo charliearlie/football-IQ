@@ -5,11 +5,11 @@
  * Uses reducer pattern for predictable state updates.
  */
 
-import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useReducer, useEffect, useCallback, useRef, useMemo, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { ParsedLocalPuzzle } from '@/types/database';
-import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
+import { saveAttempt, getAttemptByPuzzleId, getClubColorByName } from '@/lib/database';
 import { usePuzzleContext } from '@/features/puzzles';
 import { useAuth } from '@/features/auth';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -18,6 +18,7 @@ import {
   TheGridAction,
   TheGridContent,
   TheGridScore,
+  GridCategory,
   FilledCell,
   CellIndex,
   createInitialState,
@@ -29,6 +30,8 @@ import { validateCellGuess, getCellCategories, countFilledCells, validateCellWit
 import { calculateGridScore, isGridComplete } from '../utils/scoring';
 import { shareTheGridResult, ShareResult } from '../utils/share';
 import { generateTheGridScoreDisplay } from '../utils/scoreDisplay';
+import { useGridRarity } from './useGridRarity';
+import { triggerRareFind } from '@/lib/haptics';
 
 /**
  * Reducer for The Grid game state.
@@ -64,7 +67,12 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
 
     case 'CORRECT_GUESS': {
       const newCells = [...state.cells];
-      newCells[action.payload.cellIndex] = { player: action.payload.player };
+      newCells[action.payload.cellIndex] = {
+        player: action.payload.player,
+        playerId: action.payload.playerId,
+        nationalityCode: action.payload.nationalityCode,
+        rarityLoading: true, // Start loading rarity
+      };
 
       return {
         ...state,
@@ -73,6 +81,31 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
         currentGuess: '',
         lastGuessIncorrect: false,
       };
+    }
+
+    case 'SET_CELL_RARITY': {
+      const newCells = [...state.cells];
+      const cell = newCells[action.payload.cellIndex];
+      if (cell) {
+        newCells[action.payload.cellIndex] = {
+          ...cell,
+          rarityPct: action.payload.rarityPct,
+          rarityLoading: false,
+        };
+      }
+      return { ...state, cells: newCells };
+    }
+
+    case 'SET_RARITY_LOADING': {
+      const newCells = [...state.cells];
+      const cell = newCells[action.payload.cellIndex];
+      if (cell) {
+        newCells[action.payload.cellIndex] = {
+          ...cell,
+          rarityLoading: action.payload.loading,
+        };
+      }
+      return { ...state, cells: newCells };
     }
 
     case 'INCORRECT_GUESS':
@@ -91,6 +124,15 @@ function theGridReducer(state: TheGridState, action: TheGridAction): TheGridStat
       return {
         ...state,
         gameStatus: 'complete',
+        score: action.payload,
+        selectedCell: null,
+        currentGuess: '',
+      };
+
+    case 'GIVE_UP':
+      return {
+        ...state,
+        gameStatus: 'gave_up',
         score: action.payload,
         selectedCell: null,
         currentGuess: '',
@@ -134,16 +176,62 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
   const { syncAttempts } = usePuzzleContext();
   const { refreshLocalIQ } = useAuth();
   const { triggerSuccess, triggerError, triggerCompletion } = useHaptics();
+  const { recordSelection, fetchCellRarity } = useGridRarity(puzzle?.id ?? null);
 
   // Keep a ref for async callbacks
   const stateRef = useRef(state);
   stateRef.current = state;
 
   // Parse puzzle content
-  const gridContent = useMemo(() => {
+  const parsedContent = useMemo(() => {
     if (!puzzle) return null;
     return parseTheGridContent(puzzle.content);
   }, [puzzle]);
+
+  // Enrich club categories with colors from local cache
+  const [gridContent, setGridContent] = useState<TheGridContent | null>(parsedContent);
+  useEffect(() => {
+    if (!parsedContent) {
+      setGridContent(null);
+      return;
+    }
+
+    // Capture non-null reference for async closure
+    const content = parsedContent;
+    let cancelled = false;
+
+    async function enrichColors() {
+      const enrichAxis = async (axis: [GridCategory, GridCategory, GridCategory]) => {
+        const enriched = await Promise.all(
+          axis.map(async (cat) => {
+            if (cat.type === 'club' && !cat.primaryColor) {
+              const clubColors = await getClubColorByName(cat.value);
+              if (clubColors) {
+                return { ...cat, primaryColor: clubColors.primary_color, secondaryColor: clubColors.secondary_color };
+              }
+            }
+            return cat;
+          })
+        );
+        return enriched as [GridCategory, GridCategory, GridCategory];
+      };
+
+      const [xAxis, yAxis] = await Promise.all([
+        enrichAxis(content.xAxis),
+        enrichAxis(content.yAxis),
+      ]);
+
+      if (!cancelled) {
+        setGridContent({ ...content, xAxis, yAxis });
+      }
+    }
+
+    // Set parsed content immediately, then enrich async
+    setGridContent(content);
+    enrichColors();
+
+    return () => { cancelled = true; };
+  }, [parsedContent]);
 
   // Get categories for selected cell
   const selectedCellCategories = useMemo(() => {
@@ -198,9 +286,9 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     }
   }, [state.cells, state.gameStatus, triggerCompletion]);
 
-  // Save attempt on game complete
+  // Save attempt on game complete or give up
   useEffect(() => {
-    if (state.gameStatus !== 'complete' || state.attemptSaved || !puzzle) return;
+    if ((state.gameStatus !== 'complete' && state.gameStatus !== 'gave_up') || state.attemptSaved || !puzzle) return;
 
     // Capture puzzle reference for async function
     const currentPuzzle = puzzle;
@@ -211,6 +299,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
       const metadata: TheGridAttemptMetadata = {
         cellsFilled: stateRef.current.score.cellsFilled,
         cells: stateRef.current.cells,
+        ...(stateRef.current.gameStatus === 'gave_up' && { gaveUp: true }),
       };
 
       const scoreDisplay = generateTheGridScoreDisplay(
@@ -385,33 +474,87 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
 
   /**
    * Submit a player selection from the PlayerSearchOverlay.
-   * Uses database validation instead of pre-defined valid_answers.
+   * Tries name-based valid_answers matching first, then falls back to DB validation.
    *
-   * @param playerId - Player database ID
-   * @param playerName - Player display name (used if valid)
+   * Flow:
+   * 1. Local validation (instant) → dispatch CORRECT_GUESS
+   * 2. triggerSuccess() haptic
+   * 3. recordSelection() // fire-and-forget
+   * 4. fetchCellRarity().then() → dispatch SET_CELL_RARITY → optional triggerRareFind
+   *
+   * @param playerId - Player ID (QID or local ID)
+   * @param playerName - Player display name
+   * @param nationalityCode - Optional ISO nationality code for flag display
    */
   const submitPlayerSelection = useCallback(
-    async (playerId: string, playerName: string) => {
+    async (playerId: string, playerName: string, nationalityCode?: string) => {
       if (state.selectedCell === null || !gridContent) return;
 
-      const result = await validateCellWithDB(playerId, state.selectedCell, gridContent);
+      const cellIndex = state.selectedCell;
 
-      if (result.isValid) {
+      // Helper to handle post-validation rarity flow
+      const handleCorrectGuess = (displayName: string) => {
         triggerSuccess();
         dispatch({
           type: 'CORRECT_GUESS',
           payload: {
-            cellIndex: state.selectedCell,
-            player: playerName,
+            cellIndex,
+            player: displayName,
+            playerId,
+            nationalityCode,
           },
         });
-      } else {
+
+        // Fire-and-forget: record selection to server
+        recordSelection(cellIndex, playerId, displayName, nationalityCode);
+
+        // Async: fetch rarity and update cell
+        fetchCellRarity(cellIndex, playerId).then((rarityPct) => {
+          if (rarityPct !== null) {
+            dispatch({
+              type: 'SET_CELL_RARITY',
+              payload: { cellIndex, rarityPct },
+            });
+
+            // Special haptic for ultra-rare picks (<1%)
+            if (rarityPct < 1) {
+              triggerRareFind();
+            }
+          }
+        });
+      };
+
+      // Try name-based matching against valid_answers first
+      const nameResult = validateCellGuess(playerName, state.selectedCell, gridContent);
+      if (nameResult.isValid) {
+        handleCorrectGuess(nameResult.matchedPlayer ?? playerName);
+        return;
+      }
+
+      // Fall back to DB validation (club history, nationality, trophies, stats)
+      try {
+        const dbResult = await validateCellWithDB(playerId, state.selectedCell, gridContent);
+        if (dbResult.isValid) {
+          handleCorrectGuess(playerName);
+        } else {
+          triggerError();
+          dispatch({ type: 'INCORRECT_GUESS' });
+        }
+      } catch (error) {
+        console.error('[useTheGridGame] DB validation failed:', error);
         triggerError();
         dispatch({ type: 'INCORRECT_GUESS' });
       }
     },
-    [state.selectedCell, gridContent, triggerSuccess, triggerError]
+    [state.selectedCell, gridContent, triggerSuccess, triggerError, recordSelection, fetchCellRarity]
   );
+
+  const giveUp = useCallback(() => {
+    if (state.gameStatus !== 'playing') return;
+    const filledCount = countFilledCells(state.cells);
+    const score = calculateGridScore(filledCount);
+    dispatch({ type: 'GIVE_UP', payload: score });
+  }, [state.gameStatus, state.cells]);
 
   const shareResult = useCallback(async (): Promise<ShareResult> => {
     if (!state.score) {
@@ -434,6 +577,7 @@ export function useTheGridGame(puzzle: ParsedLocalPuzzle | null) {
     setCurrentGuess,
     submitGuess,
     submitPlayerSelection,
+    giveUp,
     shareResult,
     resetGame,
   };

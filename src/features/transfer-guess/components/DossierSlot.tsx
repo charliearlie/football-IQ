@@ -16,7 +16,11 @@ import Animated, {
   interpolateColor,
 } from 'react-native-reanimated';
 import { colors, spacing, fonts, borderRadius, depthOffset } from '@/theme';
+import { FlagIcon } from '@/components/FlagIcon';
 import { HintLabel } from '../types/transferGuess.types';
+
+/** Regex to detect ISO 3166-1 alpha-2 codes (e.g. "BR", "GB-ENG") */
+const ISO_CODE_PATTERN = /^[A-Z]{2}(-[A-Z]{2,3})?$/;
 
 /** Depth for 3D effect (4px as per Solid Layer pattern) */
 const DEPTH = depthOffset.tictacCell;
@@ -132,14 +136,20 @@ export function DossierSlot({
         <View style={[styles.content, { opacity: contentOpacity }]}>
           {/* Icon (hidden state) or Value (revealed state) */}
           {isRevealed ? (
-            <Text
-              style={styles.revealedValue}
-              testID={`${testID}-value`}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {hint}
-            </Text>
+            label === 'Nation' && ISO_CODE_PATTERN.test(hint) ? (
+              <View testID={`${testID}-flag`} style={styles.flagContainer}>
+                <FlagIcon code={hint} size={32} />
+              </View>
+            ) : (
+              <Text
+                style={styles.revealedValue}
+                testID={`${testID}-value`}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {hint}
+              </Text>
+            )
           ) : (
             <Image
               source={SLOT_PNG_ICONS[label]}
@@ -197,6 +207,10 @@ const styles = StyleSheet.create({
   icon: {
     width: 40,
     height: 40,
+  },
+  flagContainer: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   revealedValue: {
     fontFamily: fonts.headline,

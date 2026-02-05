@@ -19,6 +19,7 @@ import {
   ActivityIndicator,
   ScrollView,
   useWindowDimensions,
+  Linking,
 } from 'react-native';
 import Animated, {
   SlideInDown,
@@ -32,14 +33,13 @@ import Purchases, {
   PURCHASES_ERROR_CODE,
 } from 'react-native-purchases';
 import {
-  Crown,
   Archive,
   Sparkles,
-  TrendingUp,
   X,
   Check,
   RotateCcw,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
@@ -76,7 +76,6 @@ type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 const CONDENSED_BENEFITS = [
   { icon: Archive, text: 'Full Archive' },
   { icon: Sparkles, text: 'Ad-Free' },
-  { icon: TrendingUp, text: 'Exclusive Stats' },
 ];
 
 interface PremiumUpsellModalProps {
@@ -319,9 +318,9 @@ export function PremiumUpsellModal({
             ]}
           >
             {state === 'success' ? (
-              <Check size={32} color={colors.stadiumNavy} strokeWidth={3} />
+              <Check size={26} color={colors.stadiumNavy} strokeWidth={3} />
             ) : (
-              <Crown size={32} color={colors.stadiumNavy} strokeWidth={2} />
+              <ProBadge size={26} color={colors.stadiumNavy} />
             )}
           </View>
 
@@ -335,8 +334,8 @@ export function PremiumUpsellModal({
           <ScrollView
             style={styles.scrollContent}
             contentContainerStyle={styles.scrollContentContainer}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
+            showsVerticalScrollIndicator={true}
+            bounces={true}
           >
             {state === 'loading' && <LoadingContent />}
 
@@ -345,7 +344,6 @@ export function PremiumUpsellModal({
                 packages={packages}
                 onSelectPackage={handlePurchase}
                 onRestore={handleRestore}
-                puzzleDate={puzzleDate}
                 testID={testID}
               />
             )}
@@ -391,13 +389,11 @@ function SelectingContent({
   packages,
   onSelectPackage,
   onRestore,
-  puzzleDate,
   testID,
 }: {
   packages: PurchasesPackage[];
   onSelectPackage: (pkg: PurchasesPackage) => void;
   onRestore: () => void;
-  puzzleDate?: string | null;
   testID?: string;
 }) {
   return (
@@ -414,13 +410,6 @@ function SelectingContent({
           </View>
         ))}
       </View>
-
-      {/* Puzzle Date Info */}
-      {puzzleDate && (
-        <Text style={styles.puzzleInfo}>
-          You tried to access a puzzle from {puzzleDate}
-        </Text>
-      )}
 
       <Text style={styles.plansTitle}>Choose Your Plan</Text>
 
@@ -446,6 +435,23 @@ function SelectingContent({
 
       <Text style={styles.planNote}>
         Cancel anytime in your App Store settings.
+      </Text>
+
+      <Text style={styles.legalText}>
+        By subscribing, you agree to our{' '}
+        <Text
+          style={styles.legalLink}
+          onPress={() => Linking.openURL('https://football-iq.app/terms')}
+        >
+          Terms of Use
+        </Text>
+        {' '}and{' '}
+        <Text
+          style={styles.legalLink}
+          onPress={() => Linking.openURL('https://football-iq.app/privacy')}
+        >
+          Privacy Policy
+        </Text>
       </Text>
     </Animated.View>
   );
@@ -679,7 +685,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius['2xl'],
     borderWidth: 2,
     borderColor: colors.cardYellow,
-    padding: spacing.xl,
+    padding: spacing.lg,
     alignItems: 'center',
     width: '100%',
     maxWidth: 360,
@@ -687,7 +693,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   modalTablet: {
-    maxWidth: 600,
+    maxWidth: 500,
+    padding: spacing.lg,
   },
   scrollContent: {
     width: '100%',
@@ -695,6 +702,7 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     alignItems: 'center',
+    paddingBottom: spacing.sm,
   },
   closeButton: {
     position: 'absolute',
@@ -703,20 +711,20 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.cardYellow,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   iconContainerSuccess: {
     backgroundColor: colors.pitchGreen,
   },
   title: {
     fontFamily: fonts.headline,
-    fontSize: 32,
+    fontSize: 26,
     letterSpacing: 2,
     color: colors.cardYellow,
     textAlign: 'center',
@@ -726,15 +734,15 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   // Condensed benefits
   condensedBenefits: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   condensedBenefitItem: {
     flexDirection: 'row',
@@ -749,12 +757,6 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.floodlightWhite,
     fontWeight: '500',
-  },
-  puzzleInfo: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
   },
   buttonContainer: {
     width: '100%',
@@ -774,7 +776,7 @@ const styles = StyleSheet.create({
   // Plans
   plansContainer: {
     width: '100%',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   plansTitle: {
     ...textStyles.body,
@@ -791,7 +793,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 2,
     borderColor: 'transparent',
-    padding: spacing.md,
+    padding: spacing.sm,
     position: 'relative',
   },
   planCardHighlighted: {
@@ -858,7 +860,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     gap: spacing.xs,
   },
   restoreText: {
@@ -870,7 +872,17 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  legalText: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  legalLink: {
+    color: colors.cardYellow,
+    textDecorationLine: 'underline',
   },
   // Purchasing
   purchasingContainer: {

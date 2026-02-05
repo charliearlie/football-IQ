@@ -8,6 +8,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { User } from 'lucide-react-native';
 import { colors, textStyles, spacing } from '@/theme';
 import { useAuth } from '@/features/auth';
+import { ProBadge } from '@/components/ProBadge';
 
 /**
  * Format a date string to a readable format.
@@ -24,6 +25,7 @@ function formatMemberSince(dateString: string | null | undefined): string {
 export function ProfileHeader() {
   const { profile } = useAuth();
   const displayName = profile?.display_name;
+  const isPremium = profile?.is_premium ?? false;
 
   return (
     <View style={styles.container}>
@@ -31,9 +33,12 @@ export function ProfileHeader() {
         <User color={colors.floodlightWhite} size={32} strokeWidth={2} />
       </View>
       <View style={styles.textContainer}>
-        <Text style={[textStyles.h2, styles.displayName]}>
-          {displayName || 'Football Fan'}
-        </Text>
+        <View style={styles.nameRow}>
+          <Text style={[textStyles.h2, styles.displayName]}>
+            {displayName || 'Football Fan'}
+          </Text>
+          {isPremium && <ProBadge size={18} style={{ marginLeft: 6 }} />}
+        </View>
         <Text style={[textStyles.caption, styles.memberSince]}>
           {formatMemberSince(profile?.created_at ?? null)}
         </Text>
@@ -61,6 +66,10 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   displayName: {
     marginBottom: spacing.xs,

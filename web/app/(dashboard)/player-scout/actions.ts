@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/server";
+import { ACHIEVEMENT_MAP } from "../../../../src/services/oracle/achievementMappings";
 
 const WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql";
 const QID_PATTERN = /^Q\d+$/;
@@ -594,4 +595,179 @@ export async function getPlayersWithoutCareers(): Promise<{ qid: string; name: s
   }
 
   return allPlayers;
+}
+
+// ─── Achievement Fetching & Sync ─────────────────────────────────────────────
+
+export interface AchievementEntry {
+  achievementQid: string;
+  name: string;
+  category: "Individual" | "Club" | "International";
+  year: number | null;
+  clubQid: string | null;
+  clubName: string | null;
+}
+
+/**
+ * Fetch achievements for a player from Wikidata via SPARQL.
+ * Queries P166 (award received) and P1344 (participant in → competition edition).
+ * Filters results through the curated ACHIEVEMENT_MAP whitelist.
+ */
+export async function fetchPlayerAchievements(
+  qid: string
+): Promise<AchievementEntry[]> {
+  assertValidQid(qid);
+
+  const query = `
+    SELECT ?achievement ?achievementLabel ?year ?club ?clubLabel WHERE {
+      {
+        wd:${qid} p:P166 ?stmt .
+        ?stmt ps:P166 ?achievement .
+        OPTIONAL { ?stmt pq:P585 ?date }
+        OPTIONAL { ?stmt pq:P54 ?club }
+        BIND(YEAR(?date) AS ?year)
+      }
+      UNION
+      {
+        wd:${qid} p:P1344 ?stmt .
+        ?stmt ps:P1344 ?edition .
+        ?edition wdt:P361 ?achievement .
+        OPTIONAL { ?stmt pq:P585 ?date }
+        OPTIONAL { ?edition wdt:P580 ?startDate }
+        OPTIONAL { ?stmt pq:P54 ?club }
+        BIND(COALESCE(YEAR(?date), YEAR(?startDate)) AS ?year)
+      }
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+    }
+    ORDER BY ?year
+  `;
+
+  const bindings = await executeSparql(query);
+  const results: AchievementEntry[] = [];
+  const seen = new Set<string>();
+
+  for (const b of bindings as Record<string, { value?: string }>[]) {
+    const achievementUri = b.achievement?.value;
+    if (!achievementUri) continue;
+
+    const achievementQid = extractQid(achievementUri);
+    if (!achievementQid || !(achievementQid in ACHIEVEMENT_MAP)) continue;
+
+    const year = b.year?.value ? parseInt(b.year.value, 10) : null;
+    const dedupeKey = `${achievementQid}-${year ?? "null"}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    const def = ACHIEVEMENT_MAP[achievementQid];
+    const clubUri = b.club?.value;
+    const clubQid = clubUri ? extractQid(clubUri) : null;
+
+    results.push({
+      achievementQid,
+      name: def.name,
+      category: def.category,
+      year,
+      clubQid,
+      clubName: b.clubLabel?.value ?? null,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Save fetched achievements to Supabase.
+ * Upserts clubs referenced by achievements, then replaces all
+ * player_achievements for this player, and recalculates stats_cache.
+ */
+export async function saveAchievementsToSupabase(
+  playerQid: string,
+  achievements: AchievementEntry[]
+): Promise<{ success: boolean; count: number; statsCache?: Record<string, number>; error?: string }> {
+  const supabase = await createAdminClient();
+
+  // Upsert any clubs referenced by achievements
+  const clubRows = achievements
+    .filter((a) => a.clubQid && a.clubName)
+    .map((a) => ({
+      id: a.clubQid!,
+      name: a.clubName!,
+      search_name: a.clubName!
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim(),
+    }));
+
+  const uniqueClubs = [...new Map(clubRows.map((c) => [c.id, c])).values()];
+  if (uniqueClubs.length > 0) {
+    const { error: clubError } = await supabase
+      .from("clubs")
+      .upsert(uniqueClubs, { onConflict: "id" });
+    if (clubError) {
+      return { success: false, count: 0, error: `Clubs: ${clubError.message}` };
+    }
+  }
+
+  // Atomically replace achievements using stored procedure (single transaction)
+  const achievementsPayload = achievements.map((a) => ({
+    achievement_id: a.achievementQid,
+    year: a.year,
+    club_id: a.clubQid,
+  }));
+
+  const { error: replaceError } = await (supabase.rpc as unknown as (
+    fn: string,
+    params: Record<string, unknown>
+  ) => Promise<{ data: unknown; error: { message: string } | null }>)(
+    "replace_player_achievements",
+    { p_player_id: playerQid, p_achievements: achievementsPayload }
+  );
+
+  if (replaceError) {
+    return { success: false, count: 0, error: `Replace: ${replaceError.message}` };
+  }
+
+  // Recalculate stats_cache via the database function
+  // (trigger should handle this, but call explicitly to get the result)
+  // Note: calculate_player_stats RPC not in generated types, cast to allow access
+  const { data: statsData, error: statsError } = (await (supabase as unknown as { rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> })
+    .rpc("calculate_player_stats", { target_player_id: playerQid }));
+
+  if (statsError) {
+    console.error("[saveAchievements] stats_cache calc failed:", statsError.message);
+  }
+
+  const typedStatsData = statsData as Record<string, number> | null;
+
+  // Bump elite index version so mobile clients pick up changes
+  const { error: bumpError } = await supabase
+    .rpc("bump_elite_index_version");
+
+  if (bumpError) {
+    console.error("[saveAchievements] version bump failed:", bumpError.message);
+  }
+
+  return {
+    success: true,
+    count: achievements.length,
+    statsCache: typedStatsData ?? undefined,
+  };
+}
+
+/**
+ * Full sync: fetch achievements from Wikidata and save to Supabase.
+ * Convenience wrapper combining fetch + save for the CMS button.
+ */
+export async function syncPlayerAchievements(
+  playerQid: string
+): Promise<{ success: boolean; count: number; statsCache?: Record<string, number>; error?: string }> {
+  try {
+    assertValidQid(playerQid);
+    const achievements = await fetchPlayerAchievements(playerQid);
+    return await saveAchievementsToSupabase(playerQid, achievements);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, count: 0, error: message };
+  }
 }

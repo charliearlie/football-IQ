@@ -38,13 +38,17 @@ jest.mock('lucide-react-native', () => ({
   Grid3X3: 'Grid3X3',
   HelpCircle: 'HelpCircle',
   CheckCircle: 'CheckCircle',
-  Crown: 'Crown',
   Archive: 'Archive',
   Sparkles: 'Sparkles',
   TrendingUp: 'TrendingUp',
   X: 'X',
   Check: 'Check',
   RotateCcw: 'RotateCcw',
+}));
+
+// Mock ProBadge
+jest.mock('@/components/ProBadge', () => ({
+  ProBadge: 'ProBadge',
 }));
 
 // Mock react-native-reanimated

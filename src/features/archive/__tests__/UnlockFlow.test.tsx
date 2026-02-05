@@ -62,7 +62,6 @@ jest.mock('expo-haptics', () => ({
 // Mock lucide-react-native
 jest.mock('lucide-react-native', () => ({
   Lock: 'Lock',
-  Crown: 'Crown',
   Trophy: 'Trophy',
   Briefcase: 'Briefcase',
   ArrowRightLeft: 'ArrowRightLeft',
@@ -81,6 +80,11 @@ jest.mock('lucide-react-native', () => ({
   AlertCircle: 'AlertCircle',
   Loader2: 'Loader2',
   ArrowRight: 'ArrowRight',
+}));
+
+// Mock ProBadge
+jest.mock('@/components/ProBadge', () => ({
+  ProBadge: 'ProBadge',
 }));
 
 // Mock react-native-reanimated

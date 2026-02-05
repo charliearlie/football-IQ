@@ -5,20 +5,21 @@
  * Players fill a 3x3 grid by naming footballers who satisfy both row and column criteria.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+  Pressable,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { colors, fonts, spacing } from '@/theme';
+import { Flag } from 'lucide-react-native';
+import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { GameContainer } from '@/components/GameContainer';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { ReviewModeBanner } from '@/components/ReviewMode';
 import { PlayerSearchOverlay } from '@/components/PlayerSearchOverlay';
 import { AdBanner } from '@/features/ads';
@@ -26,7 +27,8 @@ import { useTheGridGame } from '../hooks/useTheGridGame';
 import { TheGridBoard } from '../components/TheGridBoard';
 import { TheGridResultModal } from '../components/TheGridResultModal';
 import { parseTheGridContent, FilledCell, TheGridAttemptMetadata } from '../types/theGrid.types';
-import { ParsedLocalAttempt, ParsedPlayer } from '@/types/database';
+import { ParsedLocalAttempt } from '@/types/database';
+import { UnifiedPlayer } from '@/services/oracle/types';
 
 export interface TheGridScreenProps {
   /** Puzzle ID to play (optional - uses today's puzzle if not provided) */
@@ -61,18 +63,34 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     selectCell,
     deselectCell,
     submitPlayerSelection,
+    giveUp,
     shareResult,
   } = useTheGridGame(puzzle);
 
   // Modal visibility
   const [showResultModal, setShowResultModal] = useState(false);
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
-  // Show result modal when game completes
+  // Show result modal when game completes or player gives up
   useEffect(() => {
-    if (state.gameStatus === 'complete' && state.attemptSaved && !isReviewMode) {
+    if ((state.gameStatus === 'complete' || state.gameStatus === 'gave_up') && state.attemptSaved && !isReviewMode) {
       setShowResultModal(true);
     }
   }, [state.gameStatus, state.attemptSaved, isReviewMode]);
+
+  // Give up handlers
+  const handleGiveUpPress = useCallback(() => {
+    setShowGiveUpModal(true);
+  }, []);
+
+  const handleGiveUpConfirm = useCallback(() => {
+    setShowGiveUpModal(false);
+    giveUp();
+  }, [giveUp]);
+
+  const handleGiveUpCancel = useCallback(() => {
+    setShowGiveUpModal(false);
+  }, []);
 
   // Parse review mode cells from attempt metadata with defensive type checking
   const reviewCells: (FilledCell | null)[] | null = React.useMemo(() => {
@@ -92,8 +110,8 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
   }, [isReviewMode, attempt?.metadata]);
 
   // Handle player selection from overlay
-  const handleSelectPlayer = async (player: ParsedPlayer) => {
-    await submitPlayerSelection(player.id, player.name);
+  const handleSelectPlayer = async (player: UnifiedPlayer) => {
+    await submitPlayerSelection(player.id, player.name, player.nationality_code ?? undefined);
   };
 
   // Handle share
@@ -151,15 +169,11 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
 
   return (
     <GameContainer
-      title="The Grid"
+      title="The Grid (beta)"
       onHelpPress={() => setShowHelpModal(true)}
       testID="the-grid-screen"
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
+      <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -170,7 +184,6 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
 
           {/* Instructions */}
           <View style={styles.instructionsContainer}>
-            <Text style={styles.instructionsTitle}>THE GRID</Text>
             <Text style={styles.instructionsText}>
               {isReviewMode
                 ? 'Review your completed game'
@@ -178,65 +191,90 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
             </Text>
           </View>
 
-        {/* The Grid Board */}
-        <View style={styles.boardContainer}>
-          <TheGridBoard
-            content={gridContent}
-            cells={displayCells}
-            selectedCell={isReviewMode ? null : state.selectedCell}
-            onCellPress={isReviewMode ? () => {} : selectCell}
-            disabled={isReviewMode || state.gameStatus === 'complete'}
-            testID="the-grid-board"
-          />
-        </View>
-
-        {/* Progress indicator */}
-        {!isReviewMode && state.gameStatus === 'playing' && (
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>
-              {state.cells.filter((c) => c !== null).length}/9 cells filled
-            </Text>
+          {/* The Grid Board */}
+          <View style={styles.boardContainer}>
+            <TheGridBoard
+              content={gridContent}
+              cells={displayCells}
+              selectedCell={isReviewMode ? null : state.selectedCell}
+              onCellPress={isReviewMode ? () => {} : selectCell}
+              disabled={isReviewMode || state.gameStatus !== 'playing'}
+              testID="the-grid-board"
+            />
           </View>
-        )}
 
-        {/* Review mode score display */}
-        {isReviewMode && attempt && (
-          <View style={styles.reviewScoreContainer}>
-            <Text style={styles.reviewScoreLabel}>Final Score</Text>
-            <Text style={styles.reviewScoreValue}>
-              {typeof attempt.score === 'number' ? attempt.score : 0}
-              <Text style={styles.reviewScoreMax}>/100</Text>
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+          {/* Progress indicator + Give up */}
+          {!isReviewMode && state.gameStatus === 'playing' && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBadge}>
+                <Text style={styles.progressBadgeText}>
+                  PROGRESS: {state.cells.filter((c) => c !== null).length} / 9 COMPLETED
+                </Text>
+              </View>
+              <Pressable
+                onPress={handleGiveUpPress}
+                style={({ pressed }) => [
+                  styles.giveUpButton,
+                  pressed && styles.giveUpButtonPressed,
+                ]}
+                testID="the-grid-giveup"
+              >
+                <Flag size={14} color={colors.redCard} />
+                <Text style={styles.giveUpButtonText}>GIVE UP</Text>
+              </Pressable>
+            </View>
+          )}
 
-      {/* Result Modal */}
-      <TheGridResultModal
-        visible={showResultModal}
-        score={state.score}
-        cells={state.cells}
-        puzzleId={puzzle?.id ?? ''}
-        onClose={() => {
-          setShowResultModal(false);
-          router.back();
-        }}
-        onShare={handleShare}
-        testID="result-modal"
-      />
+          {/* Review mode score display */}
+          {isReviewMode && attempt && (
+            <View style={styles.reviewScoreContainer}>
+              <Text style={styles.reviewScoreLabel}>Final Score</Text>
+              <Text style={styles.reviewScoreValue}>
+                {typeof attempt.score === 'number' ? attempt.score : 0}
+                <Text style={styles.reviewScoreMax}>/100</Text>
+              </Text>
+            </View>
+          )}
+        </ScrollView>
 
-      {/* Player Search Overlay - opens when cell is selected */}
-      <PlayerSearchOverlay
-        visible={!isReviewMode && state.selectedCell !== null && state.gameStatus === 'playing'}
-        onSelectPlayer={handleSelectPlayer}
-        onClose={deselectCell}
-        title={
-          selectedCellCategories
-            ? `${selectedCellCategories.row.value} & ${selectedCellCategories.col.value}`
-            : 'Search Players'
-        }
-        testID="player-search-overlay"
-      />
+        {/* Result Modal */}
+        <TheGridResultModal
+          visible={showResultModal}
+          score={state.score}
+          cells={state.cells}
+          puzzleId={puzzle?.id ?? ''}
+          puzzleDate={puzzle?.puzzle_date ?? ''}
+          onClose={() => {
+            setShowResultModal(false);
+            router.back();
+          }}
+          onShare={handleShare}
+          gaveUp={state.gameStatus === 'gave_up'}
+          testID="result-modal"
+        />
+
+        {/* Give Up Confirmation Modal */}
+        <ConfirmationModal
+          visible={showGiveUpModal}
+          confirmLabel="Reveal Answers"
+          onConfirm={handleGiveUpConfirm}
+          onCancel={handleGiveUpCancel}
+          testID="give-up-modal"
+        />
+
+        {/* Player Search Overlay - opens when cell is selected */}
+        <PlayerSearchOverlay
+          visible={!isReviewMode && state.selectedCell !== null && state.gameStatus === 'playing'}
+          onSelectPlayer={handleSelectPlayer}
+          onClose={deselectCell}
+          title={
+            selectedCellCategories
+              ? `${selectedCellCategories.row.value} & ${selectedCellCategories.col.value}`
+              : 'Search Players'
+          }
+          showError={state.lastGuessIncorrect}
+          testID="player-search-overlay"
+        />
 
         {/* Ad Banner (non-premium users) */}
         <AdBanner testID="the-grid-ad-banner" />
@@ -248,7 +286,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           onClose={() => setShowHelpModal(false)}
           testID="the-grid-help-modal"
         />
-      </KeyboardAvoidingView>
+      </View>
     </GameContainer>
   );
 }
@@ -291,14 +329,9 @@ const styles = StyleSheet.create({
   },
   instructionsContainer: {
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
     paddingHorizontal: spacing.md,
-  },
-  instructionsTitle: {
-    fontFamily: fonts.headline,
-    fontSize: 32,
-    color: colors.floodlightWhite,
-    marginBottom: spacing.xs,
   },
   instructionsText: {
     fontFamily: fonts.body,
@@ -314,10 +347,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.lg,
   },
-  progressText: {
+  progressBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius['2xl'],
+  },
+  progressBadgeText: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '600',
     color: colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  giveUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  giveUpButtonPressed: {
+    opacity: 0.7,
+  },
+  giveUpButtonText: {
+    fontFamily: fonts.headline,
+    fontSize: 14,
+    color: colors.redCard,
+    letterSpacing: 1,
   },
   reviewScoreContainer: {
     alignItems: 'center',

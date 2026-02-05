@@ -92,7 +92,7 @@ function getGameModeName(gameMode: GameMode): string {
     case 'guess_the_goalscorers':
       return 'Goalscorer Recall';
     case 'the_grid':
-      return 'The Grid';
+      return 'The Grid (beta)';
     case 'topical_quiz':
       return 'Quiz';
     default:

@@ -13,7 +13,7 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
-  Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,13 +28,12 @@ import Purchases, {
   PURCHASES_ERROR_CODE,
 } from 'react-native-purchases';
 import {
-  Crown,
   Archive,
   Sparkles,
-  TrendingUp,
   X,
   Check,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
@@ -58,7 +57,6 @@ type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 const BENEFITS = [
   { icon: Archive, text: 'Full Archive', description: 'Access all past puzzles' },
   { icon: Sparkles, text: 'Ad-Free', description: 'No interruptions' },
-  { icon: TrendingUp, text: 'Exclusive Stats', description: 'Track your progress' },
 ];
 
 export default function PremiumModalScreen() {
@@ -156,20 +154,6 @@ export default function PremiumModalScreen() {
 
         if (!isMountedRef.current) return;
 
-        // DEBUG: Show what RevenueCat returned after purchase (remove after debugging)
-        const debugInfo = {
-          appUserID: customerInfo.originalAppUserId,
-          activeEntitlements: Object.keys(customerInfo.entitlements.active),
-          allEntitlements: Object.keys(customerInfo.entitlements.all),
-          purchasedProducts: customerInfo.allPurchasedProductIdentifiers,
-          activeSubscriptions: customerInfo.activeSubscriptions,
-        };
-        Alert.alert(
-          'DEBUG: Purchase Result',
-          JSON.stringify(debugInfo, null, 2),
-          [{ text: 'OK' }]
-        );
-
         // Wait for entitlement with retry logic (handles RevenueCat timing issues)
         const result = await waitForEntitlementActivation(customerInfo);
 
@@ -223,20 +207,6 @@ export default function PremiumModalScreen() {
       const customerInfo = await Purchases.restorePurchases();
 
       if (!isMountedRef.current) return;
-
-      // DEBUG: Show what RevenueCat returned (remove after debugging)
-      const debugInfo = {
-        appUserID: customerInfo.originalAppUserId,
-        activeEntitlements: Object.keys(customerInfo.entitlements.active),
-        allEntitlements: Object.keys(customerInfo.entitlements.all),
-        purchasedProducts: customerInfo.allPurchasedProductIdentifiers,
-        activeSubscriptions: customerInfo.activeSubscriptions,
-      };
-      Alert.alert(
-        'DEBUG: Restore Result',
-        JSON.stringify(debugInfo, null, 2),
-        [{ text: 'OK' }]
-      );
 
       // Wait for entitlement with retry logic
       const result = await waitForEntitlementActivation(customerInfo);
@@ -293,7 +263,7 @@ export default function PremiumModalScreen() {
   const isPurchasing = state === 'purchasing';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Confetti active={state === 'success'} />
 
       {/* Header with close button - disabled during purchase */}
@@ -311,7 +281,7 @@ export default function PremiumModalScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {/* Icon */}
         <View
@@ -321,9 +291,9 @@ export default function PremiumModalScreen() {
           ]}
         >
           {state === 'success' ? (
-            <Check size={40} color={colors.stadiumNavy} strokeWidth={3} />
+            <Check size={28} color={colors.stadiumNavy} strokeWidth={3} />
           ) : (
-            <Crown size={40} color={colors.stadiumNavy} strokeWidth={2} />
+            <ProBadge size={28} color={colors.stadiumNavy} />
           )}
         </View>
 
@@ -346,7 +316,7 @@ export default function PremiumModalScreen() {
               {BENEFITS.map((benefit, index) => (
                 <View key={index} style={styles.benefitRow}>
                   <View style={styles.benefitIcon}>
-                    <benefit.icon size={24} color={colors.cardYellow} />
+                    <benefit.icon size={18} color={colors.cardYellow} />
                   </View>
                   <View style={styles.benefitText}>
                     <Text style={styles.benefitTitle}>{benefit.text}</Text>
@@ -355,13 +325,6 @@ export default function PremiumModalScreen() {
                 </View>
               ))}
             </View>
-
-            {/* Puzzle date info */}
-            {puzzleDate && (
-              <Text style={styles.puzzleInfo}>
-                You tried to access a puzzle from {puzzleDate}
-              </Text>
-            )}
 
             {/* Plans */}
             <Text style={styles.plansTitle}>Choose Your Plan</Text>
@@ -388,6 +351,23 @@ export default function PremiumModalScreen() {
 
             <Text style={styles.planNote}>
               Cancel anytime in your App Store settings.
+            </Text>
+
+            <Text style={styles.legalText}>
+              By subscribing, you agree to our{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL('https://football-iq.app/terms')}
+              >
+                Terms of Use
+              </Text>
+              {' '}and{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => Linking.openURL('https://football-iq.app/privacy')}
+              >
+                Privacy Policy
+              </Text>
             </Text>
           </Animated.View>
         )}
@@ -569,26 +549,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing['3xl'],
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.cardYellow,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   iconContainerSuccess: {
     backgroundColor: colors.pitchGreen,
   },
   title: {
     fontFamily: fonts.headline,
-    fontSize: 36,
+    fontSize: 24,
     letterSpacing: 2,
     color: colors.cardYellow,
     textAlign: 'center',
@@ -598,7 +578,7 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     textAlign: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.sm,
   },
   content: {
     width: '100%',
@@ -614,18 +594,18 @@ const styles = StyleSheet.create({
   },
   benefitsContainer: {
     width: '100%',
-    marginBottom: spacing.xl,
-    gap: spacing.md,
+    marginBottom: spacing.sm,
+    gap: spacing.xs,
   },
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   benefitIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.lg,
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.md,
     backgroundColor: 'rgba(250, 204, 21, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -642,18 +622,12 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.textSecondary,
   },
-  puzzleInfo: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
   plansTitle: {
     ...textStyles.body,
     color: colors.floodlightWhite,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   planCard: {
     flexDirection: 'row',
@@ -663,8 +637,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 2,
     borderColor: 'transparent',
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
     position: 'relative',
   },
   planCardHighlighted: {
@@ -706,7 +680,7 @@ const styles = StyleSheet.create({
   },
   planPrice: {
     fontFamily: fonts.headline,
-    fontSize: 28,
+    fontSize: 24,
     color: colors.cardYellow,
   },
   planPriceHighlighted: {
@@ -728,13 +702,23 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   restoreContainer: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
   },
   planNote: {
     ...textStyles.caption,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  legalText: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  legalLink: {
+    color: colors.cardYellow,
+    textDecorationLine: 'underline',
   },
   successContainer: {
     alignItems: 'center',

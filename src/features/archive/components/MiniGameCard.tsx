@@ -14,7 +14,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { Lock, Grid3X3, Check, Crown, Play, ChevronRight } from 'lucide-react-native';
+import { Lock, Grid3X3, Check, Play, ChevronRight } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
 import { triggerLight, triggerMedium } from '@/lib/haptics';
 import { ArchivePuzzle } from '../types/archive.types';
@@ -50,7 +51,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   career_path_pro: 'Career Path Pro',
   guess_the_transfer: 'Transfer Guess',
   guess_the_goalscorers: 'Goalscorer Recall',
-  the_grid: 'The Grid',
+  the_grid: 'The Grid (beta)',
   topical_quiz: 'Quiz',
   top_tens: 'Top Tens',
   starting_xi: 'Starting XI',
@@ -134,7 +135,7 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
       // Locked state: yellow crown icon
       return (
         <View style={styles.statusIndicator}>
-          <Crown size={18} color={colors.cardYellow} strokeWidth={2.5} />
+          <ProBadge size={18} color={colors.cardYellow} />
         </View>
       );
     }
@@ -192,7 +193,7 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
               {/* Premium badge */}
               {isPremiumOnly && !isLocked && (
                 <View style={styles.premiumBadge}>
-                  <Crown size={7} color={colors.stadiumNavy} strokeWidth={2.5} />
+                  <ProBadge size={7} color={colors.stadiumNavy} />
                 </View>
               )}
             </View>

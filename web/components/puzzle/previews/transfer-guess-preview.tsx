@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { FlagIcon } from "@/components/ui/flag-icon";
 import type { TransferGuessContent } from "@/lib/schemas";
 
 interface TransferGuessPreviewProps {
@@ -54,9 +55,8 @@ export function TransferGuessPreview({ content }: TransferGuessPreviewProps) {
           </div>
         </div>
 
-        {/* Year & Fee */}
+        {/* Fee */}
         <div className="flex items-center justify-center gap-4 text-sm">
-          <Badge variant="outline">{data.year || "Year"}</Badge>
           <Badge variant="secondary">{data.fee || "Fee"}</Badge>
         </div>
       </div>
@@ -84,7 +84,11 @@ export function TransferGuessPreview({ content }: TransferGuessPreviewProps) {
               {hint ? (
                 <>
                   <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{hint}</span>
+                  {index === 2 ? (
+                    <FlagIcon code={hint} size={16} />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{hint}</span>
+                  )}
                 </>
               ) : (
                 <EyeOff className="h-4 w-4 text-muted-foreground" />

@@ -11,6 +11,11 @@ export function Footer() {
           FOOTBALL IQ
         </div>
 
+        {/* Fun tagline */}
+        <p className="text-sm text-muted-foreground mb-6">
+          Made with <span className="text-pitch-green">⚽</span> for football obsessives everywhere
+        </p>
+
         {/* Legal links */}
         <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground mb-6">
           <Link

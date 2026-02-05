@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -22,8 +22,9 @@ import {
   Grid3X3,
   HelpCircle,
   Check,
-  Crown,
+  Play,
 } from 'lucide-react-native';
+import { ProBadge } from '@/components/ProBadge';
 import { GlassCard } from './GlassCard';
 import { ElevatedButton, ButtonVariant } from './ElevatedButton';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
@@ -126,11 +127,12 @@ const SPRING_CONFIG = {
 /**
  * Get configuration for each game mode.
  */
-function getGameModeConfig(gameMode: GameMode): GameModeConfig {
+function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfig {
   // Check if we have a custom icon for this game mode
   const customIcon = PUZZLE_ICONS[gameMode];
+  const imgStyle = isArchive ? archiveIconImageStyle : iconImageStyle;
   const iconElement = customIcon ? (
-    <Image source={customIcon} style={iconImageStyle} resizeMode="contain" />
+    <Image source={customIcon} style={imgStyle} resizeMode="contain" />
   ) : null;
 
   switch (gameMode) {
@@ -164,7 +166,7 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
       };
     case 'the_grid':
       return {
-        title: 'The Grid',
+        title: 'The Grid (beta)',
         subtitle: 'Fill the matrix',
         icon: <Grid3X3 color={colors.pitchGreen} size={28} />,
         iconColor: colors.pitchGreen,
@@ -204,6 +206,7 @@ function getGameModeConfig(gameMode: GameMode): GameModeConfig {
  * Style for custom puzzle icon images.
  */
 const iconImageStyle = { width: 32, height: 32 };
+const archiveIconImageStyle = { width: 24, height: 24 };
 
 /**
  * Button props returned by getButtonProps.
@@ -259,6 +262,15 @@ function getHapticType(status: CardStatus, isLocked: boolean, isPremiumLocked: b
 }
 
 /**
+ * Get icon for small phone icon-only buttons.
+ */
+function getSmallPhoneButtonIcon(status: CardStatus, isLocked: boolean): React.ReactNode {
+  if (isLocked) return <ProBadge size={14} color={colors.stadiumNavy} />;
+  if (status === 'done') return <Check size={14} color={colors.floodlightWhite} strokeWidth={3} />;
+  return <Play size={14} color={colors.stadiumNavy} fill={colors.stadiumNavy} />;
+}
+
+/**
  * UniversalGameCard - Unified game card for Home and Archive screens.
  *
  * Shows different states:
@@ -266,7 +278,7 @@ function getHapticType(status: CardStatus, isLocked: boolean, isPremiumLocked: b
  * - resume: "Resume" button (yellow)
  * - done: "Result" button (yellow) with completion badge
  * - locked: Lock button with dimmed appearance (archive only)
- * - premiumLocked: Crown badge with "Unlock" button (premium-only modes)
+ * - premiumLocked: ProBadge with "Unlock" button (premium-only modes)
  */
 export function UniversalGameCard({
   gameMode,
@@ -279,7 +291,10 @@ export function UniversalGameCard({
   isAdUnlocked = false,
   testID,
 }: UniversalGameCardProps) {
-  const config = getGameModeConfig(gameMode);
+  const { width } = useWindowDimensions();
+  const isSmallPhone = width < 385; // iPhone 13 Mini/SE breakpoint
+  const isArchive = variant === 'archive';
+  const config = getGameModeConfig(gameMode, isArchive);
   const buttonProps = getButtonProps(status);
   const scale = useSharedValue(1);
 
@@ -350,9 +365,10 @@ export function UniversalGameCard({
   }));
 
   // Merge card styles (GlassCard expects ViewStyle, not array)
+  const baseCardStyle = isArchive ? { ...styles.card, ...archiveStyles.card } : styles.card;
   const cardStyle = isLocked || isPremiumLocked
-    ? { ...styles.card, ...styles.lockedCard }
-    : styles.card;
+    ? { ...baseCardStyle, ...styles.lockedCard }
+    : baseCardStyle;
 
   // Check if this is a premium-only mode (Career Path Pro, Top Tens)
   const isProMode = isPremiumOnly;
@@ -364,19 +380,19 @@ export function UniversalGameCard({
         {isProMode && (
           <View style={styles.proSashContainer} pointerEvents="none">
             <View style={styles.proSash}>
-              <Text style={styles.proSashText}>PRO</Text>
+              <Text style={[styles.proSashText, isSmallPhone && { fontSize: 8 }]}>PRO</Text>
             </View>
           </View>
         )}
         <Pressable
-          style={styles.content}
+          style={[styles.content, isArchive && archiveStyles.content]}
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
         >
           {/* Left: Icon + Title */}
           <View style={styles.left}>
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, isArchive && archiveStyles.iconContainer]}>
               {config.icon}
               {/* Completion badge - small checkmark in corner */}
               {status === 'done' && !isLocked && !isPremiumLocked && (
@@ -386,16 +402,24 @@ export function UniversalGameCard({
               )}
               {/* Premium badge - crown for premium-only modes (except Pro which has sash) */}
               {isPremiumOnly && !isProMode && (
-                <View style={styles.premiumBadge} testID={`${testID}-premium-badge`}>
-                  <Crown size={10} color={colors.stadiumNavy} strokeWidth={2.5} />
+                <View style={[styles.premiumBadge, isArchive && archiveStyles.premiumBadge]} testID={`${testID}-premium-badge`}>
+                  <ProBadge size={10} color={colors.stadiumNavy} />
                 </View>
               )}
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.title} numberOfLines={1}>
+              <Text style={[
+                styles.title,
+                isArchive && archiveStyles.title,
+                isSmallPhone && { fontSize: isArchive ? 13 : 17 }
+              ]} numberOfLines={1}>
                 {config.title}
               </Text>
-              <Text style={styles.subtitle} numberOfLines={1}>
+              <Text style={[
+                styles.subtitle,
+                isArchive && archiveStyles.subtitle,
+                isSmallPhone && { fontSize: isArchive ? 10 : 11 }
+              ]} numberOfLines={1}>
                 {config.subtitle}
               </Text>
             </View>
@@ -407,13 +431,13 @@ export function UniversalGameCard({
               // "Velvet Rope" design: Premium unlock button with glint effect
               <View style={styles.unlockButtonContainer}>
                 <ElevatedButton
-                  title="Unlock"
+                  title={isSmallPhone ? "" : "Unlock"}
                   onPress={onPress}
                   size="small"
                   topColor={colors.cardYellow}
                   shadowColor="#D4A500"
                   hapticType={hapticType}
-                  icon={<Crown size={14} color={colors.stadiumNavy} />}
+                  icon={<ProBadge size={14} color={colors.stadiumNavy} />}
                   testID={`${testID}-unlock`}
                 />
                 {/* Glint overlay */}
@@ -426,7 +450,7 @@ export function UniversalGameCard({
               // Play button with pulse animation
               <Animated.View style={playButtonAnimatedStyle}>
                 <ElevatedButton
-                  title={buttonProps.title}
+                  title={isSmallPhone ? "" : buttonProps.title}
                   variant={buttonProps.variant}
                   onPress={onPress}
                   size="small"
@@ -434,13 +458,14 @@ export function UniversalGameCard({
                   shadowColor={buttonProps.shadowColor}
                   borderColorOverride={buttonProps.borderColor}
                   hapticType={hapticType}
+                  icon={isSmallPhone ? getSmallPhoneButtonIcon(status, false) : undefined}
                   testID={`${testID}-button`}
                 />
               </Animated.View>
             ) : (
               // Resume/Result button (no pulse)
               <ElevatedButton
-                title={buttonProps.title}
+                title={isSmallPhone ? "" : buttonProps.title}
                 variant={buttonProps.variant}
                 onPress={onPress}
                 size="small"
@@ -448,6 +473,7 @@ export function UniversalGameCard({
                 shadowColor={buttonProps.shadowColor}
                 borderColorOverride={buttonProps.borderColor}
                 hapticType={hapticType}
+                icon={isSmallPhone ? getSmallPhoneButtonIcon(status, false) : undefined}
                 testID={`${testID}-button`}
               />
             )}
@@ -570,5 +596,34 @@ const styles = StyleSheet.create({
     width: 3,
     height: '200%',
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+});
+
+/**
+ * Condensed overrides for archive variant (high-density layout).
+ */
+const archiveStyles = StyleSheet.create({
+  card: {
+    marginBottom: spacing.sm,
+  },
+  content: {
+    paddingVertical: spacing.xs,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    marginRight: spacing.sm,
+  },
+  premiumBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: 14,
+  },
+  subtitle: {
+    fontSize: 11,
   },
 });

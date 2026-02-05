@@ -116,9 +116,8 @@ export const testData = {
       answer: "Neymar",
       from_club: "Barcelona",
       to_club: "PSG",
-      year: 2017,
       fee: "€222m",
-      hints: ["Brazilian", "Forward", "Won La Liga"],
+      hints: ["2017", "ATT", "BR"],
     },
   },
 

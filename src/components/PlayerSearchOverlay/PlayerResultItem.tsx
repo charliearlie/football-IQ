@@ -10,7 +10,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { ParsedPlayer } from '@/types/database';
-import { countryCodeToEmoji } from '@/services/player/playerUtils';
+import { FlagIcon } from '@/components/FlagIcon';
 import { triggerSelection } from '@/lib/haptics';
 
 export interface PlayerResultItemProps {
@@ -42,8 +42,8 @@ export function PlayerResultItem({
     onPress();
   };
 
-  // Convert nationality codes to emoji flags
-  const flags = player.nationalities.map(countryCodeToEmoji).join(' ');
+  // Filter valid nationality codes for flag rendering
+  const nationalityCodes = player.nationalities.filter(Boolean);
 
   // Format clubs as comma-separated list with truncation
   const displayClubs = player.clubs.slice(0, MAX_CLUBS_DISPLAY);
@@ -60,7 +60,13 @@ export function PlayerResultItem({
       <View style={styles.content}>
         {/* Player name with flags */}
         <View style={styles.nameRow}>
-          {flags.length > 0 && <Text style={styles.flags}>{flags}</Text>}
+          {nationalityCodes.length > 0 && (
+            <View style={styles.flagRow}>
+              {nationalityCodes.map((code) => (
+                <FlagIcon key={code} code={code} size={14} />
+              ))}
+            </View>
+          )}
           <Text style={styles.name} numberOfLines={1}>
             {player.name}
           </Text>
@@ -95,8 +101,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  flags: {
-    fontSize: 16,
+  flagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   name: {
     fontFamily: fonts.headline,
@@ -108,7 +116,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.textSecondary,
-    paddingLeft: 24, // Align with name (flag width + gap)
+    paddingLeft: 29, // Align with name (flag width + gap)
   },
 });
 

@@ -65,7 +65,7 @@ const GAME_MODE_ORDER: GameMode[] = [
  * Game modes that require premium subscription.
  * These are shown as locked for free users.
  */
-const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens']);
+const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens', 'the_grid']);
 
 /**
  * Hook to get today's puzzles with their completion status.

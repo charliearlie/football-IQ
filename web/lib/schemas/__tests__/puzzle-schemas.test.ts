@@ -187,9 +187,8 @@ describe("transferGuessContentSchema", () => {
     answer: "Neymar",
     from_club: "Barcelona",
     to_club: "PSG",
-    year: 2017,
     fee: "€222m",
-    hints: ["Brazilian", "Forward", "Won La Liga"],
+    hints: ["2017", "ATT", "BR"],
   };
 
   it("validates correct content", () => {
@@ -208,18 +207,6 @@ describe("transferGuessContentSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects invalid year (too old)", () => {
-    const invalid = { ...validContent, year: 1800 };
-    const result = transferGuessContentSchema.safeParse(invalid);
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid year (too new)", () => {
-    const invalid = { ...validContent, year: 2100 };
-    const result = transferGuessContentSchema.safeParse(invalid);
-    expect(result.success).toBe(false);
-  });
-
   it("rejects empty hints", () => {
     const invalid = { ...validContent, hints: ["", "", ""] };
     const result = transferGuessContentSchema.safeParse(invalid);
@@ -232,10 +219,21 @@ describe("transferGuessContentSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("coerces string year to number", () => {
-    const withStringYear = { ...validContent, year: "2017" as unknown as number };
-    const result = transferGuessContentSchema.parse(withStringYear);
-    expect(result.year).toBe(2017);
+  it("accepts GB subdivision codes in nationality hint", () => {
+    const withEngland = { ...validContent, hints: ["2017", "MID", "GB-ENG"] };
+    expect(() => transferGuessContentSchema.parse(withEngland)).not.toThrow();
+  });
+
+  it("rejects emoji flag in nationality hint", () => {
+    const invalid = { ...validContent, hints: ["2017", "ATT", "🇧🇷"] };
+    const result = transferGuessContentSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects lowercase country code in nationality hint", () => {
+    const invalid = { ...validContent, hints: ["2017", "ATT", "br"] };
+    const result = transferGuessContentSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
   });
 });
 

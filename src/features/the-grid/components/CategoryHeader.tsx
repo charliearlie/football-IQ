@@ -1,35 +1,14 @@
 /**
  * CategoryHeader Component
  *
- * Displays a category icon and label for grid headers.
- * Uses Bebas Neue font for labels.
+ * Stadium Broadcast Edition - clean text-only headers.
+ * Displays category value as uppercase text with broadcast styling.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Shield, Flag, TrendingUp, Trophy, LucideIcon } from 'lucide-react-native';
 import { colors, fonts } from '@/theme';
-import { GridCategory, CategoryType } from '../types/theGrid.types';
-
-/**
- * Icon mapping for category types.
- */
-const CATEGORY_ICONS: Record<CategoryType, LucideIcon> = {
-  club: Shield,
-  nation: Flag,
-  stat: TrendingUp,
-  trophy: Trophy,
-};
-
-/**
- * Color mapping for category types.
- */
-const CATEGORY_COLORS: Record<CategoryType, string> = {
-  club: colors.cardYellow,
-  nation: colors.pitchGreen,
-  stat: colors.redCard,
-  trophy: colors.cardYellow,
-};
+import { GridCategory } from '../types/theGrid.types';
 
 export interface CategoryHeaderProps {
   category: GridCategory;
@@ -39,25 +18,20 @@ export interface CategoryHeaderProps {
 }
 
 /**
- * CategoryHeader - Displays icon + label for a grid category.
+ * CategoryHeader - Text-only label for grid categories.
+ * Clean broadcast style with no icons.
  */
 export function CategoryHeader({
   category,
   orientation = 'vertical',
   testID,
 }: CategoryHeaderProps) {
-  const IconComponent = CATEGORY_ICONS[category.type];
-  const iconColor = CATEGORY_COLORS[category.type];
-
   const containerStyle = orientation === 'horizontal'
     ? styles.containerHorizontal
     : styles.containerVertical;
 
   return (
     <View style={containerStyle} testID={testID}>
-      <View testID={`${testID}-icon`}>
-        <IconComponent size={16} color={iconColor} />
-      </View>
       <Text
         style={styles.label}
         numberOfLines={2}
@@ -88,11 +62,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.headline,
-    fontSize: 10,
-    color: colors.floodlightWhite,
+    fontSize: 12, // Slightly larger for readability
+    color: colors.textSecondary, // Muted white for broadcast look
     textAlign: 'center',
-    marginTop: 2,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1, // More spacing for broadcast look
   },
 });

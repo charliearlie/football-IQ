@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 12;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -280,6 +280,84 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 
     await database.execAsync('PRAGMA user_version = 9');
     console.log('[Database] Migration v9 complete');
+  }
+
+  // Migration v10: Add stats_cache column for pre-calculated achievement totals
+  // Enables instant Grid validation for trophy/stat categories without graph queries
+  if (currentVersion < 10) {
+    console.log('[Database] Running migration v10: Add stats_cache to player_search_cache');
+    await database.execAsync(`
+      ALTER TABLE player_search_cache ADD COLUMN stats_cache TEXT DEFAULT '{}';
+      PRAGMA user_version = 10;
+    `);
+    console.log('[Database] Migration v10 complete');
+  }
+
+  // Migration v11: Add is_elite column for tiered on-device storage
+  // Top 5,000 players by scout_rank keep full stats_cache; others keep only name + qid to save space
+  if (currentVersion < 11) {
+    console.log('[Database] Running migration v11: Add is_elite to player_search_cache');
+    await database.execAsync(`
+      ALTER TABLE player_search_cache ADD COLUMN is_elite INTEGER DEFAULT 0;
+    `);
+
+    // Mark top 5000 by scout_rank as elite
+    await database.execAsync(`
+      UPDATE player_search_cache SET is_elite = 1
+      WHERE id IN (
+        SELECT id FROM player_search_cache
+        ORDER BY scout_rank DESC
+        LIMIT 5000
+      );
+    `);
+
+    // Clear stats_cache for non-elite players to save space
+    await database.execAsync(`
+      UPDATE player_search_cache SET stats_cache = '{}'
+      WHERE is_elite = 0;
+    `);
+
+    await database.execAsync('PRAGMA user_version = 11');
+    console.log('[Database] Migration v11 complete');
+  }
+
+  // Migration v12: Club colors cache for Vector Shield rendering
+  if (currentVersion < 12) {
+    console.log('[Database] Running migration v12: Club colors cache');
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS club_colors (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        primary_color TEXT NOT NULL,
+        secondary_color TEXT NOT NULL,
+        synced_at TEXT
+      );
+    `);
+
+    // Seed from bundled elite-index.json if it contains club_colors
+    try {
+      const eliteIndex = require('../../assets/data/elite-index.json');
+      if (Array.isArray(eliteIndex.club_colors) && eliteIndex.club_colors.length > 0) {
+        for (const club of eliteIndex.club_colors) {
+          await database.runAsync(
+            `INSERT OR REPLACE INTO club_colors (id, name, primary_color, secondary_color, synced_at)
+             VALUES ($id, $name, $primary, $secondary, datetime('now'))`,
+            {
+              $id: club.id,
+              $name: club.name,
+              $primary: club.primary_color,
+              $secondary: club.secondary_color,
+            }
+          );
+        }
+        console.log(`[Database] Seeded ${eliteIndex.club_colors.length} club colors from bundle`);
+      }
+    } catch {
+      console.log('[Database] No bundled club colors to seed');
+    }
+
+    await database.execAsync('PRAGMA user_version = 12');
+    console.log('[Database] Migration v12 complete');
   }
 }
 
@@ -1292,6 +1370,7 @@ export interface CachedPlayer {
   birth_year: number | null;
   position_category: string | null;
   nationality_code: string | null;
+  stats_cache?: string | null;
 }
 
 /**
@@ -1326,6 +1405,75 @@ export async function searchPlayerCache(
       $limit: limit * 2, // Fetch extra for better ranking after client-side sort
     }
   );
+}
+
+/**
+ * Get pre-calculated achievement stats for a player.
+ * Returns the parsed stats_cache JSONB from player_search_cache.
+ * Used by Grid validation to check trophy/stat categories instantly.
+ *
+ * @param playerId - Wikidata QID (e.g., "Q615")
+ * @returns Flat map of achievement counts, or empty object if not found
+ */
+export async function getPlayerStatsCache(
+  playerId: string
+): Promise<Record<string, number>> {
+  try {
+    const database = getDatabase();
+    const row = await database.getFirstAsync<{ stats_cache: string | null }>(
+      'SELECT stats_cache FROM player_search_cache WHERE id = $id',
+      { $id: playerId }
+    );
+
+    if (!row?.stats_cache) return {};
+
+    const parsed = JSON.parse(row.stats_cache);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Get player nationality code from search cache.
+ * Used by Grid validation to check nationality criteria.
+ *
+ * @param playerId - Wikidata QID (e.g., "Q615")
+ * @returns ISO 3166-1 alpha-2 code (e.g., "FR"), or null if not found
+ */
+export async function getPlayerNationalityFromCache(
+  playerId: string
+): Promise<string | null> {
+  try {
+    const database = getDatabase();
+    const row = await database.getFirstAsync<{ nationality_code: string | null }>(
+      'SELECT nationality_code FROM player_search_cache WHERE id = $id',
+      { $id: playerId }
+    );
+    return row?.nationality_code ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if a player exists in the search cache.
+ * Used by Grid validation to verify player QID is valid.
+ *
+ * @param playerId - Wikidata QID (e.g., "Q615")
+ * @returns true if player exists in cache
+ */
+export async function playerExistsInCache(playerId: string): Promise<boolean> {
+  try {
+    const database = getDatabase();
+    const row = await database.getFirstAsync<{ id: string }>(
+      'SELECT id FROM player_search_cache WHERE id = $id',
+      { $id: playerId }
+    );
+    return row !== null;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -1415,7 +1563,69 @@ async function seedEliteIndex(
 /**
  * Batch upsert players into player_search_cache.
  * Used by SyncService for delta updates.
+ * Supports optional stats_cache for pre-calculated achievement totals.
  */
+/**
+ * Update is_elite for recently synced players using a threshold approach.
+ * Queries the 5000th-highest scout_rank once, then sets is_elite and
+ * clears stats_cache only for the provided player IDs — no full-table scan.
+ *
+ * @param playerIds - QIDs of players that were just upserted in this sync delta
+ */
+export async function recalculateEliteStatus(playerIds?: string[]): Promise<void> {
+  const database = getDatabase();
+
+  // Find the scout_rank at position 5000 (the elite cutoff)
+  const threshold = await database.getFirstAsync<{ scout_rank: number }>(
+    `SELECT scout_rank FROM player_search_cache
+     ORDER BY scout_rank DESC
+     LIMIT 1 OFFSET 4999`
+  );
+
+  // If fewer than 5000 players exist, everyone is elite
+  // Coerce to number to ensure it's safe for parameterized queries
+  const cutoff = Number(threshold?.scout_rank ?? 0);
+
+  if (playerIds && playerIds.length > 0) {
+    // Only update the delta rows — avoids touching the whole table
+    for (let i = 0; i < playerIds.length; i += ELITE_BATCH_SIZE) {
+      const batch = playerIds.slice(i, i + ELITE_BATCH_SIZE);
+      const cutoffParamIdx = batch.length + 1;
+      const placeholders = batch.map((_, idx) => `$${idx + 1}`).join(', ');
+      const params: Record<string, string | number> = {};
+      batch.forEach((id, idx) => { params[`$${idx + 1}`] = id; });
+      params[`$${cutoffParamIdx}`] = cutoff;
+
+      // Mark elite/non-elite based on threshold
+      await database.runAsync(
+        `UPDATE player_search_cache
+         SET is_elite = CASE WHEN scout_rank >= $${cutoffParamIdx} THEN 1 ELSE 0 END
+         WHERE id IN (${placeholders})`,
+        params
+      );
+
+      // Clear stats_cache for newly non-elite players in this batch
+      await database.runAsync(
+        `UPDATE player_search_cache
+         SET stats_cache = '{}'
+         WHERE id IN (${placeholders}) AND is_elite = 0`,
+        params
+      );
+    }
+  } else {
+    // Full recalc fallback (migration or manual trigger)
+    await database.runAsync(
+      `UPDATE player_search_cache
+       SET is_elite = CASE WHEN scout_rank >= $1 THEN 1 ELSE 0 END`,
+      { $1: cutoff }
+    );
+    await database.runAsync(
+      `UPDATE player_search_cache SET stats_cache = '{}' WHERE is_elite = 0`,
+      {}
+    );
+  }
+}
+
 export async function upsertPlayerCache(
   players: Array<{
     id: string;
@@ -1425,6 +1635,7 @@ export async function upsertPlayerCache(
     birth_year: number | null;
     position_category: string | null;
     nationality_code: string | null;
+    stats_cache?: Record<string, number> | string | null;
   }>
 ): Promise<void> {
   if (players.length === 0) return;
@@ -1437,14 +1648,14 @@ export async function upsertPlayerCache(
 
     const placeholders = batch
       .map((_, idx) => {
-        const base = idx * 8;
-        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
+        const base = idx * 9;
+        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9})`;
       })
       .join(', ');
 
     const params: Record<string, string | number | null> = {};
     batch.forEach((player, idx) => {
-      const base = idx * 8;
+      const base = idx * 9;
       params[`$${base + 1}`] = player.id;
       params[`$${base + 2}`] = player.name;
       params[`$${base + 3}`] = player.search_name;
@@ -1453,11 +1664,15 @@ export async function upsertPlayerCache(
       params[`$${base + 6}`] = player.position_category;
       params[`$${base + 7}`] = player.nationality_code;
       params[`$${base + 8}`] = syncedAt;
+      // stats_cache: serialize object to JSON string, pass through strings, default to '{}'
+      const sc = player.stats_cache;
+      params[`$${base + 9}`] =
+        sc == null ? '{}' : typeof sc === 'string' ? sc : JSON.stringify(sc);
     });
 
     await database.runAsync(
       `INSERT OR REPLACE INTO player_search_cache
-       (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at)
+       (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, synced_at, stats_cache)
        VALUES ${placeholders}`,
       params
     );
@@ -1511,6 +1726,65 @@ function parseAttempt(row: LocalAttempt): ParsedLocalAttempt {
  */
 export function stringifyContent(content: unknown): string {
   return JSON.stringify(content);
+}
+
+// ============ CLUB COLORS ============
+
+export interface ClubColor {
+  id: string;
+  name: string;
+  primary_color: string;
+  secondary_color: string;
+}
+
+/**
+ * Upsert club colors into local cache.
+ */
+export async function upsertClubColors(
+  clubs: ClubColor[]
+): Promise<void> {
+  if (clubs.length === 0) return;
+  const database = getDatabase();
+  const syncedAt = new Date().toISOString();
+
+  for (const club of clubs) {
+    await database.runAsync(
+      `INSERT OR REPLACE INTO club_colors (id, name, primary_color, secondary_color, synced_at)
+       VALUES ($id, $name, $primary, $secondary, $synced)`,
+      {
+        $id: club.id,
+        $name: club.name,
+        $primary: club.primary_color,
+        $secondary: club.secondary_color,
+        $synced: syncedAt,
+      }
+    );
+  }
+}
+
+/**
+ * Get all club colors from local cache.
+ */
+export async function getClubColors(): Promise<ClubColor[]> {
+  const database = getDatabase();
+  return database.getAllAsync<ClubColor>(
+    'SELECT id, name, primary_color, secondary_color FROM club_colors'
+  );
+}
+
+/**
+ * Get club colors by club name (case-insensitive LIKE match).
+ * Used by Grid CategoryHeader to enrich club categories with shield colors.
+ */
+export async function getClubColorByName(
+  clubName: string
+): Promise<ClubColor | null> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<ClubColor>(
+    'SELECT id, name, primary_color, secondary_color FROM club_colors WHERE name LIKE $pattern',
+    { $pattern: `%${clubName}%` }
+  );
+  return result ?? null;
 }
 
 /**

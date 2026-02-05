@@ -51,5 +51,8 @@ export { Confetti, type ConfettiProps } from './Confetti';
 export { SentryErrorFallback } from './SentryErrorFallback';
 export { TimeTamperedOverlay } from './TimeTamperedOverlay';
 
+// Confirmation dialog
+export { ConfirmationModal, type ConfirmationModalProps } from './ConfirmationModal';
+
 // Toast notifications
 export { PuzzleUpdateToast } from './PuzzleUpdateToast';

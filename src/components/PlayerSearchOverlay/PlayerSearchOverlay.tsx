@@ -8,6 +8,7 @@
  * - FlatList results for 3+ char queries
  * - Loading state support for future API integration
  * - Auto-close on player selection
+ * - Visual shake feedback for incorrect guesses
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -22,31 +23,36 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import Animated, { SlideInDown, FadeIn, FadeOut } from 'react-native-reanimated';
-import { X, Search } from 'lucide-react-native';
+import Animated, {
+  SlideInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import { X, Search, AlertCircle } from 'lucide-react-native';
 import { GlassCard } from '@/components/GlassCard';
 import { colors, fonts, spacing, borderRadius, textStyles } from '@/theme';
-import { ParsedPlayer, PlayerSearchResult } from '@/types/database';
-import { searchPlayers } from '@/services/player';
-import { PlayerResultItem } from './PlayerResultItem';
+import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
+import { UnifiedPlayer } from '@/services/oracle/types';
+import { FlagIcon } from '@/components/FlagIcon';
 
 /** Minimum characters required for search */
 const MIN_SEARCH_LENGTH = 3;
-
-/** Debounce delay in milliseconds */
-const DEBOUNCE_MS = 200;
 
 export interface PlayerSearchOverlayProps {
   /** Whether the overlay is visible */
   visible: boolean;
   /** Callback when a player is selected */
-  onSelectPlayer: (player: ParsedPlayer) => void;
+  onSelectPlayer: (player: UnifiedPlayer) => void;
   /** Callback when overlay is closed */
   onClose: () => void;
   /** Optional title for the overlay */
   title?: string;
   /** Whether search is loading (for future API integration) */
   isLoading?: boolean;
+  /** Whether to show error state (incorrect guess) */
+  showError?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -73,13 +79,46 @@ export function PlayerSearchOverlay({
   onClose,
   title = 'Search Players',
   isLoading: externalLoading = false,
+  showError = false,
   testID,
 }: PlayerSearchOverlayProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<PlayerSearchResult[]>([]);
+  const [results, setResults] = useState<UnifiedPlayer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const requestTokenRef = useRef(0);
+
+  // Shake animation for error feedback
+  const shakeOffset = useSharedValue(0);
+  const errorOpacity = useSharedValue(0);
+
+  // Trigger shake animation when showError changes to true
+  useEffect(() => {
+    if (showError) {
+      // Shake animation
+      shakeOffset.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+      // Show error message
+      errorOpacity.value = withSequence(
+        withTiming(1, { duration: 100 }),
+        withTiming(1, { duration: 2000 }),
+        withTiming(0, { duration: 300 })
+      );
+    }
+  }, [showError, shakeOffset, errorOpacity]);
+
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeOffset.value }],
+  }));
+
+  const errorMessageStyle = useAnimatedStyle(() => ({
+    opacity: errorOpacity.value,
+  }));
 
   // Combined loading state
   const isLoading = isSearching || externalLoading;
@@ -97,46 +136,38 @@ export function PlayerSearchOverlay({
     }
   }, [visible]);
 
-  // Debounced search
+  // Hybrid search (local Elite Index + Oracle fallback)
   useEffect(() => {
-    // Clear previous debounce
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Don't search for short queries
     if (query.length < MIN_SEARCH_LENGTH) {
+      requestTokenRef.current++;
       setResults([]);
       setIsSearching(false);
       return;
     }
 
+    const token = ++requestTokenRef.current;
     setIsSearching(true);
 
-    // Debounce the search
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const searchResults = await searchPlayers(query);
-        setResults(searchResults);
-      } catch (error) {
-        console.error('Player search failed:', error);
-        setResults([]);
-      } finally {
+    let callbackCount = 0;
+    searchPlayersHybrid(query, (newResults) => {
+      if (token !== requestTokenRef.current) return;
+      callbackCount++;
+      setResults(newResults);
+      if (callbackCount > 1 || newResults.length >= 3) {
         setIsSearching(false);
       }
-    }, DEBOUNCE_MS);
-
-    // Cleanup
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
+    }).catch((error) => {
+      // Only handle error if this is still the current request
+      if (token !== requestTokenRef.current) return;
+      console.error('[PlayerSearchOverlay] Search failed:', error);
+      setResults([]);
+      setIsSearching(false);
+    });
   }, [query]);
 
   // Handle player selection
   const handleSelectPlayer = useCallback(
-    (player: ParsedPlayer) => {
+    (player: UnifiedPlayer) => {
       onSelectPlayer(player);
       // Auto-close handled by parent
     },
@@ -181,21 +212,42 @@ export function PlayerSearchOverlay({
     );
   };
 
-  // Render result item
+  // Render result item (zero-spoiler: flag, name, position, birth year)
   const renderItem = useCallback(
-    ({ item }: { item: PlayerSearchResult }) => (
-      <PlayerResultItem
-        player={item.player}
-        onPress={() => handleSelectPlayer(item.player)}
-        testID={`${testID}-result-${item.player.id}`}
-      />
-    ),
+    ({ item }: { item: UnifiedPlayer }) => {
+      const meta = getPlayerMeta(item);
+      return (
+        <Pressable
+          onPress={() => handleSelectPlayer(item)}
+          style={({ pressed }) => [styles.resultItem, pressed && styles.resultItemPressed]}
+          testID={`${testID}-result-${item.id}`}
+        >
+          <View style={styles.resultContent}>
+            {item.nationality_code ? (
+              <View style={styles.resultFlag}>
+                <FlagIcon code={item.nationality_code} size={16} />
+              </View>
+            ) : null}
+            <View style={styles.resultTextGroup}>
+              <Text style={styles.resultName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {meta ? (
+                <Text style={styles.resultMeta} numberOfLines={1}>
+                  {meta}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        </Pressable>
+      );
+    },
     [handleSelectPlayer, testID]
   );
 
   // Key extractor
   const keyExtractor = useCallback(
-    (item: PlayerSearchResult) => item.player.id,
+    (item: UnifiedPlayer) => item.id,
     []
   );
 
@@ -219,19 +271,43 @@ export function PlayerSearchOverlay({
           style={styles.modalContainer}
         >
           <GlassCard style={styles.modal}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>{title}</Text>
-              <Pressable
-                onPress={handleClose}
-                hitSlop={8}
-                testID={`${testID}-close`}
-              >
-                <X size={24} color={colors.textSecondary} />
-              </Pressable>
-            </View>
+            {/* Header with shake animation */}
+            <Animated.View style={shakeStyle}>
+              <View style={styles.header}>
+                <Text style={styles.title}>{title}</Text>
+                <Pressable
+                  onPress={handleClose}
+                  hitSlop={8}
+                  testID={`${testID}-close`}
+                >
+                  <X size={24} color={colors.textSecondary} />
+                </Pressable>
+              </View>
+            </Animated.View>
 
-            {/* Search Input */}
+            {/* Results List (inverted so results appear from bottom) */}
+            <FlatList
+              data={results}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={renderEmptyState}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              inverted={results.length > 0}
+              testID={`${testID}-results`}
+            />
+
+            {/* Error message */}
+            <Animated.View style={[styles.errorContainer, errorMessageStyle]}>
+              <AlertCircle size={14} color={colors.redCard} />
+              <Text style={styles.errorText}>
+                Player doesn&apos;t match criteria
+              </Text>
+            </Animated.View>
+
+            {/* Search Input (fixed at bottom, near keyboard) */}
             <View style={styles.inputContainer}>
               <Search size={20} color={colors.textSecondary} />
               <TextInput
@@ -252,19 +328,6 @@ export function PlayerSearchOverlay({
                 </Pressable>
               )}
             </View>
-
-            {/* Results List */}
-            <FlatList
-              data={results}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              style={styles.list}
-              contentContainerStyle={styles.listContent}
-              ListEmptyComponent={renderEmptyState}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              testID={`${testID}-results`}
-            />
           </GlassCard>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -293,7 +356,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   title: {
     fontFamily: fonts.headline,
@@ -301,13 +364,24 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     letterSpacing: 1,
   },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    minHeight: 20,
+  },
+  errorText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.redCard,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
     gap: spacing.sm,
   },
   input: {
@@ -318,7 +392,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   list: {
-    flexGrow: 0,
     maxHeight: 400,
   },
   listContent: {
@@ -327,6 +400,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 150,
     paddingVertical: spacing.xl,
     gap: spacing.sm,
   },
@@ -339,6 +413,49 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     textAlign: 'center',
   },
+  resultItem: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xs,
+  },
+  resultItemPressed: {
+    backgroundColor: 'rgba(88, 204, 2, 0.12)',
+  },
+  resultContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  resultFlag: {
+    width: 28,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  resultTextGroup: {
+    flex: 1,
+  },
+  resultName: {
+    fontFamily: fonts.headline,
+    fontSize: 18,
+    color: colors.floodlightWhite,
+    lineHeight: 22,
+  },
+  resultMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    marginTop: 1,
+  },
 });
+
+/** Build metadata string: "Position, b. Year" */
+function getPlayerMeta(player: UnifiedPlayer): string {
+  const parts: string[] = [];
+  if (player.position_category) parts.push(player.position_category);
+  if (player.birth_year) parts.push(`b. ${player.birth_year}`);
+  return parts.join(', ');
+}
 
 export default PlayerSearchOverlay;

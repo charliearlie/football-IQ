@@ -8,6 +8,18 @@ jest.mock('react-native-reanimated', () => {
   return Reanimated;
 });
 
+// Mock FlagIcon component
+jest.mock('@/components/FlagIcon', () => ({
+  FlagIcon: ({ code, testID }: { code: string; testID?: string }) => {
+    const { View, Text } = require('react-native');
+    return (
+      <View testID={testID}>
+        <Text>{code}</Text>
+      </View>
+    );
+  },
+}));
+
 describe('DossierSlot', () => {
   describe('when locked (not revealed)', () => {
     it('shows the icon for Number slot', () => {
@@ -45,7 +57,7 @@ describe('DossierSlot', () => {
       const { getByTestId, queryByTestId } = render(
         <DossierSlot
           label="Nation"
-          hint="🇧🇷"
+          hint="BR"
           isRevealed={false}
           testID="dossier-slot"
         />
@@ -100,8 +112,36 @@ describe('DossierSlot', () => {
       expect(queryByTestId('dossier-slot-icon')).toBeNull();
     });
 
-    it('shows the hint value for Nation', () => {
-      const { getByText, queryByTestId } = render(
+    it('shows FlagIcon for Nation hint with ISO code', () => {
+      const { getByTestId, queryByTestId } = render(
+        <DossierSlot
+          label="Nation"
+          hint="BR"
+          isRevealed={true}
+          testID="dossier-slot"
+        />
+      );
+
+      // Should render FlagIcon, not text
+      expect(getByTestId('dossier-slot-flag')).toBeTruthy();
+      expect(queryByTestId('dossier-slot-icon')).toBeNull();
+    });
+
+    it('shows FlagIcon for GB home nation code', () => {
+      const { getByTestId } = render(
+        <DossierSlot
+          label="Nation"
+          hint="GB-ENG"
+          isRevealed={true}
+          testID="dossier-slot"
+        />
+      );
+
+      expect(getByTestId('dossier-slot-flag')).toBeTruthy();
+    });
+
+    it('falls back to text for legacy emoji flag hint', () => {
+      const { getByTestId, getByText } = render(
         <DossierSlot
           label="Nation"
           hint="🇧🇷"
@@ -110,8 +150,9 @@ describe('DossierSlot', () => {
         />
       );
 
+      // Legacy emoji should fall back to text display
+      expect(getByTestId('dossier-slot-value')).toBeTruthy();
       expect(getByText('🇧🇷')).toBeTruthy();
-      expect(queryByTestId('dossier-slot-icon')).toBeNull();
     });
 
     it('shows the label', () => {

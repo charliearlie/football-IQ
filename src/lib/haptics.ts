@@ -118,3 +118,17 @@ export async function triggerPerfectDay(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 150));
   await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 }
+
+/**
+ * Rare find celebration - Special haptic for ultra-rare player picks (<1% rarity)
+ * Uses: Heavy -> Heavy -> Success (impactful double-thump + celebration)
+ * More intense than triggerSuccess to signify the exceptional nature of the pick
+ */
+export async function triggerRareFind(): Promise<void> {
+  if (!isHapticsSupported) return;
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}

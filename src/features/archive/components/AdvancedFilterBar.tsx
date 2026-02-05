@@ -69,7 +69,7 @@ const GAME_MODE_OPTIONS: { value: GameMode | null; label: string; icon: React.Re
   { value: 'career_path_pro', label: 'Career Pro', icon: <Briefcase size={14} color={colors.cardYellow} /> },
   { value: 'guess_the_transfer', label: 'Transfer', icon: <ArrowRightLeft size={14} color={colors.pitchGreen} /> },
   { value: 'guess_the_goalscorers', label: 'Recall', icon: <Target size={14} color={colors.redCard} /> },
-  { value: 'the_grid', label: 'The Grid', icon: <Grid3X3 size={14} color={colors.pitchGreen} /> },
+  { value: 'the_grid', label: 'Grid (beta)', icon: <Grid3X3 size={14} color={colors.pitchGreen} /> },
   { value: 'topical_quiz', label: 'Quiz', icon: <HelpCircle size={14} color={colors.cardYellow} /> },
   { value: 'top_tens', label: 'Top Tens', icon: <ListOrdered size={14} color={colors.pitchGreen} /> },
   { value: 'starting_xi', label: 'Starting XI', icon: <Users size={14} color={colors.cardYellow} /> },

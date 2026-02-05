@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { useAuth, ONBOARDING_STORAGE_KEY, FirstRunModal } from '@/features/auth';
 import {
   isOnboardingCompletedSecure,
@@ -143,25 +141,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         throw error;
       }
 
-      // 2. Request App Tracking Transparency (ATT) on iOS
-      // We do this here to ensure the prompt appears in context after user engagement
-      if (Platform.OS === 'ios') {
-        try {
-          const { status } = await requestTrackingPermissionsAsync();
-          console.log('[Onboarding] ATT status:', status);
-        } catch (attError) {
-          console.warn('[Onboarding] ATT request failed:', attError);
-        }
-      }
-
-      // 3. Update Storage (both AsyncStorage and SecureStore)
+      // 2. Update Storage (both AsyncStorage and SecureStore)
+      // Note: ATT is now requested in _layout.tsx AuthGate after app loads
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
       // Also save to SecureStore for reinstall recovery
       await setOnboardingCompleted();
 
-      // 4. Transition State -> COMPLETED
+      // 3. Transition State -> COMPLETED
       setCurrentState('COMPLETED');
-
 
     } catch (error) {
       console.error('[OnboardingProvider] Submission failed:', error);

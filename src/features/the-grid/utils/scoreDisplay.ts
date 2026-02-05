@@ -82,7 +82,7 @@ export function generateTheGridScoreDisplay(
 
   // Title
   if (includeTitle) {
-    lines.push('Football IQ - The Grid');
+    lines.push('Football IQ - The Grid (beta)');
     if (date) {
       lines.push(date);
     }
@@ -98,7 +98,7 @@ export function generateTheGridScoreDisplay(
   lines.push('');
 
   // Score
-  lines.push(`Score: ${score.points}/${score.maxPoints}`);
+  lines.push(`Score: ${score.cellsFilled}/9`);
 
   return lines.join('\n');
 }

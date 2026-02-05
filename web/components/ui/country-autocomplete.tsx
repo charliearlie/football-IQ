@@ -3,8 +3,9 @@
 import * as React from "react";
 import { Popover, PopoverContent, PopoverAnchor } from "./popover";
 import { Input } from "./input";
+import { FlagIcon } from "./flag-icon";
 import { cn } from "@/lib/utils";
-import { searchCountries, type Country } from "@/lib/countries";
+import { searchCountries, getCountryByCode, getCountryByEmoji, type Country } from "@/lib/countries";
 
 interface CountryAutocompleteProps {
   value: string;
@@ -20,14 +21,24 @@ export function CountryAutocomplete({
   className,
 }: CountryAutocompleteProps) {
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(value);
+  const [inputValue, setInputValue] = React.useState("");
   const [results, setResults] = React.useState<Country[]>([]);
   const [highlightedIndex, setHighlightedIndex] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  // Sync external value (ISO code or emoji) to display name
   React.useEffect(() => {
-    setInputValue(value);
-  }, [value]);
+    const country = getCountryByCode(value) ?? getCountryByEmoji(value);
+    if (country) {
+      setInputValue(country.name);
+      // If loaded from DB as emoji, convert to ISO code for the form
+      if (country.code !== value) {
+        onChange(country.code);
+      }
+    } else {
+      setInputValue(value);
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     const filtered = searchCountries(inputValue);
@@ -36,8 +47,8 @@ export function CountryAutocomplete({
   }, [inputValue]);
 
   const handleSelect = (country: Country) => {
-    setInputValue(country.emoji);
-    onChange(country.emoji);
+    setInputValue(country.name);
+    onChange(country.code);
     setOpen(false);
   };
 
@@ -79,7 +90,6 @@ export function CountryAutocomplete({
           value={inputValue}
           onChange={(e) => {
             setInputValue(e.target.value);
-            onChange(e.target.value);
             if (!open) setOpen(true);
           }}
           onFocus={() => setOpen(true)}
@@ -101,7 +111,7 @@ export function CountryAutocomplete({
           <ul className="max-h-[200px] overflow-auto">
             {results.map((country, index) => (
               <li
-                key={country.name}
+                key={country.code}
                 onClick={() => handleSelect(country)}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 className={cn(
@@ -111,7 +121,7 @@ export function CountryAutocomplete({
                     : "text-white/70 hover:bg-white/5"
                 )}
               >
-                <span className="text-lg">{country.emoji}</span>
+                <FlagIcon code={country.code} size={16} />
                 <span>{country.name}</span>
               </li>
             ))}
