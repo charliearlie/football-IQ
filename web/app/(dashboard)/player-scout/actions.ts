@@ -1,7 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/server";
-import { ACHIEVEMENT_MAP } from "@/services/oracle/achievementMappings";
+import { ACHIEVEMENT_MAP } from "../../../../src/services/oracle/achievementMappings";
 
 const WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql";
 const QID_PATTERN = /^Q\d+$/;

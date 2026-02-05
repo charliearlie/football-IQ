@@ -24,11 +24,13 @@ export function useAdminStatus(): AdminStatus {
           return;
         }
 
+        // Note: is_admin column added via migration 027_add_admin_role.sql
+        // Cast needed until Supabase types are regenerated after migration
         const { data: profile } = await supabase
           .from("profiles")
           .select("is_admin")
           .eq("id", user.id)
-          .single();
+          .single() as { data: { is_admin?: boolean } | null };
 
         if (!isStale) {
           setIsAdmin(profile?.is_admin ?? false);
