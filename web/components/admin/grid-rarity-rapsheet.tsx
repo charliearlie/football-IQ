@@ -50,7 +50,8 @@ export function GridRarityRapSheet({ puzzleId }: GridRarityRapSheetProps) {
 
       try {
         const supabase = createClient();
-        const { data, error: rpcError } = await supabase.rpc(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error: rpcError } = await (supabase.rpc as any)(
           "get_grid_cell_stats",
           { p_puzzle_id: puzzleId }
         );
