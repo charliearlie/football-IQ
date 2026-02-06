@@ -233,6 +233,24 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     accentColor: colors.pitchGreen,
   },
 
+  the_chain: {
+    gameMode: 'the_chain',
+    displayTitle: 'The Chain',
+    goal: 'Link players through their shared club connections',
+    rules: [
+      { text: 'Each player must have played at a common club with the previous one', highlight: 'common club' },
+      { text: 'Build the longest chain of connected players' },
+      { text: 'Complete the full chain for maximum IQ!', highlight: 'maximum IQ' },
+    ],
+    scoring: {
+      type: 'fixed',
+      description: 'IQ growth for each correct link in the chain',
+      potentialLabel: 'CHAIN MASTER',
+    },
+    icon: undefined, // Uses Link Lucide icon as fallback
+    accentColor: colors.pitchGreen,
+  },
+
   topical_quiz: {
     gameMode: 'topical_quiz',
     displayTitle: 'Topical Quiz',

@@ -43,6 +43,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   guess_the_transfer: 'transfer-guess',
   guess_the_goalscorers: 'goalscorer-recall',
   the_grid: 'the-grid',
+  the_chain: 'the-chain',
   topical_quiz: 'topical-quiz',
   top_tens: 'top-tens',
   starting_xi: 'starting-xi',

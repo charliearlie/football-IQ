@@ -35,6 +35,7 @@ export type GameMode =
   | 'career_path'
   | 'career_path_pro'
   | 'the_grid'
+  | 'the_chain'
   | 'guess_the_transfer'
   | 'guess_the_goalscorers'
   | 'topical_quiz'

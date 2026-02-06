@@ -364,3 +364,201 @@ export async function updatePuzzleAnswerQid(
     };
   }
 }
+
+// ============================================================================
+// PLAYER COMMAND CENTER
+// ============================================================================
+
+export interface ClubHistoryEntry {
+  club_id: string;
+  club_name: string;
+  country_code: string | null;
+  start_year: number | null;
+  end_year: number | null;
+}
+
+export interface TrophyEntry {
+  achievement_id: string;
+  name: string;
+  category: string;
+  year: number | null;
+  club_name: string | null;
+}
+
+export interface CommandCenterResult {
+  player: {
+    id: string;
+    name: string;
+    nationality_code: string | null;
+    scout_rank: number;
+  };
+  clubHistory: ClubHistoryEntry[];
+  trophyCabinet: TrophyEntry[];
+}
+
+/**
+ * Fetch comprehensive player data for the command center:
+ * - Player details with scout_rank
+ * - Club history from player_appearances
+ * - Trophy cabinet from player_achievements
+ */
+export async function fetchPlayerCommandCenterData(
+  playerQid: string
+): Promise<ActionResult<CommandCenterResult>> {
+  try {
+    const supabase = await createAdminClient();
+
+    // Fetch player details
+    const { data: player, error: playerError } = await supabase
+      .from("players")
+      .select("id, name, nationality_code, scout_rank")
+      .eq("id", playerQid)
+      .maybeSingle();
+
+    if (playerError) {
+      return { success: false, error: playerError.message };
+    }
+
+    if (!player) {
+      return { success: false, error: `Player ${playerQid} not found` };
+    }
+
+    // Fetch club history (player_appearances joined with clubs)
+    const { data: appearances, error: appearancesError } = await supabase
+      .from("player_appearances")
+      .select(`
+        club_id,
+        start_year,
+        end_year,
+        clubs (
+          id,
+          name,
+          country_code
+        )
+      `)
+      .eq("player_id", playerQid)
+      .order("start_year", { ascending: true, nullsFirst: true });
+
+    if (appearancesError) {
+      return { success: false, error: appearancesError.message };
+    }
+
+    const clubHistory: ClubHistoryEntry[] = (appearances ?? []).map((app) => {
+      const club = app.clubs as { id: string; name: string; country_code: string | null } | null;
+      return {
+        club_id: app.club_id,
+        club_name: club?.name ?? "Unknown Club",
+        country_code: club?.country_code ?? null,
+        start_year: app.start_year,
+        end_year: app.end_year,
+      };
+    });
+
+    // Fetch trophy cabinet (player_achievements joined with achievements and clubs)
+    const { data: trophies, error: trophiesError } = await supabase
+      .from("player_achievements")
+      .select(`
+        achievement_id,
+        year,
+        club_id,
+        achievements (
+          id,
+          name,
+          category
+        ),
+        clubs (
+          id,
+          name
+        )
+      `)
+      .eq("player_id", playerQid)
+      .order("year", { ascending: false, nullsFirst: true });
+
+    if (trophiesError) {
+      return { success: false, error: trophiesError.message };
+    }
+
+    const trophyCabinet: TrophyEntry[] = (trophies ?? []).map((trophy) => {
+      const achievement = trophy.achievements as { id: string; name: string; category: string } | null;
+      const club = trophy.clubs as { id: string; name: string } | null;
+      return {
+        achievement_id: trophy.achievement_id,
+        name: achievement?.name ?? "Unknown Achievement",
+        category: achievement?.category ?? "Unknown",
+        year: trophy.year,
+        club_name: club?.name ?? null,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        player: {
+          id: player.id,
+          name: player.name,
+          nationality_code: player.nationality_code,
+          scout_rank: player.scout_rank ?? 0,
+        },
+        clubHistory,
+        trophyCabinet,
+      },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to fetch player data",
+    };
+  }
+}
+
+export interface ResyncResult {
+  careersUpdated: number;
+  achievementsUpdated: number;
+}
+
+/**
+ * Force re-sync a player's career and achievements from Wikidata.
+ * Uses the player-scout actions for fetching and saving.
+ */
+export async function resyncPlayerFromWikidata(
+  playerQid: string
+): Promise<ActionResult<ResyncResult>> {
+  try {
+    // Import the player-scout actions dynamically to avoid circular deps
+    const {
+      fetchPlayerCareer,
+      saveCareerToSupabase,
+      syncPlayerAchievements,
+    } = await import("@/app/(dashboard)/player-scout/actions");
+
+    // Re-sync career from Wikidata
+    const career = await fetchPlayerCareer(playerQid);
+    const careerResult = await saveCareerToSupabase(playerQid, career);
+
+    if (!careerResult.success) {
+      return { success: false, error: `Career sync failed: ${careerResult.error}` };
+    }
+
+    // Re-sync achievements from Wikidata
+    const achievementResult = await syncPlayerAchievements(playerQid);
+
+    if (!achievementResult.success) {
+      return { success: false, error: `Achievement sync failed: ${achievementResult.error}` };
+    }
+
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      data: {
+        careersUpdated: career.length,
+        achievementsUpdated: achievementResult.count,
+      },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to resync player",
+    };
+  }
+}

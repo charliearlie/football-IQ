@@ -259,6 +259,33 @@ export function ScoreDistributionContainer({
     );
   }
 
+  // For The Chain, use normalized 0-100 scores with step count labels
+  // Lower steps = better = higher normalized score (2 steps = 100, 11+ steps = 0)
+  if (gameMode === 'the_chain') {
+    // userScore is step count (e.g., 5 steps)
+    // Convert to normalized: (12 - steps) * 10, clamped to 0-100
+    // 2 steps → 100, 3 → 90, 4 → 80, 5 → 70, ..., 11+ → 10/0
+    const normalizedUserScore = Math.max(0, Math.min(100, (12 - userScore) * 10));
+
+    // Optimistically merge user's attempt into distribution (API uses buckets of 10)
+    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+      mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
+
+    // Use default 0-100 display with custom step labels
+    return (
+      <ScoreDistributionGraph
+        distribution={mergedDistribution}
+        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
+        userScore={normalizedUserScore}
+        maxScore={100}
+        bucketSize={10}
+        scoreLabels={getScoreLabelsForMode(gameMode)}
+        isFirstPlayer={isFirstPlayer}
+        testID={testID}
+      />
+    );
+  }
+
   // For all other game modes (normalized 0-100 scores)
   // userScore is already normalized for these modes
   const bucketSize = getBucketSizeForMode(gameMode, maxSteps);

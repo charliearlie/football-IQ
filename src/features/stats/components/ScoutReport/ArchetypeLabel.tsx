@@ -24,6 +24,7 @@ import {
   TrendingUp,
   Clock,
   Grid3X3,
+  Link,
   Newspaper,
   ListOrdered,
   Users,
@@ -67,6 +68,11 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     name: 'Pattern Master',
     icon: Grid3X3,
     description: 'Sees connections others miss',
+  },
+  the_chain: {
+    name: 'Chain Linker',
+    icon: Link,
+    description: 'Links players through shared histories',
   },
   topical_quiz: {
     name: 'News Hound',

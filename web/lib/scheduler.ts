@@ -99,7 +99,7 @@ export const SCHEDULED_MODES: GameMode[] = [
 /**
  * Game modes not currently in the schedule (can still be created manually).
  */
-export const UNSCHEDULED_MODES: GameMode[] = ["the_grid"];
+export const UNSCHEDULED_MODES: GameMode[] = ["the_grid", "the_chain"];
 
 // ============================================================================
 // CORE FUNCTIONS

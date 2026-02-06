@@ -140,6 +140,43 @@ Score is based on **total found** (flat tier system, not cumulative):
 
 ---
 
+## The Chain
+
+**Type:** Inverse Par
+**Game Mode ID:** `the_chain`
+**Max Points:** par + 2 (Eagle)
+
+### Rules
+- Connect two players through shared club history
+- Players are "linked" if they shared a club during overlapping years
+- Complete the chain in fewer steps for more points
+
+### Scoring Formula (Inverse Par)
+
+```
+points = max(0, par - (steps - par))
+       = max(0, 2*par - steps)
+```
+
+| Performance | Steps (Par 5) | Points | Label |
+|-------------|---------------|--------|-------|
+| Eagle (-2)  | 3             | 7      | 🦅 Eagle |
+| Birdie (-1) | 4             | 6      | 🐦 Birdie |
+| Par (0)     | 5             | 5      | ⛳ Par |
+| Bogey (+1)  | 6             | 4      | Bogey |
+| Double Bogey (+2) | 7       | 3      | Double Bogey |
+| Triple Bogey+ (+3+) | 8+    | 2-0    | Triple Bogey+ |
+| Floor       | 10+           | 0      | - |
+| DNF         | -             | 0      | Did Not Finish |
+
+**Example (Par 5):**
+- 3 steps: `max(0, 10-3) = 7` (Eagle)
+- 5 steps: `max(0, 10-5) = 5` (Par)
+- 8 steps: `max(0, 10-8) = 2` (Triple Bogey+)
+- 12 steps: `max(0, 10-12) = 0` (Floor)
+
+---
+
 ## The Grid
 
 **Type:** Dynamic (Rarity-based)
@@ -205,6 +242,7 @@ When implementing or auditing scoring:
 - [ ] **Starting XI**: 1pt per player + 3pt Perfect XI bonus
 - [ ] **Top Tens**: Flat tier scoring, max 8 (1→1, 3→2, 5→3, 7→4, 9→5, 10→8)
 - [ ] **The Grid**: Rarity-based, ~11 pts/cell avg, max 100
+- [ ] **The Chain**: Inverse Par, points = max(0, 2*par - steps), max = par+2
 - [ ] **Topical Quiz**: 2pts per correct answer
 
 ## Intelligence Tiers

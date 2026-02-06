@@ -31,6 +31,7 @@ export const EMPTY_FIELD_EXPERIENCE: FieldExperience = {
     guess_the_transfer: 0,
     guess_the_goalscorers: 0,
     the_grid: 0,
+    the_chain: 0,
     topical_quiz: 0,
     top_tens: 0,
     starting_xi: 0,

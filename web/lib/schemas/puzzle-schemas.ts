@@ -106,6 +106,27 @@ export type GridCategory = z.infer<typeof gridCategorySchema>;
 export type CategoryType = z.infer<typeof categoryTypeSchema>;
 
 // ============================================================================
+// THE CHAIN (the_chain)
+// ============================================================================
+
+export const chainPlayerSchema = z.object({
+  qid: z.string().min(1, "Player QID required"),
+  name: z.string().min(1, "Player name required"),
+  nationality_code: z.string().optional(),
+});
+
+export const theChainContentSchema = z.object({
+  start_player: chainPlayerSchema,
+  end_player: chainPlayerSchema,
+  par: z.coerce.number().int().min(2, "PAR must be at least 2").max(10, "PAR cannot exceed 10"),
+  solution_path: z.array(chainPlayerSchema).optional(),
+  hint_player: chainPlayerSchema.optional(),
+});
+
+export type TheChainContent = z.infer<typeof theChainContentSchema>;
+export type ChainPlayer = z.infer<typeof chainPlayerSchema>;
+
+// ============================================================================
 // TOPICAL QUIZ (topical_quiz)
 // ============================================================================
 
@@ -214,6 +235,7 @@ export const contentSchemaMap = {
   career_path: careerPathContentSchema,
   career_path_pro: careerPathContentSchema,
   the_grid: theGridContentSchema,
+  the_chain: theChainContentSchema,
   guess_the_transfer: transferGuessContentSchema,
   guess_the_goalscorers: goalscorerRecallContentSchema,
   topical_quiz: topicalQuizContentSchema,
@@ -227,6 +249,7 @@ export type PuzzleContent =
   | TransferGuessContent
   | GoalscorerRecallContent
   | TheGridContent
+  | TheChainContent
   | TopicalQuizContent
   | TopTensContent
   | StartingXIContent;

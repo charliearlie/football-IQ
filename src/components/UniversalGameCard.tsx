@@ -20,6 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   Grid3X3,
+  Link,
   HelpCircle,
   Check,
   Play,
@@ -169,6 +170,13 @@ function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfi
         title: 'The Grid (beta)',
         subtitle: 'Fill the matrix',
         icon: <Grid3X3 color={colors.pitchGreen} size={28} />,
+        iconColor: colors.pitchGreen,
+      };
+    case 'the_chain':
+      return {
+        title: 'The Chain',
+        subtitle: 'Link the players',
+        icon: <Link color={colors.pitchGreen} size={28} />,
         iconColor: colors.pitchGreen,
       };
     case 'topical_quiz':

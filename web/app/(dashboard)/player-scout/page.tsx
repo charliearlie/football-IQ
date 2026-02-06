@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
   Search,
   Upload,
@@ -10,6 +11,7 @@ import {
   XCircle,
   Users,
   Globe,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,7 @@ import {
   searchExistingPlayers,
   getAllPlayerQids,
   getPlayersWithoutCareers,
+  syncPlayerCareerByQid,
   type ResolvedPlayer,
 } from "./actions";
 
@@ -52,6 +55,8 @@ export default function PlayerScoutPage() {
   const [wikiUrl, setWikiUrl] = useState("");
   const [wikiStatus, setWikiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [wikiMessage, setWikiMessage] = useState("");
+  const [syncingPlayerId, setSyncingPlayerId] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
   const [playerCount, setPlayerCount] = useState<number | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [status, setStatus] = useState<PipelineStatus>("idle");
@@ -90,7 +95,43 @@ export default function PlayerScoutPage() {
     if (searchQuery.trim().length < 2) return;
     const results = await searchExistingPlayers(searchQuery.trim());
     setSearchResults(results);
+    setSyncResult(null);
   }, [searchQuery]);
+
+  // ─── Sync Single Player Career ──────────────────────────────────────────────
+  const handleSyncPlayerCareer = useCallback(async (qid: string, name: string) => {
+    setSyncingPlayerId(qid);
+    setSyncResult(null);
+
+    try {
+      const result = await syncPlayerCareerByQid(qid);
+      if (result.success) {
+        setSyncResult({
+          id: qid,
+          success: true,
+          message: `Synced ${result.careerCount ?? 0} career entries for ${result.name ?? name}`,
+        });
+        addLog("success", `Synced career for ${result.name ?? name}: ${result.careerCount ?? 0} clubs`);
+      } else {
+        setSyncResult({
+          id: qid,
+          success: false,
+          message: result.error ?? "Unknown error",
+        });
+        addLog("error", `Failed to sync ${name}: ${result.error}`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSyncResult({
+        id: qid,
+        success: false,
+        message: msg,
+      });
+      addLog("error", `Failed to sync ${name}: ${msg}`);
+    } finally {
+      setSyncingPlayerId(null);
+    }
+  }, [addLog]);
 
   // ─── Wikipedia URL Resolve ────────────────────────────────────────────────
   const handleWikiResolve = useCallback(async () => {
@@ -482,18 +523,51 @@ export default function PlayerScoutPage() {
               </Button>
             </div>
             {searchResults.length > 0 && (
-              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+              <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
                 {searchResults.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between text-sm px-2 py-1 rounded bg-white/5"
+                    className="flex items-center justify-between text-sm px-2 py-1.5 rounded bg-white/5"
                   >
-                    <span className="text-floodlight">{p.name}</span>
-                    <span className="text-muted-foreground font-mono text-xs">
-                      {p.id} (rank: {p.scout_rank})
-                    </span>
+                    <div className="flex flex-col">
+                      <Link
+                        href={`/admin/players/${p.id}`}
+                        className="text-floodlight hover:text-pitch-green hover:underline transition-colors"
+                      >
+                        {p.name}
+                      </Link>
+                      <span className="text-muted-foreground font-mono text-xs">
+                        {p.id} (rank: {p.scout_rank})
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSyncPlayerCareer(p.id, p.name)}
+                      disabled={syncingPlayerId === p.id}
+                      className="text-pitch-green hover:text-pitch-green hover:bg-pitch-green/10 h-7 px-2"
+                    >
+                      {syncingPlayerId === p.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3" />
+                      )}
+                      <span className="ml-1 text-xs">Sync</span>
+                    </Button>
                   </div>
                 ))}
+                {syncResult && (
+                  <div
+                    className={`mt-2 p-2 rounded text-xs ${
+                      syncResult.success
+                        ? "bg-pitch-green/10 text-pitch-green"
+                        : "bg-red-card/10 text-red-card"
+                    }`}
+                  >
+                    {syncResult.success ? "✓ " : "✗ "}
+                    {syncResult.message}
+                  </div>
+                )}
               </div>
             )}
           </div>

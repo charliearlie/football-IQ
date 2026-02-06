@@ -443,7 +443,7 @@ const QID_PATTERN = /^Q\d+$/;
  */
 export async function searchPlayersForForm(
   query: string
-): Promise<ActionResult<{ id: string; name: string; birth_year: number | null; scout_rank: number }[]>> {
+): Promise<ActionResult<{ id: string; name: string; birth_year: number | null; scout_rank: number; nationality_code: string | null }[]>> {
   try {
     if (!query || query.length < 2) {
       return { success: true, data: [] };
@@ -458,7 +458,7 @@ export async function searchPlayersForForm(
 
     const { data, error } = await supabase
       .from("players")
-      .select("id, name, birth_year, scout_rank")
+      .select("id, name, birth_year, scout_rank, nationality_code")
       .ilike("search_name", `%${normalized.replace(/([%_\\])/g, "\\$1")}%`)
       .order("scout_rank", { ascending: false })
       .limit(10);
@@ -822,6 +822,13 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
       { type: "nation", value: "" },
     ],
     valid_answers: {},
+  },
+  the_chain: {
+    start_player: { qid: "", name: "", nationality_code: undefined },
+    end_player: { qid: "", name: "", nationality_code: undefined },
+    par: 5,
+    solution_path: undefined,
+    hint_player: undefined,
   },
 };
 
@@ -1727,6 +1734,236 @@ export async function createReport(input: {
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// THE CHAIN - PAR CALCULATION
+// ============================================================================
+
+/**
+ * Calculate the PAR (shortest path) between two players for The Chain puzzle.
+ * Uses BFS through shared club history to find the optimal path.
+ */
+export async function calculateChainPar(
+  startQid: string,
+  endQid: string
+): Promise<ActionResult<{
+  pathFound: boolean;
+  pathLength: number | null;
+  pathQids: string[] | null;
+  pathNames: string[] | null;
+}>> {
+  try {
+    if (!startQid || !endQid) {
+      return { success: false, error: "Both start and end player QIDs are required" };
+    }
+
+    const supabase = await createAdminClient();
+
+    // Cast to any since the RPC function types are added via migration
+    const { data, error } = await (supabase.rpc as any)("find_shortest_player_path", {
+      start_qid: startQid,
+      end_qid: endQid,
+      max_depth: 8,
+    });
+
+    if (error) {
+      console.error("Calculate Chain PAR error:", error);
+      return { success: false, error: error.message };
+    }
+
+    const result = (data as any[])?.[0];
+    if (!result) {
+      return {
+        success: true,
+        data: {
+          pathFound: false,
+          pathLength: null,
+          pathQids: null,
+          pathNames: null,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        pathFound: result.path_found,
+        pathLength: result.path_length,
+        pathQids: result.path_qids,
+        pathNames: result.path_names,
+      },
+    };
+  } catch (err) {
+    console.error("Calculate Chain PAR error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "PAR calculation failed",
+    };
+  }
+}
+
+/**
+ * Check if two players are linked (shared a club with overlapping years).
+ * Used for validating chain connections.
+ */
+export async function checkPlayersLinked(
+  playerAQid: string,
+  playerBQid: string
+): Promise<ActionResult<{
+  isLinked: boolean;
+  sharedClubId: string | null;
+  sharedClubName: string | null;
+  overlapStart: number | null;
+  overlapEnd: number | null;
+}>> {
+  try {
+    if (!playerAQid || !playerBQid) {
+      return { success: false, error: "Both player QIDs are required" };
+    }
+
+    const supabase = await createAdminClient();
+
+    // Cast to any since the RPC function types are added via migration
+    const { data, error } = await (supabase.rpc as any)("check_players_linked", {
+      player_a_qid: playerAQid,
+      player_b_qid: playerBQid,
+    });
+
+    if (error) {
+      console.error("Check players linked error:", error);
+      return { success: false, error: error.message };
+    }
+
+    const result = (data as any[])?.[0];
+    if (!result) {
+      return {
+        success: true,
+        data: {
+          isLinked: false,
+          sharedClubId: null,
+          sharedClubName: null,
+          overlapStart: null,
+          overlapEnd: null,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        isLinked: result.is_linked,
+        sharedClubId: result.shared_club_id,
+        sharedClubName: result.shared_club_name,
+        overlapStart: result.overlap_start,
+        overlapEnd: result.overlap_end,
+      },
+    };
+  } catch (err) {
+    console.error("Check players linked error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Link check failed",
+    };
+  }
+}
+
+/**
+ * Get path info for The Chain puzzle using the optimized bidirectional BFS.
+ * Returns optimal length, suggested PAR (optimal + 2), and multiple sample paths.
+ */
+export async function getChainPathSamples(
+  startQid: string,
+  endQid: string,
+  sampleCount: number = 5
+): Promise<ActionResult<{
+  optimalLength: number | null;
+  suggestedPar: number | null;
+  paths: Array<{ qids: string[]; names: string[] }>;
+  depthCounts: Record<string, number>;
+  alternativePath?: { qids: string[]; names: string[] };
+}>> {
+  try {
+    if (!startQid || !endQid) {
+      return { success: false, error: "Both start and end player QIDs are required" };
+    }
+
+    const supabase = await createAdminClient();
+
+    // Run BFS multiple times to collect different paths
+    // The BFS function now has randomization built in
+    const paths: Array<{ qids: string[]; names: string[] }> = [];
+    const seenPaths = new Set<string>();
+    let optimalLength: number | null = null;
+
+    for (let i = 0; i < sampleCount + 3 && paths.length < sampleCount; i++) {
+      const { data, error } = await (supabase.rpc as any)("find_shortest_player_path", {
+        start_qid: startQid,
+        end_qid: endQid,
+        max_depth: 6,
+      });
+
+      if (error) {
+        console.error("BFS iteration error:", error);
+        continue;
+      }
+
+      const result = (data as any[])?.[0];
+      if (!result?.path_found) continue;
+
+      // Set optimal length from first successful result
+      if (optimalLength === null) {
+        optimalLength = result.path_length;
+      }
+
+      // Only keep paths of optimal length
+      if (result.path_length !== optimalLength) continue;
+
+      const pathKey = (result.path_qids as string[]).join(",");
+      if (seenPaths.has(pathKey)) continue;
+
+      seenPaths.add(pathKey);
+      paths.push({
+        qids: result.path_qids,
+        names: result.path_names,
+      });
+    }
+
+    if (optimalLength === null || paths.length === 0) {
+      return {
+        success: true,
+        data: {
+          optimalLength: null,
+          suggestedPar: null,
+          paths: [],
+          depthCounts: {},
+        },
+      };
+    }
+
+    // Alternative path feature disabled for now - focus on fast optimal path finding
+    const alternativePath: { qids: string[]; names: string[] } | undefined = undefined;
+
+    // PAR = optimal + 2, capped at 10
+    const suggestedPar = Math.min(optimalLength + 2, 10);
+
+    return {
+      success: true,
+      data: {
+        optimalLength,
+        suggestedPar,
+        paths,
+        depthCounts: {},
+        alternativePath,
+      },
+    };
+  } catch (err) {
+    console.error("Get Chain path samples error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Path samples calculation failed",
     };
   }
 }

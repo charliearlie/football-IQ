@@ -597,6 +597,46 @@ export async function getPlayersWithoutCareers(): Promise<{ qid: string; name: s
   return allPlayers;
 }
 
+/**
+ * Sync a single player's career from Wikidata by their QID.
+ * Used for quickly fixing a specific player's missing data.
+ */
+export async function syncPlayerCareerByQid(
+  qid: string
+): Promise<{ success: boolean; name?: string; careerCount?: number; error?: string }> {
+  try {
+    assertValidQid(qid);
+    const supabase = await createAdminClient();
+
+    // Get player name
+    const { data: player } = await supabase
+      .from("players")
+      .select("name")
+      .eq("id", qid)
+      .single();
+
+    if (!player) {
+      return { success: false, error: `Player ${qid} not found in database` };
+    }
+
+    // Fetch career from Wikidata
+    const career = await fetchPlayerCareer(qid);
+    if (career.length === 0) {
+      return { success: false, name: player.name, error: "No career data found on Wikidata" };
+    }
+
+    // Save to database
+    const saveResult = await saveCareerToSupabase(qid, career);
+    if (!saveResult.success) {
+      return { success: false, name: player.name, error: saveResult.error };
+    }
+
+    return { success: true, name: player.name, careerCount: career.length };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 // ─── Achievement Fetching & Sync ─────────────────────────────────────────────
 
 export interface AchievementEntry {

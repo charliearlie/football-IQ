@@ -4,6 +4,7 @@ import type {
   TransferGuessContent,
   GoalscorerRecallContent,
   TheGridContent,
+  TheChainContent,
   TopicalQuizContent,
   TopTensContent,
   StartingXIContent,
@@ -74,6 +75,16 @@ export function getTheGridDefaults(): TheGridContent {
   };
 }
 
+export function getTheChainDefaults(): TheChainContent {
+  return {
+    start_player: { qid: "", name: "", nationality_code: undefined },
+    end_player: { qid: "", name: "", nationality_code: undefined },
+    par: 5,
+    solution_path: undefined,
+    hint_player: undefined,
+  };
+}
+
 export function getTopicalQuizDefaults(): TopicalQuizContent {
   return {
     questions: [
@@ -130,6 +141,7 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
   career_path: getCareerPathDefaults,
   career_path_pro: getCareerPathDefaults,
   the_grid: getTheGridDefaults,
+  the_chain: getTheChainDefaults,
   guess_the_transfer: getTransferGuessDefaults,
   guess_the_goalscorers: getGoalscorerRecallDefaults,
   topical_quiz: getTopicalQuizDefaults,

@@ -38,6 +38,9 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
     case 'guess_the_goalscorers':
       // Dynamic: bucket size = 100 / totalScorers
       return maxSteps ? Math.round(100 / maxSteps) : 20;
+    case 'the_chain':
+      // Steps bucket - 10-point buckets for normalized scores
+      return 10;
     default:
       // Default: 10-point buckets (0%, 10%, 20%, ..., 100%)
       return 10;
@@ -112,6 +115,10 @@ export function getScoreLabelsForMode(
       }
       return labels;
     }
+    case 'the_chain':
+      // Step counts - lower is better (2 = best, 12+ = worst)
+      // 11 labels for buckets 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0
+      return ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12+'];
     default:
       // Default: use percentage labels
       return undefined;

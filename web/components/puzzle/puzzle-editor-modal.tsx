@@ -63,6 +63,7 @@ import { CareerPathForm } from "./forms/career-path-form";
 import { TransferGuessForm } from "./forms/transfer-guess-form";
 import { GoalscorerRecallForm } from "./forms/goalscorer-recall-form";
 import { TheGridForm } from "./forms/the-grid-form";
+import { TheChainForm } from "./forms/the-chain-form";
 import { TopicalQuizForm } from "./forms/topical-quiz-form";
 import { TopTensForm } from "./forms/top-tens-form";
 import { StartingXIForm } from "./forms/starting-xi-form";
@@ -72,6 +73,7 @@ import { CareerPathPreview } from "./previews/career-path-preview";
 import { TransferGuessPreview } from "./previews/transfer-guess-preview";
 import { GoalscorerRecallPreview } from "./previews/goalscorer-recall-preview";
 import { TheGridPreview } from "./previews/the-grid-preview";
+import { TheChainPreview } from "./previews/the-chain-preview";
 import { TopicalQuizPreview } from "./previews/topical-quiz-preview";
 import { TopTensPreview } from "./previews/top-tens-preview";
 import { StartingXIPreview } from "./previews/starting-xi-preview";
@@ -107,6 +109,7 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   career_path: CareerPathForm,
   career_path_pro: CareerPathForm,
   the_grid: TheGridForm,
+  the_chain: TheChainForm,
   guess_the_transfer: TransferGuessForm,
   guess_the_goalscorers: GoalscorerRecallForm,
   topical_quiz: TopicalQuizForm,
@@ -118,6 +121,7 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   career_path: CareerPathPreview,
   career_path_pro: CareerPathPreview,
   the_grid: TheGridPreview,
+  the_chain: TheChainPreview,
   guess_the_transfer: TransferGuessPreview,
   guess_the_goalscorers: GoalscorerRecallPreview,
   topical_quiz: TopicalQuizPreview,
@@ -495,6 +499,13 @@ export function PuzzleEditorModal({
           {saveError && (
             <div className="text-sm text-red-card flex-1 mr-4">
               {saveError}
+            </div>
+          )}
+
+          {/* Debug: Show validation errors */}
+          {Object.keys(formState.errors).length > 0 && (
+            <div className="text-xs text-red-400 flex-1 mr-4 max-w-md overflow-auto">
+              Validation errors: {JSON.stringify(formState.errors, null, 2)}
             </div>
           )}
 

@@ -52,6 +52,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   guess_the_transfer: 'Transfer Guess',
   guess_the_goalscorers: 'Goalscorer Recall',
   the_grid: 'The Grid (beta)',
+  the_chain: 'The Chain',
   topical_quiz: 'Quiz',
   top_tens: 'Top Tens',
   starting_xi: 'Starting XI',

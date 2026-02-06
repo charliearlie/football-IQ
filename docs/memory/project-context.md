@@ -1,15 +1,16 @@
 # Football IQ - Project Context
 
 ## Overview
-Football IQ is a mobile trivia game featuring daily puzzles across 8 game modes:
+Football IQ is a mobile trivia game featuring daily puzzles across 9 game modes:
 1. **Career Path** - Guess player from sequential career clues
 2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
 3. **The Grid** - Fill 3x3 matrix with players matching criteria
-4. **Transfer Guess** - Identify player from transfer info
-5. **Goalscorer Recall** - Name scorers from historic match (timed)
-6. **Topical Quiz** - 5 multiple-choice questions
-7. **Top Tens** (Premium) - Name all 10 answers in a ranked list
-8. **Starting XI** - Identify hidden players on a tactical pitch lineup
+4. **The Chain** - Connect two players through shared club history (Inverse Par scoring)
+5. **Transfer Guess** - Identify player from transfer info
+6. **Goalscorer Recall** - Name scorers from historic match (timed)
+7. **Topical Quiz** - 5 multiple-choice questions
+8. **Top Tens** (Premium) - Name all 10 answers in a ranked list
+9. **Starting XI** - Identify hidden players on a tactical pitch lineup
 
 ## Tech Stack
 | Layer | Technology |
@@ -243,6 +244,17 @@ Fill 3x3 matrix with players matching row (Y-axis) and column (X-axis) criteria.
 **Files**: `src/features/the-grid/`, `src/features/the-grid/utils/achievementMapping.ts`
 
 *Note: Legacy Tic Tac Toe (`tic_tac_toe`) still exists for archive review but replaced by The Grid for daily play.*
+
+### The Chain
+Connect two players through shared club history using Inverse Par scoring.
+
+**Content**: `{ start_player: { qid, name, nationality_code? }, end_player: { qid, name, nationality_code? }, par: number, solution_path?: [...], hint_player?: { qid, name, nationality_code? } }`
+**Validation**: Uses `check_players_linked()` RPC to verify overlapping years at shared clubs
+**PAR Calculation**: Uses `find_shortest_player_path()` RPC (BFS, max_depth=8) to determine optimal solution
+**Scoring**: Inverse Par - `max(0, 2*par - steps)`, max points = par + 2 (Eagle)
+**Labels**: Eagle (-2), Birdie (-1), Par (0), Bogey (+1), Double Bogey (+2), Triple Bogey+ (+3+), DNF
+**Display**: Chain of player cards with connecting clubs
+**Files**: `src/features/the-chain/`, `app/the-chain/`, `web/lib/the-chain/scoring.ts`, `web/components/puzzle/forms/the-chain-form.tsx`, `supabase/migrations/028_the_chain.sql`
 
 ### Topical Quiz
 5 multiple-choice questions on current events. Auto-advances after answer.
@@ -508,6 +520,27 @@ Schedule-aware puzzle management system for efficient content creation.
   - **Swap**: Exchange dates between two puzzles of the same game mode
 - **Files**: `web/lib/scheduler.ts`, `web/lib/displacement.ts`, `web/hooks/use-backlog-puzzles.ts`, `web/components/puzzle/backlog-sheet.tsx`, `web/components/puzzle/conflict-resolution-modal.tsx`
 - **See**: `docs/memory/decisions/intelligent-scheduler.md` for full documentation
+
+### Admin Command Center
+Player lookup and management tool for CMS administrators.
+
+**Features**:
+- **Universal Player Search**: Search across all ~4,900 elite players in the Supabase `players` table
+- **Pro Badge**: Gold badge (#FFBF00) indicates elite players (top ~5,000 by `scout_rank`)
+- **Player Detail Sheet**: Side drawer showing:
+  - Club History (from `player_appearances` table with clubs)
+  - Trophy Cabinet (from `player_achievements` grouped by Individual/Club/International)
+  - Puzzle Appearances (game mode breakdown with dates)
+- **Quick-Fix Actions**: Force re-sync from Wikidata (career + achievements)
+
+**Elite Threshold**: Players with `scout_rank >= 50` are considered elite and display the Pro Badge.
+
+**Files**:
+- `web/components/admin/universal-answer-search.tsx` - Main search component with dropdown
+- `web/components/admin/player-detail-sheet.tsx` - Detail drawer with club history, trophies, appearances
+- `web/components/admin/pro-badge.tsx` - Reusable Pro Badge component
+- `web/hooks/use-player-command-center.ts` - Data fetching hook combining command center + rap sheet
+- `web/app/(dashboard)/admin/actions.ts` - Server actions (`fetchPlayerCommandCenterData`, `resyncPlayerFromWikidata`)
 
 **Tech Stack**: Next.js 15, Tailwind CSS, shadcn/ui, Supabase SSR
 

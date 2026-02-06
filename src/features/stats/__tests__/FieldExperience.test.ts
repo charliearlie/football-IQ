@@ -247,6 +247,7 @@ describe('getDominantMode', () => {
       guess_the_transfer: 10,
       guess_the_goalscorers: 2,
       the_grid: 7,
+      the_chain: 1,
       topical_quiz: 4,
       top_tens: 6,
       starting_xi: 8,
@@ -263,6 +264,7 @@ describe('getDominantMode', () => {
       guess_the_transfer: 0,
       guess_the_goalscorers: 0,
       the_grid: 0,
+      the_chain: 0,
       topical_quiz: 0,
       top_tens: 0,
       starting_xi: 0,
@@ -279,6 +281,7 @@ describe('getDominantMode', () => {
       guess_the_transfer: 5,
       guess_the_goalscorers: 0,
       the_grid: 0,
+      the_chain: 0,
       topical_quiz: 0,
       top_tens: 0,
       starting_xi: 0,
@@ -291,8 +294,8 @@ describe('getDominantMode', () => {
 });
 
 describe('ALL_GAME_MODES constant', () => {
-  it('contains exactly 8 game modes', () => {
-    expect(ALL_GAME_MODES).toHaveLength(8);
+  it('contains exactly 9 game modes', () => {
+    expect(ALL_GAME_MODES).toHaveLength(9);
   });
 
   it('includes all expected modes', () => {
@@ -301,6 +304,7 @@ describe('ALL_GAME_MODES constant', () => {
     expect(ALL_GAME_MODES).toContain('guess_the_transfer');
     expect(ALL_GAME_MODES).toContain('guess_the_goalscorers');
     expect(ALL_GAME_MODES).toContain('the_grid');
+    expect(ALL_GAME_MODES).toContain('the_chain');
     expect(ALL_GAME_MODES).toContain('topical_quiz');
     expect(ALL_GAME_MODES).toContain('top_tens');
     expect(ALL_GAME_MODES).toContain('starting_xi');
@@ -316,11 +320,12 @@ describe('FieldExperience interface', () => {
         guess_the_transfer: 10,
         guess_the_goalscorers: 2,
         the_grid: 7,
+        the_chain: 1,
         topical_quiz: 4,
         top_tens: 6,
         starting_xi: 8,
       },
-      totalAppearances: 45,
+      totalAppearances: 46,
       dominantMode: 'guess_the_transfer',
     };
 
