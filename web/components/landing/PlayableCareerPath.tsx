@@ -2,8 +2,11 @@
 
 import { useState, useCallback } from "react";
 import confetti from "canvas-confetti";
+import Image from "next/image";
+import Link from "next/link";
 import type { CareerStep } from "@/types/careerPath";
 import { validateGuess } from "@/lib/validation";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
 import { CareerStepCard } from "./CareerStepCard";
 import { LockedStepCard } from "./LockedStepCard";
 import { SuccessModal } from "./SuccessModal";
@@ -204,6 +207,19 @@ export function PlayableCareerPath({
             >
               TRY AGAIN
             </CTAButton>
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <p className="text-muted-foreground text-sm mb-4">
+                Get hints, track your stats, and climb the ranks in the full app.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <Link href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+                  <Image src="/images/app-store.svg" alt="App Store" width={120} height={40} className="h-[40px] w-auto" />
+                </Link>
+                <Link href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
+                  <Image src="/images/play-store.svg" alt="Google Play" width={135} height={40} className="h-[40px] w-auto" />
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 

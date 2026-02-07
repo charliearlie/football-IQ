@@ -127,6 +127,51 @@ export type TheChainContent = z.infer<typeof theChainContentSchema>;
 export type ChainPlayer = z.infer<typeof chainPlayerSchema>;
 
 // ============================================================================
+// THE THREAD (the_thread)
+// ============================================================================
+
+const YEAR_RANGE_REGEX = /^\d{4}-(\d{4})?$/;
+
+export const threadTypeSchema = z.enum(["sponsor", "supplier"]);
+
+export const threadBrandSchema = z.object({
+  brand_name: z.string().min(1, "Brand name required"),
+  years: z
+    .string()
+    .min(1, "Years required")
+    .regex(YEAR_RANGE_REGEX, "Years must be in format YYYY-YYYY or YYYY-"),
+  is_hidden: z.boolean().default(false),
+});
+
+export const kitLoreSchema = z.object({
+  fun_fact: z.string().min(1, "Fun fact required for kit lore"),
+});
+
+export const theThreadContentSchema = z.object({
+  thread_type: threadTypeSchema,
+  path: z
+    .array(threadBrandSchema)
+    .min(3, "Path must have at least 3 brand entries"),
+  correct_club_id: z.string().min(1, "Club ID required"),
+  correct_club_name: z.string().min(1, "Club name required for fallback validation"),
+  kit_lore: kitLoreSchema,
+}).refine(
+  (data) => {
+    const hiddenCount = data.path.filter(b => b.is_hidden).length;
+    return hiddenCount === 0 || hiddenCount === 3;
+  },
+  {
+    message: "Exactly 3 brands must be marked as hidden (or none for legacy puzzles)",
+    path: ["path"],
+  }
+);
+
+export type ThreadType = z.infer<typeof threadTypeSchema>;
+export type ThreadBrand = z.infer<typeof threadBrandSchema>;
+export type KitLore = z.infer<typeof kitLoreSchema>;
+export type TheThreadContent = z.infer<typeof theThreadContentSchema>;
+
+// ============================================================================
 // TOPICAL QUIZ (topical_quiz)
 // ============================================================================
 
@@ -236,6 +281,7 @@ export const contentSchemaMap = {
   career_path_pro: careerPathContentSchema,
   the_grid: theGridContentSchema,
   the_chain: theChainContentSchema,
+  the_thread: theThreadContentSchema,
   guess_the_transfer: transferGuessContentSchema,
   guess_the_goalscorers: goalscorerRecallContentSchema,
   topical_quiz: topicalQuizContentSchema,
@@ -250,6 +296,7 @@ export type PuzzleContent =
   | GoalscorerRecallContent
   | TheGridContent
   | TheChainContent
+  | TheThreadContent
   | TopicalQuizContent
   | TopTensContent
   | StartingXIContent;

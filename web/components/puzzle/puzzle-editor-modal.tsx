@@ -64,6 +64,7 @@ import { TransferGuessForm } from "./forms/transfer-guess-form";
 import { GoalscorerRecallForm } from "./forms/goalscorer-recall-form";
 import { TheGridForm } from "./forms/the-grid-form";
 import { TheChainForm } from "./forms/the-chain-form";
+import { TheThreadForm } from "./forms/the-thread-form";
 import { TopicalQuizForm } from "./forms/topical-quiz-form";
 import { TopTensForm } from "./forms/top-tens-form";
 import { StartingXIForm } from "./forms/starting-xi-form";
@@ -74,6 +75,7 @@ import { TransferGuessPreview } from "./previews/transfer-guess-preview";
 import { GoalscorerRecallPreview } from "./previews/goalscorer-recall-preview";
 import { TheGridPreview } from "./previews/the-grid-preview";
 import { TheChainPreview } from "./previews/the-chain-preview";
+import { TheThreadPreview } from "./previews/the-thread-preview";
 import { TopicalQuizPreview } from "./previews/topical-quiz-preview";
 import { TopTensPreview } from "./previews/top-tens-preview";
 import { StartingXIPreview } from "./previews/starting-xi-preview";
@@ -105,11 +107,19 @@ interface FormValues {
 // FORM REGISTRY
 // ============================================================================
 
+// Placeholder component for game modes without a form yet
+const PlaceholderForm = () => (
+  <div className="p-4 text-center text-muted-foreground">
+    Form coming soon
+  </div>
+);
+
 const formRegistry: Record<GameMode, React.ComponentType> = {
   career_path: CareerPathForm,
   career_path_pro: CareerPathForm,
   the_grid: TheGridForm,
   the_chain: TheChainForm,
+  the_thread: TheThreadForm,
   guess_the_transfer: TransferGuessForm,
   guess_the_goalscorers: GoalscorerRecallForm,
   topical_quiz: TopicalQuizForm,
@@ -117,11 +127,19 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   starting_xi: StartingXIForm,
 };
 
+// Placeholder component for game modes without a preview yet
+const PlaceholderPreview = () => (
+  <div className="p-4 text-center text-muted-foreground">
+    Preview coming soon
+  </div>
+);
+
 const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }>> = {
   career_path: CareerPathPreview,
   career_path_pro: CareerPathPreview,
   the_grid: TheGridPreview,
   the_chain: TheChainPreview,
+  the_thread: TheThreadPreview,
   guess_the_transfer: TransferGuessPreview,
   guess_the_goalscorers: GoalscorerRecallPreview,
   topical_quiz: TopicalQuizPreview,

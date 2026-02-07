@@ -121,24 +121,6 @@
                 linear-gradient(135deg, #58CC02, #FACC15, #FF6B6B, #9B59B6, #4ECDC4) border-box;
   }
 
-  /* Ribbon styling for badges */
-  .ribbon {
-    position: absolute;
-    top: 12px;
-    right: -35px;
-    transform: rotate(45deg);
-    width: 140px;
-    padding: 4px 0;
-    font-size: 10px;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-    color: white;
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
-  }
-
   /* Color-coded game mode card glows */
   .card-glow-green {
     box-shadow: 0 0 40px rgba(88, 204, 2, 0.15), inset 0 1px 0 rgba(88, 204, 2, 0.1);

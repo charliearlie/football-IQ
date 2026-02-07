@@ -14,22 +14,24 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Football IQ - Daily Football Puzzles",
+  title: "Football IQ - What's Your Football IQ?",
   description:
-    "Test your football knowledge with daily puzzles. Career Path, Transfer Guess, Goalscorer Recall and more. Download the free app today!",
+    "10 game modes. 10 tiers. From Trialist to GOAT. Test your football knowledge with daily puzzles. Free on iOS and Android.",
   icons: {
     icon: "/images/favicon.png",
   },
   openGraph: {
-    title: "Football IQ - Prove Your Football IQ",
-    description: "Daily puzzles to test your football knowledge",
+    title: "What's Your Football IQ?",
+    description:
+      "10 game modes. Daily puzzles. Free to download. Find out where you rank.",
     siteName: "Football IQ",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Football IQ - Daily Football Puzzles",
-    description: "Daily puzzles to test your football knowledge",
+    title: "What's Your Football IQ?",
+    description:
+      "10 game modes. Daily puzzles. Free to download. Find out where you rank.",
   },
 };
 

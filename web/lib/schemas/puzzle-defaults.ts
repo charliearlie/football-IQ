@@ -5,6 +5,7 @@ import type {
   GoalscorerRecallContent,
   TheGridContent,
   TheChainContent,
+  TheThreadContent,
   TopicalQuizContent,
   TopTensContent,
   StartingXIContent,
@@ -85,6 +86,20 @@ export function getTheChainDefaults(): TheChainContent {
   };
 }
 
+export function getTheThreadDefaults(): TheThreadContent {
+  return {
+    thread_type: "sponsor",
+    path: [
+      { brand_name: "", years: "", is_hidden: false },
+      { brand_name: "", years: "", is_hidden: false },
+      { brand_name: "", years: "", is_hidden: false },
+    ],
+    correct_club_id: "",
+    correct_club_name: "",
+    kit_lore: { fun_fact: "" },
+  };
+}
+
 export function getTopicalQuizDefaults(): TopicalQuizContent {
   return {
     questions: [
@@ -142,6 +157,7 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
   career_path_pro: getCareerPathDefaults,
   the_grid: getTheGridDefaults,
   the_chain: getTheChainDefaults,
+  the_thread: getTheThreadDefaults,
   guess_the_transfer: getTransferGuessDefaults,
   guess_the_goalscorers: getGoalscorerRecallDefaults,
   topical_quiz: getTopicalQuizDefaults,

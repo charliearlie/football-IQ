@@ -477,6 +477,45 @@ export async function searchPlayersForForm(
 }
 
 /**
+ * Search clubs in our database by name.
+ * Used by The Thread form to find clubs and set the correct answer.
+ */
+export async function searchClubsForForm(
+  query: string
+): Promise<ActionResult<{ id: string; name: string }[]>> {
+  try {
+    if (!query || query.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    const supabase = await createAdminClient();
+    const normalized = query
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+    const { data, error } = await supabase
+      .from("clubs")
+      .select("id, name")
+      .ilike("name", `%${normalized.replace(/([%_\\])/g, "\\$1")}%`)
+      .order("name")
+      .limit(15);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data ?? [] };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Club search failed",
+    };
+  }
+}
+
+/**
  * Fetch a player's career from Wikidata SPARQL and format for the career path form.
  */
 export async function fetchCareerForForm(
@@ -829,6 +868,17 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
     par: 5,
     solution_path: undefined,
     hint_player: undefined,
+  },
+  the_thread: {
+    thread_type: "sponsor",
+    path: [
+      { brand_name: "", years: "" },
+      { brand_name: "", years: "" },
+      { brand_name: "", years: "" },
+    ],
+    correct_club_id: "",
+    correct_club_name: "",
+    kit_lore: { fun_fact: "" },
   },
 };
 

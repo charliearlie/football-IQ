@@ -4,6 +4,7 @@ export const GAME_MODES = [
   "career_path_pro",
   "the_grid",
   "the_chain",
+  "the_thread",
   "guess_the_transfer",
   "guess_the_goalscorers",
   "topical_quiz",
@@ -19,6 +20,7 @@ export const GAME_MODE_DISPLAY_NAMES: Record<GameMode, string> = {
   career_path_pro: "Career Path Pro",
   the_grid: "The Grid",
   the_chain: "The Chain",
+  the_thread: "Threads",
   guess_the_transfer: "Transfer Guess",
   guess_the_goalscorers: "Goalscorer Recall",
   topical_quiz: "Topical Quiz",
@@ -32,6 +34,7 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   career_path_pro: "CPP",
   the_grid: "TG",
   the_chain: "TC",
+  the_thread: "THR",
   guess_the_transfer: "TR",
   guess_the_goalscorers: "GR",
   topical_quiz: "TQ",
@@ -58,10 +61,9 @@ export const COLORS = {
 export const PUZZLE_STATUSES = ["live", "draft", "archived"] as const;
 export type PuzzleStatus = (typeof PUZZLE_STATUSES)[number];
 
-// App Store URLs (placeholder - update when app is published)
-export const IOS_APP_ID = "footballiq";
+// App Store URLs
 export const ANDROID_PACKAGE = "com.footballiq.app";
-export const APP_STORE_URL = `https://apps.apple.com/app/${IOS_APP_ID}`;
+export const APP_STORE_URL = "https://apps.apple.com/us/app/football-iq-football-trivia/id6757344691";
 export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
 // Fallback puzzle data for when no puzzle exists for today

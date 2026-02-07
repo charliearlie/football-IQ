@@ -65,6 +65,16 @@ export function extractAnswer(
       return { text: "Grid Puzzle", qid: undefined };
     }
 
+    case "the_chain": {
+      const answer = content.answer as string | undefined;
+      return { text: answer || "Chain Puzzle", qid: undefined };
+    }
+
+    case "the_thread": {
+      const clubName = content.correct_club_name as string | undefined;
+      return { text: clubName || "Thread Puzzle", qid: undefined };
+    }
+
     case "topical_quiz": {
       return { text: "Quiz", qid: undefined };
     }

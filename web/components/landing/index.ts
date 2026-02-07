@@ -1,9 +1,13 @@
 export { Hero } from "./Hero";
+export { MarketingHero } from "./MarketingHero";
 export { PlayableCareerPath } from "./PlayableCareerPath";
 export { CareerStepCard } from "./CareerStepCard";
 export { LockedStepCard } from "./LockedStepCard";
 export { SuccessModal } from "./SuccessModal";
-export { WeeklyFixtures } from "./WeeklyFixtures";
-export { GameModeCard } from "./GameModeCard";
 export { CTAButton } from "./CTAButton";
 export { Footer } from "./Footer";
+export { GameModeGrid } from "./GameModeGrid";
+export { SocialProofStrip } from "./SocialProofStrip";
+export { TierProgression } from "./TierProgression";
+export { ShareCardPreview } from "./ShareCardPreview";
+export { StickyMobileCTA } from "./StickyMobileCTA";
