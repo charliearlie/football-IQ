@@ -242,7 +242,8 @@ async function matchClubsToDatabase(
     // 2. Country match (if player country provided)
     // 3. Top 5 league bonus
     // 4. Number of players (popularity)
-    const { data: matches, error } = await supabase.rpc("match_club_by_name", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: matches, error } = await (supabase.rpc as any)("match_club_by_name", {
       club_name_input: club.name,
       player_country_code: playerCountryCode ?? null,
     });

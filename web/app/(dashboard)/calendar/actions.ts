@@ -1812,7 +1812,8 @@ export async function calculateChainPar(
 
     const supabase = await createAdminClient();
 
-    // Cast to any since the RPC function types are added via migration
+    // Cast needed since the RPC function types are added via migration
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)("find_shortest_player_path", {
       start_qid: startQid,
       end_qid: endQid,
@@ -1824,6 +1825,7 @@ export async function calculateChainPar(
       return { success: false, error: error.message };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = (data as any[])?.[0];
     if (!result) {
       return {
@@ -1876,7 +1878,8 @@ export async function checkPlayersLinked(
 
     const supabase = await createAdminClient();
 
-    // Cast to any since the RPC function types are added via migration
+    // Cast needed since the RPC function types are added via migration
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)("check_players_linked", {
       player_a_qid: playerAQid,
       player_b_qid: playerBQid,
@@ -1887,6 +1890,7 @@ export async function checkPlayersLinked(
       return { success: false, error: error.message };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = (data as any[])?.[0];
     if (!result) {
       return {
@@ -1949,6 +1953,7 @@ export async function getChainPathSamples(
     let optimalLength: number | null = null;
 
     for (let i = 0; i < sampleCount + 3 && paths.length < sampleCount; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)("find_shortest_player_path", {
         start_qid: startQid,
         end_qid: endQid,
@@ -1960,6 +1965,7 @@ export async function getChainPathSamples(
         continue;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = (data as any[])?.[0];
       if (!result?.path_found) continue;
 

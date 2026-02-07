@@ -455,7 +455,9 @@ export async function fetchPlayerCommandCenterData(
     });
 
     // Fetch trophy cabinet (player_achievements joined with achievements and clubs)
-    const { data: trophies, error: trophiesError } = await supabase
+    // Table added via migration, not yet in generated Supabase types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: trophies, error: trophiesError } = await (supabase as any)
       .from("player_achievements")
       .select(`
         achievement_id,
@@ -478,7 +480,8 @@ export async function fetchPlayerCommandCenterData(
       return { success: false, error: trophiesError.message };
     }
 
-    const trophyCabinet: TrophyEntry[] = (trophies ?? []).map((trophy) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const trophyCabinet: TrophyEntry[] = (trophies ?? []).map((trophy: any) => {
       const achievement = trophy.achievements as { id: string; name: string; category: string } | null;
       const club = trophy.clubs as { id: string; name: string } | null;
       return {

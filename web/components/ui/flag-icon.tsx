@@ -1,3 +1,5 @@
+import * as flags from "country-flag-icons/string/3x2";
+
 /**
  * Home nation flag SVGs (GB-ENG, GB-SCT, GB-WLS, GB-NIR).
  * Not available in country-flag-icons, so we inline them.
@@ -24,8 +26,7 @@ const HOME_NATION_SVGS: Record<string, string> = {
 </svg>`,
 };
 
-// Cache for dynamically loaded SVG strings
-const svgCache = new Map<string, string>();
+const flagMap = flags as Record<string, string>;
 
 function getFlagSvg(code: string): string | null {
   const upperCode = code.toUpperCase();
@@ -35,20 +36,7 @@ function getFlagSvg(code: string): string | null {
     return HOME_NATION_SVGS[upperCode];
   }
 
-  // Check cache
-  if (svgCache.has(upperCode)) {
-    return svgCache.get(upperCode)!;
-  }
-
-  // Load from country-flag-icons string exports
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const svg = require(`country-flag-icons/string/3x2/${upperCode}`) as string;
-    svgCache.set(upperCode, svg);
-    return svg;
-  } catch {
-    return null;
-  }
+  return flagMap[upperCode] ?? null;
 }
 
 interface FlagIconProps {
