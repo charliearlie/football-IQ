@@ -596,6 +596,58 @@ describe("StartingXIPreview", () => {
     expect(screen.getByText("0 hidden")).toBeInTheDocument();
     expect(screen.getByText(/add hidden players for users to guess/i)).toBeInTheDocument();
   });
+
+  it("positions 4-2-3-1 wide AMs correctly (not bunched in center)", () => {
+    const data4231 = {
+      match_name: "Bayern vs Dortmund",
+      competition: "Champions League Final",
+      match_date: "25 May 2013",
+      formation: "4-2-3-1" as const,
+      team: "Bayern Munich",
+      players: [
+        { position_key: "GK" as const, player_name: "Neuer", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "RB" as const, player_name: "Lahm", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "RCB" as const, player_name: "Boateng", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "LCB" as const, player_name: "Dante", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "LB" as const, player_name: "Alaba", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "RCDM" as const, player_name: "Martinez", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "LCDM" as const, player_name: "Schweinsteiger", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "RCAM" as const, player_name: "Robben", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "CAM" as const, player_name: "Muller", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "LCAM" as const, player_name: "Ribery", is_hidden: false, override_x: null, override_y: null },
+        { position_key: "ST" as const, player_name: "Mandzukic", is_hidden: false, override_x: null, override_y: null },
+      ],
+    };
+
+    const { container } = render(<StartingXIPreview content={data4231} />);
+
+    // Find Robben (RCAM) and Ribery (LCAM) markers by their name text
+    const robbenEl = screen.getByText("Robben").closest(".absolute") as HTMLElement;
+    const riberyEl = screen.getByText("Ribery").closest(".absolute") as HTMLElement;
+
+    // RCAM should be on the right (> 70%)
+    const robbenLeft = parseFloat(robbenEl.style.left);
+    expect(robbenLeft).toBeGreaterThan(70);
+
+    // LCAM should be on the left (< 30%)
+    const riberyLeft = parseFloat(riberyEl.style.left);
+    expect(riberyLeft).toBeLessThan(30);
+  });
+
+  it("uses override coordinates when provided", () => {
+    const dataWithOverrides = {
+      ...startingXIData,
+      players: startingXIData.players.map((p, i) =>
+        i === 0 ? { ...p, override_x: 25, override_y: 75 } : p
+      ),
+    };
+    const { container } = render(<StartingXIPreview content={dataWithOverrides} />);
+
+    // GK (Alisson) should be at the override position
+    const alissonEl = screen.getByText("Alisson").closest(".absolute") as HTMLElement;
+    expect(alissonEl.style.left).toBe("25%");
+    expect(alissonEl.style.top).toBe("75%");
+  });
 });
 
 // ============================================================================

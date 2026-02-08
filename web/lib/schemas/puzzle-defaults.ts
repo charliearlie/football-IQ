@@ -187,9 +187,167 @@ export const FORMATION_POSITIONS: Record<string, string[]> = {
   "4-3-2-1": ["GK", "RB", "RCB", "LCB", "LB", "RCM", "CM", "LCM", "RCAM", "LCAM", "ST"],
 };
 
+/**
+ * Formation-specific coordinates for all positions.
+ * Mirrors the mobile app's FORMATION_COORDS exactly.
+ * Each formation defines exact x,y coordinates for its 11 positions.
+ */
+export const FORMATION_COORDS: Record<string, Array<{ key: string; x: number; y: number }>> = {
+  "4-3-3": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RB", x: 85, y: 75 },
+    { key: "RCB", x: 65, y: 78 },
+    { key: "LCB", x: 35, y: 78 },
+    { key: "LB", x: 15, y: 75 },
+    { key: "RCM", x: 65, y: 50 },
+    { key: "CM", x: 50, y: 50 },
+    { key: "LCM", x: 35, y: 50 },
+    { key: "RW", x: 82, y: 25 },
+    { key: "ST", x: 50, y: 15 },
+    { key: "LW", x: 18, y: 25 },
+  ],
+  "4-2-3-1": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RB", x: 85, y: 75 },
+    { key: "RCB", x: 65, y: 78 },
+    { key: "LCB", x: 35, y: 78 },
+    { key: "LB", x: 15, y: 75 },
+    { key: "RCDM", x: 60, y: 55 },
+    { key: "LCDM", x: 40, y: 55 },
+    { key: "RCAM", x: 82, y: 28 },
+    { key: "CAM", x: 50, y: 30 },
+    { key: "LCAM", x: 18, y: 28 },
+    { key: "ST", x: 50, y: 15 },
+  ],
+  "4-4-2": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RB", x: 85, y: 75 },
+    { key: "RCB", x: 65, y: 78 },
+    { key: "LCB", x: 35, y: 78 },
+    { key: "LB", x: 15, y: 75 },
+    { key: "RM", x: 85, y: 50 },
+    { key: "RCM", x: 60, y: 52 },
+    { key: "LCM", x: 40, y: 52 },
+    { key: "LM", x: 15, y: 50 },
+    { key: "RST", x: 60, y: 18 },
+    { key: "LST", x: 40, y: 18 },
+  ],
+  "4-4-1-1": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RB", x: 85, y: 75 },
+    { key: "RCB", x: 65, y: 78 },
+    { key: "LCB", x: 35, y: 78 },
+    { key: "LB", x: 15, y: 75 },
+    { key: "RM", x: 85, y: 50 },
+    { key: "RCM", x: 60, y: 52 },
+    { key: "LCM", x: 40, y: 52 },
+    { key: "LM", x: 15, y: 50 },
+    { key: "CAM", x: 50, y: 35 },
+    { key: "ST", x: 50, y: 18 },
+  ],
+  "3-5-2": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RCB", x: 68, y: 78 },
+    { key: "CB", x: 50, y: 78 },
+    { key: "LCB", x: 32, y: 78 },
+    { key: "RWB", x: 88, y: 58 },
+    { key: "RCM", x: 62, y: 50 },
+    { key: "CDM", x: 50, y: 55 },
+    { key: "LCM", x: 38, y: 50 },
+    { key: "LWB", x: 12, y: 58 },
+    { key: "RST", x: 60, y: 18 },
+    { key: "LST", x: 40, y: 18 },
+  ],
+  "3-4-3": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RCB", x: 68, y: 78 },
+    { key: "CB", x: 50, y: 78 },
+    { key: "LCB", x: 32, y: 78 },
+    { key: "RWB", x: 88, y: 55 },
+    { key: "RCM", x: 60, y: 50 },
+    { key: "LCM", x: 40, y: 50 },
+    { key: "LWB", x: 12, y: 55 },
+    { key: "RW", x: 82, y: 25 },
+    { key: "ST", x: 50, y: 15 },
+    { key: "LW", x: 18, y: 25 },
+  ],
+  "5-3-2": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RWB", x: 88, y: 68 },
+    { key: "RCB", x: 68, y: 78 },
+    { key: "CB", x: 50, y: 78 },
+    { key: "LCB", x: 32, y: 78 },
+    { key: "LWB", x: 12, y: 68 },
+    { key: "RCM", x: 65, y: 50 },
+    { key: "CM", x: 50, y: 50 },
+    { key: "LCM", x: 35, y: 50 },
+    { key: "RST", x: 60, y: 18 },
+    { key: "LST", x: 40, y: 18 },
+  ],
+  "5-4-1": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RWB", x: 88, y: 68 },
+    { key: "RCB", x: 68, y: 78 },
+    { key: "CB", x: 50, y: 78 },
+    { key: "LCB", x: 32, y: 78 },
+    { key: "LWB", x: 12, y: 68 },
+    { key: "RM", x: 85, y: 50 },
+    { key: "RCM", x: 60, y: 52 },
+    { key: "LCM", x: 40, y: 52 },
+    { key: "LM", x: 15, y: 50 },
+    { key: "ST", x: 50, y: 18 },
+  ],
+  "4-1-4-1": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RB", x: 85, y: 75 },
+    { key: "RCB", x: 65, y: 78 },
+    { key: "LCB", x: 35, y: 78 },
+    { key: "LB", x: 15, y: 75 },
+    { key: "CDM", x: 50, y: 60 },
+    { key: "RM", x: 85, y: 45 },
+    { key: "RCM", x: 60, y: 48 },
+    { key: "LCM", x: 40, y: 48 },
+    { key: "LM", x: 15, y: 45 },
+    { key: "ST", x: 50, y: 18 },
+  ],
+  "4-3-2-1": [
+    { key: "GK", x: 50, y: 90 },
+    { key: "RB", x: 85, y: 75 },
+    { key: "RCB", x: 65, y: 78 },
+    { key: "LCB", x: 35, y: 78 },
+    { key: "LB", x: 15, y: 75 },
+    { key: "RCM", x: 65, y: 52 },
+    { key: "CM", x: 50, y: 55 },
+    { key: "LCM", x: 35, y: 52 },
+    { key: "RCAM", x: 62, y: 35 },
+    { key: "LCAM", x: 38, y: 35 },
+    { key: "ST", x: 50, y: 18 },
+  ],
+};
+
 // Helper to get positions for a formation
 export function getFormationPositions(formation: string): string[] {
   return FORMATION_POSITIONS[formation] || FORMATION_POSITIONS["4-3-3"];
+}
+
+/**
+ * Get formation-specific default coordinates for a position.
+ * Falls back to a generic position map if formation or position not found.
+ */
+export function getFormationDefaultCoords(
+  formation: string,
+  positionKey: string
+): { x: number; y: number } {
+  const formationCoords = FORMATION_COORDS[formation];
+  if (formationCoords) {
+    const pos = formationCoords.find((p) => p.key === positionKey);
+    if (pos) return { x: pos.x, y: pos.y };
+  }
+  // Fallback: generic defaults
+  const FALLBACK: Record<string, { x: number; y: number }> = {
+    GK: { x: 50, y: 90 }, ST: { x: 50, y: 15 }, CF: { x: 50, y: 25 },
+  };
+  return FALLBACK[positionKey] || { x: 50, y: 50 };
 }
 
 // Helper to generate default players for a formation

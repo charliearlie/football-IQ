@@ -27,7 +27,7 @@ import {
  * Includes all possible game status values across all game modes.
  */
 export interface BaseGameState {
-  gameStatus: 'idle' | 'playing' | 'won' | 'lost' | 'draw' | 'complete';
+  gameStatus: 'idle' | 'playing' | 'won' | 'lost' | 'draw' | 'complete' | 'revealed';
   attemptId: string | null;
   attemptSaved: boolean;
   startedAt: string | null;
@@ -186,20 +186,15 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     isFocused,
     state,
     dispatch,
-    hasProgressToSave,
-    serializeProgress,
-    hasRestoredProgress,
-    deserializeProgress,
-    buildFinalAttempt,
-    onAttemptSaved,
-    onLocalAttemptSaved,
   } = config;
 
-  // 1. StateRef for AppState callbacks (avoids stale closure)
+  // 1. Refs to avoid stale closures in background/unmount callbacks.
+  // State and config are updated every render so effects always read the latest.
   const stateRef = useRef(state);
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
+  stateRef.current = state;
+
+  const configRef = useRef(config);
+  configRef.current = config;
 
   // 2. Generate attemptId when game starts
   useEffect(() => {
@@ -213,6 +208,8 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     async function checkForResume() {
       // Skip if no puzzle or screen is unfocused
       if (!puzzle || isFocused === false) return;
+
+      const { hasRestoredProgress, deserializeProgress } = configRef.current;
 
       try {
         const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
@@ -241,6 +238,8 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         const currentState = stateRef.current;
+        const { hasProgressToSave: checkProgress, serializeProgress: serialize } =
+          configRef.current;
 
         // Check prerequisites
         if (
@@ -252,7 +251,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
         }
 
         // Check if there's meaningful progress to save
-        if (!hasProgressToSave(currentState)) {
+        if (!checkProgress(currentState)) {
           return;
         }
 
@@ -263,7 +262,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
             completed: 0, // In-progress
             score: null,
             score_display: null,
-            metadata: JSON.stringify(serializeProgress(currentState)),
+            metadata: JSON.stringify(serialize(currentState)),
             started_at: currentState.startedAt,
             completed_at: null,
             synced: 0,
@@ -278,7 +277,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
-    // Callbacks are stable via config object
+    // configRef ensures fresh callbacks without effect re-creation
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle]);
 
@@ -287,13 +286,15 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     // Return cleanup function that saves on unmount
     return () => {
       const currentState = stateRef.current;
+      const { hasProgressToSave: checkProgress, serializeProgress: serialize } =
+        configRef.current;
 
       // Check prerequisites
       if (
         currentState.gameStatus !== 'playing' ||
         !puzzle ||
         !currentState.attemptId ||
-        !hasProgressToSave(currentState)
+        !checkProgress(currentState)
       ) {
         return;
       }
@@ -305,7 +306,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
         completed: 0,
         score: null,
         score_display: null,
-        metadata: JSON.stringify(serializeProgress(currentState)),
+        metadata: JSON.stringify(serialize(currentState)),
         started_at: currentState.startedAt,
         completed_at: null,
         synced: 0,
@@ -316,6 +317,7 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
       });
     };
     // Only re-create cleanup when puzzle changes
+    // configRef ensures fresh callbacks without effect re-creation
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle?.id]);
 
@@ -333,11 +335,17 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     }
 
     const saveGameAttempt = async () => {
+      const {
+        buildFinalAttempt: buildAttempt,
+        onAttemptSaved: onSaved,
+        onLocalAttemptSaved: onLocalSaved,
+      } = configRef.current;
+
       try {
         const attemptId = state.attemptId ?? Crypto.randomUUID();
         const now = new Date().toISOString();
 
-        const attemptData = buildFinalAttempt(state, attemptId, now);
+        const attemptData = buildAttempt(state, attemptId, now);
         const attempt: LocalAttempt = {
           ...attemptData,
           puzzle_id: puzzle.id,
@@ -347,15 +355,15 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
         dispatch({ type: 'ATTEMPT_SAVED' });
 
         // Refresh local IQ immediately for instant UI update
-        if (onLocalAttemptSaved) {
-          onLocalAttemptSaved().catch((err) => {
+        if (onLocalSaved) {
+          onLocalSaved().catch((err) => {
             console.error('Failed to refresh local IQ:', err);
           });
         }
 
         // Fire-and-forget cloud sync if callback provided
-        if (onAttemptSaved) {
-          onAttemptSaved().catch((err) => {
+        if (onSaved) {
+          onSaved().catch((err) => {
             console.error('Cloud sync failed:', err);
           });
         }

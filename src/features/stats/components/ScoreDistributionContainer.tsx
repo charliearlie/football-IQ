@@ -8,7 +8,9 @@
  */
 
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useScoreDistribution } from '../hooks/useScoreDistribution';
 import { ScoreDistributionGraph } from './ScoreDistributionGraph';
 import { ScoreDistributionSkeleton } from './ScoreDistributionSkeleton';
@@ -81,6 +83,49 @@ function transformGoalscorerDistribution(
     count: 0, // Not used for display
     percentage,
   }));
+}
+
+/**
+ * Transform Threads distribution from normalized 0-100 scores to hint-count buckets.
+ *
+ * Possible normalized scores: 100 (0 hints), 60 (1 hint), 40 (2 hints), 20 (3 hints), 0 (give up).
+ * Maps to 5 buckets: 4 (best) → 0 (worst).
+ */
+function transformThreadDistribution(
+  distribution: DistributionEntry[]
+): DistributionEntry[] {
+  const bucketMap = new Map<number, number>();
+
+  for (const entry of distribution) {
+    // Map normalized score to hint bucket
+    let bucket: number;
+    if (entry.score >= 80) bucket = 4;       // 0 hints (100 normalized)
+    else if (entry.score >= 50) bucket = 3;  // 1 hint (60 normalized)
+    else if (entry.score >= 30) bucket = 2;  // 2 hints (40 normalized)
+    else if (entry.score >= 10) bucket = 1;  // 3 hints (20 normalized)
+    else bucket = 0;                          // Give up (0 normalized)
+
+    const current = bucketMap.get(bucket) || 0;
+    bucketMap.set(bucket, current + entry.percentage);
+  }
+
+  return Array.from(bucketMap.entries()).map(([score, percentage]) => ({
+    score,
+    count: 0,
+    percentage,
+  }));
+}
+
+/**
+ * Map Threads raw points to hint-count bucket value.
+ * 10 pts → 4 (0 hints), 6 → 3 (1 hint), 4 → 2, 2 → 1, 0 → 0.
+ */
+function threadPointsToHintBucket(points: number): number {
+  if (points >= 10) return 4;
+  if (points >= 6) return 3;
+  if (points >= 4) return 2;
+  if (points >= 2) return 1;
+  return 0;
 }
 
 /**
@@ -179,14 +224,24 @@ export function ScoreDistributionContainer({
   maxSteps,
   testID,
 }: ScoreDistributionContainerProps) {
+  const { isConnected } = useNetworkStatus();
   const { distribution, totalAttempts, isLoading, error } = useScoreDistribution(
     puzzleId,
     gameMode
   );
 
-  // Fail silently on error - graph is a nice-to-have feature
-  if (error) {
-    return null;
+  // Show offline placeholder when offline or on fetch error
+  if (isConnected === false || error) {
+    return (
+      <View
+        style={offlineStyles.container}
+        testID={testID ? `${testID}-offline` : undefined}
+      >
+        <Text style={offlineStyles.text}>
+          Score distribution unavailable offline
+        </Text>
+      </View>
+    );
   }
 
   // Show skeleton while loading
@@ -259,6 +314,36 @@ export function ScoreDistributionContainer({
     );
   }
 
+  // For Threads, transform distribution to hint-count display (5 bars)
+  if (gameMode === 'the_thread') {
+    // userScore is raw points (0, 2, 4, 6, 10), normalize to 0-100
+    const normalizedUserScore = userScore * 10;
+
+    // Optimistically merge at normalized scale (API uses 20-point buckets)
+    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+      mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 20);
+
+    // Transform to 5 hint-count buckets
+    const transformedDistribution = transformThreadDistribution(mergedDistribution);
+
+    // Map user points to hint bucket: 10→4, 6→3, 4→2, 2→1, 0→0
+    const userHintBucket = threadPointsToHintBucket(userScore);
+
+    return (
+      <ScoreDistributionGraph
+        distribution={transformedDistribution}
+        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
+        userScore={userHintBucket}
+        maxScore={4}
+        minScore={0}
+        bucketSize={1}
+        scoreLabels={getScoreLabelsForMode(gameMode)}
+        isFirstPlayer={isFirstPlayer}
+        testID={testID}
+      />
+    );
+  }
+
   // For The Chain, use normalized 0-100 scores with step count labels
   // Lower steps = better = higher normalized score (2 steps = 100, 11+ steps = 0)
   if (gameMode === 'the_chain') {
@@ -307,3 +392,15 @@ export function ScoreDistributionContainer({
     />
   );
 }
+
+const offlineStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  text: {
+    fontSize: 13,
+    color: 'rgba(248, 250, 252, 0.5)',
+    fontStyle: 'italic',
+  },
+});

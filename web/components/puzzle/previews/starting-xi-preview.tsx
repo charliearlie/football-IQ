@@ -2,45 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { StartingXIContent } from "@/lib/schemas";
-
-interface StartingXIPreviewProps {
-  content: unknown;
-}
-
-// Position coordinates (x: 0-100 left-right, y: 0-100 top-bottom)
-const POSITION_COORDS: Record<string, { x: number; y: number }> = {
-  // Goalkeeper
-  GK: { x: 50, y: 90 },
-  // Defenders
-  RB: { x: 85, y: 75 },
-  RCB: { x: 65, y: 78 },
-  CB: { x: 50, y: 78 },
-  LCB: { x: 35, y: 78 },
-  LB: { x: 15, y: 75 },
-  RWB: { x: 88, y: 65 },
-  LWB: { x: 12, y: 65 },
-  // Defensive Midfield
-  CDM: { x: 50, y: 60 },
-  RCDM: { x: 60, y: 58 },
-  LCDM: { x: 40, y: 58 },
-  // Central Midfield
-  RCM: { x: 65, y: 48 },
-  CM: { x: 50, y: 45 },
-  LCM: { x: 35, y: 48 },
-  RM: { x: 88, y: 45 },
-  LM: { x: 12, y: 45 },
-  // Attacking Midfield
-  CAM: { x: 50, y: 32 },
-  RCAM: { x: 60, y: 30 },
-  LCAM: { x: 40, y: 30 },
-  // Forwards
-  RW: { x: 85, y: 20 },
-  LW: { x: 15, y: 20 },
-  ST: { x: 50, y: 15 },
-  RST: { x: 60, y: 15 },
-  LST: { x: 40, y: 15 },
-  CF: { x: 50, y: 22 },
-};
+import { getFormationDefaultCoords } from "@/lib/schemas/puzzle-defaults";
 
 export function StartingXIPreview({ content }: StartingXIPreviewProps) {
   const data = content as StartingXIContent;
@@ -97,10 +59,14 @@ export function StartingXIPreview({ content }: StartingXIPreviewProps) {
 
         {/* Players */}
         {data.players.map((player, index) => {
+          const defaultCoords = getFormationDefaultCoords(
+            data.formation,
+            player.position_key
+          );
           const coords =
-            player.override_x && player.override_y
+            player.override_x != null && player.override_y != null
               ? { x: player.override_x, y: player.override_y }
-              : POSITION_COORDS[player.position_key] || { x: 50, y: 50 };
+              : defaultCoords;
 
           return (
             <div

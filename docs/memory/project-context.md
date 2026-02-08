@@ -1,16 +1,17 @@
 # Football IQ - Project Context
 
 ## Overview
-Football IQ is a mobile trivia game featuring daily puzzles across 9 game modes:
+Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes:
 1. **Career Path** - Guess player from sequential career clues
 2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
 3. **The Grid** - Fill 3x3 matrix with players matching criteria
 4. **The Chain** - Connect two players through shared club history (Inverse Par scoring)
-5. **Transfer Guess** - Identify player from transfer info
-6. **Goalscorer Recall** - Name scorers from historic match (timed)
-7. **Topical Quiz** - 5 multiple-choice questions
-8. **Top Tens** (Premium) - Name all 10 answers in a ranked list
-9. **Starting XI** - Identify hidden players on a tactical pitch lineup
+5. **The Thread** - Guess the club from a chronological list of kit sponsors/suppliers
+6. **Transfer Guess** - Identify player from transfer info
+7. **Goalscorer Recall** - Name scorers from historic match (timed)
+8. **Topical Quiz** - 5 multiple-choice questions
+9. **Top Tens** (Premium) - Name all 10 answers in a ranked list
+10. **Starting XI** - Identify hidden players on a tactical pitch lineup
 
 ## Tech Stack
 | Layer | Technology |
@@ -155,6 +156,40 @@ Cache Oracle results to player_search_cache
 - `supabase/migrations/020_player_sync.sql` — `app_config` table + `get_elite_index_delta` RPC
 - `supabase/migrations/022_achievements.sql` — Achievements schema, stats_cache, calculate_player_stats RPC
 
+### Club Search (for The Thread game mode)
+Hybrid search for clubs with nickname support and fuzzy matching.
+
+**Architecture:**
+1. **Local Cache**: ~200 elite clubs pre-seeded in `club_colors` table from `elite-index.json`
+2. **Nickname Map**: Hardcoded `CLUB_NICKNAME_MAP` for common aliases (e.g., "Spurs" → Tottenham)
+3. **Local Search**: `searchClubColors()` — LIKE on name with diacritic normalization
+4. **Remote Fallback**: If < 3 local results, debounced (300ms) Supabase `clubs` table query
+5. **Deduplication**: Results merged by club ID, sorted by relevance score
+
+**Search Flow:**
+```
+User types 2+ chars → searchClubColors() (instant, ~200 clubs)
+  ↓
+Check CLUB_NICKNAME_MAP for alias matches
+  ↓ (if < 3 results)
+300ms debounce → Supabase clubs table query
+  ↓
+Merge + dedupe by ID → sort by relevance
+```
+
+**Nickname Examples:**
+- "Spurs" → Tottenham Hotspur F.C.
+- "Gunners" → Arsenal F.C.
+- "Barca" → FC Barcelona
+- "Bayern" / "FCB" → FC Bayern Munich
+
+**Files:**
+- `src/services/club/ClubSearchEngine.ts` — Hybrid search with callback pattern
+- `src/services/club/clubNicknames.ts` — `CLUB_NICKNAME_MAP` + `NICKNAME_TO_CLUB_ID` reverse lookup
+- `src/services/club/types.ts` — `UnifiedClub`, `CachedClub` interfaces
+- `src/lib/database.ts` — `searchClubColors()`, `getClubColorById()`
+- `src/components/ClubAutocomplete.tsx` — Neubrutalist autocomplete UI
+
 ### Access Control (3-Tier)
 | Tier | User Type | Puzzle Access |
 |------|-----------|---------------|
@@ -255,6 +290,17 @@ Connect two players through shared club history using Inverse Par scoring.
 **Labels**: Eagle (-2), Birdie (-1), Par (0), Bogey (+1), Double Bogey (+2), Triple Bogey+ (+3+), DNF
 **Display**: Chain of player cards with connecting clubs
 **Files**: `src/features/the-chain/`, `app/the-chain/`, `web/lib/the-chain/scoring.ts`, `web/components/puzzle/forms/the-chain-form.tsx`, `supabase/migrations/028_the_chain.sql`
+
+### The Thread
+Guess the football club from a chronological list of kit sponsors or suppliers.
+
+**Content**: `{ thread_type: 'sponsor' | 'supplier', path: [{ brand_name, years }], correct_club_id, correct_club_name, kit_lore: { fun_fact } }`
+**Validation**: Path must have at least 3 entries, years must follow YYYY-YYYY or YYYY- format. Club guesses validated by Wikidata QID (primary) with fuzzy name matching fallback.
+**Scoring**: 100 points for 1st guess, -20 per subsequent guess (100 → 80 → 60 → 40 → 20 → 0). Formula: `max(0, 100 - ((guessCount - 1) * 20))`
+**Display**: All brands shown upfront. Stars emoji grid on share (⭐⭐⭐⭐⭐ Perfect! down to ✓ Completed)
+**Kit Lore**: Fun fact revealed only after game ends (won or gave up)
+**CMS Form**: Timeline-styled brand array with numbered nodes, club selector with debounced search, thread type toggle (Sponsor/Supplier)
+**Files**: `src/features/the-thread/`, `web/lib/schemas/puzzle-schemas.ts`, `web/components/puzzle/forms/the-thread-form.tsx`, `web/components/puzzle/previews/the-thread-preview.tsx`, `web/app/(dashboard)/admin/the-thread/page.tsx`
 
 ### Topical Quiz
 5 multiple-choice questions on current events. Auto-advances after answer.

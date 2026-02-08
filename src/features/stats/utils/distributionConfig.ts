@@ -119,6 +119,9 @@ export function getScoreLabelsForMode(
       // Step counts - lower is better (2 = best, 12+ = worst)
       // 11 labels for buckets 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0
       return ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12+'];
+    case 'the_thread':
+      // Hint-count labels: 0 hints (best) to give up (worst)
+      return ['0 hints', '1 hint', '2 hints', '3 hints', 'Give up'];
     default:
       // Default: use percentage labels
       return undefined;
@@ -166,6 +169,9 @@ export function normalizeScoreForMode(
     case 'the_grid':
       // Already 0-100
       return rawScore;
+    case 'the_thread':
+      // 0-10 points -> 0-100
+      return rawScore * 10;
     default:
       return rawScore;
   }

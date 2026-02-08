@@ -1788,6 +1788,62 @@ export async function getClubColorByName(
 }
 
 /**
+ * Get club color by Wikidata ID.
+ * Used by ClubSearchEngine for nickname lookups.
+ */
+export async function getClubColorById(
+  clubId: string
+): Promise<ClubColor | null> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<ClubColor>(
+    'SELECT id, name, primary_color, secondary_color FROM club_colors WHERE id = $id',
+    { $id: clubId }
+  );
+  return result ?? null;
+}
+
+/**
+ * Search club colors by name (fuzzy match).
+ * Used by ClubSearchEngine for local search.
+ *
+ * @param query - Search query (minimum 2 characters)
+ * @param limit - Maximum results to return
+ * @returns Clubs sorted by name match quality (prefix matches first)
+ */
+export async function searchClubColors(
+  query: string,
+  limit: number = 10
+): Promise<ClubColor[]> {
+  if (!query || query.length < 2) return [];
+
+  const database = getDatabase();
+  const normalizedQuery = query
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+  // Search with prefix priority ordering
+  return database.getAllAsync<ClubColor>(
+    `SELECT id, name, primary_color, secondary_color
+     FROM club_colors
+     WHERE LOWER(name) LIKE $pattern
+        OR LOWER(
+             REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(name, 'ü', 'u'), 'ö', 'o'), 'ä', 'a'), 'é', 'e'), 'ñ', 'n')
+           ) LIKE $pattern
+     ORDER BY
+       CASE WHEN LOWER(name) LIKE $prefix THEN 0 ELSE 1 END,
+       LENGTH(name) ASC
+     LIMIT $limit`,
+    {
+      $pattern: `%${normalizedQuery}%`,
+      $prefix: `${normalizedQuery}%`,
+      $limit: limit,
+    }
+  );
+}
+
+/**
  * Close the database connection.
  * Primarily used for testing cleanup.
  */

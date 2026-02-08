@@ -90,6 +90,72 @@ getSyncIntervalMs(new Date('2026-10-01'));  // 2592000000 (30 days, quiet)
 // Monthly sync months: all others
 ```
 
+### Club Search (for The Thread)
+```typescript
+// Hybrid search: local club_colors (~200 clubs) + nickname map → debounced Supabase
+import { searchClubsHybrid } from '@/services/club';
+import type { UnifiedClub } from '@/services/club';
+
+searchClubsHybrid('spurs', (results) => {
+  // UnifiedClub[] — instant local + nickname results, Supabase fallback if <3 matches
+});
+
+// UnifiedClub interface
+interface UnifiedClub {
+  id: string;                    // Wikidata QID (e.g., "Q18671")
+  name: string;                  // Full name (e.g., "Tottenham Hotspur F.C.")
+  primary_color: string;         // Hex (e.g., "#132257")
+  secondary_color: string;       // Hex (e.g., "#FFFFFF")
+  source: 'local' | 'remote';
+  relevance_score: number;
+  match_type: 'name' | 'nickname';
+}
+
+// Nickname utilities
+import { findClubByNickname, getClubNicknames } from '@/services/club';
+
+findClubByNickname('spurs');     // 'Q18671' (Tottenham)
+findClubByNickname('barca');     // 'Q7156' (Barcelona)
+getClubNicknames('Q18602');      // ['united', 'red devils', 'man utd', 'man united']
+```
+
+### ClubAutocomplete Component
+```typescript
+import { ClubAutocomplete } from '@/components';
+
+// Basic usage (selection only)
+<ClubAutocomplete
+  onSelect={(club) => console.log('Selected:', club.name)}
+  placeholder="Search club..."
+/>
+
+// With text submission (like PlayerAutocomplete)
+<ClubAutocomplete
+  onSelect={(club) => handleClubSelection(club)}
+  onSubmitText={(text) => handleTextSubmit(text)}
+  shouldShake={hasError}
+  disabled={isGameOver}
+/>
+
+// Props
+interface ClubAutocompleteProps {
+  onSelect: (club: UnifiedClub) => void;
+  onSubmitText?: (text: string) => void;
+  shouldShake?: boolean;       // Trigger shake animation
+  disabled?: boolean;
+  placeholder?: string;
+  onFocus?: () => void;
+  testID?: string;
+}
+
+// Features:
+// - 2 char minimum query length (vs 3 for players)
+// - ClubShield shows primary/secondary colors
+// - "via nickname" hint when matched by alias
+// - Haptic feedback on selection (triggerLight)
+// - Shake animation + border flash on error
+```
+
 ### Admin: Player Scout (`/player-scout`)
 - Batch-resolves player names via Wikidata SPARQL
 - Fetches career clubs (P54 property)
@@ -740,6 +806,94 @@ generateTopTensEmojiGrid(rankSlots, score)
 </PremiumOnlyGate>
 ```
 
+## The Thread Game
+```typescript
+import {
+  useTheThreadGame,
+  calculateThreadScore,
+  formatThreadScore,
+  generateThreadEmojiGrid,
+  parseTheThreadContent,
+  createInitialState,
+} from '@/features/the-thread';
+
+// Puzzle content structure
+interface TheThreadContent {
+  thread_type: 'sponsor' | 'supplier';    // Kit sponsor or kit manufacturer
+  path: ThreadBrand[];                    // Min 3 brands, chronological
+  correct_club_id: string;                // Wikidata QID (e.g., "Q18656")
+  correct_club_name: string;              // Fallback for validation
+  kit_lore: { fun_fact: string };         // Revealed after game ends
+}
+
+interface ThreadBrand {
+  brand_name: string;                     // e.g., "Sharp", "Nike"
+  years: string;                          // "YYYY-YYYY" or "YYYY-" (ongoing)
+}
+
+// Hook usage (internal to TheThreadScreen)
+const {
+  state,
+  threadContent,
+  threadType,                // 'sponsor' | 'supplier' | null
+  brands,                    // ThreadBrand[] (shortcut to path)
+  kitLore,                   // KitLore | null
+  isGameOver,
+  canShowKitLore,            // true when gameStatus is 'won' or 'revealed'
+  submitGuess,
+  giveUp,
+  resetGame,
+  shareResult,
+} = useTheThreadGame(puzzle);
+
+// State values
+state.guesses               // UnifiedClub[] (all guesses made)
+state.gameStatus            // 'playing' | 'won' | 'lost' | 'revealed'
+state.score                 // ThreadScore | null (set on game end)
+state.lastGuessIncorrect    // Triggers shake animation
+state.attemptId             // UUID for persistence
+state.attemptSaved          // true after saved to SQLite
+
+// Scoring: 100 points for 1st guess, -20 per subsequent
+// Formula: max(0, 100 - ((guessCount - 1) * 20))
+calculateThreadScore(1, true)   // { points: 100, maxPoints: 100, guessCount: 1, won: true }
+calculateThreadScore(2, true)   // { points: 80, ... }
+calculateThreadScore(3, true)   // { points: 60, ... }
+calculateThreadScore(5, true)   // { points: 20, ... }
+calculateThreadScore(6, true)   // { points: 0, won: true } (floor at 0)
+calculateThreadScore(3, false)  // { points: 0, won: false } (gave up)
+
+// Format: "80/100"
+formatThreadScore(score)
+
+// Emoji grid: "⭐⭐⭐⭐ Great!" (100=5 stars, 80=4, 60=3, 40=2, 20=1, 0=✓, DNF=💀)
+generateThreadEmojiGrid(score)
+
+// Submit club guess (validates ID then fuzzy name match)
+submitGuess(club: UnifiedClub)
+
+// Give up and reveal answer
+giveUp()
+```
+
+### The Thread CMS Form
+```typescript
+// CMS Form: web/components/puzzle/forms/the-thread-form.tsx
+// Uses ClubSelector component with searchClubsForForm() server action
+// Timeline-styled brand array with useFieldArray
+
+import { TheThreadForm } from '@/components/puzzle/forms/the-thread-form';
+import { TheThreadPreview } from '@/components/puzzle/previews/the-thread-preview';
+
+// Registered in puzzle-editor-modal.tsx formRegistry and previewRegistry
+// Admin page: /admin/the-thread
+
+// Server action for club search
+import { searchClubsForForm } from '@/app/(dashboard)/calendar/actions';
+const clubs = await searchClubsForForm('arsenal');
+// Returns: { id: string, name: string, primary_color: string | null, secondary_color: string | null }[]
+```
+
 ## Starting XI Game
 ```typescript
 import {
@@ -1364,6 +1518,7 @@ const result = await prefetchQuizImages(urls);
 - Goalscorer Recall: `src/features/goalscorer-recall/`
 - Tic Tac Toe: `src/features/tic-tac-toe/` (legacy)
 - The Grid: `src/features/the-grid/`
+- The Thread: `src/features/the-thread/` (kit sponsor/supplier guessing)
 - Topical Quiz: `src/features/topical-quiz/`
 - Top Tens: `src/features/top-tens/` (premium-only)
 - Starting XI: `src/features/starting-xi/`
@@ -1533,7 +1688,7 @@ open tools/content-creator.html
 3. Fill form → Review JSON → Push to Supabase
 ```
 
-Supported game modes: `career_path`, `career_path_pro`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `topical_quiz`, `top_tens`, `starting_xi`
+Supported game modes: `career_path`, `career_path_pro`, `guess_the_transfer`, `guess_the_goalscorers`, `tic_tac_toe`, `the_grid`, `the_chain`, `the_thread`, `topical_quiz`, `top_tens`, `starting_xi`
 
 ## RevenueCat Integration
 ```typescript

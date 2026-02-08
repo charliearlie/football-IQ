@@ -57,6 +57,7 @@ const GAME_MODE_ORDER: GameMode[] = [
   'guess_the_goalscorers',
   'the_grid',
   'the_chain',
+  'the_thread',
   'topical_quiz',
   'top_tens',
   'starting_xi',

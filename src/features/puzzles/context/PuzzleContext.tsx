@@ -17,6 +17,7 @@ import { syncAttemptsToSupabase } from '../services/attemptSyncService';
 import { syncCatalogFromSupabase } from '@/features/archive/services/catalogSyncService';
 import { performLightSync } from '../services/puzzleLightSyncService';
 import { useRehydration } from '@/features/integrity';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import {
   PuzzleContextValue,
   SyncStatus,
@@ -57,8 +58,15 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   const userId = user?.id ?? null;
   const isPremium = profile?.is_premium ?? false;
 
+  // Network connectivity
+  const { isConnected } = useNetworkStatus();
+
   // Track which user we've synced for to prevent re-syncing on callback recreation
   const syncedForUserRef = useRef<string | null>(null);
+  // Track whether initial sync was skipped due to being offline
+  const skippedInitialSyncRef = useRef(false);
+  // Track offline→online transitions for attempt flushing
+  const wasDisconnectedRef = useRef(false);
 
   // Light sync cooldown and AppState tracking
   const lastLightSyncAtRef = useRef<number>(0);
@@ -158,6 +166,11 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
    * Uses cooldown to prevent rapid-fire checks on quick foreground/background cycles.
    */
   const doLightSync = useCallback(async () => {
+    if (isConnected === false) {
+      console.log('[PuzzleContext] Light sync skipped (offline)');
+      return;
+    }
+
     const now = Date.now();
     if (now - lastLightSyncAtRef.current < LIGHT_SYNC_COOLDOWN_MS) {
       console.log('[PuzzleContext] Light sync skipped (cooldown)');
@@ -184,7 +197,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     } catch (err) {
       console.error('[PuzzleContext] Light sync failed:', err);
     }
-  }, [isPremium, refreshLocalPuzzles]);
+  }, [isConnected, isPremium, refreshLocalPuzzles]);
 
   /**
    * Dismiss the puzzle update toast.
@@ -225,13 +238,20 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
 
   // Auto-sync when user becomes available (or changes)
   useEffect(() => {
-    console.log('[PuzzleContext] User check - userId:', userId, 'syncedForUser:', syncedForUserRef.current);
+    console.log('[PuzzleContext] User check - userId:', userId, 'isConnected:', isConnected, 'syncedForUser:', syncedForUserRef.current);
     if (userId && syncedForUserRef.current !== userId) {
-      console.log('[PuzzleContext] Triggering initial puzzle sync');
-      syncedForUserRef.current = userId;
-      syncPuzzles();
+      if (isConnected === false) {
+        // Offline: skip remote sync, leave syncStatus as 'idle' so local data renders
+        console.log('[PuzzleContext] Offline - skipping initial sync, using local data');
+        syncedForUserRef.current = userId;
+        skippedInitialSyncRef.current = true;
+      } else {
+        console.log('[PuzzleContext] Triggering initial puzzle sync');
+        syncedForUserRef.current = userId;
+        syncPuzzles();
+      }
     }
-  }, [userId, syncPuzzles]);
+  }, [userId, isConnected, syncPuzzles]);
 
   // Reset sync tracking when user logs out
   useEffect(() => {
@@ -251,6 +271,31 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
     return unsubscribe;
   }, [syncPuzzles]);
 
+  // Reconnection: sync puzzles and attempts when we come back online
+  useEffect(() => {
+    if (isConnected === false) {
+      wasDisconnectedRef.current = true;
+    }
+
+    if (isConnected === true && userId) {
+      // Trigger deferred puzzle sync if initial sync was skipped
+      if (skippedInitialSyncRef.current) {
+        console.log('[PuzzleContext] Back online - triggering deferred puzzle sync');
+        skippedInitialSyncRef.current = false;
+        syncPuzzles();
+      }
+
+      // Flush unsynced attempts after any offline period
+      if (wasDisconnectedRef.current) {
+        wasDisconnectedRef.current = false;
+        console.log('[PuzzleContext] Network reconnected - flushing unsynced attempts');
+        syncAttempts().catch((err) => {
+          console.warn('[PuzzleContext] Reconnection attempt sync failed:', err);
+        });
+      }
+    }
+  }, [isConnected, userId, syncPuzzles, syncAttempts]);
+
   // Re-check for stale puzzles when app returns to foreground
   // This catches CMS edits made while the app was backgrounded
   useEffect(() => {
@@ -263,13 +308,20 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
             '[PuzzleContext] App returned to foreground, checking for updates'
           );
           doLightSync();
+
+          // Also flush any unsynced attempts on foreground return
+          if (isConnected !== false && userId) {
+            syncAttempts().catch((err) => {
+              console.warn('[PuzzleContext] Foreground attempt sync failed:', err);
+            });
+          }
         }
         appStateRef.current = nextState;
       }
     );
 
     return () => subscription.remove();
-  }, [doLightSync]);
+  }, [doLightSync, syncAttempts, isConnected, userId]);
 
   const value = useMemo<PuzzleContextValue>(
     () => ({

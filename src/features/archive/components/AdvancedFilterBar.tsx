@@ -31,6 +31,8 @@ import {
   ListOrdered,
   Users,
   Shuffle,
+  Link,
+  Shirt,
 } from 'lucide-react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
@@ -70,6 +72,8 @@ const GAME_MODE_OPTIONS: { value: GameMode | null; label: string; icon: React.Re
   { value: 'guess_the_transfer', label: 'Transfer', icon: <ArrowRightLeft size={14} color={colors.pitchGreen} /> },
   { value: 'guess_the_goalscorers', label: 'Recall', icon: <Target size={14} color={colors.redCard} /> },
   { value: 'the_grid', label: 'Grid (beta)', icon: <Grid3X3 size={14} color={colors.pitchGreen} /> },
+  { value: 'the_chain', label: 'The Chain', icon: <Link size={14} color={colors.pitchGreen} /> },
+  { value: 'the_thread', label: 'Threads', icon: <Shirt size={14} color={colors.cardYellow} /> },
   { value: 'topical_quiz', label: 'Quiz', icon: <HelpCircle size={14} color={colors.cardYellow} /> },
   { value: 'top_tens', label: 'Top Tens', icon: <ListOrdered size={14} color={colors.pitchGreen} /> },
   { value: 'starting_xi', label: 'Starting XI', icon: <Users size={14} color={colors.cardYellow} /> },

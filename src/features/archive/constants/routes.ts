@@ -17,6 +17,7 @@ export const GAME_MODE_ROUTES: Record<GameMode, string> = {
   guess_the_goalscorers: 'goalscorer-recall',
   the_grid: 'the-grid',
   the_chain: 'the-chain',
+  the_thread: 'the-thread',
   topical_quiz: 'topical-quiz',
   top_tens: 'top-tens',
   starting_xi: 'starting-xi',

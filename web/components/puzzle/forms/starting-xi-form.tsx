@@ -24,6 +24,7 @@ import {
 
 import type { StartingXIContent, FormationName } from "@/lib/schemas";
 import { FORMATION_POSITIONS } from "@/lib/schemas";
+import { PitchPositionEditor } from "./pitch-position-editor";
 
 interface FormValues {
   content: StartingXIContent;
@@ -237,6 +238,11 @@ export function StartingXIForm() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Pitch Position Editor */}
+      <div className="glass-card p-4">
+        <PitchPositionEditor />
       </div>
     </div>
   );

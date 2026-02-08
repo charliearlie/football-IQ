@@ -93,8 +93,16 @@ function getGameModeName(gameMode: GameMode): string {
       return 'Goalscorer Recall';
     case 'the_grid':
       return 'The Grid (beta)';
+    case 'the_chain':
+      return 'The Chain';
+    case 'the_thread':
+      return 'Threads';
     case 'topical_quiz':
       return 'Quiz';
+    case 'top_tens':
+      return 'Top Tens';
+    case 'starting_xi':
+      return 'Starting XI';
     default:
       return 'Game';
   }

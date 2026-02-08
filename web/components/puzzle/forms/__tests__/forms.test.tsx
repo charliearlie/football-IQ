@@ -366,10 +366,10 @@ describe("StartingXIForm", () => {
   it("shows position labels for each player", () => {
     renderWithForm(<StartingXIForm />, { gameMode: "starting_xi" });
 
-    // Default 4-3-3 positions
-    expect(screen.getByText("GK")).toBeInTheDocument();
-    expect(screen.getByText("RB")).toBeInTheDocument();
-    expect(screen.getByText("ST")).toBeInTheDocument();
+    // Default 4-3-3 positions (appear in both player list badges and pitch editor)
+    expect(screen.getAllByText("GK").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("RB").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("ST").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders hidden toggle for each player", () => {

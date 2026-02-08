@@ -28,6 +28,7 @@ export const GAME_MODE_DISPLAY: Record<
   guess_the_goalscorers: { displayName: 'Goalscorer Recall', skillName: 'Rapid Recall' },
   the_grid: { displayName: 'The Grid (beta)', skillName: 'Pattern Recognition' },
   the_chain: { displayName: 'The Chain', skillName: 'Connection Master' },
+  the_thread: { displayName: 'Threads', skillName: 'Kit Historian' },
   topical_quiz: { displayName: 'Topical Quiz', skillName: 'Current Affairs' },
   top_tens: { displayName: 'Top Tens', skillName: 'Deep Knowledge' },
   starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },
@@ -39,14 +40,15 @@ export const GAME_MODE_DISPLAY: Record<
  * Total: 100%
  */
 export const IQ_WEIGHTS: Record<GameMode, number> = {
-  career_path: 0.14, // 14% - flagship mode
-  career_path_pro: 0.10, // 10% - premium flagship
-  guess_the_transfer: 0.14, // 14% - flagship mode
-  guess_the_goalscorers: 0.11, // 11%
-  the_grid: 0.11, // 11%
-  the_chain: 0.10, // 10% - new mode
-  topical_quiz: 0.10, // 10%
-  top_tens: 0.12, // 12% - premium mode
+  career_path: 0.13, // 13% - flagship mode
+  career_path_pro: 0.09, // 9% - premium flagship
+  guess_the_transfer: 0.13, // 13% - flagship mode
+  guess_the_goalscorers: 0.10, // 10%
+  the_grid: 0.10, // 10%
+  the_chain: 0.09, // 9%
+  the_thread: 0.08, // 8% - kit history mode
+  topical_quiz: 0.09, // 9%
+  top_tens: 0.11, // 11% - premium mode
   starting_xi: 0.08, // 8%
 };
 

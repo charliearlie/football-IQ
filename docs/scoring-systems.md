@@ -177,6 +177,43 @@ points = max(0, par - (steps - par))
 
 ---
 
+## The Thread
+
+**Type:** Tiered (Decreasing)
+**Game Mode ID:** `the_thread`
+**Max Points:** 10
+
+### Rules
+- Players see a chronological list of kit sponsors or suppliers
+- All brands shown upfront — no progressive reveal
+- Goal: Guess the football club from the brand pattern
+
+### Scoring Formula
+
+```
+points = max(0, 10 - ((guessCount - 1) * 2))
+```
+
+| Guess # | Points | Label |
+|---------|--------|-------|
+| 1       | 10     | Perfect! |
+| 2       | 8      | Great! |
+| 3       | 6      | Good! |
+| 4       | 4      | Nice! |
+| 5       | 2      | Close! |
+| 6+      | 0      | Completed |
+| Give up | 0      | DNF |
+
+### Share Grid Format
+
+Uses 5-slot visual grid: `🧵 🟥🟥🟩⬜⬜ Good!`
+- 🧵 = The Thread header
+- 🟩 = Correct guess
+- 🟥 = Incorrect guess
+- ⬜ = Unused attempt
+
+---
+
 ## The Grid
 
 **Type:** Dynamic (Rarity-based)
@@ -243,6 +280,7 @@ When implementing or auditing scoring:
 - [ ] **Top Tens**: Flat tier scoring, max 8 (1→1, 3→2, 5→3, 7→4, 9→5, 10→8)
 - [ ] **The Grid**: Rarity-based, ~11 pts/cell avg, max 100
 - [ ] **The Chain**: Inverse Par, points = max(0, 2*par - steps), max = par+2
+- [ ] **The Thread**: Decreasing tier, points = max(0, 10 - (guessCount-1)*2), max = 10
 - [ ] **Topical Quiz**: 2pts per correct answer
 
 ## Intelligence Tiers

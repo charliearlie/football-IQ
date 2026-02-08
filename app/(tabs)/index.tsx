@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Lightbulb } from 'lucide-react-native';
+import { Lightbulb, WifiOff } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
 import { colors, textStyles, spacing } from '@/theme';
 import {
@@ -26,6 +26,7 @@ import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { PremiumUpsellBanner, UnlockChoiceModal } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
 import { useAuth } from '@/features/auth';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 /**
  * Get today's date in YYYY-MM-DD format.
@@ -44,6 +45,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   guess_the_goalscorers: 'goalscorer-recall',
   the_grid: 'the-grid',
   the_chain: 'the-chain',
+  the_thread: 'the-thread',
   topical_quiz: 'topical-quiz',
   top_tens: 'top-tens',
   starting_xi: 'starting-xi',
@@ -66,13 +68,17 @@ const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premiu
  */
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, user, signInAnonymously } = useAuth();
+  const { isConnected } = useNetworkStatus();
   const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
   const { cards, completedCount, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
 
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
   const isLoading = statsLoading || puzzlesLoading;
+
+  // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
+  const isFirstTimeOffline = !user && cards.length === 0 && isConnected === false;
 
   // State for completed game modal
   const [completedModal, setCompletedModal] = useState<{
@@ -86,6 +92,16 @@ export default function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     await Promise.all([refreshStats(), refreshPuzzles()]);
   }, [refreshStats, refreshPuzzles]);
+
+  // Auto-retry anonymous sign-in when coming back online for first-time users
+  const prevConnectedRef = useRef(isConnected);
+  useEffect(() => {
+    if (prevConnectedRef.current === false && isConnected === true && !user) {
+      console.log('[HomeScreen] Back online, retrying anonymous sign-in');
+      signInAnonymously();
+    }
+    prevConnectedRef.current = isConnected;
+  }, [isConnected, user, signInAnonymously]);
 
   // Track last sync time to avoid rapid re-syncing when switching apps
   const lastSyncRef = useRef<number>(0);
@@ -190,11 +206,27 @@ export default function HomeScreen() {
         {/* Premium Upsell Banner (non-premium only) */}
         <PremiumUpsellBanner testID="home-premium-upsell" />
 
+        {/* Offline banner for returning users with local data */}
+        {isConnected === false && cards.length > 0 && (
+          <View style={styles.offlineBanner}>
+            <WifiOff size={14} color={colors.textSecondary} />
+            <Text style={styles.offlineBannerText}>Playing offline</Text>
+          </View>
+        )}
+
         {/* Daily Stack */}
         <View style={styles.dailyStack}>
           <Text style={styles.sectionTitle}>Today's Challenges</Text>
 
-          {isLoading && cards.length === 0 ? (
+          {isFirstTimeOffline ? (
+            <View style={styles.offlineContainer} testID="first-time-offline">
+              <WifiOff size={48} color={colors.textSecondary} />
+              <Text style={styles.offlineTitle}>No Internet Connection</Text>
+              <Text style={styles.offlineText}>
+                Football IQ needs an internet connection for your first launch to download today's games and create your session. Please connect and try again.
+              </Text>
+            </View>
+          ) : isLoading && cards.length === 0 ? (
             <View testID="home-skeleton-container">
               {[0, 1, 2, 3, 4].map((i) => (
                 <DailyStackCardSkeleton key={`skeleton-${i}`} testID={`daily-skeleton-${i}`} />
@@ -309,5 +341,38 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.glassBackground,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    marginTop: spacing.sm,
+  },
+  offlineBannerText: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+  },
+  offlineContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing['2xl'],
+    gap: 12,
+  },
+  offlineTitle: {
+    ...textStyles.h3,
+    color: colors.floodlightWhite,
+    marginTop: spacing.sm,
+  },
+  offlineText: {
+    ...textStyles.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
   },
 });

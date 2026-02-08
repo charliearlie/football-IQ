@@ -81,7 +81,8 @@ function initializeSlots(content: LineupContent): PlayerSlotState[] {
     const coords = getPositionCoords(
       player.position_key,
       player.override_x,
-      player.override_y
+      player.override_y,
+      content.formation
     );
 
     return {

@@ -251,6 +251,30 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     accentColor: colors.pitchGreen,
   },
 
+  the_thread: {
+    gameMode: 'the_thread',
+    displayTitle: 'Threads',
+    goal: 'Identify the club from their kit sponsor/supplier history',
+    rules: [
+      { text: 'Some brands are hidden as hints', highlight: 'hidden as hints' },
+      { text: 'Reveal hints for clues (costs points!)' },
+      { text: 'Fewer hints = higher IQ!', highlight: 'higher IQ' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'Score based on how many hints you reveal',
+      potentialLabel: 'KIT HISTORIAN',
+      tiers: [
+        { range: '0 hints', label: 'Kit Historian' },
+        { range: '1 hint', label: 'Director of Football' },
+        { range: '2 hints', label: 'Chief Scout' },
+        { range: '3 hints', label: 'Scout' },
+      ],
+    },
+    icon: undefined, // Uses Shirt Lucide icon as fallback
+    accentColor: colors.cardYellow,
+  },
+
   topical_quiz: {
     gameMode: 'topical_quiz',
     displayTitle: 'Topical Quiz',

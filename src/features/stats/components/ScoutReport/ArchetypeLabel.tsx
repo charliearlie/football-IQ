@@ -25,6 +25,7 @@ import {
   Clock,
   Grid3X3,
   Link,
+  Shirt,
   Newspaper,
   ListOrdered,
   Users,
@@ -73,6 +74,11 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     name: 'Chain Linker',
     icon: Link,
     description: 'Links players through shared histories',
+  },
+  the_thread: {
+    name: 'Kit Historian',
+    icon: Shirt,
+    description: 'Knows every kit sponsor through the ages',
   },
   topical_quiz: {
     name: 'News Hound',

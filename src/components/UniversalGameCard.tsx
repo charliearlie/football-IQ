@@ -21,6 +21,7 @@ import Animated, {
 import {
   Grid3X3,
   Link,
+  Shirt,
   HelpCircle,
   Check,
   Play,
@@ -178,6 +179,13 @@ function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfi
         subtitle: 'Link the players',
         icon: <Link color={colors.pitchGreen} size={28} />,
         iconColor: colors.pitchGreen,
+      };
+    case 'the_thread':
+      return {
+        title: 'Threads',
+        subtitle: 'Follow the thread',
+        icon: <Shirt color={colors.cardYellow} size={28} />,
+        iconColor: colors.cardYellow,
       };
     case 'topical_quiz':
       return {

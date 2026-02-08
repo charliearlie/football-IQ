@@ -6,3 +6,4 @@ export {
   type ParticleBurstOrigin,
   type UseFeedbackResult,
 } from './useFeedback';
+export { useNetworkStatus, type NetworkStatus } from './useNetworkStatus';

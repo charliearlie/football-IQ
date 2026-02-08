@@ -34,6 +34,12 @@ export {
   type PlayerAutocompleteProps,
 } from './PlayerAutocomplete';
 
+// Club Autocomplete
+export {
+  ClubAutocomplete,
+  type ClubAutocompleteProps,
+} from './ClubAutocomplete';
+
 // Feedback components
 export {
   ErrorFlashOverlay,
