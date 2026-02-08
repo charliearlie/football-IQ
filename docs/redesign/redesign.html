@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football IQ - Home</title>
+    <!-- Importing Design System Fonts: Bebas Neue and Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            /* Design System Colors */
+            --pitch-green: #58CC02;
+            --grass-shadow: #46A302;
+            --stadium-navy: #0F172A;
+            --floodlight-white: #F8FAFC;
+            --card-yellow: #FACC15;
+            --card-yellow-shadow: #cda412;
+            --red-card: #EF4444;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-secondary: rgba(248, 250, 252, 0.7);
+            
+            /* Derived for UI */
+            --bg-dark: var(--stadium-navy);
+            --text-main: var(--floodlight-white);
+            --primary: var(--pitch-green);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: #020617; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Mobile Container Simulation */
+        .app-frame {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 450px) {
+            .app-frame {
+                border-radius: 32px;
+                height: 90vh;
+                border: 8px solid #1e293b;
+            }
+        }
+
+        /* Scrollable Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* Typography Utilities */
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.5px; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        
+        /* Header Structure */
+        header {
+            padding: 24px 24px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, var(--bg-dark), transparent);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .brand-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .header-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Component Patterns */
+        .badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 10px;
+            border-radius: 9999px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 14px;
+            color: var(--stadium-navy);
+            text-transform: uppercase;
+            height: 32px;
+        }
+
+        .badge-yellow { 
+            background-color: var(--card-yellow); 
+            box-shadow: 0 2px 0 var(--card-yellow-shadow);
+            transition: transform 0.1s;
+            cursor: pointer;
+        }
+        .badge-yellow:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .badge-glass { 
+            background: var(--glass-bg); 
+            border: 1px solid var(--glass-border);
+            color: var(--text-main); 
+        }
+
+        /* Hero / Progress Section */
+        .hero-section {
+            padding: 10px 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .progress-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 12px solid #1e293b;
+        }
+
+        .ring-fill {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(var(--pitch-green) 0% 50%, transparent 50% 100%);
+            mask: radial-gradient(transparent 55%, black 56%);
+            -webkit-mask: radial-gradient(transparent 55%, black 56%);
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 8px rgba(88, 204, 2, 0.4));
+        }
+
+        .ring-content {
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ring-label { 
+            font-family: 'Montserrat', sans-serif; 
+            font-weight: 600; 
+            font-size: 11px; 
+            color: var(--text-secondary); 
+            text-transform: uppercase; 
+        }
+        .ring-value { 
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px; 
+            line-height: 1; 
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0 24px 20px;
+            width: 100%;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .stat-card { display: flex; flex-direction: column; }
+        .stat-label { 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 11px; 
+            color: var(--text-secondary); 
+            font-weight: 600; 
+            margin-bottom: 4px; 
+            text-transform: uppercase;
+        }
+        .stat-row { display: flex; align-items: baseline; gap: 8px; }
+        .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 24px; }
+        
+        /* Event Banner Section */
+        .event-section {
+            padding: 0 24px 24px;
+        }
+
+        .event-banner {
+            background: linear-gradient(135deg, #1e293b 0%, #172554 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .event-banner::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 100px;
+            height: 100px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 50%;
+            filter: blur(20px);
+        }
+
+        .event-tag {
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .event-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        .event-meta {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            color: var(--text-secondary);
+            z-index: 2;
+        }
+
+        .event-play-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Bebas Neue', sans-serif;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1d4ed8;
+            transition: transform 0.1s;
+        }
+        .event-play-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Game List Header */
+        .section-header {
+            padding: 0 24px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .section-title { 
+            font-family: 'Bebas Neue', sans-serif; 
+            font-size: 24px; 
+            color: var(--text-main);
+        }
+        
+        .timer-badge { 
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 14px; 
+            color: var(--red-card);
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+        }
+
+        /* Game List */
+        .games-list {
+            padding: 0 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px; 
+        }
+
+        .game-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            transition: transform 0.1s;
+            cursor: pointer;
+        }
+        .game-card:active { transform: scale(0.98); }
+
+        .icon-box {
+            width: 48px; 
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        .game-info { flex: 1; min-width: 0; }
+        .game-title { 
+            font-family: 'Bebas Neue', sans-serif; 
+            font-size: 20px; 
+            margin-bottom: 2px; 
+            letter-spacing: 0.5px;
+        }
+        .game-desc { 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 12px; 
+            color: var(--text-secondary); 
+            line-height: 1.2; 
+        }
+
+        .play-btn {
+            background-color: var(--pitch-green);
+            color: var(--stadium-navy);
+            border: none;
+            /* Wider to compensate for shadow height visually */
+            width: 44px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0px 4px 0px var(--grass-shadow);
+            transform: translateY(0);
+            transition: all 0.1s ease;
+        }
+        .play-btn:active { transform: translateY(4px); box-shadow: 0px 0px 0px var(--grass-shadow); }
+
+        /* Locked/Bonus Game Logic */
+        .game-card.bonus {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(88, 204, 2, 0.05) 100%);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            cursor: default;
+        }
+        .game-card.bonus:active { transform: none; }
+
+        .bonus-header { display: flex; align-items: center; gap: 16px; }
+
+        .unlock-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .unlock-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.1s ease;
+        }
+
+        .btn-ad {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--floodlight-white);
+        }
+        .btn-ad:active { background: rgba(255,255,255,0.1); transform: scale(0.98); }
+
+        .btn-pro {
+            background: var(--card-yellow);
+            color: var(--stadium-navy);
+            box-shadow: 0px 4px 0px var(--card-yellow-shadow);
+            transform: translateY(0);
+        }
+        .btn-pro:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 12px 24px 28px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 60px;
+        }
+
+        .nav-item.active { color: var(--pitch-green); }
+        .nav-item.active i { stroke-width: 2.5px; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="app-frame">
+        <header>
+            <div class="brand-title">FOOTBALL IQ</div>
+            <div class="header-stats">
+                <div class="badge badge-yellow">
+                    <i data-lucide="zap" size="14"></i>
+                    <span>PRO</span>
+                </div>
+                <div class="badge badge-glass">
+                    <i data-lucide="flame" size="14" style="color: #FACC15"></i>
+                    <span>2</span>
+                </div>
+                <!-- Removed Currency Badge -->
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- Hero Progress -->
+            <div class="hero-section">
+                <div class="progress-container">
+                    <div class="ring-bg"></div>
+                    <div class="ring-fill"></div>
+                    <div class="ring-content">
+                        <span class="ring-label">DAILY GOAL</span>
+                        <span class="ring-value">2/4</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="glass-card stat-card">
+                    <span class="stat-label">GAMES COMPLETED</span>
+                    <div class="stat-row">
+                        <span class="stat-val">50/159</span>
+                    </div>
+                </div>
+                <div class="glass-card stat-card">
+                    <span class="stat-label">IQ LEVEL</span>
+                    <div class="stat-row">
+                        <span class="stat-val" style="font-size:22px">STARTING XI</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Event Banner -->
+            <div class="event-section">
+                <div class="event-banner">
+                    <div class="event-tag">
+                        <i data-lucide="zap" size="12"></i>
+                        <span>LIMITED TIME</span>
+                    </div>
+                    <div class="event-title">DERBY DAY SPECIAL</div>
+                    <div class="event-meta">Double XP • Ends in 2h</div>
+                    <button class="event-play-btn">PLAY</button>
+                </div>
+            </div>
+
+            <!-- List Header -->
+            <div class="section-header">
+                <div class="section-title">TODAY'S CHALLENGES</div>
+                <div class="timer-badge">
+                    <i data-lucide="clock" size="14"></i>
+                    <span>4H 20M</span>
+                </div>
+            </div>
+
+            <!-- Games List -->
+            <div class="games-list">
+                
+                <!-- Game 1 -->
+                <div class="glass-card game-card">
+                    <div class="icon-box">
+                        <i data-lucide="users" size="24" color="#58CC02"></i>
+                    </div>
+                    <div class="game-info">
+                        <div class="game-title">STARTING XI</div>
+                        <div class="game-desc">Guess the 2014 Final lineup</div>
+                    </div>
+                    <button class="play-btn">
+                        <i data-lucide="play" size="20" fill="#0F172A"></i>
+                    </button>
+                </div>
+
+                <!-- Game 2 -->
+                <div class="glass-card game-card">
+                    <div class="icon-box">
+                        <i data-lucide="map-pin" size="24" color="#58CC02"></i>
+                    </div>
+                    <div class="game-info">
+                        <div class="game-title">CAREER PATH</div>
+                        <div class="game-desc">Trace the striker's journey</div>
+                    </div>
+                    <button class="play-btn">
+                        <i data-lucide="play" size="20" fill="#0F172A"></i>
+                    </button>
+                </div>
+
+                 <!-- Locked/Bonus Game -->
+                 <div class="glass-card game-card bonus">
+                    <div class="bonus-header">
+                        <div class="icon-box">
+                            <i data-lucide="gift" size="24" color="#FACC15"></i>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title" style="color: var(--card-yellow);">MYSTERY CHEST</div>
+                            <div class="game-desc">Unlock exclusive daily rewards</div>
+                        </div>
+                    </div>
+                    <div class="unlock-actions">
+                        <button class="unlock-btn btn-ad">
+                            <i data-lucide="play-circle" size="16"></i>
+                            <span>WATCH AD</span>
+                        </button>
+                        <button class="unlock-btn btn-pro">
+                            <i data-lucide="zap" size="16"></i>
+                            <span>GO PRO</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <i data-lucide="home" size="24"></i>
+                <span>HOME</span>
+            </div>
+            <div class="nav-item">
+                <i data-lucide="archive" size="24"></i>
+                <span>ARCHIVE</span>
+            </div>
+            <div class="nav-item">
+                <i data-lucide="brain-circuit" size="24"></i>
+                <span>MY IQ</span>
+            </div>
+            <div class="nav-item">
+                <i data-lucide="settings" size="24"></i>
+                <span>SETTINGS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

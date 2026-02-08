@@ -33,7 +33,7 @@ const STAR_PATH =
 const BORDER_COLOR = '#D4A500';
 
 /** Minimum size at which the "P" text is rendered */
-const MIN_TEXT_SIZE = 24;
+const MIN_TEXT_SIZE = 20;
 
 function ProBadgeComponent({
   size = 24,
@@ -69,19 +69,7 @@ function ProBadgeComponent({
         strokeWidth={0.8}
       />
 
-      {/* "P" text in negative space — only at legible sizes */}
-      {size >= MIN_TEXT_SIZE && (
-        <SvgText
-          x="12"
-          y="16.5"
-          textAnchor="middle"
-          fontSize="10"
-          fontWeight="bold"
-          fill="#0F172A"
-        >
-          P
-        </SvgText>
-      )}
+
     </Svg>
   );
 }

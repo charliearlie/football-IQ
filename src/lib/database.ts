@@ -428,6 +428,17 @@ export async function getAllPuzzles(): Promise<ParsedLocalPuzzle[]> {
 }
 
 /**
+ * Get the total number of puzzles in the local database.
+ */
+export async function getPuzzleCount(): Promise<number> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM puzzles'
+  );
+  return result?.count ?? 0;
+}
+
+/**
  * Lightweight timestamp query for staleness detection.
  * Returns only id and updated_at for puzzles in the given date range.
  * Used by light sync to minimize memory usage during foreground checks.

@@ -85,7 +85,10 @@ export interface UnlockChoiceModalProps {
   /** Game mode for navigation after unlock */
   gameMode: GameMode;
   /** Callback when unlock succeeds (for parent to refresh data) */
+  /** Callback when unlock succeeds (for parent to refresh data) */
   onUnlockSuccess?: () => void;
+  /** Whether to automatically trigger the ad flow on mount */
+  autoTriggerAd?: boolean;
   /** Test ID for testing */
   testID?: string;
 }

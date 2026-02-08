@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { getAllCompletedAttemptsWithDates } from '@/lib/database';
+import { getAllCompletedAttemptsWithDates, getPuzzleCount } from '@/lib/database';
 import { getAuthorizedDateUnsafe } from '@/lib/time';
 
 /**
@@ -11,6 +11,7 @@ export interface UserStats {
   longestStreak: number;
   gamesPlayedToday: number;
   totalGamesPlayed: number;
+  totalPuzzlesAvailable: number;
   lastPlayedDate: string | null;
 }
 
@@ -167,6 +168,7 @@ export function useUserStats(): UseUserStatsResult {
     longestStreak: 0,
     gamesPlayedToday: 0,
     totalGamesPlayed: 0,
+    totalPuzzlesAvailable: 0,
     lastPlayedDate: null,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -191,11 +193,15 @@ export function useUserStats(): UseUserStatsResult {
       // Get last played date
       const lastPlayedDate = attemptDates.length > 0 ? attemptDates[0] : null;
 
+      // Get total puzzles available
+      const totalPuzzlesAvailable = await getPuzzleCount();
+
       setStats({
         currentStreak: current,
         longestStreak: longest,
         gamesPlayedToday,
         totalGamesPlayed: attempts.length,
+        totalPuzzlesAvailable,
         lastPlayedDate,
       });
     } catch (error) {

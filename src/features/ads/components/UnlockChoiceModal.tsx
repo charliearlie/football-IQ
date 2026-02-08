@@ -58,6 +58,7 @@ export function UnlockChoiceModal({
   puzzleDate,
   gameMode,
   onUnlockSuccess,
+  autoTriggerAd,
   testID,
 }: UnlockChoiceModalProps) {
   const router = useRouter();
@@ -84,15 +85,26 @@ export function UnlockChoiceModal({
     }
   }, [visible]);
 
+  // Handle auto-trigger
+  useEffect(() => {
+    if (visible && autoTriggerAd && state === 'idle') {
+      // Small timeout to ensure modal is visible/mounted before starting
+      const timer = setTimeout(() => {
+        handleWatchAd();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, autoTriggerAd, state]); // eslint-disable-next-line react-hooks/exhaustive-deps
+
   // Pre-load rewarded ad when modal opens (only in idle state)
   // Don't re-load if we're in the middle of showing/completing an ad
   useEffect(() => {
-    if (visible && state === 'idle' && !isRewardedAdReady) {
+    if (visible && state === 'idle' && !isRewardedAdReady && !autoTriggerAd) {
       loadRewardedAd().catch((error) => {
         console.warn('[UnlockChoiceModal] Failed to pre-load ad:', error);
       });
     }
-  }, [visible, state, isRewardedAdReady, loadRewardedAd]);
+  }, [visible, state, isRewardedAdReady, loadRewardedAd, autoTriggerAd]);
 
 
   // IMPORTANT: No auto-navigation listeners.
