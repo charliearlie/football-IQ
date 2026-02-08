@@ -1,3 +1,4 @@
+
 /**
  * Type definitions for the Archive feature.
  *
@@ -124,6 +125,8 @@ export type { GameMode };
 export interface ArchiveDateGroup {
   /** Date key in YYYY-MM-DD format */
   dateKey: string;
+  /** Alias for dateKey, used by some components (MatchdayCard) */
+  dateString: string;
   /** Short formatted date for display (e.g., "JAN 19") */
   dateLabel: string;
   /** Full date for display (e.g., "Sunday, January 19") */

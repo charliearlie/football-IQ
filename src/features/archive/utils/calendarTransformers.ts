@@ -1,3 +1,4 @@
+
 /**
  * Calendar Transformers
  *
@@ -58,6 +59,7 @@ export function groupByDate(puzzles: ArchivePuzzle[]): ArchiveDateGroup[] {
     const completedCount = dayPuzzles.filter((p) => p.status === 'done').length;
     groups.push({
       dateKey,
+      dateString: dateKey, // Alias for dateKey
       dateLabel: formatDateShort(dateKey),
       dateFullLabel: formatDateFull(dateKey),
       puzzles: dayPuzzles,

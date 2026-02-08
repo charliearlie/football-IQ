@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football IQ - Archive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pitchGreen: '#58CC02',
+                        grassShadow: '#46A302',
+                        stadiumNavy: '#0F172A',
+                        floodlightWhite: '#F8FAFC',
+                        cardYellow: '#FACC15',
+                        redCard: '#EF4444',
+                        glassBg: 'rgba(255, 255, 255, 0.05)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)',
+                        textSecondary: 'rgba(248, 250, 252, 0.7)',
+                    },
+                    fontFamily: {
+                        bebas: ['"Bebas Neue"', 'sans-serif'],
+                        montserrat: ['"Montserrat"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Design System Component: Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+        }
+
+        /* Design System Component: 3D Button (Wide) */
+        .btn-3d {
+            background-color: #58CC02;
+            color: #0F172A;
+            border-radius: 12px;
+            border: none;
+            position: relative;
+            top: 0;
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0 #46A302;
+        }
+
+        .btn-3d:active {
+            top: 6px;
+            box-shadow: 0 0 0 #46A302;
+        }
+
+        /* NEW: Icon Only Play Button (Home Screen Style) */
+        .btn-play-icon {
+            width: 44px;
+            height: 44px;
+            background-color: #58CC02;
+            border-radius: 14px; /* Squircle shape */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 0 #46A302;
+            transition: all 0.1s ease;
+            border: none;
+        }
+        .btn-play-icon:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #46A302;
+        }
+
+        /* Custom Scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Glow effects */
+        .glow-green {
+            box-shadow: 0 0 20px rgba(88, 204, 2, 0.15);
+        }
+        
+        .glow-gold {
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.1);
+        }
+
+        /* Pro Banner Gradient */
+        .pro-banner {
+            background: linear-gradient(90deg, rgba(15,23,42,1) 0%, rgba(30,41,59,1) 100%);
+            border: 1px solid #FACC15;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.15);
+        }
+
+        /* Animation utilities */
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+        .transition-transform {
+            transition-property: transform;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden">
+
+    <!-- Header -->
+    <header class="pt-8 pb-4 px-5 flex justify-between items-end z-10">
+        <div>
+            <h1 class="font-bebas text-4xl tracking-wide leading-none">Archive</h1>
+            <p class="text-textSecondary text-xs font-montserrat mt-1 font-semibold tracking-wider uppercase">Your Season History</p>
+        </div>
+        
+        <!-- NEW: Games Completed Counter -->
+        <div class="text-right">
+            <div class="text-[10px] text-textSecondary uppercase font-bold tracking-wider mb-0.5 opacity-80">Games Completed</div>
+            <div class="flex items-baseline justify-end gap-1">
+                <span class="text-pitchGreen font-bebas text-3xl drop-shadow-[0_0_8px_rgba(88,204,2,0.5)]">12</span>
+                <span class="text-textSecondary/50 font-bebas text-2xl">/</span>
+                <span class="text-white font-bebas text-2xl">89</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Scrollable Content -->
+    <main class="flex-1 overflow-y-auto px-5 pb-24 no-scrollbar z-10 space-y-5">
+
+        <!-- PRO BANNER (Mandatory) -->
+        <div class="pro-banner rounded-2xl p-4 flex items-center justify-between relative overflow-hidden group">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+            
+            <div class="flex items-center gap-4 z-10">
+                <div class="bg-cardYellow w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/20">
+                    <i data-lucide="sparkles" class="text-stadiumNavy w-6 h-6 fill-stadiumNavy"></i>
+                </div>
+                <div>
+                    <h3 class="font-bebas text-cardYellow text-xl tracking-wide">Go Pro</h3>
+                    <p class="text-textSecondary text-xs">Unlock the full archive history</p>
+                </div>
+            </div>
+            <i data-lucide="chevron-right" class="text-cardYellow w-5 h-5"></i>
+        </div>
+
+        <!-- Filters & Quick Action -->
+        <div class="flex flex-col gap-4">
+            <!-- 3D Action Button -->
+            <button class="btn-3d w-full py-4 flex items-center justify-center gap-2 font-bebas text-xl tracking-wider">
+                <i data-lucide="shuffle" class="w-5 h-5"></i>
+                Random Unplayed Game
+            </button>
+
+            <!-- Filter Chips -->
+            <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                <button class="bg-stadiumNavy border border-pitchGreen text-pitchGreen px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide whitespace-nowrap">All Games</button>
+                <button class="glass-card text-textSecondary px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide whitespace-nowrap border-white/10">Incomplete</button>
+                <button class="glass-card text-textSecondary px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide whitespace-nowrap border-white/10">Perfect</button>
+            </div>
+        </div>
+
+        <!-- RECENT GAMES (Unlocked) -->
+        <div class="space-y-3">
+            <h2 class="font-bebas text-textSecondary text-lg tracking-wide opacity-80 pl-1">This Week</h2>
+
+            <!-- Card 1: Today (Active/Incomplete) -->
+            <div class="glass-card relative overflow-hidden border-l-4 border-l-pitchGreen transition-all duration-300 group" id="card-feb8">
+                <!-- Summary Header (Clickable) -->
+                <div class="p-4 cursor-pointer" onclick="toggleCard('feb8')">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-baseline gap-2">
+                            <span class="font-bebas text-2xl text-white">FEB 8</span>
+                            <span class="text-xs font-bold text-pitchGreen bg-pitchGreen/10 px-2 py-0.5 rounded-sm">TODAY</span>
+                        </div>
+                        
+                        <!-- NEW: Improved Toggle Visibility -->
+                        <div class="flex items-center gap-3">
+                            <span class="font-bebas text-xl text-textSecondary">1/4</span>
+                            <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition shadow-inner">
+                                <i id="chevron-feb8" data-lucide="chevron-down" class="w-5 h-5 text-pitchGreen transition-transform duration-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Icons Progress (Collapsed View) -->
+                    <div class="flex justify-between items-center gap-2">
+                        <div class="h-10 flex-1 rounded-md bg-pitchGreen/20 flex items-center justify-center border border-pitchGreen/50">
+                            <i data-lucide="check" class="w-4 h-4 text-pitchGreen"></i>
+                        </div>
+                        <div class="h-0.5 w-2 bg-pitchGreen/30"></div>
+                        <div class="h-10 flex-1 rounded-md bg-white/5 flex items-center justify-center border border-white/10">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4 text-white/50"></i>
+                        </div>
+                        <div class="h-0.5 w-2 bg-white/10"></div>
+                        <div class="h-10 flex-1 rounded-md bg-white/5 flex items-center justify-center border border-white/10">
+                             <i data-lucide="arrow-right-left" class="w-4 h-4 text-white/50"></i>
+                        </div>
+                        <div class="h-0.5 w-2 bg-white/10"></div>
+                        <div class="h-10 flex-1 rounded-md bg-white/5 flex items-center justify-center border border-white/10">
+                            <i data-lucide="target" class="w-4 h-4 text-white/50"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expanded Details (Puzzles) -->
+                <div id="details-feb8" class="hidden px-4 pb-4 space-y-3 border-t border-white/5 pt-4">
+                    <!-- Completed Item -->
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-pitchGreen/20 w-10 h-10 rounded-xl flex items-center justify-center text-pitchGreen">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bebas text-lg tracking-wide leading-none text-white">Daily Trivia</h4>
+                                <span class="text-[11px] text-textSecondary font-montserrat font-medium">Completed • 150 pts</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Incomplete Item 1 -->
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center text-textSecondary border border-white/5">
+                                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bebas text-lg tracking-wide leading-none text-white">Starting XI</h4>
+                                <span class="text-[11px] text-textSecondary font-montserrat font-medium">Name the lineup</span>
+                            </div>
+                        </div>
+                        <!-- NEW: Icon Play Button -->
+                        <button class="btn-play-icon">
+                            <i data-lucide="play" class="w-5 h-5 fill-stadiumNavy text-stadiumNavy ml-0.5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Incomplete Item 2 -->
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center text-textSecondary border border-white/5">
+                                <i data-lucide="arrow-right-left" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bebas text-lg tracking-wide leading-none text-white">Transfer Guess</h4>
+                                <span class="text-[11px] text-textSecondary font-montserrat font-medium">Who made the move?</span>
+                            </div>
+                        </div>
+                        <button class="btn-play-icon">
+                            <i data-lucide="play" class="w-5 h-5 fill-stadiumNavy text-stadiumNavy ml-0.5"></i>
+                        </button>
+                    </div>
+
+                     <!-- Incomplete Item 3 -->
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center text-textSecondary border border-white/5">
+                                <i data-lucide="target" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bebas text-lg tracking-wide leading-none text-white">Career Path Pro</h4>
+                                <span class="text-[11px] text-textSecondary font-montserrat font-medium">For true experts</span>
+                            </div>
+                        </div>
+                        <button class="btn-play-icon">
+                            <i data-lucide="play" class="w-5 h-5 fill-stadiumNavy text-stadiumNavy ml-0.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Perfect Score -->
+            <div class="glass-card glow-green relative overflow-hidden transition-all duration-300 group" id="card-feb7">
+                <div class="p-4 cursor-pointer" onclick="toggleCard('feb7')">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-baseline gap-2">
+                            <span class="font-bebas text-2xl text-white">FEB 7</span>
+                        </div>
+                        
+                        <!-- Toggle -->
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1">
+                                <i data-lucide="trophy" class="w-3 h-3 text-cardYellow"></i>
+                                <span class="font-bebas text-xl text-pitchGreen">5/5</span>
+                            </div>
+                             <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition shadow-inner">
+                                <i id="chevron-feb7" data-lucide="chevron-down" class="w-5 h-5 text-pitchGreen transition-transform duration-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Completed State Visual -->
+                    <div class="flex gap-1.5 opacity-60">
+                        <div class="h-1.5 flex-1 rounded-full bg-pitchGreen"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-pitchGreen"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-pitchGreen"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-pitchGreen"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-pitchGreen"></div>
+                    </div>
+                    <div class="mt-2 text-xs text-textSecondary flex items-center gap-1">
+                        <i data-lucide="check-circle-2" class="w-3 h-3 text-pitchGreen"></i>
+                        <span>All Daily Puzzles Solved</span>
+                    </div>
+                </div>
+
+                <!-- Expanded Details (Perfect) -->
+                <div id="details-feb7" class="hidden px-4 pb-4 space-y-2 border-t border-white/5 pt-4">
+                     <!-- Loop for perfect items -->
+                     <div class="grid grid-cols-1 gap-2">
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pitchGreen/10 border border-pitchGreen/20">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-pitchGreen/20 p-1.5 rounded-lg">
+                                    <i data-lucide="check" class="w-4 h-4 text-pitchGreen"></i>
+                                </div>
+                                <span class="font-bebas text-white tracking-wide">Daily Trivia</span>
+                            </div>
+                            <span class="text-xs font-bold text-pitchGreen bg-pitchGreen/10 px-2 py-1 rounded">150 PTS</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pitchGreen/10 border border-pitchGreen/20">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-pitchGreen/20 p-1.5 rounded-lg">
+                                    <i data-lucide="check" class="w-4 h-4 text-pitchGreen"></i>
+                                </div>
+                                <span class="font-bebas text-white tracking-wide">Starting XI</span>
+                            </div>
+                            <span class="text-xs font-bold text-pitchGreen bg-pitchGreen/10 px-2 py-1 rounded">300 PTS</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pitchGreen/10 border border-pitchGreen/20">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-pitchGreen/20 p-1.5 rounded-lg">
+                                    <i data-lucide="check" class="w-4 h-4 text-pitchGreen"></i>
+                                </div>
+                                <span class="font-bebas text-white tracking-wide">Transfer Guess</span>
+                            </div>
+                            <span class="text-xs font-bold text-pitchGreen bg-pitchGreen/10 px-2 py-1 rounded">200 PTS</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pitchGreen/10 border border-pitchGreen/20">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-pitchGreen/20 p-1.5 rounded-lg">
+                                    <i data-lucide="check" class="w-4 h-4 text-pitchGreen"></i>
+                                </div>
+                                <span class="font-bebas text-white tracking-wide">Career Path</span>
+                            </div>
+                            <span class="text-xs font-bold text-pitchGreen bg-pitchGreen/10 px-2 py-1 rounded">250 PTS</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pitchGreen/10 border border-pitchGreen/20">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-pitchGreen/20 p-1.5 rounded-lg">
+                                    <i data-lucide="check" class="w-4 h-4 text-pitchGreen"></i>
+                                </div>
+                                <span class="font-bebas text-white tracking-wide">Mystery Player</span>
+                            </div>
+                            <span class="text-xs font-bold text-pitchGreen bg-pitchGreen/10 px-2 py-1 rounded">100 PTS</span>
+                        </div>
+                     </div>
+                </div>
+            </div>
+            
+            <!-- Card 3: Incomplete Past -->
+             <div class="glass-card relative overflow-hidden transition-all duration-300 group" id="card-feb6">
+                <div class="p-4 cursor-pointer" onclick="toggleCard('feb6')">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="font-bebas text-2xl text-textSecondary">FEB 6</span>
+                        
+                        <!-- Toggle -->
+                        <div class="flex items-center gap-3">
+                            <span class="font-bebas text-xl text-textSecondary">2/5</span>
+                            <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition shadow-inner">
+                                <i id="chevron-feb6" data-lucide="chevron-down" class="w-5 h-5 text-pitchGreen transition-transform duration-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Incomplete Visual -->
+                    <div class="flex gap-1.5 opacity-40">
+                        <div class="h-1.5 flex-1 rounded-full bg-white"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-white"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-white/20"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-white/20"></div>
+                        <div class="h-1.5 flex-1 rounded-full bg-white/20"></div>
+                    </div>
+                </div>
+
+                <!-- Expanded Details (Mixed) -->
+                <div id="details-feb6" class="hidden px-4 pb-4 space-y-3 border-t border-white/5 pt-4">
+                     <!-- Completed -->
+                     <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 opacity-50">
+                        <div class="flex items-center gap-4">
+                             <div class="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center text-textSecondary border border-white/5">
+                                 <i data-lucide="check-circle" class="w-5 h-5"></i>
+                             </div>
+                             <span class="font-bebas text-textSecondary tracking-wide text-lg">Daily Trivia</span>
+                        </div>
+                     </div>
+
+                     <!-- Incomplete Actions -->
+                     <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center text-textSecondary border border-white/5">
+                                <i data-lucide="arrow-right-left" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bebas text-lg tracking-wide leading-none text-white">Transfer Guess</h4>
+                                <span class="text-[11px] text-textSecondary font-montserrat font-medium">Who made the move?</span>
+                            </div>
+                        </div>
+                        <button class="btn-play-icon">
+                            <i data-lucide="play" class="w-5 h-5 fill-stadiumNavy text-stadiumNavy ml-0.5"></i>
+                        </button>
+                    </div>
+                     <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center text-textSecondary border border-white/5">
+                                <i data-lucide="target" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bebas text-lg tracking-wide leading-none text-white">Career Path Pro</h4>
+                                <span class="text-[11px] text-textSecondary font-montserrat font-medium">For true experts</span>
+                            </div>
+                        </div>
+                        <button class="btn-play-icon">
+                            <i data-lucide="play" class="w-5 h-5 fill-stadiumNavy text-stadiumNavy ml-0.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THE VAULT (Locked Games > 7 days) -->
+        <div class="space-y-3 pt-2">
+             <div class="flex justify-between items-center pl-1">
+                <h2 class="font-bebas text-cardYellow text-lg tracking-wide flex items-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    The Vault
+                </h2>
+                <span class="text-[10px] text-cardYellow border border-cardYellow/30 px-2 py-0.5 rounded-full bg-cardYellow/5">PRO ONLY</span>
+            </div>
+
+            <!-- Locked Card -->
+            <div class="glass-card p-4 relative overflow-hidden opacity-80">
+                 <!-- The "Blur" overlay effect for locked content -->
+                <div class="absolute inset-0 bg-stadiumNavy/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                    <div class="bg-stadiumNavy/80 border border-cardYellow/30 p-2 rounded-full shadow-lg shadow-black/50">
+                        <i data-lucide="lock" class="w-5 h-5 text-cardYellow"></i>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-3 opacity-50">
+                    <span class="font-bebas text-2xl text-textSecondary">JAN 31</span>
+                    <span class="font-bebas text-xl text-textSecondary">0/5</span>
+                </div>
+                
+                 <!-- Faded Icons -->
+                 <div class="flex justify-between items-center gap-2 opacity-30 blur-[2px]">
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                </div>
+            </div>
+
+             <!-- Locked Card 2 -->
+             <div class="glass-card p-4 relative overflow-hidden opacity-60">
+                 <!-- The "Blur" overlay effect for locked content -->
+                <div class="absolute inset-0 bg-stadiumNavy/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                    <div class="bg-stadiumNavy/80 border border-cardYellow/30 p-2 rounded-full shadow-lg shadow-black/50">
+                        <i data-lucide="lock" class="w-5 h-5 text-cardYellow"></i>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-3 opacity-50">
+                    <span class="font-bebas text-2xl text-textSecondary">JAN 30</span>
+                    <span class="font-bebas text-xl text-textSecondary">0/5</span>
+                </div>
+                 <div class="flex justify-between items-center gap-2 opacity-30 blur-[2px]">
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                    <div class="h-8 flex-1 rounded bg-white/10"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="h-8"></div> <!-- Bottom Spacer -->
+
+    </main>
+
+    <!-- Navigation Bar (Context from screenshot) -->
+    <nav class="fixed bottom-0 w-full max-w-md bg-stadiumNavy/90 backdrop-blur-xl border-t border-white/10 pb-6 pt-3 px-6 flex justify-between items-center z-50">
+        <div class="flex flex-col items-center gap-1 opacity-50">
+            <i data-lucide="home" class="w-6 h-6"></i>
+            <span class="text-[10px] font-medium">Home</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-pitchGreen">
+            <i data-lucide="archive" class="w-6 h-6"></i>
+            <span class="text-[10px] font-medium">Archive</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 opacity-50">
+            <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+            <span class="text-[10px] font-medium">My IQ</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 opacity-50">
+            <i data-lucide="settings" class="w-6 h-6"></i>
+            <span class="text-[10px] font-medium">Settings</span>
+        </div>
+    </nav>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleCard(dateId) {
+            const details = document.getElementById(`details-${dateId}`);
+            const chevron = document.getElementById(`chevron-${dateId}`);
+            const card = document.getElementById(`card-${dateId}`);
+
+            if (details.classList.contains('hidden')) {
+                // Open
+                details.classList.remove('hidden');
+                details.classList.add('fade-in');
+                chevron.classList.add('rotate-180');
+            } else {
+                // Close
+                details.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+    </script>
+</body>
+</html>

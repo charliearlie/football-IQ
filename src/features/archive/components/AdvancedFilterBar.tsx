@@ -214,6 +214,7 @@ export function AdvancedFilterBar({
           size="small"
           fullWidth
           hapticType="none"
+          borderRadius={borderRadius.lg}
           testID={`${testID}-random-play`}
         />
       </View>

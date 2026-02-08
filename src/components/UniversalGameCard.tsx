@@ -111,118 +111,21 @@ export interface UniversalGameCardProps {
 }
 
 /**
- * Game mode configuration for display.
+ * Custom puzzle icons mapping.
+ * Maps game modes to their custom PNG icons.
  */
-interface GameModeConfig {
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  iconColor: string;
-}
+import {
+  getGameModeConfig,
+  GameModeConfig,
+  iconImageStyle,
+  archiveIconImageStyle,
+} from '@/features/puzzles/utils/gameModeConfig';
 
 const SPRING_CONFIG = {
   damping: 15,
   stiffness: 300,
   mass: 0.5,
 };
-
-/**
- * Get configuration for each game mode.
- */
-function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfig {
-  // Check if we have a custom icon for this game mode
-  const customIcon = PUZZLE_ICONS[gameMode];
-  const imgStyle = isArchive ? archiveIconImageStyle : iconImageStyle;
-  const iconElement = customIcon ? (
-    <Image source={customIcon} style={imgStyle} resizeMode="contain" />
-  ) : null;
-
-  switch (gameMode) {
-    case 'career_path':
-      return {
-        title: 'Career Path',
-        subtitle: 'Follow the journey',
-        icon: iconElement!,
-        iconColor: colors.cardYellow,
-      };
-    case 'career_path_pro':
-      return {
-        title: 'Career Path Pro',
-        subtitle: 'For true experts',
-        icon: iconElement!,
-        iconColor: colors.cardYellow,
-      };
-    case 'guess_the_transfer':
-      return {
-        title: 'Transfer Guess',
-        subtitle: 'Who made the move?',
-        icon: iconElement!,
-        iconColor: colors.pitchGreen,
-      };
-    case 'guess_the_goalscorers':
-      return {
-        title: 'Goalscorer Recall',
-        subtitle: 'Remember the match',
-        icon: iconElement!,
-        iconColor: colors.redCard,
-      };
-    case 'the_grid':
-      return {
-        title: 'The Grid (beta)',
-        subtitle: 'Fill the matrix',
-        icon: <Grid3X3 color={colors.pitchGreen} size={28} />,
-        iconColor: colors.pitchGreen,
-      };
-    case 'the_chain':
-      return {
-        title: 'The Chain',
-        subtitle: 'Link the players',
-        icon: <Link color={colors.pitchGreen} size={28} />,
-        iconColor: colors.pitchGreen,
-      };
-    case 'the_thread':
-      return {
-        title: 'Threads',
-        subtitle: 'Follow the thread',
-        icon: <Shirt color={colors.cardYellow} size={28} />,
-        iconColor: colors.cardYellow,
-      };
-    case 'topical_quiz':
-      return {
-        title: 'Quiz',
-        subtitle: '5 questions',
-        icon: iconElement!,
-        iconColor: colors.cardYellow,
-      };
-    case 'top_tens':
-      return {
-        title: 'Top Tens',
-        subtitle: 'Name all 10',
-        icon: iconElement!,
-        iconColor: colors.pitchGreen,
-      };
-    case 'starting_xi':
-      return {
-        title: 'Starting XI',
-        subtitle: 'Name the lineup',
-        icon: iconElement!,
-        iconColor: colors.cardYellow,
-      };
-    default:
-      return {
-        title: 'Unknown',
-        subtitle: '',
-        icon: <HelpCircle color={colors.textSecondary} size={28} />,
-        iconColor: colors.textSecondary,
-      };
-  }
-}
-
-/**
- * Style for custom puzzle icon images.
- */
-const iconImageStyle = { width: 32, height: 32 };
-const archiveIconImageStyle = { width: 24, height: 24 };
 
 /**
  * Button props returned by getButtonProps.
@@ -475,6 +378,7 @@ export function UniversalGameCard({
                   borderColorOverride={buttonProps.borderColor}
                   hapticType={hapticType}
                   icon={isSmallPhone ? getSmallPhoneButtonIcon(status, false) : undefined}
+                  borderRadius={borderRadius.lg}
                   testID={`${testID}-button`}
                 />
               </Animated.View>
@@ -490,6 +394,7 @@ export function UniversalGameCard({
                 borderColorOverride={buttonProps.borderColor}
                 hapticType={hapticType}
                 icon={isSmallPhone ? getSmallPhoneButtonIcon(status, false) : undefined}
+                borderRadius={borderRadius.lg}
                 testID={`${testID}-button`}
               />
             )}

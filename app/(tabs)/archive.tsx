@@ -1,8 +1,9 @@
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { colors, textStyles, spacing } from '@/theme';
+import { colors, spacing } from '@/theme';
 import {
   useArchivePuzzles,
   useGatedNavigation,
@@ -13,6 +14,7 @@ import {
   GameMode,
 } from '@/features/archive';
 import { ArchiveCalendar } from '@/features/archive/components/ArchiveCalendar';
+import { ArchiveHeader } from '@/features/archive/components/ArchiveHeader';
 import { AdvancedFilterBar } from '@/features/archive/components/AdvancedFilterBar';
 import { useRandomPlay } from '@/features/archive/hooks/useRandomPlay';
 import { applyFilters, groupByDate } from '@/features/archive/utils/calendarTransformers';
@@ -39,7 +41,7 @@ const DEFAULT_FILTERS: ArchiveFilterState = {
  * Archive Screen - Match Calendar
  *
  * High-density accordion-style archive browser with:
- * - Date-grouped accordion rows (7-10 visible without scrolling)
+ * - Date-grouped accordion rows (MatchdayCard)
  * - At-a-glance completion icons
  * - Advanced filtering (Status, Game Mode)
  * - Premium ghosting (grayscale + lock instead of blur)
@@ -80,6 +82,17 @@ export default function ArchiveScreen() {
     loadMore,
     refresh,
   } = useArchivePuzzles('all');
+
+  // Calculate Global Stats
+  const stats = useMemo(() => {
+    let completed = 0;
+    let total = 0;
+    rawDateGroups.forEach(group => {
+      total += group.puzzles.length;
+      completed += group.puzzles.filter(p => p.status === 'done').length;
+    });
+    return { completed, total };
+  }, [rawDateGroups]);
 
   // Apply client-side filtering to the date groups
   const filteredDateGroups = useMemo((): ArchiveDateGroup[] => {
@@ -183,10 +196,11 @@ export default function ArchiveScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={textStyles.h1}>Archive</Text>
-      </View>
+      {/* Header with Stats */}
+      <ArchiveHeader 
+        completedCount={stats.completed}
+        totalCount={stats.total}
+      />
 
       {/* Premium Upsell Banner (non-premium only) */}
       <View style={styles.bannerContainer}>
@@ -202,6 +216,7 @@ export default function ArchiveScreen() {
         refreshing={isRefreshing}
         isLoading={isLoading}
         hasMore={hasMore}
+        isPremium={isPremium}
         ListHeaderComponent={
           <AdvancedFilterBar
             filters={filters}
@@ -252,12 +267,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.stadiumNavy,
   },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
   bannerContainer: {
     paddingHorizontal: spacing.xl,
+    paddingTop: spacing.sm,
   },
 });

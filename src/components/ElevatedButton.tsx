@@ -79,6 +79,11 @@ export interface ElevatedButtonProps {
   style?: ViewStyle;
   /** Custom text styles (overrides size config) */
   textStyle?: TextStyle;
+  /** Custom padding overrides */
+  paddingHorizontal?: number;
+  paddingVertical?: number;
+  /** Custom border radius (defaults to 2xl/24px) */
+  borderRadius?: number;
   /** Test ID for testing */
   testID?: string;
 }
@@ -95,7 +100,7 @@ const SPRING_CONFIG = {
 const SIZE_CONFIG = {
   tiny: {
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 6,
     depth: depthOffset.buttonTiny,
     textStyle: textStyles.buttonTiny as TextStyle,
   },
@@ -148,6 +153,7 @@ export function ElevatedButton({
   style,
   textStyle,
   testID,
+  ...props
 }: ElevatedButtonProps) {
   const pressed = useSharedValue(0);
   const { triggerMedium, triggerLight } = useHaptics();
@@ -217,6 +223,7 @@ export function ElevatedButton({
             top: depth, // Start where the top layer ends when pressed
             backgroundColor: depthColor,
             borderColor: depthColor,
+            borderRadius: props.borderRadius ?? borderRadius['2xl'],
           },
         ]}
       />
@@ -228,8 +235,9 @@ export function ElevatedButton({
           {
             backgroundColor: backgroundColor,
             borderColor: borderColor,
-            paddingHorizontal: sizeConfig.paddingHorizontal,
-            paddingVertical: sizeConfig.paddingVertical,
+            paddingHorizontal: props.paddingHorizontal ?? sizeConfig.paddingHorizontal,
+            paddingVertical: props.paddingVertical ?? sizeConfig.paddingVertical,
+            borderRadius: props.borderRadius ?? borderRadius['2xl'],
           },
           animatedTopStyle,
         ]}
@@ -261,11 +269,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     // top is set dynamically based on depth
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius['2xl'],
     borderWidth: 2,
   },
   topLayer: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius['2xl'],
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
