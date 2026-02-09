@@ -76,3 +76,54 @@ describe('useDailyPuzzles — filtering logic', () => {
     expect(filterDailyPuzzles(puzzles, today)).toHaveLength(3);
   });
 });
+
+/**
+ * Tests for isSpecialCompleted logic used in useDailyPuzzles.
+ * Mirrors the check at the end of loadCards().
+ */
+describe('useDailyPuzzles — special completion logic', () => {
+  const today = '2026-02-15';
+
+  interface MockAttempt {
+    completed: boolean;
+  }
+
+  /** Same logic as useDailyPuzzles.loadCards() special completion check */
+  function resolveIsSpecialCompleted(
+    puzzles: MinimalPuzzle[],
+    todayDate: string,
+    attempt: MockAttempt | null
+  ): boolean {
+    const specialPuzzle = puzzles.find((p) => p.puzzle_date === todayDate && p.is_special);
+    if (!specialPuzzle) return false;
+    return attempt?.completed === true;
+  }
+
+  it('returns false when no special puzzle exists', () => {
+    const puzzles: MinimalPuzzle[] = [
+      { id: 'regular', game_mode: 'career_path', puzzle_date: today, is_special: false },
+    ];
+    expect(resolveIsSpecialCompleted(puzzles, today, null)).toBe(false);
+  });
+
+  it('returns false when special puzzle has no attempt', () => {
+    const puzzles: MinimalPuzzle[] = [
+      { id: 'special', game_mode: 'career_path', puzzle_date: today, is_special: true },
+    ];
+    expect(resolveIsSpecialCompleted(puzzles, today, null)).toBe(false);
+  });
+
+  it('returns false when special puzzle is in progress', () => {
+    const puzzles: MinimalPuzzle[] = [
+      { id: 'special', game_mode: 'career_path', puzzle_date: today, is_special: true },
+    ];
+    expect(resolveIsSpecialCompleted(puzzles, today, { completed: false })).toBe(false);
+  });
+
+  it('returns true when special puzzle is completed', () => {
+    const puzzles: MinimalPuzzle[] = [
+      { id: 'special', game_mode: 'career_path', puzzle_date: today, is_special: true },
+    ];
+    expect(resolveIsSpecialCompleted(puzzles, today, { completed: true })).toBe(true);
+  });
+});

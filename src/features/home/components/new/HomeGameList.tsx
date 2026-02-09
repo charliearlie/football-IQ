@@ -55,7 +55,7 @@ export function HomeGameList({ cards, onCardPress, onWatchAd, onGoPro, isPremium
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
+    marginTop: 0,
     paddingBottom: 40,
   },
 });

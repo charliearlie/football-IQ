@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football IQ Pro Modal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        
+        /* 3D Button Effect */
+        .btn-3d:active { transform: translateY(3px); }
+        .btn-container:active .btn-shadow { height: 0px; }
+        
+        /* Glass Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card-selected {
+            background: rgba(248, 204, 21, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid #FACC15;
+        }
+    </style>
+</head>
+<body class="bg-black min-h-screen flex items-center justify-center p-4 font-sans text-[#F8FAFC]">
+
+    <!-- Phone Frame Simulator (Dimensions tailored for iPhone 13/14 but content safe for SE) -->
+    <div class="relative w-full max-w-[375px] h-[812px] bg-[#0F172A] rounded-[3rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden flex flex-col">
+        
+        <!-- Ambient Background Glows -->
+        <div class="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] bg-[#58CC02] opacity-10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-[#FACC15] opacity-5 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="relative z-10 px-5 pt-12 pb-0 flex justify-end">
+            <button class="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+                <!-- X Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#F8FAFC] opacity-70"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="relative z-10 px-5 pt-0 pb-4 text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 mb-3 bg-gradient-to-tr from-[#FACC15] to-[#F59E0B] rounded-xl shadow-lg shadow-yellow-500/20 transform rotate-3">
+                <!-- Trophy Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#0F172A" stroke="#0F172A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            </div>
+            
+            <h1 class="font-bebas text-4xl tracking-wide mb-1 leading-none">
+                Football IQ <span class="text-[#FACC15]">PRO</span>
+            </h1>
+            <p class="font-montserrat text-[#F8FAFC] opacity-70 text-sm font-medium px-4">
+                Join the elite. Unlock the full archive.
+            </p>
+        </div>
+
+        <!-- Benefits List -->
+        <div class="relative z-10 px-5 space-y-2 mb-4">
+            <!-- Benefit 1 -->
+            <div class="flex items-center gap-3 p-1.5">
+                <div class="bg-white/5 p-2 rounded-lg border border-white/10 shrink-0">
+                    <!-- Zap Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#FACC15]"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <h4 class="font-bebas text-lg text-[#F8FAFC] tracking-wide leading-none truncate">UNLIMITED ARCHIVE ACCESS</h4>
+                    <p class="font-montserrat text-[11px] text-[#F8FAFC] opacity-70 mt-0.5 leading-tight truncate">Play every puzzle from previous seasons</p>
+                </div>
+            </div>
+            <!-- Benefit 2 -->
+            <div class="flex items-center gap-3 p-1.5">
+                <div class="bg-white/5 p-2 rounded-lg border border-white/10 shrink-0">
+                    <!-- Ban Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#FACC15]"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <h4 class="font-bebas text-lg text-[#F8FAFC] tracking-wide leading-none truncate">AD-FREE EXPERIENCE</h4>
+                    <p class="font-montserrat text-[11px] text-[#F8FAFC] opacity-70 mt-0.5 leading-tight truncate">Zero interruptions, pure gameplay</p>
+                </div>
+            </div>
+            <!-- Benefit 3 -->
+            <div class="flex items-center gap-3 p-1.5">
+                <div class="bg-white/5 p-2 rounded-lg border border-white/10 shrink-0">
+                    <!-- Star Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#FACC15]"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <h4 class="font-bebas text-lg text-[#F8FAFC] tracking-wide leading-none truncate">PRO STATS & INSIGHTS</h4>
+                    <p class="font-montserrat text-[11px] text-[#F8FAFC] opacity-70 mt-0.5 leading-tight truncate">Track your bench warmer to legend status</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="relative z-10 flex-1 px-4 space-y-3 flex flex-col justify-end pb-2">
+            
+            <!-- Annual Plan (Selected) -->
+            <div class="relative p-3.5 rounded-xl cursor-pointer transition-all duration-300 glass-card-selected transform scale-[1.02] shadow-xl shadow-yellow-900/10">
+                <div class="absolute -top-2.5 right-4 bg-[#FACC15] text-[#0F172A] font-bebas text-xs px-2.5 py-0.5 rounded-full shadow-md tracking-wider">
+                    BEST VALUE • SAVE 50%
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded-full border-2 border-[#FACC15] bg-[#FACC15] flex items-center justify-center shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-baseline justify-between">
+                            <h3 class="font-bebas text-xl tracking-wide text-white">ANNUAL</h3>
+                            <div class="text-right">
+                                <span class="font-bebas text-xl text-[#F8FAFC]">$9.99</span>
+                                <span class="font-montserrat text-[10px] text-[#F8FAFC] opacity-50 ml-1">/yr</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-0.5">
+                            <div class="font-montserrat font-bold text-[#FACC15] text-xs">
+                                Just $0.83 / month
+                            </div>
+                            <div class="font-montserrat text-[10px] text-[#F8FAFC] opacity-50 line-through">
+                                $19.99
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Plan -->
+            <div class="relative p-3.5 rounded-xl cursor-pointer transition-all duration-200 glass-card hover:bg-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded-full border-2 border-white/30 flex items-center justify-center shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-baseline justify-between">
+                            <h3 class="font-bebas text-xl tracking-wide text-[#F8FAFC]">MONTHLY</h3>
+                            <div class="text-right">
+                                <span class="font-bebas text-xl text-[#F8FAFC]">$2.99</span>
+                                <span class="font-montserrat text-[10px] text-[#F8FAFC] opacity-50 ml-1">/mo</span>
+                            </div>
+                        </div>
+                        <p class="font-montserrat text-[10px] text-[#F8FAFC] opacity-50 mt-0.5 truncate">
+                            Flexible plan, cancel anytime
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / CTA -->
+        <div class="relative z-10 px-5 pb-8 pt-2 bg-[#0F172A]">
+            
+            <!-- 3D Button -->
+            <div class="relative h-[52px] w-full group cursor-pointer btn-container">
+                <div class="absolute inset-0 bg-[#46A302] rounded-xl translate-y-1.5 btn-shadow transition-all"></div>
+                <div class="absolute inset-0 bg-[#58CC02] rounded-xl flex items-center justify-center btn-3d transition-transform h-full">
+                    <span class="font-bebas text-xl text-[#0F172A] tracking-wider mt-0.5">
+                        UNLOCK FULL ACCESS
+                    </span>
+                </div>
+            </div>
+            
+            <div class="flex justify-center gap-3 mt-4">
+                <button class="font-montserrat text-[9px] text-[#F8FAFC] opacity-40 hover:opacity-100 transition-opacity font-medium uppercase">RESTORE</button>
+                <span class="text-[#F8FAFC] opacity-20">•</span>
+                <button class="font-montserrat text-[9px] text-[#F8FAFC] opacity-40 hover:opacity-100 transition-opacity font-medium uppercase">TERMS</button>
+                <span class="text-[#F8FAFC] opacity-20">•</span>
+                <button class="font-montserrat text-[9px] text-[#F8FAFC] opacity-40 hover:opacity-100 transition-opacity font-medium uppercase">PRIVACY</button>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

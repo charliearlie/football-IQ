@@ -80,7 +80,7 @@ export default function HomeScreen() {
   const { profile, user, signInAnonymously } = useAuth();
   const { isConnected } = useNetworkStatus();
   const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
-  const { cards, completedCount, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
+  const { cards, completedCount, isSpecialCompleted, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
 
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
@@ -237,7 +237,7 @@ export default function HomeScreen() {
         />
 
         {/* 4. Special Event Banner (Conditional) */}
-        {specialEvent && (
+        {specialEvent && !isSpecialCompleted && (
             <EventBanner event={specialEvent} onPress={handleEventPress} />
         )}
 

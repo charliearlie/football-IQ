@@ -48,6 +48,8 @@ export async function initDatabase(): Promise<SQLite.SQLiteDatabase | null> {
 
   console.log('[Database] Opening database...');
   db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+  await db.getAllAsync('PRAGMA journal_mode = WAL');
+  await db.runAsync('PRAGMA busy_timeout = 5000');
   await runMigrations(db);
   console.log('[Database] Initialization complete');
   return db;
@@ -956,7 +958,7 @@ export async function getCatalogEntriesPaginated(
   if (gameMode) {
     return database.getAllAsync<LocalCatalogEntry>(
       `SELECT * FROM puzzle_catalog
-       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime')
+       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime') AND is_special = 0
        ORDER BY puzzle_date DESC
        LIMIT $limit OFFSET $offset`,
       { $gameMode: gameMode, $limit: limit, $offset: offset }
@@ -965,7 +967,7 @@ export async function getCatalogEntriesPaginated(
 
   return database.getAllAsync<LocalCatalogEntry>(
     `SELECT * FROM puzzle_catalog
-     WHERE puzzle_date <= date('now', 'localtime')
+     WHERE puzzle_date <= date('now', 'localtime') AND is_special = 0
      ORDER BY puzzle_date DESC
      LIMIT $limit OFFSET $offset`,
     { $limit: limit, $offset: offset }
@@ -985,7 +987,7 @@ export async function getCatalogEntryCount(
   if (gameMode) {
     const result = await database.getFirstAsync<{ count: number }>(
       `SELECT COUNT(*) as count FROM puzzle_catalog
-       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime')`,
+       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime') AND is_special = 0`,
       { $gameMode: gameMode }
     );
     return result?.count ?? 0;
@@ -993,7 +995,7 @@ export async function getCatalogEntryCount(
 
   const result = await database.getFirstAsync<{ count: number }>(
     `SELECT COUNT(*) as count FROM puzzle_catalog
-     WHERE puzzle_date <= date('now', 'localtime')`
+     WHERE puzzle_date <= date('now', 'localtime') AND is_special = 0`
   );
   return result?.count ?? 0;
 }
@@ -1021,6 +1023,7 @@ export async function getCatalogEntriesIncomplete(
     `SELECT pc.* FROM puzzle_catalog pc
      LEFT JOIN attempts a ON pc.id = a.puzzle_id
      WHERE pc.puzzle_date <= date('now', 'localtime')
+       AND pc.is_special = 0
        AND (a.id IS NULL OR a.completed = 0)
      GROUP BY pc.id
      ORDER BY pc.puzzle_date DESC
@@ -1042,6 +1045,7 @@ export async function getCatalogEntryCountIncomplete(): Promise<number> {
     `SELECT COUNT(DISTINCT pc.id) as count FROM puzzle_catalog pc
      LEFT JOIN attempts a ON pc.id = a.puzzle_id
      WHERE pc.puzzle_date <= date('now', 'localtime')
+       AND pc.is_special = 0
        AND (a.id IS NULL OR a.completed = 0)`
   );
   return result?.count ?? 0;
@@ -1073,6 +1077,7 @@ export async function getRandomUnplayedPuzzle(
       `SELECT pc.* FROM puzzle_catalog pc
        LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
        WHERE pc.puzzle_date <= date('now', 'localtime')
+         AND pc.is_special = 0
          AND a.id IS NULL
        ORDER BY RANDOM()
        LIMIT 1`
@@ -1086,6 +1091,7 @@ export async function getRandomUnplayedPuzzle(
      LEFT JOIN unlocked_puzzles up ON pc.id = up.puzzle_id
      WHERE pc.puzzle_date <= date('now', 'localtime')
        AND a.id IS NULL
+       AND pc.is_special = 0
        AND pc.game_mode NOT IN ('career_path_pro', 'top_tens')
        AND (pc.puzzle_date >= $freeWindowStart OR up.puzzle_id IS NOT NULL)
      ORDER BY RANDOM()

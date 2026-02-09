@@ -360,7 +360,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         </View>
 
         {/* Premium Banner */}
-        <PremiumUpsellBanner />
+        <PremiumUpsellBanner fullWidth />
 
         {/* Subscription */}
         <SettingsSection title="SUBSCRIPTION">

@@ -1,4 +1,5 @@
 // Types
+export * from './components/PremiumUpsellContent';
 export type { OfferInfo, PackageWithOffer } from './types/subscription.types';
 
 // Utilities

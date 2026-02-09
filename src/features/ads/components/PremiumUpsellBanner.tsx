@@ -8,7 +8,7 @@ import { useAuth } from "@/features/auth";
 import { colors, textStyles, spacing, borderRadius } from "@/theme";
 import { ProBadge } from "@/components/ProBadge/ProBadge";
 
-export function PremiumUpsellBanner({ testID }: { testID?: string }) {
+export function PremiumUpsellBanner({ testID, fullWidth = false }: { testID?: string; fullWidth?: boolean }) {
   const router = useRouter();
   const { profile } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
@@ -33,12 +33,13 @@ export function PremiumUpsellBanner({ testID }: { testID?: string }) {
     <Animated.View 
       entering={FadeIn.duration(300)} 
       exiting={FadeOut.duration(300)}
-      style={styles.wrapper}
+      style={[styles.wrapper, fullWidth && styles.fullWidthWrapper]}
     >
       <Pressable
         onPress={handlePress}
         style={({ pressed }) => [
           styles.container,
+          fullWidth && styles.fullWidthContainer,
           pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
         ]}
         testID={testID}
@@ -56,10 +57,10 @@ export function PremiumUpsellBanner({ testID }: { testID?: string }) {
           <Pressable 
             onPress={handleDismiss} 
             style={styles.closeButton}
-            hitSlop={12}
+            hitSlop={8}
             testID={`${testID || 'premium-banner'}-close`}
           >
-            <X size={16} color={colors.stadiumNavy} strokeWidth={2.5} style={{ opacity: 0.6 }} />
+            <X size={18} color="#000000" strokeWidth={2.5} />
           </Pressable>
           
           <View style={styles.contentContainer}>
@@ -90,6 +91,9 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
+  fullWidthWrapper: {
+    marginHorizontal: 0,
+  },
   container: {
     borderRadius: borderRadius.lg, // 12
     overflow: "hidden",
@@ -99,6 +103,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+  fullWidthContainer: {
+    // Keep border radius even when full width (relative to parent)
+  },
   gradient: {
     padding: spacing.lg, // 16
     minHeight: 80,
@@ -107,16 +114,14 @@ const styles = StyleSheet.create({
   textureOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(255, 255, 255, 0.1)",
-    // Simple texture effect using a rotated view or just noise if we had an image
-    // For now, just a subtle overlay on the right
     left: "50%",
     transform: [{ skewX: "-20deg" }],
   },
   closeButton: {
     position: "absolute",
-    top: spacing.sm,
-    right: spacing.sm,
-    zIndex: 10,
+    top: 4,
+    right: 8,
+    zIndex: 20, // Higher z-index to ensure it sits on top but doesn't capture touches outside its bounds unnecessarily if we control hitSlop
     padding: 4,
   },
   contentContainer: {

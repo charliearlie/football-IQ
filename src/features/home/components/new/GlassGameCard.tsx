@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12, // Squircle 
-    backgroundColor: 'rgba(255,255,255,0.1)', // Lighter background
+    backgroundColor: '#F1F5F9', // Off-white for better icon visibility
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,

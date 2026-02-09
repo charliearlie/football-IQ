@@ -42,6 +42,10 @@ const DEFAULT_TITLES: Record<GameMode, string> = {
  * Searches today's synced puzzles for one with is_special=true
  * and constructs a SpecialEvent from its metadata.
  *
+ * NOTE: This hook does NOT check completion status to avoid concurrent
+ * SQLite access. The home screen uses `isSpecialCompleted` from
+ * useDailyPuzzles to hide the banner after completion.
+ *
  * @returns The active SpecialEvent or null if none exist today.
  */
 export function useSpecialEvent(): SpecialEvent | null {

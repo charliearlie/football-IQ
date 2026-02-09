@@ -204,7 +204,7 @@ export default function ArchiveScreen() {
 
       {/* Premium Upsell Banner (non-premium only) */}
       <View style={styles.bannerContainer}>
-        <PremiumUpsellBanner testID="archive-premium-upsell" />
+        <PremiumUpsellBanner testID="archive-premium-upsell" fullWidth />
       </View>
 
       {/* Match Calendar with Advanced Filter */}

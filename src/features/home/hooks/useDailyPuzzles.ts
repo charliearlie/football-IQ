@@ -35,6 +35,7 @@ export interface DailyPuzzleCard {
 export interface UseDailyPuzzlesResult {
   cards: DailyPuzzleCard[];
   completedCount: number;
+  isSpecialCompleted: boolean;
   isLoading: boolean;
   refresh: () => Promise<void>;
 }
@@ -100,6 +101,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
   const { profile } = useAuth();
   const isPremium = profile?.is_premium ?? false;
   const [cards, setCards] = useState<DailyPuzzleCard[]>([]);
+  const [isSpecialCompleted, setIsSpecialCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[]>([]);
 
@@ -183,6 +185,15 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
       }
 
       setCards(validCards);
+
+      // Check if today's special event puzzle has been completed
+      const specialPuzzle = puzzles.find((p) => p.puzzle_date === today && p.is_special);
+      if (specialPuzzle) {
+        const specialAttempt = await getAttemptByPuzzleId(specialPuzzle.id);
+        setIsSpecialCompleted(specialAttempt?.completed === true);
+      } else {
+        setIsSpecialCompleted(false);
+      }
     } catch (error) {
       console.error('Failed to load daily puzzle cards:', error);
     } finally {
@@ -234,6 +245,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
   return {
     cards,
     completedCount,
+    isSpecialCompleted,
     isLoading: isLoading || syncStatus === 'syncing',
     refresh,
   };
