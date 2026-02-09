@@ -24,6 +24,14 @@ export interface TransferGuessContent {
   to_club: string;
   /** Transfer fee display (e.g., "€80M", "Free", "Undisclosed") */
   fee: string;
+  /** Hex color for the origin club badge (e.g., "#FDE100") */
+  from_club_color?: string;
+  /** Hex color for the destination club badge (e.g., "#DA291C") */
+  to_club_color?: string;
+  /** Short abbreviation for origin club (e.g., "BVB"). Falls back to first 3 letters. */
+  from_club_abbreviation?: string;
+  /** Short abbreviation for destination club (e.g., "MNU"). Falls back to first 3 letters. */
+  to_club_abbreviation?: string;
   /** Array of 3 hints: [year (YYYY), position (ATT/MID/DEF/GK), nation (ISO code, e.g. "BR", "GB-ENG")] */
   hints: [string, string, string];
 }

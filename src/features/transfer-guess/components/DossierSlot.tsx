@@ -2,9 +2,7 @@ import { useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
-  ImageSourcePropType,
   ViewStyle,
 } from 'react-native';
 import Animated, {
@@ -15,6 +13,7 @@ import Animated, {
   withTiming,
   interpolateColor,
 } from 'react-native-reanimated';
+import { Calendar, Shirt, Flag, Lock } from 'lucide-react-native';
 import { colors, spacing, fonts, borderRadius, depthOffset } from '@/theme';
 import { FlagIcon } from '@/components/FlagIcon';
 import { HintLabel } from '../types/transferGuess.types';
@@ -26,11 +25,7 @@ const ISO_CODE_PATTERN = /^[A-Z]{2}(-[A-Z]{2,3})?$/;
 const DEPTH = depthOffset.tictacCell;
 
 /** Slot height for consistent sizing */
-const SLOT_HEIGHT = 80;
-
-/** Background tint for dossier paper effect */
-const DOSSIER_BACKGROUND = 'rgba(255, 255, 255, 0.1)';
-const DOSSIER_SHADOW = 'rgba(255, 255, 255, 0.05)';
+const SLOT_HEIGHT = 100;
 
 /** Spring config for reveal pop animation */
 const POP_SPRING = {
@@ -45,12 +40,12 @@ const SETTLE_SPRING = {
   mass: 0.8,
 };
 
-/** Map hint labels to custom PNG icons */
-const SLOT_PNG_ICONS: Record<HintLabel, ImageSourcePropType> = {
-  Year: require('../../../../assets/images/transfer-year.png'),
-  Position: require('../../../../assets/images/transfer-position.png'),
-  Nation: require('../../../../assets/images/transfer-nationality.png'),
-};
+/** Map hint labels to lucide-react-native icon components */
+const SLOT_ICONS = {
+  Year: Calendar,
+  Position: Shirt,
+  Nation: Flag,
+} as const;
 
 export interface DossierSlotProps {
   /** The hint label (Year, Position, Nation) */
@@ -68,11 +63,11 @@ export interface DossierSlotProps {
 }
 
 /**
- * DossierSlot - A single intel card in the Scout's Dossier grid.
+ * DossierSlot - A single "Scouting Card" in the hint grid.
  *
- * Uses Solid Layer 3D architecture with custom PNG icons.
- * Hidden: Shows custom icon for the hint type
- * Revealed: Shows the actual value with pitchGreen border glow
+ * Uses Solid Layer 3D architecture with lucide-react-native icons.
+ * Locked: Glass background, icon + label, lock icon in top-right corner
+ * Revealed: Green-tinted background, value "pops" in, category label at bottom
  */
 export function DossierSlot({
   label,
@@ -83,6 +78,7 @@ export function DossierSlot({
   testID,
 }: DossierSlotProps) {
   const wasRevealedRef = useRef(false);
+  const Icon = SLOT_ICONS[label];
 
   // Animation values
   const scale = useSharedValue(1);
@@ -120,6 +116,9 @@ export function DossierSlot({
         { translateY: pressOffset.value * DEPTH },
       ],
       borderColor,
+      backgroundColor: borderProgress.value > 0.5
+        ? 'rgba(88, 204, 2, 0.1)'
+        : 'rgba(255, 255, 255, 0.05)',
     };
   });
 
@@ -133,12 +132,19 @@ export function DossierSlot({
 
       {/* Top Layer - Animates on reveal */}
       <Animated.View style={[styles.topLayer, animatedTopStyle]}>
+        {/* Lock icon in top-right corner (hidden state only) */}
+        {!isRevealed && (
+          <View style={styles.lockIcon}>
+            <Lock size={12} color={colors.textSecondary} strokeWidth={2} />
+          </View>
+        )}
+
         <View style={[styles.content, { opacity: contentOpacity }]}>
           {/* Icon (hidden state) or Value (revealed state) */}
           {isRevealed ? (
             label === 'Nation' && ISO_CODE_PATTERN.test(hint) ? (
               <View testID={`${testID}-flag`} style={styles.flagContainer}>
-                <FlagIcon code={hint} size={32} />
+                <FlagIcon code={hint} size={28} />
               </View>
             ) : (
               <Text
@@ -151,17 +157,22 @@ export function DossierSlot({
               </Text>
             )
           ) : (
-            <Image
-              source={SLOT_PNG_ICONS[label]}
-              style={styles.icon}
-              resizeMode="contain"
-              testID={`${testID}-icon`}
-            />
+            <>
+              <Icon
+                size={24}
+                color={colors.textSecondary}
+                strokeWidth={1.5}
+                testID={`${testID}-icon`}
+              />
+              <Text style={styles.hiddenLabel}>{label.toUpperCase()}</Text>
+            </>
           )}
         </View>
 
-        {/* Label at bottom */}
-        <Text style={styles.label}>{label}</Text>
+        {/* Category label at bottom (revealed state) */}
+        {isRevealed && (
+          <Text style={styles.revealedLabel}>{label.toUpperCase()}</Text>
+        )}
       </Animated.View>
     </View>
   );
@@ -179,10 +190,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SLOT_HEIGHT,
-    backgroundColor: DOSSIER_SHADOW,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: borderRadius.lg,
-    borderWidth: 2,
-    borderColor: 'rgba(15, 23, 42, 0.8)', // Dark navy shadow border
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.8)',
   },
   topLayer: {
     position: 'absolute',
@@ -190,41 +201,52 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SLOT_HEIGHT,
-    backgroundColor: DOSSIER_BACKGROUND,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: borderRadius.lg,
-    borderWidth: 2,
-    borderColor: colors.stadiumNavy, // Will be animated to pitchGreen
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  lockIcon: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    opacity: 0.5,
   },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    width: 40,
-    height: 40,
+    gap: spacing.xs,
   },
   flagContainer: {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
+  hiddenLabel: {
+    fontFamily: fonts.headline,
+    fontSize: 14,
+    color: colors.textSecondary,
+    letterSpacing: 1,
+  },
   revealedValue: {
     fontFamily: fonts.headline,
-    fontSize: 28,
+    fontSize: 20,
     color: colors.pitchGreen,
     textAlign: 'center',
     letterSpacing: 1,
   },
-  label: {
+  revealedLabel: {
+    position: 'absolute',
+    bottom: 8,
     fontFamily: fonts.body,
     fontWeight: '600',
     fontSize: 10,
-    color: colors.textSecondary,
+    color: 'rgba(255, 255, 255, 0.5)',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });

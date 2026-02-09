@@ -3,6 +3,7 @@ import { Lightbulb } from 'lucide-react-native';
 import { PlayerAutocomplete } from '@/components';
 import { colors, spacing, fonts, textStyles } from '@/theme';
 import { UnifiedPlayer } from '@/services/oracle/types';
+import { MAX_GUESSES } from '../types/transferGuess.types';
 
 export interface TransferActionZoneProps {
   /** Called when user selects a player from autocomplete dropdown */
@@ -26,13 +27,12 @@ export interface TransferActionZoneProps {
 }
 
 /**
- * TransferActionZone - The input and action buttons area.
+ * TransferActionZone - Floating action bar with life balls and input.
  *
  * Layout:
- * - Guesses remaining indicator (caption)
+ * - Game status row: "X GUESSES LEFT" text + life balls
  * - PlayerAutocomplete (inline input + submit button with dropdown)
- * - "Reveal Hint" text link with lightbulb icon (amber, subtle)
- * - "Give Up" button (red, shown when all hints revealed)
+ * - "Reveal a hint" / "Give up" text links
  */
 export function TransferActionZone({
   onPlayerSelect,
@@ -47,14 +47,26 @@ export function TransferActionZone({
 }: TransferActionZoneProps) {
   // Show Give Up button when all hints are revealed (replaces hint link)
   const showGiveUp = !canRevealHint && !isGameOver;
+  const guessesUsed = MAX_GUESSES - guessesRemaining;
 
   return (
     <View style={styles.container} testID={testID}>
-      {/* Guesses remaining indicator */}
-      <View style={styles.guessesIndicator}>
-        <Text style={styles.guessesText}>
-          {guessesRemaining} {guessesRemaining === 1 ? 'guess' : 'guesses'} left
+      {/* Game Status Row: text + life balls */}
+      <View style={styles.statusRow}>
+        <Text style={styles.statusText}>
+          {guessesRemaining} {guessesRemaining === 1 ? 'GUESS' : 'GUESSES'} LEFT
         </Text>
+        <View style={styles.lifeBalls}>
+          {Array.from({ length: MAX_GUESSES }, (_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.lifeBall,
+                i < guessesUsed && styles.lifeBallLost,
+              ]}
+            />
+          ))}
+        </View>
       </View>
 
       {/* Autocomplete input (handles shake + error flash internally) */}
@@ -66,7 +78,7 @@ export function TransferActionZone({
         testID={testID ? `${testID}-autocomplete` : undefined}
       />
 
-      {/* Reveal Hint - subtle text link (costly action) */}
+      {/* Hint / Give Up Links */}
       {canRevealHint && !isGameOver && (
         <Pressable
           onPress={onRevealHint}
@@ -76,12 +88,11 @@ export function TransferActionZone({
           ]}
           testID={`${testID}-reveal`}
         >
-          <Lightbulb size={18} color={colors.amber} />
-          <Text style={styles.hintText}>Reveal a hint</Text>
+          <Lightbulb size={14} color={colors.cardYellow} />
+          <Text style={styles.hintText}>Need a bigger hint? (Cost: 1 Guess)</Text>
         </Pressable>
       )}
 
-      {/* Give Up link (shown when all hints revealed) */}
       {showGiveUp && (
         <Pressable
           onPress={onGiveUp}
@@ -107,29 +118,55 @@ const styles = StyleSheet.create({
     borderTopColor: colors.glassBorder,
     gap: spacing.md,
   },
-  guessesIndicator: {
+  statusRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xs,
   },
-  guessesText: {
-    ...textStyles.caption,
+  statusText: {
+    fontFamily: fonts.body,
+    fontWeight: '600',
+    fontSize: 12,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
     letterSpacing: 1,
+  },
+  lifeBalls: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  lifeBall: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.pitchGreen,
+    shadowColor: colors.pitchGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  lifeBallLost: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   hintLink: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
+    gap: 6,
+    paddingVertical: spacing.xs,
   },
   hintLinkPressed: {
     opacity: 0.7,
   },
   hintText: {
     fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.amber,
+    fontSize: 12,
+    color: colors.cardYellow,
   },
   giveUpText: {
     fontFamily: fonts.body,

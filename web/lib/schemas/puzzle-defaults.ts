@@ -32,6 +32,10 @@ export function getTransferGuessDefaults(): TransferGuessContent {
     from_club: "",
     to_club: "",
     fee: "",
+    from_club_color: "",
+    to_club_color: "",
+    from_club_abbreviation: "",
+    to_club_abbreviation: "",
     hints: ["", "", ""],
   };
 }

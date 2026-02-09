@@ -203,6 +203,10 @@ export function TransferGuessScreen({
             fromClub={transferContent.from_club}
             toClub={transferContent.to_club}
             fee={transferContent.fee}
+            fromClubColor={transferContent.from_club_color}
+            toClubColor={transferContent.to_club_color}
+            fromClubAbbreviation={transferContent.from_club_abbreviation}
+            toClubAbbreviation={transferContent.to_club_abbreviation}
             testID="review-market-header"
           />
 
@@ -268,6 +272,10 @@ export function TransferGuessScreen({
             fromClub={transferContent.from_club}
             toClub={transferContent.to_club}
             fee={transferContent.fee}
+            fromClubColor={transferContent.from_club_color}
+            toClubColor={transferContent.to_club_color}
+            fromClubAbbreviation={transferContent.from_club_abbreviation}
+            toClubAbbreviation={transferContent.to_club_abbreviation}
             testID="market-header"
           />
 

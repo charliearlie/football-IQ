@@ -43,6 +43,10 @@ export function TransferGuessForm() {
       setValue("content.from_club", data.from_club);
       setValue("content.to_club", data.to_club);
       setValue("content.fee", data.fee);
+      setValue("content.from_club_color", data.from_club_color ?? "");
+      setValue("content.to_club_color", data.to_club_color ?? "");
+      setValue("content.from_club_abbreviation", data.from_club_abbreviation ?? "");
+      setValue("content.to_club_abbreviation", data.to_club_abbreviation ?? "");
       setValue("content.hints.0", data.hints[0]);
       setValue("content.hints.1", data.hints[1]);
       setValue("content.hints.2", data.hints[2]);
@@ -170,6 +174,116 @@ export function TransferGuessForm() {
                 </FormItem>
               )}
             />
+          </div>
+
+          {/* Club Appearance */}
+          <div className="glass-card p-4 space-y-4">
+            <h3 className="text-sm font-medium text-floodlight">Club Appearance</h3>
+            <FormDescription className="text-xs">
+              Optional. If abbreviation is blank, the first 3 letters of the club name will be used.
+            </FormDescription>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* From Club Color */}
+              <FormField
+                control={control}
+                name="content.from_club_color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>From Club Color</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={field.value || "#888888"}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          className="w-10 h-10 rounded border border-white/10 bg-transparent cursor-pointer"
+                        />
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="#FDE100"
+                          className="bg-white/5 border-white/10 font-mono text-sm"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* To Club Color */}
+              <FormField
+                control={control}
+                name="content.to_club_color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To Club Color</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={field.value || "#888888"}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          className="w-10 h-10 rounded border border-white/10 bg-transparent cursor-pointer"
+                        />
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="#DA291C"
+                          className="bg-white/5 border-white/10 font-mono text-sm"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* From Club Abbreviation */}
+              <FormField
+                control={control}
+                name="content.from_club_abbreviation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>From Club Abbreviation</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="e.g., BVB, CHE"
+                        maxLength={4}
+                        className="bg-white/5 border-white/10 uppercase"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* To Club Abbreviation */}
+              <FormField
+                control={control}
+                name="content.to_club_abbreviation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To Club Abbreviation</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="e.g., MNU, RMA"
+                        maxLength={4}
+                        className="bg-white/5 border-white/10 uppercase"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           {/* Hints */}

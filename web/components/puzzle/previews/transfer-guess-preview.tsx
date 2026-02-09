@@ -9,6 +9,11 @@ interface TransferGuessPreviewProps {
   content: unknown;
 }
 
+function getAbbreviation(clubName: string, abbreviation?: string): string {
+  if (abbreviation) return abbreviation.toUpperCase();
+  return clubName.slice(0, 3).toUpperCase();
+}
+
 export function TransferGuessPreview({ content }: TransferGuessPreviewProps) {
   const data = content as TransferGuessContent;
 
@@ -19,6 +24,11 @@ export function TransferGuessPreview({ content }: TransferGuessPreviewProps) {
       </div>
     );
   }
+
+  const fromAbbr = getAbbreviation(data.from_club || "", data.from_club_abbreviation);
+  const toAbbr = getAbbreviation(data.to_club || "", data.to_club_abbreviation);
+  const fromColor = data.from_club_color || undefined;
+  const toColor = data.to_club_color || undefined;
 
   return (
     <div className="space-y-4">
@@ -32,32 +42,65 @@ export function TransferGuessPreview({ content }: TransferGuessPreviewProps) {
 
       {/* Transfer Card */}
       <div className="glass-card p-4 space-y-4">
+        {/* Fee */}
+        {data.fee && (
+          <div className="text-center mb-2">
+            <p className="text-[10px] uppercase tracking-widest text-yellow-400 font-bold mb-1">
+              Transfer Fee
+            </p>
+            <p className="text-2xl font-bold text-floodlight font-display">
+              {data.fee}
+            </p>
+          </div>
+        )}
+
         {/* Clubs */}
         <div className="flex items-center justify-center gap-4">
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-2 mx-auto">
-              <span className="text-2xl">🏟️</span>
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto"
+              style={{
+                borderWidth: 2,
+                borderStyle: "solid",
+                borderColor: fromColor || "rgba(255,255,255,0.1)",
+                backgroundColor: fromColor ? `${fromColor}15` : "rgba(255,255,255,0.05)",
+              }}
+            >
+              <span
+                className="text-lg font-display font-bold"
+                style={{ color: fromColor || "rgba(248,250,252,0.7)" }}
+              >
+                {fromAbbr}
+              </span>
             </div>
-            <p className="font-medium text-floodlight text-sm">
+            <p className="font-medium text-floodlight text-xs uppercase">
               {data.from_club || "From Club"}
             </p>
           </div>
 
-          <ArrowRight className="h-6 w-6 text-muted-foreground" />
+          <ArrowRight className="h-5 w-5 text-green-500" />
 
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-2 mx-auto">
-              <span className="text-2xl">🏟️</span>
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto"
+              style={{
+                borderWidth: 2,
+                borderStyle: "solid",
+                borderColor: toColor || "rgba(255,255,255,0.1)",
+                backgroundColor: toColor ? `${toColor}15` : "rgba(255,255,255,0.05)",
+              }}
+            >
+              <span
+                className="text-lg font-display font-bold"
+                style={{ color: toColor || "rgba(248,250,252,0.7)" }}
+              >
+                {toAbbr}
+              </span>
             </div>
-            <p className="font-medium text-floodlight text-sm">
+            <p className="font-medium text-floodlight text-xs uppercase">
               {data.to_club || "To Club"}
             </p>
           </div>
-        </div>
-
-        {/* Fee */}
-        <div className="flex items-center justify-center gap-4 text-sm">
-          <Badge variant="secondary">{data.fee || "Fee"}</Badge>
         </div>
       </div>
 
@@ -77,7 +120,7 @@ export function TransferGuessPreview({ content }: TransferGuessPreviewProps) {
                 {index + 1}
               </Badge>
               <span className="text-sm text-floodlight">
-                {["Nationality", "Position", "Achievement"][index]}
+                {["Year", "Position", "Nationality"][index]}
               </span>
             </div>
             <div className="flex items-center gap-2">

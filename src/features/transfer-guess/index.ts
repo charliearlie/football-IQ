@@ -33,6 +33,7 @@ export {
   generateTransferEmojiGrid,
 } from './utils/transferScoreDisplay';
 export { shareTransferResult, copyToClipboard } from './utils/transferShare';
+export { formatTransferFee } from './utils/formatTransferFee';
 
 // Types
 export type {

@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Football IQ - Guess The Transfer</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      /* --- DESIGN SYSTEM TOKENS --- */
+      :root {
+        /* Palette */
+        --pitch-green: #58cc02;
+        --grass-shadow: #46a302;
+        --stadium-navy: #0f172a;
+        --floodlight-white: #f8fafc;
+        --card-yellow: #facc15;
+        --red-card: #ef4444;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-secondary: rgba(248, 250, 252, 0.7);
+
+        /* Typography */
+        --font-display: "Bebas Neue", sans-serif;
+        --font-body: "Montserrat", sans-serif;
+
+        /* Spacing */
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 12px;
+        --space-lg: 16px;
+        --space-xl: 24px;
+        --space-2xl: 32px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        background-color: var(--stadium-navy);
+        color: var(--floodlight-white);
+        font-family: var(--font-body);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Prevent scroll on mobile wrapper */
+      }
+
+      /* --- LAYOUT UTILITIES --- */
+      .container {
+        padding: var(--space-lg);
+        max-width: 480px;
+        margin: 0 auto;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .flex-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .flex-col {
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* --- HEADER --- */
+      header {
+        padding-bottom: var(--space-xl);
+        padding-top: var(--space-sm);
+      }
+
+      .nav-btn {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .nav-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .nav-btn svg {
+        stroke: var(--floodlight-white);
+        width: 20px;
+        height: 20px;
+      }
+
+      .game-title {
+        font-family: var(--font-display);
+        font-size: 28px;
+        letter-spacing: 1px;
+        text-align: center;
+        flex-grow: 1;
+      }
+
+      /* --- TRANSFER STAGE (HERO) --- */
+      .transfer-stage {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: var(--space-xl) var(--space-lg);
+        position: relative;
+        margin-bottom: var(--space-xl);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+      }
+
+      /* Decorative shine effect */
+      .transfer-stage::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(88, 204, 2, 0.1) 0%,
+          rgba(0, 0, 0, 0) 60%
+        );
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .price-tag {
+        text-align: center;
+        margin-bottom: var(--space-lg);
+        position: relative;
+        z-index: 1;
+      }
+
+      .price-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--card-yellow);
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .price-value {
+        font-family: var(--font-display);
+        font-size: 48px;
+        color: var(--floodlight-white);
+        text-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
+        line-height: 1;
+      }
+
+      .clubs-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+      }
+
+      .club {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 35%;
+      }
+
+      .club-logo-placeholder {
+        width: 64px;
+        height: 64px;
+        background: #1e293b;
+        border-radius: 50%;
+        border: 2px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: var(--space-sm);
+        font-family: var(--font-display);
+        font-size: 24px;
+        color: var(--text-secondary);
+      }
+
+      /* Specifically styling Dortmund and United colors for demo */
+      .club-bvb .club-logo-placeholder {
+        border-color: #fde100;
+        color: #fde100;
+        background: rgba(253, 225, 0, 0.1);
+      }
+      .club-mutd .club-logo-placeholder {
+        border-color: #da291c;
+        color: #da291c;
+        background: rgba(218, 41, 28, 0.1);
+      }
+
+      .club-name {
+        font-family: var(--font-display);
+        font-size: 18px;
+        text-align: center;
+        line-height: 1.1;
+      }
+
+      /* Animated Connector */
+      .connector {
+        flex-grow: 1;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        position: relative;
+        margin: 0 var(--space-sm);
+        margin-bottom: 24px; /* Align with logos */
+      }
+
+      .connector-arrow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--stadium-navy);
+        padding: 4px;
+        border-radius: 50%;
+        border: 1px solid var(--pitch-green);
+      }
+
+      .connector-arrow svg {
+        color: var(--pitch-green);
+        width: 16px;
+        height: 16px;
+        display: block;
+      }
+
+      /* --- CLUE GRID (SCOUTING REPORTS) --- */
+      .clue-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-md);
+        margin-bottom: auto; /* Push input to bottom */
+      }
+
+      .clue-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+      }
+
+      .clue-card:active {
+        transform: scale(0.95);
+      }
+
+      .clue-icon {
+        color: var(--text-secondary);
+        margin-bottom: var(--space-xs);
+        transition: 0.3s;
+      }
+
+      .clue-label {
+        font-family: var(--font-display);
+        font-size: 14px;
+        color: var(--text-secondary);
+        letter-spacing: 1px;
+      }
+
+      .clue-value {
+        display: none; /* Hidden by default */
+        font-family: var(--font-display);
+        font-size: 20px;
+        color: var(--pitch-green);
+        text-align: center;
+        line-height: 1;
+      }
+
+      .clue-lock {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        opacity: 0.5;
+      }
+
+      /* Active/Revealed State */
+      .clue-card.revealed {
+        background: rgba(88, 204, 2, 0.1);
+        border-color: var(--pitch-green);
+      }
+
+      .clue-card.revealed .clue-icon,
+      .clue-card.revealed .clue-lock,
+      .clue-card.revealed .clue-label {
+        display: none;
+      }
+
+      .clue-card.revealed .clue-value {
+        display: block;
+        animation: popIn 0.3s ease-out;
+      }
+
+      .clue-card.revealed::after {
+        content: attr(data-label);
+        position: absolute;
+        bottom: 8px;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 600;
+      }
+
+      @keyframes popIn {
+        0% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* --- GAME STATUS --- */
+      .game-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: var(--space-sm);
+        padding: 0 var(--space-xs);
+      }
+
+      .lives-container {
+        display: flex;
+        gap: 4px;
+      }
+
+      .life-ball {
+        width: 12px;
+        height: 12px;
+        background: var(--pitch-green);
+        border-radius: 50%;
+        box-shadow: 0 0 5px var(--pitch-green);
+      }
+
+      .life-ball.lost {
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        box-shadow: none;
+      }
+
+      .status-text {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      /* --- INPUT AREA --- */
+      .input-area {
+        display: flex;
+        gap: var(--space-md);
+        margin-bottom: var(--space-xl);
+        position: relative;
+      }
+
+      .search-container {
+        flex-grow: 1;
+        position: relative;
+      }
+
+      .search-input {
+        width: 100%;
+        background: #1e293b;
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 16px;
+        padding-left: 44px;
+        color: white;
+        font-family: var(--font-body);
+        font-size: 16px;
+        outline: none;
+      }
+
+      .search-input:focus {
+        border-color: var(--pitch-green);
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        width: 18px;
+        height: 18px;
+      }
+
+      /* 3D BUTTON IMPLEMENTATION */
+      .btn-3d {
+        background: var(--pitch-green);
+        color: var(--stadium-navy);
+        font-family: var(--font-display);
+        font-size: 20px;
+        letter-spacing: 0.5px;
+        border: none;
+        border-radius: 12px;
+        padding: 0 24px;
+        cursor: pointer;
+        position: relative;
+        transform: translateY(-4px); /* Initial lift */
+        box-shadow: 0 4px 0 var(--grass-shadow); /* The 3D side */
+        transition:
+          transform 0.1s,
+          box-shadow 0.1s;
+        display: flex;
+        align-items: center;
+      }
+
+      .btn-3d:active {
+        transform: translateY(0);
+        box-shadow: 0 0 0 var(--grass-shadow);
+      }
+
+      /* Hint/Reveal Button logic */
+      .hint-text {
+        text-align: center;
+        margin-top: var(--space-md);
+        font-size: 12px;
+        color: var(--card-yellow);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      /* --- OVERLAYS --- */
+      .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .success-card {
+        background: #1e293b;
+        border: 1px solid var(--pitch-green);
+        padding: 32px;
+        border-radius: 20px;
+        text-align: center;
+        width: 80%;
+        transform: scale(0.8);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .modal-overlay.active .success-card {
+        transform: scale(1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- HEADER -->
+      <header class="flex-between">
+        <div class="nav-btn">
+          <i data-lucide="arrow-left"></i>
+        </div>
+        <div class="game-title">GUESS THE TRANSFER</div>
+        <div class="nav-btn">
+          <i data-lucide="help-circle"></i>
+        </div>
+      </header>
+
+      <!-- MAIN TRANSFER STAGE -->
+      <div class="transfer-stage">
+        <div class="price-tag">
+          <div class="price-label">Transfer Fee</div>
+          <div class="price-value">£12,000,000</div>
+        </div>
+
+        <div class="clubs-row">
+          <div class="club club-bvb">
+            <div class="club-logo-placeholder">BVB</div>
+            <div class="club-name">BORUSSIA DORTMUND</div>
+          </div>
+
+          <div class="connector">
+            <div class="connector-arrow">
+              <i data-lucide="arrow-right"></i>
+            </div>
+          </div>
+
+          <div class="club club-mutd">
+            <div class="club-logo-placeholder">MNU</div>
+            <div class="club-name">MANCHESTER UNITED</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME STATUS (LIVES) -->
+      <div class="game-status">
+        <span class="status-text">5 GUESSES LEFT</span>
+        <div class="lives-container">
+          <div class="life-ball"></div>
+          <div class="life-ball"></div>
+          <div class="life-ball"></div>
+          <div class="life-ball"></div>
+          <div class="life-ball"></div>
+        </div>
+      </div>
+
+      <!-- CLUES GRID -->
+      <div class="clue-grid">
+        <div
+          class="clue-card"
+          onclick="revealClue(this, 'year')"
+          data-label="Year"
+        >
+          <i data-lucide="calendar" class="clue-icon"></i>
+          <div class="clue-label">YEAR</div>
+          <i data-lucide="lock" class="clue-lock" size="12"></i>
+          <div class="clue-value">2012</div>
+        </div>
+
+        <div
+          class="clue-card"
+          onclick="revealClue(this, 'position')"
+          data-label="Position"
+        >
+          <i data-lucide="shirt" class="clue-icon"></i>
+          <div class="clue-label">POSITION</div>
+          <i data-lucide="lock" class="clue-lock" size="12"></i>
+          <div class="clue-value">ST</div>
+        </div>
+
+        <div
+          class="clue-card"
+          onclick="revealClue(this, 'nation')"
+          data-label="Nation"
+        >
+          <i data-lucide="flag" class="clue-icon"></i>
+          <div class="clue-label">NATION</div>
+          <i data-lucide="lock" class="clue-lock" size="12"></i>
+          <!-- Using emoji for flag for simplicity -->
+          <div class="clue-value" style="font-size: 28px">🇯🇵</div>
+        </div>
+      </div>
+
+      <!-- INPUT & ACTION -->
+      <div class="input-area">
+        <div class="search-container">
+          <i data-lucide="search" class="search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search player..."
+            id="playerInput"
+          />
+        </div>
+        <button class="btn-3d" onclick="checkAnswer()">SUBMIT</button>
+      </div>
+
+      <div class="hint-text">
+        <i data-lucide="lightbulb" size="14"></i>
+        <span>Need a bigger hint? (Cost: 1 Guess)</span>
+      </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal-overlay" id="successModal">
+      <div class="success-card">
+        <h2
+          style="
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: var(--pitch-green);
+            margin-bottom: 8px;
+          "
+        >
+          GOAL!
+        </h2>
+        <p
+          style="
+            font-size: 14px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+          "
+        >
+          Correct! It was Shinji Kagawa.
+        </p>
+        <button
+          class="btn-3d"
+          style="width: 100%; justify-content: center"
+          onclick="location.reload()"
+        >
+          NEXT TRANSFER
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      function revealClue(card, type) {
+        if (card.classList.contains("revealed")) return;
+
+        // Add sound effect logic here if needed
+        card.classList.add("revealed");
+      }
+
+      function checkAnswer() {
+        const input = document.getElementById("playerInput");
+        const val = input.value.toLowerCase();
+
+        // Simple validation demo
+        if (val.includes("kagawa") || val.includes("shinji")) {
+          document.getElementById("successModal").classList.add("active");
+        } else {
+          // Shake animation for error
+          input.style.borderColor = "var(--red-card)";
+          input.parentElement.classList.add("shake");
+          setTimeout(() => {
+            input.parentElement.classList.remove("shake");
+            input.style.borderColor = "var(--glass-border)";
+          }, 500);
+        }
+      }
+    </script>
+
+    <style>
+      /* Shake animation for wrong answer */
+      @keyframes shake {
+        0% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        50% {
+          transform: translateX(5px);
+        }
+        75% {
+          transform: translateX(-5px);
+        }
+        100% {
+          transform: translateX(0);
+        }
+      }
+      .shake {
+        animation: shake 0.3s;
+      }
+    </style>
+  </body>
+</html>

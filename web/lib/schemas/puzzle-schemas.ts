@@ -48,6 +48,10 @@ export const transferGuessContentSchema = z.object({
   from_club: z.string().min(1, "Origin club required"),
   to_club: z.string().min(1, "Destination club required"),
   fee: z.string().min(1, "Transfer fee required"),
+  from_club_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be hex color (e.g. #EF0107)").optional().or(z.literal("")),
+  to_club_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be hex color (e.g. #DA291C)").optional().or(z.literal("")),
+  from_club_abbreviation: z.string().max(4, "Max 4 characters").optional().or(z.literal("")),
+  to_club_abbreviation: z.string().max(4, "Max 4 characters").optional().or(z.literal("")),
   hints: z.tuple([
     z.string().min(1, "Transfer year hint required"),
     z.string().min(1, "Position hint required"),

@@ -14,19 +14,14 @@ export interface DossierGridProps {
 }
 
 /**
- * DossierGrid - The Intel Dossier 2-column grid layout.
+ * DossierGrid - The Scouting Report 3-column hint grid.
  *
- * Layout:
- * ┌─────────────┬─────────────┐
- * │  [📅] Year  │ [⚽] Position│
- * │    2019     │     ATT     │
- * ├─────────────┴─────────────┤
- * │       [🏴] Nationality     │
- * │           Brazil           │
- * └───────────────────────────┘
+ * Layout (matching transfer-guess.html prototype):
+ * ┌──────────┬──────────┬──────────┐
+ * │   YEAR   │ POSITION │  NATION  │
+ * └──────────┴──────────┴──────────┘
  *
- * Year + Position side-by-side on top row
- * Nationality spans full width on bottom row (the "big reveal")
+ * All three hints displayed side-by-side in equal-width columns.
  */
 export function DossierGrid({
   hints,
@@ -36,14 +31,13 @@ export function DossierGrid({
 }: DossierGridProps) {
   return (
     <View style={styles.container} testID={testID}>
-      {/* Top row: Year + Position (side-by-side) */}
-      <View style={styles.topRow}>
+      <View style={styles.row}>
         <DossierSlot
           label="Year"
           hint={hints[0]}
           isRevealed={hintsRevealed >= 1}
           isReviewMode={isReviewMode}
-          style={styles.halfSlot}
+          style={styles.slot}
           testID={`${testID}-slot-year`}
         />
         <DossierSlot
@@ -51,19 +45,18 @@ export function DossierGrid({
           hint={hints[1]}
           isRevealed={hintsRevealed >= 2}
           isReviewMode={isReviewMode}
-          style={styles.halfSlot}
+          style={styles.slot}
           testID={`${testID}-slot-position`}
         />
+        <DossierSlot
+          label="Nation"
+          hint={hints[2]}
+          isRevealed={hintsRevealed >= 3}
+          isReviewMode={isReviewMode}
+          style={styles.slot}
+          testID={`${testID}-slot-nation`}
+        />
       </View>
-
-      {/* Bottom row: Nationality (full width, the "big reveal") */}
-      <DossierSlot
-        label="Nation"
-        hint={hints[2]}
-        isRevealed={hintsRevealed >= 3}
-        isReviewMode={isReviewMode}
-        testID={`${testID}-slot-nation`}
-      />
     </View>
   );
 }
@@ -72,13 +65,12 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.lg,
-    gap: spacing.sm,
   },
-  topRow: {
+  row: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
-  halfSlot: {
+  slot: {
     flex: 1,
   },
 });

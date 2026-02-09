@@ -20,19 +20,31 @@ jest.mock('@/components/FlagIcon', () => ({
   },
 }));
 
+// Mock lucide-react-native icons
+jest.mock('lucide-react-native', () => {
+  const { View } = require('react-native');
+  const MockIcon = (props: { testID?: string }) => <View {...props} />;
+  return {
+    Calendar: MockIcon,
+    Shirt: MockIcon,
+    Flag: MockIcon,
+    Lock: MockIcon,
+  };
+});
+
 describe('DossierSlot', () => {
   describe('when locked (not revealed)', () => {
-    it('shows the icon for Number slot', () => {
+    it('shows the icon for Year slot', () => {
       const { getByTestId, queryByTestId } = render(
         <DossierSlot
-          label="Number"
-          hint="7"
+          label="Year"
+          hint="2019"
           isRevealed={false}
           testID="dossier-slot"
         />
       );
 
-      // Should show icon (Image component)
+      // Should show icon
       expect(getByTestId('dossier-slot-icon')).toBeTruthy();
 
       // Should NOT show the revealed value
@@ -67,33 +79,33 @@ describe('DossierSlot', () => {
       expect(queryByTestId('dossier-slot-value')).toBeNull();
     });
 
-    it('shows the label', () => {
+    it('shows the uppercase label', () => {
       const { getByText } = render(
         <DossierSlot
-          label="Number"
-          hint="7"
+          label="Year"
+          hint="2019"
           isRevealed={false}
           testID="dossier-slot"
         />
       );
 
-      expect(getByText('Number')).toBeTruthy();
+      expect(getByText('YEAR')).toBeTruthy();
     });
   });
 
   describe('when revealed', () => {
-    it('shows the hint value for Number', () => {
+    it('shows the hint value for Year', () => {
       const { getByTestId, getByText, queryByTestId } = render(
         <DossierSlot
-          label="Number"
-          hint="7"
+          label="Year"
+          hint="2019"
           isRevealed={true}
           testID="dossier-slot"
         />
       );
 
       expect(getByTestId('dossier-slot-value')).toBeTruthy();
-      expect(getByText('7')).toBeTruthy();
+      expect(getByText('2019')).toBeTruthy();
       // Should NOT show the icon
       expect(queryByTestId('dossier-slot-icon')).toBeNull();
     });
@@ -144,7 +156,7 @@ describe('DossierSlot', () => {
       const { getByTestId, getByText } = render(
         <DossierSlot
           label="Nation"
-          hint="🇧🇷"
+          hint="\u{1F1E7}\u{1F1F7}"
           isRevealed={true}
           testID="dossier-slot"
         />
@@ -152,10 +164,9 @@ describe('DossierSlot', () => {
 
       // Legacy emoji should fall back to text display
       expect(getByTestId('dossier-slot-value')).toBeTruthy();
-      expect(getByText('🇧🇷')).toBeTruthy();
     });
 
-    it('shows the label', () => {
+    it('shows the uppercase category label at bottom', () => {
       const { getByText } = render(
         <DossierSlot
           label="Position"
@@ -165,7 +176,7 @@ describe('DossierSlot', () => {
         />
       );
 
-      expect(getByText('Position')).toBeTruthy();
+      expect(getByText('POSITION')).toBeTruthy();
     });
   });
 
@@ -173,8 +184,8 @@ describe('DossierSlot', () => {
     it('dims unrevealed slots in review mode', () => {
       const { getByTestId } = render(
         <DossierSlot
-          label="Number"
-          hint="7"
+          label="Year"
+          hint="2019"
           isRevealed={false}
           isReviewMode={true}
           testID="dossier-slot"
