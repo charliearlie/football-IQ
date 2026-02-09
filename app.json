@@ -26,7 +26,8 @@
       "package": "com.charliearlie.footballiq.app",
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "com.google.android.gms.permission.AD_ID"
       ]
     },
     "web": {
@@ -104,6 +105,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "fb25570c-8978-441c-a2e1-b68dadfcff6d"
+      }
+    },
+    "owner": "charliearlie"
   }
 }

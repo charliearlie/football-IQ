@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
+  Bell,
   Calendar,
   Trophy,
   Settings,
@@ -34,6 +35,7 @@ const navigation: NavSection[] = [
   {
     items: [
       { name: "Calendar", href: "/calendar", icon: Calendar },
+      { name: "Notifications", href: "/notifications", icon: Bell },
       { name: "Player Scout", href: "/player-scout", icon: Globe },
     ],
   },

@@ -26,6 +26,7 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Sentry from '@sentry/react-native';
 import { onMidnight, getAuthorizedDateUnsafe } from '@/lib/time';
+import { router } from 'expo-router';
 import {
   initializeNotifications,
   requestPermissions,
@@ -34,8 +35,13 @@ import {
   cancelNotification,
   addReceivedListener,
   addResponseListener,
+  getLastNotificationResponse,
+  registerForPushNotifications,
+  savePushToken,
   NOTIFICATION_IDS,
 } from '../services/notificationService';
+import { GAME_MODE_ROUTES } from '@/features/archive/constants/routes';
+import type { GameMode } from '@/features/puzzles/types/puzzle.types';
 import {
   getMorningTriggerTime,
   getEveningTriggerTime,
@@ -69,6 +75,8 @@ interface NotificationProviderProps {
   completedPuzzlesToday: number;
   /** Total number of puzzles available today */
   totalPuzzlesToday: number;
+  /** User ID for push token registration */
+  userId: string | null;
 }
 
 export function NotificationProvider({
@@ -78,6 +86,7 @@ export function NotificationProvider({
   totalGamesPlayed,
   completedPuzzlesToday,
   totalPuzzlesToday,
+  userId,
 }: NotificationProviderProps) {
   // Permission state
   const [permissionStatus, setPermissionStatus] =
@@ -94,9 +103,42 @@ export function NotificationProvider({
   const lastScheduledDate = useRef<string | null>(null);
   const prevTotalGamesPlayed = useRef(totalGamesPlayed);
   const prevCompletedCount = useRef(completedPuzzlesToday);
+  const pushTokenRegistered = useRef(false);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
+
+  // ============================================================================
+  // Push Token Registration
+  // ============================================================================
+
+  const registerPushToken = useCallback(async () => {
+    if (!isSupported || !userId || pushTokenRegistered.current) return;
+
+    const token = await registerForPushNotifications();
+    if (token) {
+      await savePushToken(userId, token);
+      pushTokenRegistered.current = true;
+    }
+  }, [isSupported, userId]);
+
+  // ============================================================================
+  // Deep Link Navigation from Push Notifications
+  // ============================================================================
+
+  const handleNotificationNavigation = useCallback((data: Record<string, unknown>) => {
+    const gameMode = data?.gameMode as string | undefined;
+    const puzzleId = data?.puzzleId as string | undefined;
+
+    if (!gameMode) return;
+
+    // Map game_mode (database format) to route path if needed
+    const routePath = GAME_MODE_ROUTES[gameMode as GameMode] ?? gameMode;
+
+    const path = puzzleId ? `/${routePath}/${puzzleId}` : `/${routePath}`;
+    // Use href object to satisfy typed routes
+    router.push({ pathname: path } as Parameters<typeof router.push>[0]);
+  }, []);
 
   // ============================================================================
   // Initialization
@@ -118,7 +160,8 @@ export function NotificationProvider({
           AsyncStorage.getItem(STORAGE_KEYS.LAST_SCHEDULED_DATE),
         ]);
 
-        setHasAskedPermission(askedResult === 'true');
+        const wasAsked = askedResult === 'true';
+        setHasAskedPermission(wasAsked);
         setPerfectDayShownDates(shownResult ? JSON.parse(shownResult) : []);
         lastScheduledDate.current = scheduledResult;
 
@@ -131,6 +174,23 @@ export function NotificationProvider({
           await scheduleNotifications(currentStreak, gamesPlayedToday);
         }
 
+        // Show permission modal on first app load if not asked yet
+        if (!wasAsked && status !== 'granted') {
+          setTimeout(() => {
+            setShowPermissionModal(true);
+          }, 1500);
+        }
+
+        // Handle cold-start deep linking (app opened via notification tap)
+        const lastResponse = await getLastNotificationResponse();
+        if (lastResponse) {
+          const data = lastResponse.notification.request.content.data;
+          if (data?.gameMode) {
+            // Small delay to let navigation mount
+            setTimeout(() => handleNotificationNavigation(data as Record<string, unknown>), 500);
+          }
+        }
+
         console.log('[Notifications] Provider initialized');
       } catch (error) {
         console.error('[Notifications] Init error:', error);
@@ -139,7 +199,7 @@ export function NotificationProvider({
     }
 
     init();
-  }, [isSupported, currentStreak, gamesPlayedToday]);
+  }, [isSupported, currentStreak, gamesPlayedToday, handleNotificationNavigation]);
 
   // ============================================================================
   // Notification Scheduling
@@ -244,27 +304,14 @@ export function NotificationProvider({
   }, [isSupported, permissionStatus, gamesPlayedToday, completedPuzzlesToday]);
 
   // ============================================================================
-  // First Puzzle Completion -> Show Permission Modal
+  // Push Token Registration (when userId becomes available or permission changes)
   // ============================================================================
 
   useEffect(() => {
-    if (!isSupported) return;
-
-    // Detect first puzzle completion (1 -> 1, with prev at 0)
-    const justCompletedFirst =
-      totalGamesPlayed === 1 && prevTotalGamesPlayed.current === 0;
-
-    if (justCompletedFirst && !hasAskedPermission) {
-      // Small delay for better UX (let result modal show first)
-      const timer = setTimeout(() => {
-        setShowPermissionModal(true);
-      }, 2000);
-
-      return () => clearTimeout(timer);
+    if (permissionStatus === 'granted' && userId) {
+      registerPushToken();
     }
-
-    prevTotalGamesPlayed.current = totalGamesPlayed;
-  }, [isSupported, totalGamesPlayed, hasAskedPermission]);
+  }, [permissionStatus, userId, registerPushToken]);
 
   // ============================================================================
   // Perfect Day Detection
@@ -337,14 +384,19 @@ export function NotificationProvider({
         '[Notifications] Opened:',
         response.notification.request.identifier
       );
-      // Could navigate to specific screen based on notification type
+
+      // Deep link to specific game mode when user taps a push notification
+      const data = response.notification.request.content.data;
+      if (data?.gameMode) {
+        handleNotificationNavigation(data as Record<string, unknown>);
+      }
     });
 
     return () => {
       receivedSub.remove();
       responseSub.remove();
     };
-  }, [isSupported]);
+  }, [isSupported, handleNotificationNavigation]);
 
   // ============================================================================
   // Context Actions
@@ -362,8 +414,10 @@ export function NotificationProvider({
 
     if (status === 'granted') {
       await scheduleNotifications(currentStreak, gamesPlayedToday);
+      // Register push token immediately after permission is granted
+      await registerPushToken();
     }
-  }, [isSupported, currentStreak, gamesPlayedToday, scheduleNotifications]);
+  }, [isSupported, currentStreak, gamesPlayedToday, scheduleNotifications, registerPushToken]);
 
   const dismissPermissionModal = useCallback(async () => {
     setShowPermissionModal(false);

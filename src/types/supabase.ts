@@ -173,6 +173,63 @@ export type Database = {
         }
         Relationships: []
       }
+      push_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          token: string
+          platform: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          token: string
+          platform: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          token?: string
+          platform?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sent_notifications: {
+        Row: {
+          id: string
+          title: string
+          body: string
+          data: Json
+          sent_by: string | null
+          sent_at: string
+          recipient_count: number
+        }
+        Insert: {
+          id?: string
+          title: string
+          body: string
+          data?: Json
+          sent_by?: string | null
+          sent_at?: string
+          recipient_count?: number
+        }
+        Update: {
+          id?: string
+          title?: string
+          body?: string
+          data?: Json
+          sent_by?: string | null
+          sent_at?: string
+          recipient_count?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
