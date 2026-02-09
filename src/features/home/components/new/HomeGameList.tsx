@@ -2,7 +2,6 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { GlassGameCard } from './GlassGameCard';
 import { DailyPuzzleCard } from '@/features/home/hooks/useDailyPuzzles';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 // Map game modes to display titles/subtitles
 // This duplicates some logic from UniversalGameCard but allows for redesign specific text

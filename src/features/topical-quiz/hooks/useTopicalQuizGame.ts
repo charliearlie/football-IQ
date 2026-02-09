@@ -12,11 +12,10 @@ import {
   TopicalQuizAction,
   TopicalQuizContent,
   QuizAnswer,
-  RestoreProgressPayload,
   TOTAL_QUESTIONS,
   AUTO_ADVANCE_DELAY_MS,
 } from '../types/topicalQuiz.types';
-import { calculateQuizScore, TopicalQuizScore } from '../utils/quizScoring';
+import { calculateQuizScore } from '../utils/quizScoring';
 import { generateQuizEmojiGrid } from '../utils/quizScoreDisplay';
 import { shareQuizResult, ShareResult } from '../utils/quizShare';
 

@@ -17,7 +17,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

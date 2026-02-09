@@ -15,6 +15,8 @@ import {
   MAX_HINTS,
 } from '../types/transferGuess.types';
 import { calculateTransferScore } from '../utils/transferScoring';
+import { generateTransferScoreDisplay } from '../utils/transferScoreDisplay';
+import { shareTransferResult, ShareResult } from '../utils/transferShare';
 
 /**
  * Metadata shape for transfer guess game persistence.
@@ -24,8 +26,6 @@ interface TransferGuessMeta {
   guesses: string[];
   startedAt: string;
 }
-import { generateTransferScoreDisplay } from '../utils/transferScoreDisplay';
-import { shareTransferResult, ShareResult } from '../utils/transferShare';
 
 /**
  * Create the initial state for the transfer guess game.

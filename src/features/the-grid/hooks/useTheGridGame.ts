@@ -17,13 +17,10 @@ import {
   TheGridState,
   TheGridAction,
   TheGridContent,
-  TheGridScore,
   GridCategory,
-  FilledCell,
   CellIndex,
   createInitialState,
   parseTheGridContent,
-  RestoreProgressPayload,
   TheGridAttemptMetadata,
 } from '../types/theGrid.types';
 import { validateCellGuess, getCellCategories, countFilledCells, validateCellWithDB } from '../utils/validation';

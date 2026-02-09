@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useProfile } from '../hooks/useProfile';
-import { AuthContextValue, Profile } from '../types/auth.types';
+import { AuthContextValue } from '../types/auth.types';
 import {
   storeAuthCredentials,
   getStoredCredentials,
@@ -35,9 +35,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const {
     profile,
     isLoading: isProfileLoading,
-    isPremium,
-    displayName,
-    needsDisplayName,
+    isPremium: _isPremium,
+    displayName: _displayName,
+    needsDisplayName: _needsDisplayName,
     totalIQ,
     refetch: refetchProfile,
     refreshLocalIQ,

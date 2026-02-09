@@ -22,14 +22,10 @@ import {
   Shield,
   FileText,
   Star,
-  Trash2,
   Bell,
-  BellOff,
   RotateCcw,
   UserX,
   Lightbulb,
-  Volume2,
-  VolumeX,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";

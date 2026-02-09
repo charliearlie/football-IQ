@@ -3,6 +3,8 @@ import { usePuzzle } from './usePuzzle';
 import { getPuzzle } from '@/lib/database';
 import { GameMode, ParsedLocalPuzzle, UsePuzzleResult } from '../types/puzzle.types';
 
+import { fetchAndSavePuzzle } from '@/features/puzzles/services/puzzleSyncService';
+
 /** Valid game modes for type checking */
 const GAME_MODES: GameMode[] = [
   'career_path',
@@ -19,8 +21,6 @@ const GAME_MODES: GameMode[] = [
 function isGameMode(value: string): value is GameMode {
   return GAME_MODES.includes(value as GameMode);
 }
-
-import { fetchAndSavePuzzle } from '@/features/puzzles/services/puzzleSyncService';
 
 /**
  * A wrapper around usePuzzle that maintains a stable puzzle reference.

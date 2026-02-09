@@ -16,7 +16,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ChevronRight, Trophy } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, textStyles, spacing } from '@/theme';
 import { triggerLight } from '@/lib/haptics';
 import { ArchiveDateGroup } from '../types/archive.types';
 import { AtAGlanceBar } from './AtAGlanceBar';

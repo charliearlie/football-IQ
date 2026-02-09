@@ -15,9 +15,6 @@ import Animated, {
   withTiming,
   withDelay,
   Easing,
-  interpolateColor,
-  FadeIn,
-  SlideInLeft,
 } from "react-native-reanimated";
 import { Check, Link } from "lucide-react-native";
 import { FlagIcon } from "@/components/FlagIcon/FlagIcon";

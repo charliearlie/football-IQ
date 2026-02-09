@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import { DailyStackCard } from '../components/DailyStackCard';
 
 // Mock the navigation

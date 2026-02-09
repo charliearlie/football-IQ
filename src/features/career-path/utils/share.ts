@@ -8,7 +8,7 @@
 import { Share, Platform } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { GameScore } from './scoring';
-import { generateScoreDisplay, ScoreDisplayOptions } from './scoreDisplay';
+import { generateScoreDisplay } from './scoreDisplay';
 
 /**
  * Result of a share attempt.

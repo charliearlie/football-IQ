@@ -68,7 +68,7 @@ export const POSITION_MAP: Record<PositionKey, PositionCoords> = {
  */
 export const FORMATION_COORDS: Record<
   FormationName,
-  Array<{ key: PositionKey; x: number; y: number }>
+  { key: PositionKey; x: number; y: number }[]
 > = {
   '4-3-3': [
     { key: 'GK', x: 50, y: 90 },
@@ -416,7 +416,7 @@ export function getPositionCoords(
  */
 export function getFormationCoords(
   formation: FormationName
-): Array<{ key: PositionKey; x: number; y: number }> {
+): { key: PositionKey; x: number; y: number }[] {
   return FORMATION_COORDS[formation] || FORMATION_COORDS['4-3-3'];
 }
 

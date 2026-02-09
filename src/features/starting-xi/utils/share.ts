@@ -11,7 +11,6 @@ import type {
 } from "../types/startingXI.types";
 import {
   generateStartingXIEmojiGrid,
-  generateLinearEmojiDisplay,
 } from "./scoreDisplay";
 
 export interface ShareResult {

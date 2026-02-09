@@ -174,14 +174,14 @@ export async function searchPlayersHybrid(
  * Cache Oracle results to local SQLite player_search_cache.
  */
 async function cacheOracleResults(
-  players: Array<{
+  players: {
     id: string;
     name: string;
     scout_rank: number;
     birth_year: number | null;
     position_category: string | null;
     nationality_code: string | null;
-  }>
+  }[]
 ): Promise<void> {
   if (players.length === 0) return;
 

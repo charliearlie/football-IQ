@@ -27,7 +27,6 @@ import {
   Target,
   Grid3X3,
   HelpCircle,
-  Trophy,
   ListOrdered,
   Users,
   Shuffle,

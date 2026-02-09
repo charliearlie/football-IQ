@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, spacing } from '@/theme';
+import { spacing } from '@/theme';
 import { TheGridContent, FilledCell, CellIndex } from '../types/theGrid.types';
 import { CategoryHeader } from './CategoryHeader';
 import { GridCell } from './GridCell';

@@ -15,8 +15,6 @@ import Animated, {
   withSpring,
   withSequence,
   withTiming,
-  Easing,
-  interpolateColor,
 } from "react-native-reanimated";
 import { Flag, Trophy } from "lucide-react-native";
 import { colors, fonts, spacing, borderRadius } from "@/theme";

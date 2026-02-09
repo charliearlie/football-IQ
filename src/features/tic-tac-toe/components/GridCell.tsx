@@ -10,12 +10,11 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  interpolateColor,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
-import { colors, borderRadius, spacing, textStyles } from '@/theme';
+import { colors, borderRadius, spacing } from '@/theme';
 import { useHaptics } from '@/hooks/useHaptics';
 import type { CellState, CellIndex } from '../types/ticTacToe.types';
 

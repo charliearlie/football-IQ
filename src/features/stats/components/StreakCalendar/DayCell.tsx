@@ -22,7 +22,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { colors, fonts, borderRadius, depthOffset } from '@/theme';
-import { triggerSelection, triggerLight } from '@/lib/haptics';
+import { triggerSelection } from '@/lib/haptics';
 import { CalendarDay, CellIntensity, CellPosition } from '../../types/calendar.types';
 
 export interface DayCellProps {

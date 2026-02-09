@@ -1,9 +1,9 @@
 import { View, FlatList, StyleSheet } from "react-native";
-import { colors, spacing, layout } from "@/theme";
+import { spacing, layout } from "@/theme";
 import { BrandNode } from "./BrandNode";
 import { ThreadAxis } from "./ThreadAxis";
 import { ThreadHeader } from "./ThreadHeader";
-import { getTimelineConfig, LAYOUT } from "../constants/timeline";
+import { getTimelineConfig } from "../constants/timeline";
 import type { ThreadBrand, ThreadType, ThreadGameStatus } from "../types/theThread.types";
 
 const config = getTimelineConfig();

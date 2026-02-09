@@ -15,7 +15,7 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import Animated, { SlideInDown } from "react-native-reanimated";
 import { X } from "lucide-react-native";
 import { colors, textStyles, spacing, borderRadius } from "@/theme";
 import { useHaptics } from "@/hooks/useHaptics";

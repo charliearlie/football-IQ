@@ -8,7 +8,7 @@
 
 import React, { memo } from 'react';
 import { ViewStyle } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 export interface ProBadgeProps {
   /** Size in pixels (width and height). Default: 24 */

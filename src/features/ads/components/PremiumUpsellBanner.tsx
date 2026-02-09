@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/features/auth";
-import { colors, textStyles, spacing, borderRadius } from "@/theme";
+import { colors, spacing, borderRadius } from "@/theme";
 import { ProBadge } from "@/components/ProBadge/ProBadge";
 
 export function PremiumUpsellBanner({ testID, fullWidth = false }: { testID?: string; fullWidth?: boolean }) {

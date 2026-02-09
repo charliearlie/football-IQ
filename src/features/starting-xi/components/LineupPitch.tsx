@@ -18,9 +18,6 @@ import Animated, {
   withSpring,
   interpolate,
 } from 'react-native-reanimated';
-
-// Determine platform at module level (not in worklet)
-const IS_IOS = Platform.OS === 'ios';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { PitchBackground } from './PitchBackground';
 import { PlayerMarker } from './PlayerMarker';
@@ -30,6 +27,9 @@ import type {
   FormationName,
   GuessResult,
 } from '../types/startingXI.types';
+
+// Determine platform at module level (not in worklet)
+const IS_IOS = Platform.OS === 'ios';
 
 export interface LineupPitchProps {
   /** Array of 11 player slots */

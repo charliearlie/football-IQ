@@ -30,7 +30,7 @@ import type {
   SlotIndex,
   StartingXIMeta,
 } from '../types/startingXI.types';
-import { POSITION_MAP, extractSurname, getPositionCoords } from '../constants/formations';
+import { extractSurname, getPositionCoords } from '../constants/formations';
 import { calculateScoreFromSlots } from '../utils/scoring';
 import { shareStartingXIResult, ShareResult } from '../utils/share';
 import { generateScoreDisplayString } from '../utils/scoreDisplay';

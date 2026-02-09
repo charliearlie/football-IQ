@@ -8,7 +8,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Image, ViewStyle } from 'react-native';
 import { User, Medal } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius, fonts, fontWeights } from '@/theme';
+import { colors, textStyles, spacing, fonts, fontWeights } from '@/theme';
 import { GlassCard } from '@/components/GlassCard';
 import { LeaderboardEntry as EntryType } from '../types/leaderboard.types';
 

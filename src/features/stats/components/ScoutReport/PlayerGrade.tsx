@@ -5,7 +5,7 @@
  * Grades: GOAT (top 1%), World Class (top 10%), Division 1/2, Prospect
  */
 
-import { View, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -15,7 +15,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
-import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
+import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { getTierForPoints } from '../../utils/tierProgression';
 
 export type PlayerGradeLevel = 'GOAT' | 'WORLD CLASS' | 'DIVISION 1' | 'DIVISION 2' | 'PROSPECT';

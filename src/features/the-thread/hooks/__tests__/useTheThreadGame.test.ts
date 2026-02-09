@@ -15,11 +15,10 @@ import {
   TheThreadState,
   TheThreadAction,
   TheThreadContent,
-  ThreadRestorePayload,
   createInitialState,
   parseTheThreadContent,
 } from "../../types/theThread.types";
-import { calculateThreadScore, ThreadScore } from "../../utils/scoring";
+import { calculateThreadScore } from "../../utils/scoring";
 import { UnifiedClub } from "@/services/club/types";
 
 // =============================================================================

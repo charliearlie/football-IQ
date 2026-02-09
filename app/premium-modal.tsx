@@ -5,48 +5,26 @@
  * Uses Expo Router's native presentation for iOS/Android modal animations.
  */
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
-  Pressable,
-  ActivityIndicator,
-  ScrollView,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Animated, {
-  FadeIn,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+
+
 import Purchases, {
   PurchasesPackage,
   PURCHASES_ERROR_CODE,
 } from 'react-native-purchases';
-import {
-  Archive,
-  Sparkles,
-  X,
-  Check,
-} from 'lucide-react-native';
-import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
-import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
 import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/features/auth';
 import {
   PremiumUpsellContent,
-  processPackagesWithOffers,
-  OfferInfo,
 } from '@/features/subscription';
 import { colors } from '@/theme/colors';
-import { spacing, borderRadius } from '@/theme/spacing';
-import { fonts, textStyles } from '@/theme/typography';
-import { PREMIUM_OFFERING_ID, PREMIUM_ENTITLEMENT_ID } from '@/config/revenueCat';
+import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 
 /** Type guard for RevenueCat errors */
 function isRevenueCatError(error: unknown): error is { code: string; message?: string } {
@@ -58,14 +36,8 @@ const API_TIMEOUT_MS = 15000;
 
 type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
 
-const BENEFITS = [
-  { icon: Archive, text: 'Full Archive', description: 'Access all past puzzles' },
-  { icon: Sparkles, text: 'Ad-Free', description: 'No interruptions' },
-];
-
 export default function PremiumModalScreen() {
-  const { puzzleDate, mode } = useLocalSearchParams<{
-    puzzleDate?: string;
+  const { mode } = useLocalSearchParams<{
     mode?: string;
   }>();
   const router = useRouter();
@@ -77,7 +49,7 @@ export default function PremiumModalScreen() {
 
   const [state, setState] = useState<ModalState>('loading');
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [_selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Track mounted state for cleanup
@@ -251,20 +223,6 @@ export default function PremiumModalScreen() {
       setState('error');
     }
   }, [forceSync]);
-
-  const getTitle = () => {
-    if (state === 'success') return 'WELCOME TO PRO!';
-    if (mode === 'blocked') return 'PRO CONTENT';
-    return 'UNLOCK ARCHIVE';
-  };
-
-  const getSubtitle = () => {
-    if (state === 'success') return 'You now have full access to everything!';
-    if (mode === 'blocked') return 'This puzzle requires Pro access';
-    return 'Get unlimited access to all past puzzles';
-  };
-
-  const isPurchasing = state === 'purchasing';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>

@@ -23,7 +23,6 @@ import {
   getPointsToNextTier,
   getTierColor,
   IQ_TIERS,
-  IQTier,
 } from '../utils/tierProgression';
 
 describe('IQ_TIERS constant', () => {

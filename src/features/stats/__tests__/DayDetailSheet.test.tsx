@@ -12,9 +12,9 @@
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { DayDetailSheet } from '../components/StreakCalendar/DayDetailSheet';
-import { CalendarDay, GameModeCompletion } from '../types/calendar.types';
+import { CalendarDay } from '../types/calendar.types';
 
 // Mock haptics
 jest.mock('@/lib/haptics', () => ({

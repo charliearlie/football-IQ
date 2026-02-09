@@ -10,9 +10,14 @@
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/features/auth';
+
+import { PremiumUpsellModal } from '../components/PremiumUpsellModal';
+import { UniversalGameCard } from '@/components';
+import { isPuzzleLocked } from '../utils/dateGrouping';
+import { ArchivePuzzle } from '../types/archive.types';
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
@@ -132,11 +137,6 @@ jest.mock('react-native-purchases', () => ({
     PURCHASE_CANCELLED_ERROR: 'PURCHASE_CANCELLED',
   },
 }));
-
-import { PremiumUpsellModal } from '../components/PremiumUpsellModal';
-import { UniversalGameCard } from '@/components';
-import { isPuzzleLocked } from '../utils/dateGrouping';
-import { ArchivePuzzle } from '../types/archive.types';
 
 /**
  * Helper to create a mock puzzle for testing.

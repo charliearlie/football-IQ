@@ -9,7 +9,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from "react-native-reanimated";
-import { colors, spacing, fonts, fontWeights, glows } from "@/theme";
+import { colors, spacing, fonts, fontWeights } from "@/theme";
 import { getTimelineConfig, getThreadTheme, TIMELINE_ANIMATIONS } from "../constants/timeline";
 import type { ThreadBrand, ThreadType, ThreadGameStatus } from "../types/theThread.types";
 

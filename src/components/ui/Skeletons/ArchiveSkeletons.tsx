@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { GlassCard } from '@/components/GlassCard';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing } from '@/theme';
 import { SkeletonBox } from './SkeletonBase';
 
 interface MonthHeaderSkeletonProps {

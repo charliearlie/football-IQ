@@ -6,7 +6,7 @@ import {
   getPendingReportsForDateRange,
   resolveReport,
 } from "@/app/(dashboard)/calendar/actions";
-import type { ContentReport, ReportStatus } from "@/types/supabase";
+import type { ContentReport } from "@/types/supabase";
 
 // ============================================================================
 // TYPES

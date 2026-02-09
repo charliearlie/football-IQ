@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
-import { HOME_DIMENSIONS, HOME_FONTS, HOME_COLORS } from '@/theme/home-design';
-import { textStyles } from '@/theme/typography';
+import { HOME_FONTS, HOME_COLORS } from '@/theme/home-design';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

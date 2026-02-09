@@ -17,7 +17,6 @@ import {
   GoalWithState,
   Goal,
   TIMER_DURATION,
-  RestoreProgressPayload,
 } from '../types/goalscorerRecall.types';
 import { useCountdownTimer } from './useCountdownTimer';
 import { calculateGoalscorerScore } from '../utils/scoring';

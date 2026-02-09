@@ -20,7 +20,6 @@ import {
   PerformanceStats,
   UsePerformanceStatsResult,
   GameProficiency,
-  GAME_MODE_DISPLAY,
 } from '../types/stats.types';
 import {
   calculateProficiency,

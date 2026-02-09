@@ -5,7 +5,7 @@
  */
 
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, textStyles, spacing } from '@/theme';
+import { textStyles, spacing } from '@/theme';
 import { GlassCard } from '@/components';
 import { GameProficiency } from '../types/stats.types';
 import { ProficiencyBar } from './ProficiencyBar';

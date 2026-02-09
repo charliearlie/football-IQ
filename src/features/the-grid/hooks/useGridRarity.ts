@@ -99,7 +99,7 @@ export function useGridRarity(puzzleId: string | null) {
    */
   const fetchGridSummary = useCallback(
     async (
-      selections: Array<{ cellIndex: number; playerId: string; playerName: string }>
+      selections: { cellIndex: number; playerId: string; playerName: string }[]
     ): Promise<CellRarityData[] | null> => {
       if (!puzzleId || selections.length === 0) return null;
 

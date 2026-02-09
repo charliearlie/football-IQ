@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { HOME_COLORS, HOME_FONTS, HOME_GRADIENTS } from '@/theme/home-design';
+import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { IQRankTitle } from '../../hooks/useIQRank';
 import { LinearGradient } from 'expo-linear-gradient';
 

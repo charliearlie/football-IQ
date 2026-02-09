@@ -6,7 +6,7 @@
 
 import { validateCellGuess, getCellCategories } from '../utils/validation';
 import { calculateGridScore } from '../utils/scoring';
-import { TheGridContent, CellIndex } from '../types/theGrid.types';
+import { TheGridContent } from '../types/theGrid.types';
 
 // Test fixture: sample puzzle content
 const mockContent: TheGridContent = {

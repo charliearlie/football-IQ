@@ -26,7 +26,7 @@ import { AdBanner } from '@/features/ads';
 import { useTheGridGame } from '../hooks/useTheGridGame';
 import { TheGridBoard } from '../components/TheGridBoard';
 import { TheGridResultModal } from '../components/TheGridResultModal';
-import { parseTheGridContent, FilledCell, TheGridAttemptMetadata } from '../types/theGrid.types';
+import { FilledCell, TheGridAttemptMetadata } from '../types/theGrid.types';
 import { ParsedLocalAttempt } from '@/types/database';
 import { UnifiedPlayer } from '@/services/oracle/types';
 

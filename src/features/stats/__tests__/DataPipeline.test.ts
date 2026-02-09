@@ -32,7 +32,7 @@ import { GameMode } from '@/features/puzzles/types/puzzle.types';
 function createEmptyProficiencies(
   excludeMode?: GameMode
 ): GameProficiency[] {
-  const modes: Array<{ gameMode: GameMode; displayName: string }> = [
+  const modes: { gameMode: GameMode; displayName: string }[] = [
     { gameMode: 'career_path', displayName: 'Deduction' },
     { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge' },
     { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall' },

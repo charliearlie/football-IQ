@@ -12,7 +12,6 @@ import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import {
   asMetadataObject,
   getMetadataNumber,
-  isGameResult,
 } from '@/types/gameMetadata';
 import {
   LeaderboardEntry,
@@ -82,7 +81,7 @@ export function normalizeModeScore(
  * @returns Daily score result with total, games played, and breakdown
  */
 export function calculateDailyScore(
-  attempts: Array<{ gameMode: GameMode; metadata: unknown }>
+  attempts: { gameMode: GameMode; metadata: unknown }[]
 ): DailyScoreResult {
   if (attempts.length === 0) {
     return {

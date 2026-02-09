@@ -7,7 +7,7 @@
 
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import type { RefObject } from 'react';
-import { colors, textStyles, spacing, borderRadius, fonts, fontWeights } from '@/theme';
+import { colors, textStyles, spacing, fonts, fontWeights } from '@/theme';
 import { GoalSlot } from './GoalSlot';
 import type { GoalWithState } from '../types/goalscorerRecall.types';
 

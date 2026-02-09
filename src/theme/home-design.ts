@@ -4,6 +4,8 @@
  * Derived from the "Pitch Perfect" HTML Prototype
  */
 
+import { fonts } from './typography';
+
 export const HOME_COLORS = {
   // Primary
   pitchGreen: "#58CC02",
@@ -43,8 +45,6 @@ export const HOME_DIMENSIONS = {
   buttonRadius: 12,
   cardRadius: 12,
 };
-
-import { fonts } from './typography';
 
 export const HOME_FONTS = {
   heading: fonts.headline,

@@ -7,7 +7,7 @@
  * Includes achievement validation via stats_cache for trophy/stat categories.
  */
 
-import { validateCellWithDB, DBValidationResult } from '../utils/validation';
+import { validateCellWithDB } from '../utils/validation';
 import { TheGridContent, CellIndex } from '../types/theGrid.types';
 import * as playerSearch from '@/services/player/playerSearch';
 import * as database from '@/lib/database';

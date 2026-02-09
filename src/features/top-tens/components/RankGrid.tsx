@@ -6,7 +6,7 @@
  * each card in sequence as the "indicator" climbs up.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { spacing, layout } from '@/theme';
 import { RankSlotState } from '../types/topTens.types';

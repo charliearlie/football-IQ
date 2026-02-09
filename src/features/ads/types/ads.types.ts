@@ -5,7 +5,6 @@
  * banner ads, rewarded ads, and ad-to-unlock functionality.
  */
 
-import { UnlockedPuzzle } from '@/types/database';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 /**

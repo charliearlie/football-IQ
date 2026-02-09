@@ -18,7 +18,6 @@ import Animated, {
   withSpring,
   withDelay,
   interpolate,
-  useAnimatedStyle,
 } from 'react-native-reanimated';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import { GameProficiency } from '../../types/stats.types';
@@ -32,12 +31,12 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
  * Angles are in degrees, starting from top (270°) going clockwise
  * 7 axes evenly distributed: 360° / 7 = ~51.43° per axis
  */
-const RADAR_AXES: Array<{
+const RADAR_AXES: {
   angle: number;
   label: string;
   gameMode: GameMode;
   shortLabel: string;
-}> = [
+}[] = [
   { angle: 270, label: 'Deduction', gameMode: 'career_path', shortLabel: 'DED' },
   { angle: 315, label: 'Expert Deduction', gameMode: 'career_path_pro', shortLabel: 'PRO' },
   { angle: 0, label: 'Market Knowledge', gameMode: 'guess_the_transfer', shortLabel: 'MKT' },

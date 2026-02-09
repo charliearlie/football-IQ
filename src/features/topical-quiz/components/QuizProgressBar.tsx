@@ -3,7 +3,6 @@ import { View, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withSpring,
-  interpolateColor,
 } from 'react-native-reanimated';
 import { colors, spacing } from '@/theme';
 import { QuizAnswer, TOTAL_QUESTIONS } from '../types/topicalQuiz.types';

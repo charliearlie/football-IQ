@@ -19,7 +19,7 @@ import Animated, {
 import { Play, Flag, Sparkles } from "lucide-react-native";
 import { GlassCard } from "@/components/GlassCard";
 import { FlagIcon } from "@/components/FlagIcon/FlagIcon";
-import { colors, fonts, spacing, borderRadius, glows } from "@/theme";
+import { colors, fonts, spacing, borderRadius } from "@/theme";
 import { ChainPlayer } from "../types/theChain.types";
 
 export interface ChainPlayerCardProps {

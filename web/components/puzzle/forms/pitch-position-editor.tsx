@@ -5,7 +5,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { getFormationDefaultCoords, FORMATION_COORDS } from "@/lib/schemas/puzzle-defaults";
+import { getFormationDefaultCoords } from "@/lib/schemas/puzzle-defaults";
 import type { StartingXIContent } from "@/lib/schemas";
 
 interface FormValues {

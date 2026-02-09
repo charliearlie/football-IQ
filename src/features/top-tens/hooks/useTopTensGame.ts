@@ -16,15 +16,13 @@ import { useAuth } from '@/features/auth';
 import {
   TopTensState,
   TopTensAction,
-  TopTensContent,
-  TopTensScore,
   RankIndex,
   TopTensAttemptMetadata,
   parseTopTensContent,
   createInitialClimbingState,
 } from '../types/topTens.types';
 import { validateTopTensGuess } from '../utils/validation';
-import { calculateTopTensScore, formatTopTensScore } from '../utils/scoring';
+import { calculateTopTensScore } from '../utils/scoring';
 import { generateTopTensScoreDisplay } from '../utils/scoreDisplay';
 import { shareTopTensResult, ShareResult } from '../utils/share';
 

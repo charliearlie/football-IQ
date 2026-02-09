@@ -13,43 +13,26 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Modal,
   View,
-  Text,
   StyleSheet,
-  Pressable,
-  ActivityIndicator,
-  ScrollView,
   useWindowDimensions,
-  Linking,
 } from 'react-native';
 import Animated, {
   SlideInDown,
-  FadeIn,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
 } from 'react-native-reanimated';
 import Purchases, {
   PurchasesPackage,
   PURCHASES_ERROR_CODE,
 } from 'react-native-purchases';
-import {
-  Archive,
-  Sparkles,
-  X,
-  Check,
-  RotateCcw,
-} from 'lucide-react-native';
-import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
-import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
 import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/features/auth';
 import {
   PremiumUpsellContent,
-  processPackagesWithOffers,
-  OfferInfo,
 } from '@/features/subscription';
 import { colors } from '@/theme/colors';
+import { spacing, borderRadius } from '@/theme/spacing';
+import { fonts, textStyles } from '@/theme/typography';
+import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 
 /**
  * Type guard for RevenueCat PurchasesError.
@@ -65,22 +48,11 @@ function isPurchasesError(
     typeof (error as Record<string, unknown>).code === 'string'
   );
 }
-import { spacing, borderRadius } from '@/theme/spacing';
-import { fonts, textStyles } from '@/theme/typography';
-import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 
 /**
  * Modal state machine states.
  */
 type ModalState = 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
-
-/**
- * Condensed benefits for display alongside pricing.
- */
-const CONDENSED_BENEFITS = [
-  { icon: Archive, text: 'Full Archive' },
-  { icon: Sparkles, text: 'Ad-Free' },
-];
 
 interface PremiumUpsellModalProps {
   /** Whether the modal is visible */
@@ -109,7 +81,7 @@ interface PremiumUpsellModalProps {
 export function PremiumUpsellModal({
   visible,
   onClose,
-  puzzleDate,
+  puzzleDate: _puzzleDate,
   mode = 'upsell',
   testID,
 }: PremiumUpsellModalProps) {
@@ -117,7 +89,7 @@ export function PremiumUpsellModal({
   const isTablet = width >= 768; // Standard iPad breakpoint
   const [state, setState] = useState<ModalState>('loading');
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [_selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { user } = useAuth();
   const { forceSync } = useSubscriptionSync();
@@ -269,24 +241,6 @@ export function PremiumUpsellModal({
     setErrorMessage(null);
     fetchOfferings();
   }, [fetchOfferings]);
-
-  /**
-   * Get title based on mode and state.
-   */
-  const getTitle = () => {
-    if (state === 'success') return 'WELCOME TO PRO!';
-    if (mode === 'blocked') return 'PRO CONTENT';
-    return 'UNLOCK ARCHIVE';
-  };
-
-  /**
-   * Get subtitle based on mode.
-   */
-  const getSubtitle = () => {
-    if (state === 'success') return 'You now have full access to everything!';
-    if (mode === 'blocked') return 'This puzzle requires Pro access';
-    return 'Get unlimited access to all past puzzles';
-  };
 
   return (
     <Modal

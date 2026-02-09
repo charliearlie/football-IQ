@@ -34,7 +34,7 @@ import { PremiumUpsellBanner, UnlockChoiceModal } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
 import { useAuth } from '@/features/auth';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { HOME_COLORS, HOME_DIMENSIONS } from '@/theme/home-design';
+import { HOME_COLORS } from '@/theme/home-design';
 
 /**
  * Get today's date in YYYY-MM-DD format.

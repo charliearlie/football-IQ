@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import { PuzzleProvider, usePuzzleContext } from '../context/PuzzleContext';
 
 // ── Controllable mocks ──────────────────────────────────────────────────

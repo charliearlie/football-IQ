@@ -1566,7 +1566,7 @@ const ELITE_BATCH_SIZE = 50;
  */
 async function seedEliteIndex(
   database: SQLite.SQLiteDatabase,
-  players: Array<{
+  players: {
     id: string;
     name: string;
     search_name: string;
@@ -1574,7 +1574,7 @@ async function seedEliteIndex(
     birth_year: number | null;
     position_category: string | null;
     nationality_code: string | null;
-  }>
+  }[]
 ): Promise<void> {
   const syncedAt = new Date().toISOString();
 
@@ -1677,7 +1677,7 @@ export async function recalculateEliteStatus(playerIds?: string[]): Promise<void
 }
 
 export async function upsertPlayerCache(
-  players: Array<{
+  players: {
     id: string;
     name: string;
     search_name: string;
@@ -1686,7 +1686,7 @@ export async function upsertPlayerCache(
     position_category: string | null;
     nationality_code: string | null;
     stats_cache?: Record<string, number> | string | null;
-  }>
+  }[]
 ): Promise<void> {
   if (players.length === 0) return;
 

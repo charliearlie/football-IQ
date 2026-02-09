@@ -129,7 +129,7 @@ export type TicTacToeAction =
 /**
  * All possible winning combinations (indices)
  */
-export const WINNING_LINES: ReadonlyArray<[CellIndex, CellIndex, CellIndex]> = [
+export const WINNING_LINES: readonly [CellIndex, CellIndex, CellIndex][] = [
   // Rows
   [0, 1, 2],
   [3, 4, 5],

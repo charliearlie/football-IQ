@@ -1,6 +1,6 @@
 import { View, StyleSheet, Platform, Pressable, Text } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { colors, spacing, fonts, borderRadius } from '@/theme';
+import { colors, spacing, fonts } from '@/theme';
 import { PlayerAutocomplete } from '@/components';
 import { UnifiedPlayer } from '@/services/oracle/types';
 

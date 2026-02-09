@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet, ViewStyle } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withTiming,

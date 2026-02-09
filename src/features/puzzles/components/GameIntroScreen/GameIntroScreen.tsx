@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -14,7 +14,6 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-  withDelay,
   FadeIn,
   Easing,
 } from 'react-native-reanimated';

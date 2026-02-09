@@ -5,7 +5,6 @@ import { useGamePersistence } from '@/hooks/useGamePersistence';
 import { usePuzzleContext } from '@/features/puzzles';
 import { useAuth } from '@/features/auth';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
-import { LocalAttempt } from '@/types/database';
 import { UnifiedPlayer } from '@/services/oracle/types';
 import {
   CareerPathState,
@@ -14,6 +13,10 @@ import {
   CareerStep,
   CareerPathRestorePayload,
 } from '../types/careerPath.types';
+import { validateGuess } from '../utils/validation';
+import { calculateScore } from '../utils/scoring';
+import { generateScoreDisplay } from '../utils/scoreDisplay';
+import { shareGameResult, ShareResult } from '../utils/share';
 
 /**
  * Metadata shape for career path game persistence.
@@ -23,10 +26,6 @@ interface CareerPathMeta {
   guesses: string[];
   startedAt: string;
 }
-import { validateGuess } from '../utils/validation';
-import { calculateScore } from '../utils/scoring';
-import { generateScoreDisplay } from '../utils/scoreDisplay';
-import { shareGameResult, ShareResult } from '../utils/share';
 
 /**
  * Create the initial state for the career path game.

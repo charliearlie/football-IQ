@@ -7,7 +7,7 @@
  * Automatically refreshes when app comes to foreground.
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import {
   getCalendarAttempts,

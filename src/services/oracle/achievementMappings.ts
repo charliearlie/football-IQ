@@ -344,7 +344,7 @@ export function isKnownAchievement(qid: string): boolean {
  */
 export function getAchievementsByCategory(
   category: AchievementCategory
-): Array<{ qid: string } & AchievementDefinition> {
+): ({ qid: string } & AchievementDefinition)[] {
   return Object.entries(ACHIEVEMENT_MAP)
     .filter(([, def]) => def.category === category)
     .map(([qid, def]) => ({ qid, ...def }));

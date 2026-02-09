@@ -15,7 +15,7 @@ import {
   CircleDashed,
 } from 'lucide-react-native';
 import { colors, textStyles, spacing, borderRadius, shadows } from '@/theme';
-import { GameModeFilter as FilterType, GameMode } from '../types/archive.types';
+import { GameModeFilter as FilterType } from '../types/archive.types';
 
 interface GameModeFilterProps {
   /** Currently selected filter */

@@ -1,5 +1,5 @@
 
-import { ArchivePuzzle, GameMode } from '../types/archive.types';
+import { ArchivePuzzle } from '../types/archive.types';
 import { getDayStatus, calculateDayStats, isDayLocked } from '../utils/dayStatus';
 
 // Mock data

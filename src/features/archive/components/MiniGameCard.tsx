@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Lock, Grid3X3, Check, Play, ChevronRight } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { colors, spacing, borderRadius } from '@/theme';
 import { triggerLight, triggerMedium } from '@/lib/haptics';
 import { ArchivePuzzle } from '../types/archive.types';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';

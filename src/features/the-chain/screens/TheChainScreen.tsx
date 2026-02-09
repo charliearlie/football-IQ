@@ -16,8 +16,8 @@ import {
   Pressable,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Link2, HelpCircle } from "lucide-react-native";
-import { colors, fonts, spacing, borderRadius } from "@/theme";
+import { Link2 } from "lucide-react-native";
+import { colors, fonts, spacing } from "@/theme";
 import {
   usePuzzle,
   useOnboarding,
@@ -37,7 +37,6 @@ import { ChainProgress } from "../components/ChainProgress";
 import { ChainProgressBar } from "../components/ChainProgressBar";
 import { TheChainResultModal } from "../components/TheChainResultModal";
 import {
-  parseTheChainContent,
   ChainLink,
   TheChainAttemptMetadata,
 } from "../types/theChain.types";

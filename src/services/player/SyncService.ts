@@ -83,7 +83,7 @@ export async function syncEliteIndex(): Promise<SyncResult> {
     }
 
     // Parse and upsert delta players (now includes stats_cache)
-    const players = (result.updated_players ?? []) as Array<{
+    const players = (result.updated_players ?? []) as {
       id: string;
       name: string;
       search_name: string;
@@ -92,7 +92,7 @@ export async function syncEliteIndex(): Promise<SyncResult> {
       position_category: string | null;
       nationality_code: string | null;
       stats_cache?: Record<string, number> | null;
-    }>;
+    }[];
 
     await upsertPlayerCache(players);
     await recalculateEliteStatus(players.map((p) => p.id));
@@ -138,12 +138,12 @@ export async function syncClubColors(): Promise<{
       return { success: false, count: 0, error: (error as { message: string }).message };
     }
 
-    const clubs = ((data as unknown) ?? []) as Array<{
+    const clubs = ((data as unknown) ?? []) as {
       id: string;
       name: string;
       primary_color: string;
       secondary_color: string;
-    }>;
+    }[];
 
     if (clubs.length === 0) {
       console.log('[SyncService] No club colors returned');

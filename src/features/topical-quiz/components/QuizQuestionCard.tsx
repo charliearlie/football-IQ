@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
-import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
+import Animated, { SlideInRight } from 'react-native-reanimated';
 import { GlassCard } from '@/components';
 import { colors, textStyles, spacing, fonts } from '@/theme';
 

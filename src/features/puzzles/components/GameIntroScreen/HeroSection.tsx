@@ -17,7 +17,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { GameRules } from '../../constants/rules';
-import { colors, spacing, borderRadius, shadows } from '@/theme';
+import { spacing, borderRadius, shadows } from '@/theme';
 
 interface HeroSectionProps {
   /** Game rules containing icon and accent color */

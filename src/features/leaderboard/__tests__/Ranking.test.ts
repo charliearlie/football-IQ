@@ -15,7 +15,7 @@ import {
   calculateDailyScore,
   normalizeModeScore,
 } from '../utils/rankingUtils';
-import { LeaderboardEntry, StickyMeConfig } from '../types/leaderboard.types';
+import { LeaderboardEntry } from '../types/leaderboard.types';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 describe('Leaderboard Ranking', () => {

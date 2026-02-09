@@ -10,7 +10,6 @@ import { View, Text, TextInput, StyleSheet, Keyboard } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withSequence,
   withTiming,
   FadeIn,

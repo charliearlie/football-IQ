@@ -8,6 +8,8 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 
+import { ScoreDistributionContainer } from '../components/ScoreDistributionContainer';
+
 // ── Controllable mocks ──────────────────────────────────────────────────
 
 let mockIsConnected: boolean | null = true;
@@ -18,7 +20,7 @@ jest.mock('@/hooks/useNetworkStatus', () => ({
   }),
 }));
 
-let mockDistribution: Array<{ score: number; count: number; percentage: number }> = [];
+let mockDistribution: { score: number; count: number; percentage: number }[] = [];
 let mockTotalAttempts = 0;
 let mockIsLoading = false;
 let mockError: Error | null = null;
@@ -50,8 +52,6 @@ jest.mock('../components/ScoreDistributionSkeleton', () => {
     ),
   };
 });
-
-import { ScoreDistributionContainer } from '../components/ScoreDistributionContainer';
 
 // ── Tests ───────────────────────────────────────────────────────────────
 

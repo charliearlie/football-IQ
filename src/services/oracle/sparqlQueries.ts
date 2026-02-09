@@ -169,7 +169,7 @@ export interface ParsedAchievement {
 }
 
 export function parseSPARQLAchievementResults(
-  bindings: Array<Record<string, { type: string; value: string }>>
+  bindings: Record<string, { type: string; value: string }>[]
 ): ParsedAchievement[] {
   return bindings.map((binding) => {
     const achievementUri = binding.achievement?.value ?? '';

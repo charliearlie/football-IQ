@@ -107,13 +107,6 @@ interface FormValues {
 // FORM REGISTRY
 // ============================================================================
 
-// Placeholder component for game modes without a form yet
-const PlaceholderForm = () => (
-  <div className="p-4 text-center text-muted-foreground">
-    Form coming soon
-  </div>
-);
-
 const formRegistry: Record<GameMode, React.ComponentType> = {
   career_path: CareerPathForm,
   career_path_pro: CareerPathForm,
@@ -126,13 +119,6 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   top_tens: TopTensForm,
   starting_xi: StartingXIForm,
 };
-
-// Placeholder component for game modes without a preview yet
-const PlaceholderPreview = () => (
-  <div className="p-4 text-center text-muted-foreground">
-    Preview coming soon
-  </div>
-);
 
 const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }>> = {
   career_path: CareerPathPreview,

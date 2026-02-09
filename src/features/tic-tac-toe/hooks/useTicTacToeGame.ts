@@ -11,10 +11,8 @@ import {
   TicTacToeState,
   TicTacToeAction,
   TicTacToeContent,
-  TicTacToeScore,
   CellIndex,
   CellArray,
-  RestoreProgressPayload,
 } from '../types/ticTacToe.types';
 import { validateCellGuess, getCellCategories } from '../utils/validation';
 import {

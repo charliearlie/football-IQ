@@ -21,11 +21,9 @@ import {
 import ViewShot from "react-native-view-shot";
 import Animated, {
   FadeIn,
-  SlideInUp,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withDelay,
 } from "react-native-reanimated";
 import { Trophy, Share2, X, Flame, Calendar } from "lucide-react-native";
 import { Confetti } from "@/components/Confetti";

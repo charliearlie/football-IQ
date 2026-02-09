@@ -8,7 +8,6 @@
 import {
   validateTopTensGuess,
   findMatchingAnswer,
-  TopTensValidationResult,
 } from '../utils/validation';
 import { TopTensContent, TopTensAnswer, RankIndex } from '../types/topTens.types';
 

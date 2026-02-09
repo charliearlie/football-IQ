@@ -74,7 +74,7 @@ if (Platform.OS === 'ios' || Platform.OS === 'android') {
 export function AdBanner({ position = 'bottom', testID }: AdBannerProps) {
   const insets = useSafeAreaInsets();
   const ads = useAdsOptional();
-  const [adLoaded, setAdLoaded] = useState(false);
+  const [_adLoaded, setAdLoaded] = useState(false);
   const [adError, setAdError] = useState(false);
 
   // Don't show if ads are not supported or user is premium

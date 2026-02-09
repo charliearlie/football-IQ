@@ -22,7 +22,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { colors } from '@/theme/colors';
-import { fonts, textStyles } from '@/theme/typography';
+import { fonts } from '@/theme/typography';
 import { processPackagesWithOffers } from '@/features/subscription';
 import { ProBadge } from '@/components/ProBadge';
 

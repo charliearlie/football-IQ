@@ -19,9 +19,7 @@ import { UnifiedPlayer } from "@/services/oracle/types";
 import {
   TheChainState,
   TheChainAction,
-  TheChainContent,
   ChainLink,
-  ChainPlayer,
   CheckPlayersLinkedResult,
   TheChainAttemptMetadata,
   createInitialState,
@@ -29,7 +27,6 @@ import {
 } from "../types/theChain.types";
 import {
   calculateChainScore,
-  ChainScore,
   generateChainEmojiGrid,
 } from "../utils/scoring";
 import { shareTheChainResult, ShareResult } from "../utils/share";

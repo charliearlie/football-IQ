@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { isPuzzleLocked, isWithinFreeWindow } from '@/features/archive/utils/dateGrouping';
 import { getValidAdUnlocks, getPuzzle } from '@/lib/database';
-import type { UnlockedPuzzle, ParsedLocalPuzzle } from '@/types/database';
+import type { UnlockedPuzzle } from '@/types/database';
 import { colors } from '@/theme/colors';
 
 interface PremiumGateProps {

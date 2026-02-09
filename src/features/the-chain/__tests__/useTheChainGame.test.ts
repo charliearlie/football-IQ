@@ -11,7 +11,7 @@ import {
   createInitialState,
   parseTheChainContent,
 } from "../types/theChain.types";
-import { calculateChainScore, ChainScore } from "../utils/scoring";
+import { calculateChainScore } from "../utils/scoring";
 
 // --- Reducer function extracted for testing ---
 // Note: This matches the reducer in useTheChainGame.ts

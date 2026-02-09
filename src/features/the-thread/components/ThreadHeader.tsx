@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { colors, spacing, fonts, fontWeights } from "@/theme";
+import { spacing, fonts } from "@/theme";
 import { getThreadTheme, LAYOUT } from "../constants/timeline";
 import type { ThreadType } from "../types/theThread.types";
 

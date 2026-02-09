@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/features/auth';
 import { ElevatedButton } from '@/components/ElevatedButton';
-import { colors, fonts, spacing, borderRadius } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 /**
  * Deep link route for shared Scouting Reports.

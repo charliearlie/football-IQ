@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Flame } from 'lucide-react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { ProBadge } from '@/components/ProBadge/ProBadge';
-import { textStyles } from '@/theme/typography';
 
 interface HomeHeaderProps {
   streak: number;

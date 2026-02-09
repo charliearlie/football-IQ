@@ -3,7 +3,6 @@ import { renderHook, act, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingProvider, useOnboarding } from '../context/OnboardingContext';
 import { useAuth } from '../context/AuthContext';
-import { FirstRunModal } from '../components/FirstRunModal';
 
 // Mock dependencies
 jest.mock('@react-native-async-storage/async-storage', () => ({

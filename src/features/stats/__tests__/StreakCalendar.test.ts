@@ -12,17 +12,17 @@
  */
 
 // Mock the database module before imports
-jest.mock('@/lib/database', () => ({
-  getCalendarAttempts: jest.fn(),
-  getAllCatalogEntries: jest.fn(),
-}));
-
 import {
   getCalendarAttempts,
   getAllCatalogEntries,
   CalendarAttemptRow,
 } from '@/lib/database';
 import { LocalCatalogEntry } from '@/types/database';
+
+jest.mock('@/lib/database', () => ({
+  getCalendarAttempts: jest.fn(),
+  getAllCatalogEntries: jest.fn(),
+}));
 
 // Import the functions we need to test (we'll need to export them or test via hook)
 // For now, we'll test the aggregation logic by mocking the hook's internal functions

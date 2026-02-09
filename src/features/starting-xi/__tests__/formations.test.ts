@@ -4,7 +4,6 @@ import {
   FORMATION_COORDS,
   getPositionCoords,
   getFormationCoords,
-  extractSurname,
 } from '../constants/formations';
 import type { FormationName, PositionKey } from '../types/startingXI.types';
 

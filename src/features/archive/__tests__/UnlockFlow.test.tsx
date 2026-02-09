@@ -9,7 +9,6 @@
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/features/auth';
 import { useAds } from '@/features/ads';

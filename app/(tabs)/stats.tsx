@@ -5,17 +5,14 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Pressable,
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { Trophy } from "lucide-react-native";
 import { colors, fonts, fontWeights, spacing, borderRadius } from "@/theme";
 import {
   usePerformanceStats,
-  IQCardOverlay,
   ScoutingReportOverlay,
   StreakCalendar,
   getTierForPoints,

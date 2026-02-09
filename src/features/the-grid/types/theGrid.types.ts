@@ -83,12 +83,12 @@ export interface GridIQScore {
   /** Normalized 0-100 IQ score */
   gridIQ: number;
   /** Per-cell breakdown */
-  cellScores: Array<{
+  cellScores: {
     cellIndex: number;
     player: string;
     rarityPct: number;
     iqContribution: number;
-  }>;
+  }[];
 }
 
 /**

@@ -26,7 +26,7 @@ import {
   useOnboarding,
   GameIntroScreen,
 } from "@/features/puzzles";
-import { colors, spacing, textStyles, layout } from "@/theme";
+import { colors, spacing, textStyles } from "@/theme";
 import { GameContainer, ConfirmationModal } from "@/components";
 import { AdBanner } from "@/features/ads";
 import { useTheThreadGame } from "../hooks/useTheThreadGame";

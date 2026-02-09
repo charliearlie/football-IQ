@@ -7,7 +7,7 @@
 
 import { render, screen } from "@testing-library/react-native";
 import { LaundryLine } from "../LaundryLine";
-import type { ThreadBrand, ThreadGameStatus } from "../../types/theThread.types";
+import type { ThreadBrand } from "../../types/theThread.types";
 
 // Mock brands for testing
 const mockBrands: ThreadBrand[] = [

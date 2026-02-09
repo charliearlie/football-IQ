@@ -17,7 +17,7 @@ import { POINTS_WIN, POINTS_DRAW, POINTS_LOSS } from '../types/ticTacToe.types';
 export { WINNING_LINES } from '../types/ticTacToe.types';
 
 // All 8 winning combinations
-const WINNING_COMBINATIONS: ReadonlyArray<[CellIndex, CellIndex, CellIndex]> = [
+const WINNING_COMBINATIONS: readonly [CellIndex, CellIndex, CellIndex][] = [
   // Rows
   [0, 1, 2],
   [3, 4, 5],

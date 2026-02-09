@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -19,10 +19,6 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import {
-  Grid3X3,
-  Link,
-  Shirt,
-  HelpCircle,
   Check,
   Play,
 } from 'lucide-react-native';
@@ -36,15 +32,9 @@ import { GameMode } from '@/features/puzzles/types/puzzle.types';
  * Custom puzzle icons mapping.
  * Maps game modes to their custom PNG icons.
  */
-const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
-  career_path: require('../../assets/images/puzzles/career-path.png'),
-  career_path_pro: require('../../assets/images/puzzles/career-path.png'),
-  guess_the_transfer: require('../../assets/images/puzzles/guess-the-transfer.png'),
-  guess_the_goalscorers: require('../../assets/images/puzzles/goalscorer-recall.png'),
-  topical_quiz: require('../../assets/images/puzzles/quiz.png'),
-  starting_xi: require('../../assets/images/puzzles/starting-xi.png'),
-  top_tens: require('../../assets/images/puzzles/top-tens.png'),
-};
+import {
+  getGameModeConfig,
+} from '@/features/puzzles/utils/gameModeConfig';
 
 /**
  * Card variants for different contexts.
@@ -109,17 +99,6 @@ export interface UniversalGameCardProps {
    */
   testID?: string;
 }
-
-/**
- * Custom puzzle icons mapping.
- * Maps game modes to their custom PNG icons.
- */
-import {
-  getGameModeConfig,
-  GameModeConfig,
-  iconImageStyle,
-  archiveIconImageStyle,
-} from '@/features/puzzles/utils/gameModeConfig';
 
 const SPRING_CONFIG = {
   damping: 15,

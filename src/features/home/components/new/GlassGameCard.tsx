@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Lock, Check, Video, Crown, Gift } from 'lucide-react-native';
-import { HOME_COLORS, HOME_FONTS, HOME_DIMENSIONS } from '@/theme/home-design';
+import { Play, Check, Video, Gift } from 'lucide-react-native';
+import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { CardStatus } from '../../hooks/useDailyPuzzles';
 import { ProBadge } from '@/components/ProBadge/ProBadge';

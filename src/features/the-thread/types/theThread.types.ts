@@ -119,7 +119,7 @@ export type TheThreadAction =
  */
 export interface TheThreadAttemptMetadata {
   /** Guesses made (club IDs and names for serialization) */
-  guesses: Array<{ id: string; name: string }>;
+  guesses: { id: string; name: string }[];
   /** Number of guesses made */
   guessCount: number;
   /** Whether player won */

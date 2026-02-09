@@ -8,6 +8,9 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react-native';
 
+// Import after all mocks
+import HomeScreen from '../../../../app/(tabs)/index';
+
 // ── Controllable mocks ──────────────────────────────────────────────────
 
 let mockIsConnected: boolean | null = true;
@@ -28,13 +31,13 @@ jest.mock('@/features/auth', () => ({
   }),
 }));
 
-let mockCards: Array<{
+let mockCards: {
   puzzleId: string;
   gameMode: string;
   status: string;
   isPremiumOnly?: boolean;
   isAdUnlocked?: boolean;
-}> = [];
+}[] = [];
 let mockPuzzlesLoading = false;
 
 jest.mock('@/features/home', () => {
@@ -100,9 +103,6 @@ jest.mock('react-native-safe-area-context', () => {
     ),
   };
 });
-
-// Import after all mocks
-import HomeScreen from '../../../../app/(tabs)/index';
 
 // ── Tests ───────────────────────────────────────────────────────────────
 

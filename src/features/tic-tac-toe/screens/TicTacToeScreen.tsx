@@ -27,7 +27,7 @@ import { TicTacToeGrid } from '../components/TicTacToeGrid';
 import { TicTacToeActionZone } from '../components/TicTacToeActionZone';
 import { TicTacToeResultModal } from '../components/TicTacToeResultModal';
 import { AdBanner } from '@/features/ads';
-import type { CellState, TicTacToeContent } from '../types/ticTacToe.types';
+import type { CellState } from '../types/ticTacToe.types';
 
 /**
  * Metadata structure saved when a Tic Tac Toe game completes.

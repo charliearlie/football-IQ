@@ -34,7 +34,6 @@ import {
   X,
   Check,
   AlertCircle,
-  ArrowRight,
 } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';

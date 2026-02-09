@@ -26,7 +26,6 @@ import {
   calculateBadges,
   isPerfectScore,
 } from '../utils/iqCalculation';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { GameProficiency } from '../types/stats.types';
 
 describe('normalizeScore', () => {
