@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 12;
+const SCHEMA_VERSION = 13;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -359,6 +359,33 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     await database.execAsync('PRAGMA user_version = 12');
     console.log('[Database] Migration v12 complete');
   }
+
+  // Migration v13: Special Event support
+  // Adds is_special flag and event banner fields to puzzles and catalog tables
+  if (currentVersion < 13) {
+    console.log('[Database] Running migration v13: Special Event columns');
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN is_special INTEGER DEFAULT 0;
+    `);
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN event_title TEXT;
+    `);
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN event_subtitle TEXT;
+    `);
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN event_tag TEXT;
+    `);
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN event_theme TEXT;
+    `);
+    await database.execAsync(`
+      ALTER TABLE puzzle_catalog ADD COLUMN is_special INTEGER DEFAULT 0;
+    `);
+
+    await database.execAsync('PRAGMA user_version = 13');
+    console.log('[Database] Migration v13 complete');
+  }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -370,8 +397,8 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 export async function savePuzzle(puzzle: LocalPuzzle): Promise<void> {
   const database = getDatabase();
   await database.runAsync(
-    `INSERT OR REPLACE INTO puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at)
-     VALUES ($id, $game_mode, $puzzle_date, $content, $difficulty, $synced_at, $updated_at)`,
+    `INSERT OR REPLACE INTO puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at, is_special, event_title, event_subtitle, event_tag, event_theme)
+     VALUES ($id, $game_mode, $puzzle_date, $content, $difficulty, $synced_at, $updated_at, $is_special, $event_title, $event_subtitle, $event_tag, $event_theme)`,
     {
       $id: puzzle.id,
       $game_mode: puzzle.game_mode,
@@ -380,6 +407,11 @@ export async function savePuzzle(puzzle: LocalPuzzle): Promise<void> {
       $difficulty: puzzle.difficulty,
       $synced_at: puzzle.synced_at,
       $updated_at: puzzle.updated_at,
+      $is_special: puzzle.is_special ?? 0,
+      $event_title: puzzle.event_title ?? null,
+      $event_subtitle: puzzle.event_subtitle ?? null,
+      $event_tag: puzzle.event_tag ?? null,
+      $event_theme: puzzle.event_theme ?? null,
     }
   );
 }
@@ -433,7 +465,7 @@ export async function getAllPuzzles(): Promise<ParsedLocalPuzzle[]> {
 export async function getPuzzleCount(): Promise<number> {
   const database = getDatabase();
   const result = await database.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) as count FROM puzzles'
+    'SELECT COUNT(*) as count FROM puzzles WHERE is_special = 0'
   );
   return result?.count ?? 0;
 }
@@ -631,7 +663,7 @@ export async function getAllCompletedAttemptsWithDates(): Promise<
     `SELECT a.*, p.puzzle_date
      FROM attempts a
      JOIN puzzles p ON a.puzzle_id = p.id
-     WHERE a.completed = 1
+     WHERE a.completed = 1 AND p.is_special = 0
      ORDER BY p.puzzle_date DESC`
   );
   return rows.map((row) => ({
@@ -851,23 +883,24 @@ export async function saveCatalogEntries(
 
     // Build parameterized multi-row INSERT
     const placeholders = batch.map((_, idx) => {
-      const base = idx * 5; // 5 params per entry
-      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+      const base = idx * 6; // 6 params per entry
+      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`;
     }).join(', ');
 
     // Flatten parameters into positional array
-    const params: Record<string, string | null> = {};
+    const params: Record<string, string | number | null> = {};
     batch.forEach((entry, idx) => {
-      const base = idx * 5;
+      const base = idx * 6;
       params[`$${base + 1}`] = entry.id;
       params[`$${base + 2}`] = entry.game_mode;
       params[`$${base + 3}`] = entry.puzzle_date;
       params[`$${base + 4}`] = entry.difficulty;
       params[`$${base + 5}`] = syncedAt;
+      params[`$${base + 6}`] = entry.is_special ?? 0;
     });
 
     await database.runAsync(
-      `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at)
+      `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at, is_special)
        VALUES ${placeholders}`,
       params
     );

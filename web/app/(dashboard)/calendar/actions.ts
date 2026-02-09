@@ -34,6 +34,11 @@ export interface CreatePuzzleInput {
   difficulty?: string | null;
   source?: string | null;
   is_premium?: boolean;
+  is_special?: boolean;
+  event_title?: string | null;
+  event_subtitle?: string | null;
+  event_tag?: string | null;
+  event_theme?: string | null;
 }
 
 export interface UpdatePuzzleInput {
@@ -360,6 +365,7 @@ export async function upsertPuzzle(
         .select("id")
         .eq("puzzle_date", input.puzzle_date)
         .eq("game_mode", input.game_mode)
+        .eq("is_special", input.is_special ?? false)
         .maybeSingle();
 
       if (lookupError) {
@@ -381,6 +387,11 @@ export async function upsertPuzzle(
         source: input.source || "manual",
         is_premium: isPremium,
         updated_at: new Date().toISOString(),
+        is_special: input.is_special ?? false,
+        event_title: input.is_special ? input.event_title : null,
+        event_subtitle: input.is_special ? input.event_subtitle : null,
+        event_tag: input.is_special ? (input.event_tag || 'LIMITED TIME') : null,
+        event_theme: input.is_special ? (input.event_theme || 'gold') : null,
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       result = await (supabase as any)
@@ -404,6 +415,11 @@ export async function upsertPuzzle(
         source: input.source || "manual",
         is_premium: isPremium ?? false,
         triggered_by: "manual",
+        is_special: input.is_special ?? false,
+        event_title: input.is_special ? input.event_title : null,
+        event_subtitle: input.is_special ? input.event_subtitle : null,
+        event_tag: input.is_special ? (input.event_tag || 'LIMITED TIME') : null,
+        event_theme: input.is_special ? (input.event_theme || 'gold') : null,
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       result = await (supabase as any)

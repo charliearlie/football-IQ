@@ -6,7 +6,7 @@
 
 ## Database Tables
 ```
-daily_puzzles    - Puzzles (RLS: 3-tier access)
+daily_puzzles    - Puzzles (RLS: 3-tier access, is_special flag for event puzzles)
 profiles         - User profiles (RLS: read all, update own)
 puzzle_attempts  - Attempts (RLS: owner-only)
 user_streaks     - Streaks (RLS: owner-only)
@@ -1822,6 +1822,8 @@ const unlocks = await getValidAdUnlocks();  // All unlocked puzzles
 005_create_puzzle_catalog_rpc
 006_create_leaderboard_rpcs
 007_premium_puzzle_access
+...
+033_special_events        - is_special flag + event banner fields on daily_puzzles
 ```
 
 ## Sentry Error Monitoring

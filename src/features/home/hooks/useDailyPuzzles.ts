@@ -107,8 +107,8 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
     try {
       const today = getTodayDate();
 
-      // Filter puzzles for today
-      const todaysPuzzles = puzzles.filter((p) => p.puzzle_date === today);
+      // Filter puzzles for today, excluding special event puzzles
+      const todaysPuzzles = puzzles.filter((p) => p.puzzle_date === today && !p.is_special);
 
       // Create a map for quick lookup
       const puzzleMap = new Map<GameMode, ParsedLocalPuzzle>();

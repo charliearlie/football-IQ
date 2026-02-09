@@ -165,6 +165,11 @@ export function PuzzleEditorModal({
   const [isSavingNextGap, setIsSavingNextGap] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
+  const [isSpecial, setIsSpecial] = useState(false);
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventSubtitle, setEventSubtitle] = useState('');
+  const [eventTag, setEventTag] = useState('LIMITED TIME');
+  const [eventTheme, setEventTheme] = useState<'gold' | 'red' | 'blue'>('gold');
 
   const isEditMode = !!puzzle;
   const isPremium = PREMIUM_MODES.includes(gameMode);
@@ -221,6 +226,11 @@ export function PuzzleEditorModal({
         difficulty: puzzle?.difficulty || null,
         status: (puzzle?.status as PuzzleStatus) || "draft",
       });
+      setIsSpecial(puzzle?.is_special ?? false);
+      setEventTitle(puzzle?.event_title ?? '');
+      setEventSubtitle(puzzle?.event_subtitle ?? '');
+      setEventTag(puzzle?.event_tag ?? 'LIMITED TIME');
+      setEventTheme((puzzle?.event_theme as 'gold' | 'red' | 'blue') ?? 'gold');
       setSaveError(null);
     }
   }, [isOpen, puzzle, gameMode, reset]);
@@ -242,6 +252,11 @@ export function PuzzleEditorModal({
           status,
           difficulty,
           source: "manual",
+          is_special: isSpecial,
+          event_title: isSpecial ? eventTitle : null,
+          event_subtitle: isSpecial ? eventSubtitle : null,
+          event_tag: isSpecial ? eventTag : null,
+          event_theme: isSpecial ? eventTheme : null,
         });
 
         if (!result.success) {
@@ -261,7 +276,7 @@ export function PuzzleEditorModal({
         setIsSaving(false);
       }
     },
-    [form, puzzleDate, gameMode, onSaveSuccess, onClose]
+    [form, puzzleDate, gameMode, onSaveSuccess, onClose, isSpecial, eventTitle, eventSubtitle, eventTag, eventTheme]
   );
 
   // Handle save and next gap
@@ -282,6 +297,11 @@ export function PuzzleEditorModal({
         status: "draft", // Always save as draft when using "Save & Next Gap"
         difficulty,
         source: "manual",
+        is_special: isSpecial,
+        event_title: isSpecial ? eventTitle : null,
+        event_subtitle: isSpecial ? eventSubtitle : null,
+        event_tag: isSpecial ? eventTag : null,
+        event_theme: isSpecial ? eventTheme : null,
       });
 
       if (!result.success) {
@@ -296,7 +316,7 @@ export function PuzzleEditorModal({
     } finally {
       setIsSavingNextGap(false);
     }
-  }, [form, puzzleDate, gameMode, onSaveAndNextGap]);
+  }, [form, puzzleDate, gameMode, onSaveAndNextGap, isSpecial, eventTitle, eventSubtitle, eventTag, eventTheme]);
 
   // Handle copy from yesterday
   const handleCopyFromYesterday = useCallback(async () => {
@@ -410,6 +430,74 @@ export function PuzzleEditorModal({
 
             {/* Scrollable Form Area */}
             <ScrollArea className="flex-1 px-6 py-4">
+              {/* Special Event Section */}
+              <div className={`rounded-lg border p-4 mb-4 ${isSpecial ? 'border-yellow-500 bg-yellow-500/10' : 'border-border'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm font-medium">Special Event</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSpecial}
+                      onChange={(e) => setIsSpecial(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:bg-yellow-500 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+                  </label>
+                </div>
+
+                {isSpecial && (
+                  <div className="space-y-3 mt-3 pt-3 border-t border-border">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Banner Title *</label>
+                      <input
+                        type="text"
+                        value={eventTitle}
+                        onChange={(e) => setEventTitle(e.target.value)}
+                        placeholder="e.g. DERBY DAY SPECIAL"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Banner Subtitle</label>
+                      <input
+                        type="text"
+                        value={eventSubtitle}
+                        onChange={(e) => setEventSubtitle(e.target.value)}
+                        placeholder="e.g. Double XP - Ends Tonight"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="text-xs text-muted-foreground mb-1 block">Tag</label>
+                        <input
+                          type="text"
+                          value={eventTag}
+                          onChange={(e) => setEventTag(e.target.value)}
+                          placeholder="LIMITED TIME"
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-xs text-muted-foreground mb-1 block">Theme</label>
+                        <select
+                          value={eventTheme}
+                          onChange={(e) => setEventTheme(e.target.value as 'gold' | 'red' | 'blue')}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="gold">Gold</option>
+                          <option value="red">Red</option>
+                          <option value="blue">Blue</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <FormProvider {...form}>
                 <form className="space-y-6">
                   <FormComponent />

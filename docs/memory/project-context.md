@@ -29,7 +29,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 ### Supabase Tables
 | Table | RLS | Purpose |
 |-------|-----|---------|
-| `daily_puzzles` | Yes | One puzzle per game mode per day |
+| `daily_puzzles` | Yes | One puzzle per game mode per day (+ special event puzzles via `is_special` flag) |
 | `profiles` | Yes | User profiles with `is_premium` flag |
 | `puzzle_attempts` | Yes | User puzzle attempts with scores |
 | `user_streaks` | Yes | Streak tracking per game mode |
@@ -46,19 +46,19 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 
 ### SQLite Tables (Local)
 ```sql
-puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at)
+puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at, is_special, event_title, event_subtitle, event_tag, event_theme)
 attempts (id, puzzle_id, completed, score, score_display, metadata, started_at, completed_at, synced)
 sync_queue (id, table_name, record_id, action, payload, created_at)
 unlocked_puzzles (puzzle_id, unlocked_at)  -- Ad unlocks (permanent)
-puzzle_catalog (id, game_mode, puzzle_date, difficulty)  -- Archive metadata
+puzzle_catalog (id, game_mode, puzzle_date, difficulty, is_special)  -- Archive metadata
 player_database (id, external_id, name, search_name, clubs, nationalities, is_active)
 player_search_cache (id, name, search_name, scout_rank, birth_year, position_category, nationality_code, stats_cache, synced_at)
 _metadata (key, value, updated_at)  -- Version tracking (Elite Index version)
 ```
 
 ### Migrations
-**Supabase:** 001-009 + 012 + 019-022 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync, achievements + stats_cache)
-**SQLite:** v1-v10 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding, stats_cache column)
+**Supabase:** 001-009 + 012 + 019-022 + 033 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync, achievements + stats_cache, special events)
+**SQLite:** v1-v13 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding, stats_cache column, special event columns)
 
 ## Authentication
 
@@ -335,8 +335,20 @@ Identify hidden players in a historic match lineup displayed on a tactical pitch
 Home screen dashboard showing today's 6 puzzles with Play/Resume/Done states.
 - **StreakHeader**: Fire icon + count, daily progress (X/6)
 - **Card states**: Play (green), Resume (yellow), Done (emoji grid + Result button)
+- **Special Event Banner**: DB-driven EventBanner for `is_special` puzzles (hidden from daily feed)
 - **Midnight refresh**: AppState listener triggers refresh on date change
 - **Files**: `src/features/home/`, `app/(tabs)/index.tsx`
+
+### Special Events
+Database-driven system for time-limited event puzzles shown via a premium banner instead of the daily feed.
+- **Database**: `is_special` boolean on `daily_puzzles` + CMS-configurable banner fields (`event_title`, `event_subtitle`, `event_tag`, `event_theme`)
+- **Unique constraint**: `(puzzle_date, game_mode, is_special)` allows 1 regular + 1 special of same mode per day
+- **CMS**: "Special Event?" toggle in puzzle editor modal with conditional banner fields
+- **Mobile filtering**: `useDailyPuzzles` excludes `is_special=true` puzzles from "Today's Challenges"
+- **EventBanner**: `useSpecialEvent` hook finds today's special puzzle, `EventBanner` renders with theme-based colors (gold/red/blue)
+- **Themes**: `gold` (amber gradient), `red` (crimson gradient), `blue` (navy gradient) — each with matching accent, glow, border, and button colors
+- **Default tag**: "LIMITED TIME"
+- **Files**: `src/features/home/hooks/useSpecialEvent.ts`, `src/features/home/config/events.ts`, `src/features/home/components/new/EventBanner.tsx`, `supabase/migrations/033_special_events.sql`
 
 ### Archive Screen
 Historical puzzle browser with premium gating and "Velvet Rope" locked card design.

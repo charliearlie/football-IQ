@@ -15,7 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/features/auth';
-import { getValidAdUnlocks } from '@/lib/database';
+import { getValidAdUnlocks, getPuzzle } from '@/lib/database';
 import type { UnlockedPuzzle } from '@/types/database';
 import { colors } from '@/theme/colors';
 
@@ -82,6 +82,8 @@ export function PremiumOnlyGate({
 
   // Load ad unlocks from database
   const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[] | null>(null);
+  // Check if this puzzle is a special event (bypasses premium gate)
+  const [isSpecialEvent, setIsSpecialEvent] = useState<boolean | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -98,6 +100,25 @@ export function PremiumOnlyGate({
     };
   }, []);
 
+  // Load puzzle to check is_special
+  useEffect(() => {
+    if (!puzzleId) {
+      setIsSpecialEvent(false);
+      return;
+    }
+    let active = true;
+    getPuzzle(puzzleId)
+      .then((p) => {
+        if (active) setIsSpecialEvent(p?.is_special === 1);
+      })
+      .catch(() => {
+        if (active) setIsSpecialEvent(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [puzzleId]);
+
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
 
@@ -107,9 +128,9 @@ export function PremiumOnlyGate({
     ? (adUnlocks?.some((u) => u.puzzle_id === puzzleId) ?? false)
     : false;
 
-  // User has access if premium OR ad-unlocked
-  const hasAccess = isPremium || isAdUnlocked;
-  const isLoading = authLoading || !areAdUnlocksLoaded;
+  // User has access if premium, ad-unlocked, OR special event puzzle
+  const hasAccess = isPremium || isAdUnlocked || isSpecialEvent === true;
+  const isLoading = authLoading || !areAdUnlocksLoaded || isSpecialEvent === null;
 
   // Redirect non-premium users to archive with unlock context
   useEffect(() => {

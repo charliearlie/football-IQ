@@ -47,15 +47,18 @@ export function PremiumGate({
   
   // State for ad unlocks - fetched from local DB
   const [adUnlocks, setAdUnlocks] = useState<UnlockedPuzzle[] | null>(null);
-  
+
   // State for puzzle metadata - only needed if checks fail and we don't have date
   const [fetchedPuzzleDate, setFetchedPuzzleDate] = useState<string | null>(null);
   const [isPuzzleLoading, setIsPuzzleLoading] = useState(false);
 
+  // Check if this puzzle is a special event (bypasses premium gate)
+  const [isSpecialEvent, setIsSpecialEvent] = useState<boolean | null>(null);
+
   // Track if we've already navigated to avoid loops
   const hasNavigatedRef = useRef(false);
 
-  // 1. Load Ad Unlocks immediately
+  // 1. Load Ad Unlocks and puzzle is_special status immediately
   useEffect(() => {
     let active = true;
     getValidAdUnlocks()
@@ -66,8 +69,18 @@ export function PremiumGate({
         console.error('[PremiumGate] Failed to load unlocks', err);
         if (active) setAdUnlocks([]);
       });
+    getPuzzle(puzzleId)
+      .then(p => {
+        if (active) {
+          setIsSpecialEvent(p?.is_special === 1);
+          if (p && !initialPuzzleDate) setFetchedPuzzleDate(p.puzzle_date);
+        }
+      })
+      .catch(() => {
+        if (active) setIsSpecialEvent(false);
+      });
     return () => { active = false; };
-  }, []);
+  }, [puzzleId, initialPuzzleDate]);
 
   const isPremium = profile?.is_premium ?? false;
   // If adUnlocks is null, we are still loading. If array, we are loaded.
@@ -85,8 +98,10 @@ export function PremiumGate({
   // - Premium User
   // - Ad Unlocked (locally verified)
   // - Recent Puzzle (verified synchronously via prop)
-  const canAccessFast = 
-    areAdUnlocksLoaded && (isPremium || isAdUnlocked || isWithinFreeWindowCheck);
+  // - Special Event puzzle (available to everyone)
+  const canAccessFast =
+    areAdUnlocksLoaded && isSpecialEvent !== null &&
+    (isPremium || isAdUnlocked || isWithinFreeWindowCheck || isSpecialEvent);
 
   // 3. Slow Path: Fetch Metadata if needed
   // Only fetch if we can't determine access synchronously and we don't have the date
@@ -108,9 +123,10 @@ export function PremiumGate({
   }, [areAdUnlocksLoaded, canAccessFast, puzzleDate, isPuzzleLoading, puzzleId]);
 
   // 4. Decision Logic
-  const isLoading = 
-    isAuthLoading || 
-    !areAdUnlocksLoaded || 
+  const isLoading =
+    isAuthLoading ||
+    !areAdUnlocksLoaded ||
+    isSpecialEvent === null ||
     (!canAccessFast && !puzzleDate && isPuzzleLoading);
 
   // Logic implies:

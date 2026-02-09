@@ -70,8 +70,15 @@ export type Database = {
           content: Json
           created_at: string | null
           difficulty: string | null
+          event_subtitle: string | null
+          event_tag: string | null
+          event_theme: string | null
+          event_title: string | null
           game_mode: string
           id: string
+          is_bonus: boolean
+          is_premium: boolean
+          is_special: boolean
           puzzle_date: string
           source: string | null
           status: string | null
@@ -82,9 +89,16 @@ export type Database = {
           content: Json
           created_at?: string | null
           difficulty?: string | null
+          event_subtitle?: string | null
+          event_tag?: string | null
+          event_theme?: string | null
+          event_title?: string | null
           game_mode: string
           id?: string
-          puzzle_date: string
+          is_bonus?: boolean
+          is_premium?: boolean
+          is_special?: boolean
+          puzzle_date?: string
           source?: string | null
           status?: string | null
           triggered_by?: string | null
@@ -94,8 +108,15 @@ export type Database = {
           content?: Json
           created_at?: string | null
           difficulty?: string | null
+          event_subtitle?: string | null
+          event_tag?: string | null
+          event_theme?: string | null
+          event_title?: string | null
           game_mode?: string
           id?: string
+          is_bonus?: boolean
+          is_premium?: boolean
+          is_special?: boolean
           puzzle_date?: string
           source?: string | null
           status?: string | null

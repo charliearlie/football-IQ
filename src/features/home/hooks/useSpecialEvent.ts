@@ -1,33 +1,74 @@
-import { useEffect, useState } from 'react';
-import { SPECIAL_EVENTS, SpecialEvent } from '../config/events';
+import { useMemo } from 'react';
+import { usePuzzleContext } from '@/features/puzzles';
+import { getAuthorizedDateUnsafe } from '@/lib/time';
+import { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { SpecialEvent } from '../config/events';
 
 /**
- * Hook to get the currently active special event.
- * Checks the start/end dates against the current time.
+ * Route map for each game mode (matches the one in index.tsx).
+ */
+const ROUTE_MAP: Record<GameMode, string> = {
+  career_path: 'career-path',
+  career_path_pro: 'career-path-pro',
+  guess_the_transfer: 'transfer-guess',
+  guess_the_goalscorers: 'goalscorer-recall',
+  the_grid: 'the-grid',
+  the_chain: 'the-chain',
+  the_thread: 'the-thread',
+  topical_quiz: 'topical-quiz',
+  top_tens: 'top-tens',
+  starting_xi: 'starting-xi',
+};
+
+/**
+ * Default titles per game mode, used as fallback if event_title is missing.
+ */
+const DEFAULT_TITLES: Record<GameMode, string> = {
+  career_path: 'SPECIAL CAREER PATH',
+  career_path_pro: 'SPECIAL CAREER PATH PRO',
+  guess_the_transfer: 'SPECIAL TRANSFER GUESS',
+  guess_the_goalscorers: 'SPECIAL GOALSCORER RECALL',
+  the_grid: 'SPECIAL GRID',
+  the_chain: 'SPECIAL CHAIN',
+  the_thread: 'SPECIAL THREAD',
+  topical_quiz: 'SPECIAL QUIZ',
+  top_tens: 'SPECIAL TOP TENS',
+  starting_xi: 'SPECIAL STARTING XI',
+};
+
+/**
+ * Hook to get the currently active special event puzzle.
  *
- * @returns The active SpecialEvent or null if none are active.
+ * Searches today's synced puzzles for one with is_special=true
+ * and constructs a SpecialEvent from its metadata.
+ *
+ * @returns The active SpecialEvent or null if none exist today.
  */
 export function useSpecialEvent(): SpecialEvent | null {
-  const [activeEvent, setActiveEvent] = useState<SpecialEvent | null>(null);
+  const { puzzles } = usePuzzleContext();
 
-  useEffect(() => {
-    const checkEvent = () => {
-      const now = new Date();
-      // Find the first event that is currently active
-      const current = SPECIAL_EVENTS.find(event => {
-        const start = new Date(event.startDate);
-        const end = new Date(event.endDate);
-        return now >= start && now <= end;
-      });
-      
-      setActiveEvent(current || null);
+  return useMemo(() => {
+    const today = getAuthorizedDateUnsafe();
+
+    // Find today's special puzzle
+    const specialPuzzle = puzzles.find(
+      (p) => p.puzzle_date === today && p.is_special
+    );
+
+    if (!specialPuzzle) return null;
+
+    const gameMode = specialPuzzle.game_mode as GameMode;
+    const route = ROUTE_MAP[gameMode];
+
+    return {
+      id: specialPuzzle.id,
+      gameMode,
+      isActive: true,
+      title: specialPuzzle.event_title || DEFAULT_TITLES[gameMode],
+      subtitle: specialPuzzle.event_subtitle || '',
+      tag: specialPuzzle.event_tag || 'LIMITED TIME',
+      route: `/${route}/${specialPuzzle.id}` as any,
+      theme: (specialPuzzle.event_theme as 'blue' | 'red' | 'gold') || 'gold',
     };
-
-    checkEvent();
-    
-    // Optional: Set up an interval to check periodically if the app stays open across event boundaries?
-    // For now, running once on mount/render is sufficient as events are likely daily/weekly.
-  }, []);
-
-  return activeEvent;
+  }, [puzzles]);
 }
