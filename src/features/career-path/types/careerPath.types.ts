@@ -21,6 +21,8 @@ export interface CareerStep {
   text: string;
   /** Year or year range (e.g., "2019-2023") */
   year: string;
+  /** End year (for current club logic) - null if current */
+  endYear?: number | null;
   /** Number of appearances (optional) */
   apps?: number;
   /** Number of goals scored (optional) */

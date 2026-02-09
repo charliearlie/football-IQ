@@ -20,7 +20,7 @@ export interface LockedCardProps {
 export function LockedCard({ stepNumber, testID }: LockedCardProps) {
   return (
     <View style={styles.container} testID={testID}>
-      <GlassCard style={styles.card}>
+      <GlassCard style={styles.card} contentStyle={{ paddingHorizontal: 12, paddingVertical: 8 }}>
         <View style={styles.content}>
           <View style={styles.stepBadge}>
             <Text style={styles.stepNumber}>{stepNumber}</Text>
@@ -43,7 +43,7 @@ export function LockedCard({ stepNumber, testID }: LockedCardProps) {
       {/* Lock icon centered */}
       <View style={styles.lockOverlay}>
         <View style={styles.lockCircle}>
-          <Lock size={20} color={colors.textSecondary} strokeWidth={2} />
+          <Lock size={16} color={colors.textSecondary} strokeWidth={2} />
         </View>
       </View>
     </View>
@@ -63,11 +63,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 48,
   },
   stepBadge: {
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
     borderRadius: borderRadius.full,
     backgroundColor: colors.glassBorder,
     alignItems: 'center',
@@ -92,8 +91,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lockCircle: {
-    width: 44,
-    height: 44,
+    width: 32,
+    height: 32,
     borderRadius: borderRadius.full,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',

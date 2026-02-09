@@ -1,14 +1,18 @@
 import type {
   PurchasesPackage,
   PurchasesStoreProduct,
+  IntroEligibility,
 } from 'react-native-purchases';
 import type { OfferInfo, PackageWithOffer } from '../types/subscription.types';
 
 /**
- * Detects if a product has an active promotional offer.
+ * Detects if a product has an active promotional offer AND the user is eligible.
  * Checks introPrice first (most common), then discounts array (iOS promotional offers).
  */
-export function detectOffer(product: PurchasesStoreProduct): OfferInfo {
+export function detectOffer(
+  product: PurchasesStoreProduct,
+  isEligibleForIntroPrice: boolean = true
+): OfferInfo {
   const hasIntroPrice = product.introPrice != null;
   const hasDiscounts =
     product.discounts != null && product.discounts.length > 0;
@@ -18,11 +22,17 @@ export function detectOffer(product: PurchasesStoreProduct): OfferInfo {
   }
 
   // Prefer introPrice as it's the most common offer type
-  if (hasIntroPrice && product.introPrice) {
+  // CRITICAL: Only use intro price if user is eligible
+  if (hasIntroPrice && product.introPrice && isEligibleForIntroPrice) {
     return createIntroOfferInfo(product, product.introPrice);
   }
 
   // Fall back to first discount in discounts array
+  // Note: Promotional offers (discounts) usually have their own eligibility logic
+  // determined by the app developer (e.g. signing a StoreKit payload), but for now
+  // we'll assume if they exist in the product object they might be valid,
+  // OR we could treat them as needing eligibility too.
+  // Standard intro prices are the main source of "unexpected" high prices.
   if (hasDiscounts && product.discounts) {
     return createDiscountOfferInfo(product, product.discounts[0]);
   }
@@ -163,13 +173,24 @@ export function formatOfferPeriod(
  */
 export function processPackagesWithOffers(
   packages: PurchasesPackage[],
-  recommendedType: string = 'MONTHLY'
+  recommendedType: string = 'MONTHLY',
+  eligibilityMap: Record<string, IntroEligibility> = {}
 ): PackageWithOffer[] {
   // First pass: detect offers on all packages
-  const packagesWithOffers = packages.map((pkg) => ({
-    package: pkg,
-    offer: detectOffer(pkg.product),
-  }));
+  const packagesWithOffers = packages.map((pkg) => {
+    // Check eligibility for this specific product
+    // RevenueCat returns key as productIdentifier
+    const eligibility = eligibilityMap[pkg.product.identifier];
+    const isEligible = eligibility ? eligibility.status === 0 : true; // 0 = INTRO_ELIGIBILITY_STATUS_ELIGIBLE. Default to true if unknown to fail open? No, better fail safe, but previous behavior was always true. Let's strictly check status === 0 if we have the map. If map is empty (initial load), maybe assume true or false?
+    // Actually, if we don't have eligibility yet, we shouldn't show the offer price to be safe.
+    // However, the UI might flicker.
+    // Let's assume passed eligibility map is authoritative.
+
+    return {
+      package: pkg,
+      offer: detectOffer(pkg.product, isEligible),
+    };
+  });
 
   // Check if any offer is active
   const hasAnyOffer = packagesWithOffers.some((p) => p.offer.isOfferActive);

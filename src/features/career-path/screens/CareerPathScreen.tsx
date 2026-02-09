@@ -32,7 +32,6 @@ import {
 } from "@/components";
 import { useCareerPathGame } from "../hooks/useCareerPathGame";
 import { TimelineStepRow } from "../components/TimelineStepRow";
-import { TimelineAxis } from "../components/TimelineAxis";
 import { ActionZone } from "../components/ActionZone";
 import { GameOverActionZone } from "../components/GameOverActionZone";
 import { GameResultModal } from "../components/GameResultModal";
@@ -497,15 +496,9 @@ export function CareerPathScreen({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        {/* Timeline Container - holds axis line and career steps */}
+{/* Timeline Container - holds axis line and career steps */}
         <View style={styles.timelineContainer}>
-          {/* Continuous Timeline Axis - absolute positioned behind nodes */}
-          <TimelineAxis
-            totalSteps={careerSteps.length}
-            revealedCount={state.revealedCount}
-            isVictoryRevealing={isVictoryRevealing}
-            testID="timeline-axis"
-          />
+          {/* Continuous Timeline Axis - handled by individual TimelineStepRow components now */}
 
           {/* Career Steps List */}
           <FlatList
@@ -519,6 +512,13 @@ export function CareerPathScreen({
             windowSize={5}
             keyboardDismissMode="on-drag"
             testID="career-steps-list"
+            ListFooterComponent={
+              <ScoutingDisclaimer
+                scoutedAt={scoutedAt}
+                onReportError={handleOpenReportSheet}
+                testID="scouting-disclaimer"
+              />
+            }
           />
         </View>
 
@@ -540,39 +540,34 @@ export function CareerPathScreen({
           />
         )}
 
-        {/* Action Zone - show GameOverActionZone when game ends, hidden when viewing full path */}
-        {!viewingFullPath &&
-          (isGameOver ? (
-            <GameOverActionZone
-              answer={answer}
-              won={state.gameStatus === "won"}
-              onSeeScore={() => setShowResultModal(true)}
-              testID="game-over-zone"
-            />
-          ) : (
-            <ActionZone
-              onPlayerSelect={submitPlayerGuess}
-              onTextSubmit={submitTextGuess}
-              onRevealNext={revealNext}
-              canRevealMore={canRevealMore}
-              shouldShake={state.lastGuessIncorrect}
-              isGameOver={isGameOver}
-              onFocus={handleInputFocus}
-              onGiveUp={handleGiveUpPress}
-              allCluesRevealed={allCluesRevealed}
-              testID="action-zone"
-            />
-          ))}
+        {/* Bottom bar: Action Zone + Ad Banner */}
+        {!viewingFullPath && (
+          <View style={styles.bottomBar}>
+            {isGameOver ? (
+              <GameOverActionZone
+                answer={answer}
+                won={state.gameStatus === "won"}
+                onSeeScore={() => setShowResultModal(true)}
+                testID="game-over-zone"
+              />
+            ) : (
+              <ActionZone
+                onPlayerSelect={submitPlayerGuess}
+                onTextSubmit={submitTextGuess}
+                onRevealNext={revealNext}
+                canRevealMore={canRevealMore}
+                shouldShake={state.lastGuessIncorrect}
+                isGameOver={isGameOver}
+                onFocus={handleInputFocus}
+                onGiveUp={handleGiveUpPress}
+                allCluesRevealed={allCluesRevealed}
+                testID="action-zone"
+              />
+            )}
+            {!keyboardVisible && <AdBanner testID="career-path-ad-banner" />}
+          </View>
+        )}
 
-        {/* Scouting Disclaimer - shows data provenance and report option */}
-        <ScoutingDisclaimer
-          scoutedAt={scoutedAt}
-          onReportError={handleOpenReportSheet}
-          testID="scouting-disclaimer"
-        />
-
-        {/* Banner Ad (non-premium only) — hidden when keyboard is open to free space */}
-        {!keyboardVisible && <AdBanner testID="career-path-ad-banner" />}
 
         {/* Help Modal */}
         <GameIntroModal
@@ -610,6 +605,7 @@ const styles = StyleSheet.create({
   timelineContainer: {
     flex: 1,
     position: "relative",
+    backgroundColor: colors.stadiumNavy, // Ensure background is set
   },
   centered: {
     flex: 1,
@@ -617,13 +613,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     padding: layout.screenPadding,
+    backgroundColor: colors.stadiumNavy,
   },
   loadingText: {
     marginTop: spacing.md,
+    color: colors.floodlightWhite,
   },
   noPuzzleText: {
     textAlign: "center",
     marginTop: spacing.sm,
+    color: colors.textSecondary,
   },
   progress: {
     color: colors.textSecondary,
@@ -632,10 +631,17 @@ const styles = StyleSheet.create({
     color: colors.pitchGreen,
     fontWeight: "600",
   },
+  bottomBar: {
+    position: "absolute" as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
   listContent: {
     paddingHorizontal: layout.screenPadding,
-    paddingBottom: 160, // ActionZone height (~140px) + buffer
-    gap: spacing.xs, // Tight gap for timeline rows
+    paddingBottom: 220, // ActionZone + AdBanner height + buffer
+    gap: 0, // Remove gap, as rows handle their own spacing/connecting
   },
   reviewContent: {
     paddingHorizontal: layout.screenPadding,

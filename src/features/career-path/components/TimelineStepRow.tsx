@@ -1,36 +1,33 @@
-import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
   withSpring,
-  withDelay,
   withRepeat,
   withSequence,
+  withTiming,
+  withDelay,
+  Easing,
   cancelAnimation,
   interpolate,
-  Extrapolation,
-  Easing,
 } from 'react-native-reanimated';
-import { colors, spacing, fonts, borderRadius, glows } from '@/theme';
+import { colors, spacing } from '@/theme';
 import { CareerStep } from '../types/careerPath.types';
-import { getTimelineConfig, TIMELINE_ANIMATIONS } from '../constants/timeline';
-
-const config = getTimelineConfig();
+import { CareerStepCard } from './CareerStepCard';
 
 export interface TimelineStepRowProps {
   /** The career step data */
   step: CareerStep;
-  /** The step number (1-indexed) - for logic only, not displayed */
+  /** The step number (1-indexed) */
   stepNumber: number;
   /** Whether this step is revealed */
   isRevealed: boolean;
-  /** Whether this is the most recently revealed step (pulsing node) */
+  /** Whether this is the most recently revealed step */
   isLatest: boolean;
-  /** Whether this is the first step (no line above) */
+  /** Whether this is the first step (no line above top half?) */
   isFirstStep: boolean;
-  /** Whether this is the last step in the list */
+  /** Whether this is the last step */
   isLastStep: boolean;
   /** Highlight as the winning step in review mode */
   isWinningStep?: boolean;
@@ -42,20 +39,16 @@ export interface TimelineStepRowProps {
   revealDelay?: number;
   /** Style as victory-revealed card */
   isVictoryReveal?: boolean;
-  /** Whether shake animation should trigger (for error feedback) */
+  /** Whether shake animation should trigger */
   shouldShake?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
 
 /**
- * TimelineStepRow - A compact timeline row displaying a career step.
+ * TimelineStepRow - Connects the timeline axis with the step card.
  *
- * Layout: [Timeline Axis 40px] [Year 80px] [Club Info flex:1]
- * Height: 60px (responsive)
- *
- * The timeline axis shows a vertical line with a circular node.
- * Node states: revealed (green), current (pulsing green), locked (hollow navy)
+ * Layout: [Axis Column] [CareerStepCard]
  */
 export function TimelineStepRow({
   step,
@@ -69,322 +62,206 @@ export function TimelineStepRow({
   forceReveal = false,
   revealDelay = 0,
   isVictoryReveal = false,
-  shouldShake = false,
   testID,
 }: TimelineStepRowProps) {
-  // Track if this was previously revealed (for animation triggering)
-  const wasRevealed = useRef(isRevealed);
-
-  // Animation shared values (line removed - handled by TimelineAxis)
   const nodeScale = useSharedValue(isRevealed ? 1 : 0);
-  const nodeOpacity = useSharedValue(isRevealed ? 1 : 0);
   const pulseScale = useSharedValue(1);
-  const clubSlideX = useSharedValue(isRevealed ? 0 : 20);
-  const clubOpacity = useSharedValue(isRevealed ? 1 : 0);
-  const victoryProgress = useSharedValue(0);
-  const errorFlashOpacity = useSharedValue(0);
 
-  // Node and club info animation when newly revealed
+  const showAsRevealed = isRevealed || forceReveal;
+
+  // Animate node entry
   useEffect(() => {
-    if ((isRevealed || forceReveal) && !wasRevealed.current) {
+    if (showAsRevealed) {
       const delay = forceReveal ? revealDelay : 0;
-
-      // Node appears with scale pop
       nodeScale.value = withDelay(
         delay,
         withSpring(1, { damping: 12, stiffness: 150 })
       );
-      nodeOpacity.value = withDelay(
-        delay,
-        withTiming(1, { duration: 200 })
-      );
-
-      // Club info slides in from right
-      clubSlideX.value = withDelay(
-        delay + TIMELINE_ANIMATIONS.slideInDelay,
-        withSpring(0, TIMELINE_ANIMATIONS.slideInSpring)
-      );
-      clubOpacity.value = withDelay(
-        delay + TIMELINE_ANIMATIONS.slideInDelay,
-        withTiming(1, { duration: 250 })
-      );
-
-      wasRevealed.current = true;
     }
-  }, [isRevealed, forceReveal, revealDelay, nodeScale, nodeOpacity, clubSlideX, clubOpacity]);
+  }, [showAsRevealed, forceReveal, revealDelay, nodeScale]);
 
-  // Victory reveal animation
+  // Pulse animation for current active step
   useEffect(() => {
-    if (forceReveal && !isRevealed) {
-      const timer = setTimeout(() => {
-        victoryProgress.value = withSpring(1, {
-          damping: 10,
-          stiffness: 120,
-          mass: 0.8,
-        });
-      }, revealDelay);
-      return () => clearTimeout(timer);
-    }
-  }, [forceReveal, revealDelay, isRevealed, victoryProgress]);
-
-  // Pulsing animation for current active step
-  useEffect(() => {
+    // Only pulse if it's the latest revealed step OR it's a "Current" club (based on logic)
+    // The prompt says "Active State: The current level has a 'pulsing' glow effect."
+    // Usually means the latest revealed step the player is guessing from.
     if (isLatest && !forceReveal) {
       pulseScale.value = withRepeat(
         withSequence(
-          withTiming(TIMELINE_ANIMATIONS.pulseScale, {
-            duration: TIMELINE_ANIMATIONS.pulseDuration / 2,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(1, {
-            duration: TIMELINE_ANIMATIONS.pulseDuration / 2,
-            easing: Easing.inOut(Easing.ease),
-          })
+          withTiming(1.3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
         ),
         -1,
-        false
+        true
       );
     } else {
       cancelAnimation(pulseScale);
-      pulseScale.value = withTiming(1, { duration: 200 });
+      pulseScale.value = withTiming(1);
     }
   }, [isLatest, forceReveal, pulseScale]);
 
-  // Error flash animation on node
-  useEffect(() => {
-    if (shouldShake && isLatest) {
-      errorFlashOpacity.value = withSequence(
-        withTiming(0.8, { duration: 100 }),
-        withTiming(0.8, { duration: 80 }),
-        withTiming(0, { duration: 120 })
-      );
-    }
-  }, [shouldShake, isLatest, errorFlashOpacity]);
-
-  // Animated styles
   const nodeStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: nodeScale.value * pulseScale.value },
-    ],
-    opacity: nodeOpacity.value,
+    transform: [{ scale: Math.max(0, nodeScale.value * pulseScale.value) }], // Ensure non-negative
   }));
 
-  const clubInfoStyle = useAnimatedStyle(() => ({
-    opacity: clubOpacity.value,
-    transform: [{ translateX: clubSlideX.value }],
-  }));
+  const isCurrentClub = !step.endYear || step.endYear === new Date().getFullYear();
+  // Active means it is the step we are currently focusing on (latest revealed)
+  // OR it is the player's current club (end of career).
+  const isActiveDot = isLatest && (isCurrentClub || !isLastStep); // Logic refinement: active if latest.
 
-  const victoryStyle = useAnimatedStyle(() => {
-    if (!forceReveal || isRevealed) return {};
-    return {
-      opacity: victoryProgress.value,
-      transform: [
-        {
-          scale: interpolate(
-            victoryProgress.value,
-            [0, 0.5, 1],
-            [0.9, 1.05, 1],
-            Extrapolation.CLAMP
-          ),
-        },
-      ],
-    };
-  });
+  // Pulse animation for current active step
+  useEffect(() => {
+    // Only pulse if it's the latest step active
+    if (isActiveDot && !forceReveal) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    } else {
+      cancelAnimation(pulseScale);
+      pulseScale.value = withTiming(1);
+    }
+  }, [isActiveDot, forceReveal, pulseScale]);
 
-  const errorFlashStyle = useAnimatedStyle(() => ({
-    opacity: errorFlashOpacity.value,
-  }));
 
-  // Determine visual states
-  const showAsRevealed = isRevealed || forceReveal;
-  const isLoan = step.type === 'loan';
 
-  // Get node color based on state
-  const getNodeColor = () => {
-    if (isMissedStep) return colors.redCard;
-    if (isWinningStep || isVictoryReveal || isLatest) return colors.pitchGreen;
-    if (showAsRevealed) return colors.pitchGreen;
-    return 'transparent'; // Locked: hollow
-  };
-
-  // Get glow style for winning/missed states
-  const getGlowStyle = () => {
-    if (isWinningStep || isVictoryReveal) return glows.green;
-    if (isMissedStep) return glows.red;
-    return undefined;
-  };
-
+  // Dot Styles
+  // Past/Revealed: Outlined Green with dark center? Or Filled Green? 
+  // Ref: "Green flashing circle on clubs which aren't the players current one? That should only appear if it's a current club."
+  // Implies: Non-current clubs should NOT be flashing.
+  // Visuals: 
+  // - Past: Static Green Outline / Dark Center
+  // - Current/Active: Filled Green + Pulse
+  
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        getGlowStyle(),
-        forceReveal && !isRevealed ? victoryStyle : undefined,
-      ]}
-      testID={testID}
-    >
-      {/* Timeline Axis - Node only (line handled by TimelineAxis) */}
-      <View style={styles.axisContainer}>
-        {/* Node */}
-        <Animated.View
-          style={[
-            styles.node,
-            {
-              backgroundColor: getNodeColor(),
-              borderColor: showAsRevealed ? getNodeColor() : colors.stadiumNavy,
-            },
-            nodeStyle,
-          ]}
-        >
-          {/* Error flash glow */}
-          <Animated.View
-            style={[
-              styles.nodeErrorGlow,
-              errorFlashStyle,
-            ]}
-          />
-        </Animated.View>
+    <View style={styles.container} testID={testID}>
+      {/* Axis Column */}
+      <View style={styles.axisColumn}>
+        {/* Continuous Line */}
+        {!isFirstStep && (
+            <View style={[styles.lineSegment, styles.lineTop]} />
+        )}
+        {!isLastStep && (
+            <View style={[styles.lineSegment, styles.lineBottom]} />
+        )}
+
+        {/* Timeline Dot */}
+        <View style={styles.dotContainer}>
+           {/* Base Dot */}
+           <View style={[
+             styles.dotBase, 
+             showAsRevealed ? styles.dotRevealedBase : styles.dotLockedBase,
+             (isActiveDot && showAsRevealed) && styles.dotActiveBase // Special style for active pulsing dot
+            ]}>
+             
+             {/* Inner Fill - Only for active? Or always? */}
+             {/* If past, maybe just outline? */}
+             {isActiveDot && (
+                 <Animated.View style={[styles.dotFill, nodeStyle]} />
+             )}
+             
+             {/* Use a smaller static fill for past steps if needed, or leave empty for outline look */}
+             {!isActiveDot && showAsRevealed && (
+                 <View style={styles.dotPastFill} />
+             )}
+             
+           </View>
+        </View>
       </View>
 
-      {/* Year Column */}
-      <View style={styles.yearContainer}>
-        {showAsRevealed ? (
-          <Text style={styles.yearText}>{step.year}</Text>
-        ) : (
-          <Text style={[styles.yearText, styles.yearLocked]}>----</Text>
-        )}
+      {/* Card Column */}
+      <View style={styles.cardColumn}>
+        <CareerStepCard
+          step={step}
+          stepNumber={stepNumber}
+          isRevealed={isRevealed}
+          isLatest={isLatest}
+          isWinningStep={isWinningStep}
+          isMissedStep={isMissedStep}
+          forceReveal={forceReveal}
+          revealDelay={revealDelay}
+          isVictoryReveal={isVictoryReveal}
+          testID={testID ? `${testID}-card` : undefined}
+        />
       </View>
-
-      {/* Club Info Column */}
-      <Animated.View style={[styles.clubContainer, clubInfoStyle]}>
-        {showAsRevealed ? (
-          <>
-            <View style={styles.clubRow}>
-              <Text style={styles.clubName} numberOfLines={1}>
-                {step.text}
-              </Text>
-              {isLoan && (
-                <View style={styles.loanBadge}>
-                  <Text style={styles.loanText}>LOAN</Text>
-                </View>
-              )}
-            </View>
-            {/* Stats row (apps/goals) */}
-            {(step.apps !== undefined || step.goals !== undefined) && (
-              <View style={styles.statsRow}>
-                {step.apps !== undefined && (
-                  <Text style={styles.statText}>{step.apps} Apps</Text>
-                )}
-                {step.apps !== undefined && step.goals !== undefined && (
-                  <Text style={styles.statSeparator}>·</Text>
-                )}
-                {step.goals !== undefined && (
-                  <Text style={styles.statText}>{step.goals} Gls</Text>
-                )}
-              </View>
-            )}
-          </>
-        ) : (
-          <View style={styles.placeholderBar} />
-        )}
-      </Animated.View>
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: config.stepHeight,
     flexDirection: 'row',
-    alignItems: 'center',
   },
-  // Timeline Axis - node only (continuous line handled by TimelineAxis component)
-  axisContainer: {
-    width: config.axisWidth,
-    height: '100%',
+  axisColumn: {
+    width: 40, 
     alignItems: 'center',
-    justifyContent: 'center',
+    position: 'relative',
   },
-  node: {
-    width: config.nodeSize,
-    height: config.nodeSize,
-    borderRadius: config.nodeSize / 2,
+  lineSegment: {
+    position: 'absolute',
+    width: 2,
+    backgroundColor: colors.pitchGreen,
+    left: 19, 
+    opacity: 0.3,
+  },
+  lineTop: {
+    top: 0,
+    height: '50%',
+  },
+  lineBottom: {
+    bottom: 0,
+    height: '50%',
+  },
+  dotContainer: {
+    position: 'absolute',
+    top: 24, 
+    left: 13, // Adjusted for slightly larger dot size (14px) -> Center 20 - 7 = 13
+    zIndex: 2,
+  },
+  dotBase: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     borderWidth: 2,
-    zIndex: 1,
-  },
-  nodeErrorGlow: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: config.nodeSize / 2,
-    backgroundColor: colors.redCard,
-    transform: [{ scale: 2 }],
-  },
-  // Year Column
-  yearContainer: {
-    width: config.yearWidth,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.stadiumNavy,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  yearText: {
-    fontFamily: fonts.headline,
-    fontSize: config.yearFontSize,
-    color: colors.floodlightWhite,
-    letterSpacing: 0.5,
+  dotLockedBase: {
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  yearLocked: {
-    opacity: 0.4,
+  dotRevealedBase: {
+    borderColor: colors.pitchGreen, // Green Outline
+    backgroundColor: colors.stadiumNavy, // Dark center
   },
-  // Club Info Column
-  clubContainer: {
+  dotActiveBase: {
+    borderColor: colors.pitchGreen,
+    shadowColor: colors.pitchGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+  },
+  dotFill: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.pitchGreen,
+    // Animated scale applies here
+  },
+  dotPastFill: {
+    // Optional: could be empty for ring, or small dot. 
+    // Reference left image suggests empty ring for past.
+    // Let's leave it empty (transparent) or very subtle.
+    width: 0,
+    height: 0,
+  },
+  cardColumn: {
     flex: 1,
-    justifyContent: 'center',
     paddingRight: spacing.sm,
-  },
-  clubRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  clubName: {
-    fontFamily: fonts.body,
-    fontWeight: '600',
-    fontSize: config.clubFontSize,
-    color: colors.floodlightWhite,
-    flex: 1,
-  },
-  loanBadge: {
-    backgroundColor: colors.cardYellow,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-  },
-  loanText: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.stadiumNavy,
-    textTransform: 'uppercase',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: 2,
-  },
-  statText: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  statSeparator: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-    opacity: 0.5,
-  },
-  // Locked state placeholder
-  placeholderBar: {
-    width: 80,
-    height: 12,
-    backgroundColor: colors.glassBorder,
-    borderRadius: borderRadius.sm,
   },
 });

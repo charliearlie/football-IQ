@@ -1,55 +1,52 @@
-import { useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+  FadeIn,
   interpolate,
   Extrapolation,
+  Easing,
 } from 'react-native-reanimated';
-import { CheckCircle } from 'lucide-react-native';
-import { GlassCard } from '@/components';
-import { colors, spacing, textStyles, borderRadius, glows } from '@/theme';
+import { Footprints, CheckCircle, Circle } from 'lucide-react-native';
+import Svg, { Circle as SvgCircle, Path } from 'react-native-svg';
+import { colors, spacing, fonts, borderRadius, shadows, glows } from '@/theme';
 import { CareerStep } from '../types/careerPath.types';
 import { LockedCard } from './LockedCard';
+import { GlassCard } from '@/components/GlassCard';
 
-/** Spring configuration for card entrance animation */
-const ENTRANCE_SPRING = {
-  damping: 12,
-  stiffness: 100,
-  mass: 0.8,
-};
-
-export interface CareerStepCardProps {
-  /** The career step data */
-  step: CareerStep;
-  /** The step number (1-indexed) */
-  stepNumber: number;
-  /** Whether this step is revealed */
-  isRevealed: boolean;
-  /** Whether this is the most recently revealed step */
-  isLatest: boolean;
-  /** Test ID for testing */
-  testID?: string;
-  /** Highlight as the winning step in review mode (green border/glow) */
-  isWinningStep?: boolean;
-  /** Mark as the missed step when lost in review mode (red border + "MISSED" badge) */
-  isMissedStep?: boolean;
-  /** Force reveal this card during victory sequence (overrides isRevealed) */
-  forceReveal?: boolean;
-  /** Delay in ms for staggered reveal animation */
-  revealDelay?: number;
-  /** Style as victory-revealed card (green glow) */
-  isVictoryReveal?: boolean;
+function FootballIcon({ size = 12, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <SvgCircle cx={12} cy={12} r={11} stroke={color} strokeWidth={2} />
+      <Path
+        d="M12 1 L9 8 L3 8 L7.5 13 L5.5 20 L12 16 L18.5 20 L16.5 13 L21 8 L15 8 Z"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
 }
 
-/**
- * CareerStepCard - Displays a single career step.
- *
- * Shows a locked blur overlay when not revealed, and animates in
- * with a spring entrance when revealed. Displays step number,
- * type badge (club/loan), club name, and year range.
- */
+export interface CareerStepCardProps {
+  step: CareerStep;
+  stepNumber: number;
+  isRevealed: boolean;
+  isLatest: boolean;
+  isWinningStep?: boolean;
+  isMissedStep?: boolean;
+  forceReveal?: boolean;
+  revealDelay?: number;
+  isVictoryReveal?: boolean;
+  testID?: string;
+}
+
 export function CareerStepCard({
   step,
   stepNumber,
@@ -62,290 +59,298 @@ export function CareerStepCard({
   revealDelay = 0,
   isVictoryReveal = false,
 }: CareerStepCardProps) {
-  const animatedProgress = useSharedValue(isRevealed ? 1 : 0);
+  // --- Animations ---
+  const currentPulse = useSharedValue(1);
   const victoryProgress = useSharedValue(0);
 
-  useEffect(() => {
-    if (isRevealed) {
-      // Animate in with spring when revealed
-      animatedProgress.value = withSpring(1, ENTRANCE_SPRING);
-    }
-  }, [isRevealed, animatedProgress]);
+  const currentYear = new Date().getFullYear();
+  const isCurrentClub = step.endYear === null;
+  const isLoan = step.type === 'loan';
 
-  // Victory reveal animation - staggered entrance for hidden cards during win
-  useEffect(() => {
+  React.useEffect(() => {
+    // Pulse animation only for the truly active current club
+    if ((isRevealed || forceReveal) && isCurrentClub) {
+      currentPulse.value = withRepeat(
+        withSequence(
+          withTiming(0.4, { duration: 800 }),
+          withTiming(1, { duration: 800 })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [isRevealed, forceReveal, isCurrentClub, currentPulse]);
+
+  // Victory reveal animation
+  React.useEffect(() => {
     if (forceReveal && !isRevealed) {
-      // Trigger animation after delay for staggered effect
-      const timer = setTimeout(() => {
-        victoryProgress.value = withSpring(1, {
-          damping: 10,
-          stiffness: 120,
-          mass: 0.8,
-        });
-      }, revealDelay);
-      return () => clearTimeout(timer);
+        const timer = setTimeout(() => {
+          victoryProgress.value = withSpring(1, {
+            damping: 10,
+            stiffness: 120,
+            mass: 0.8,
+          });
+        }, revealDelay);
+        return () => clearTimeout(timer);
     }
   }, [forceReveal, revealDelay, isRevealed, victoryProgress]);
 
-  // Victory reveal animated style with scale bounce
-  const victoryAnimatedStyle = useAnimatedStyle(() => {
-    if (!forceReveal || isRevealed) return {};
-
-    return {
-      opacity: victoryProgress.value,
-      transform: [
-        {
-          translateY: interpolate(
-            victoryProgress.value,
-            [0, 1],
-            [20, 0],
-            Extrapolation.CLAMP
-          ),
-        },
-        {
-          scale: interpolate(
-            victoryProgress.value,
-            [0, 0.5, 1],
-            [0.9, 1.05, 1],
-            Extrapolation.CLAMP
-          ),
-        },
-      ],
-    };
-  });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: animatedProgress.value,
-    transform: [
-      {
-        translateY: interpolate(
-          animatedProgress.value,
-          [0, 1],
-          [30, 0],
-          Extrapolation.CLAMP
-        ),
-      },
-      {
-        scale: interpolate(
-          animatedProgress.value,
-          [0, 1],
-          [0.95, 1],
-          Extrapolation.CLAMP
-        ),
-      },
-    ],
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: currentPulse.value,
   }));
 
-  // Show locked card if not revealed AND not force-revealing (victory sequence)
-  if (!isRevealed && !forceReveal) {
-    return <LockedCard stepNumber={stepNumber} testID={testID} />;
+  const victoryAnimatedStyle = useAnimatedStyle(() => {
+      if (!forceReveal || isRevealed) return {};
+      return {
+        opacity: victoryProgress.value,
+        transform: [
+          { translateY: interpolate(victoryProgress.value, [0, 1], [20, 0], Extrapolation.CLAMP) },
+          { scale: interpolate(victoryProgress.value, [0, 1], [0.95, 1], Extrapolation.CLAMP) },
+        ],
+      };
+  });
+
+  // --- Logic ---
+  const formattedYear = useMemo(() => step.year, [step.year]);
+  const showAsRevealed = isRevealed || forceReveal;
+
+  // --- Styles ---
+  // We use GlassCard, so valid styles pass through commonly.
+  // Exception: Loan and Current overrides.
+  
+  // ... (Animations and Logic above remains)
+
+  const getCardStyle = () => {
+      // Wrapper style (shadow, etc)
+      const style: any = {};
+      
+      if (isLoan) {
+          style.borderLeftColor = colors.cardYellow;
+          style.borderLeftWidth = 3;
+          style.backgroundColor = 'rgba(250, 204, 21, 0.05)';
+          style.borderTopWidth = 0;
+          style.borderBottomWidth = 0;
+          style.borderRightWidth = 0;
+      }
+      
+      if (isCurrentClub) {
+          // No special background — keep it consistent with other cards
+      }
+
+      return style;
+  };
+  
+  const getBorderColor = () => {
+     if (isLoan) return 'transparent'; // Handled by wrapper or just transparent
+     if (isCurrentClub) return 'transparent';
+     if (isWinningStep) return colors.pitchGreen;
+     if (isMissedStep) return colors.redCard;
+     return 'transparent'; // Default for standard cards!
+  };
+
+  if (!showAsRevealed) {
+    return (
+      <View style={styles.lockedWrapper}>
+        <LockedCard stepNumber={stepNumber} testID={testID} />
+      </View>
+    );
   }
 
-  // Determine which animation style to use
-  const currentAnimatedStyle = forceReveal && !isRevealed ? victoryAnimatedStyle : animatedStyle;
-
-  const isLoan = step.type === 'loan';
-
-  // Determine card style based on state (victory > winning > missed > latest > default)
-  const getCardStyle = () => {
-    if (isVictoryReveal) return styles.victoryCard;
-    if (isWinningStep) return styles.winningCard;
-    if (isMissedStep) return styles.missedCard;
-    if (isLatest) return styles.latestCard;
-    return undefined;
-  };
-
-  // Determine step badge style
-  const getStepBadgeStyle = () => {
-    if (isWinningStep) return styles.stepBadgeWinning;
-    if (isLatest) return styles.stepBadgeLatest;
-    return undefined;
-  };
-
-  // Determine step number text style
-  const getStepNumberStyle = () => {
-    if (isWinningStep || isLatest) return styles.stepNumberLatest;
-    return undefined;
-  };
-
   return (
-    <Animated.View style={currentAnimatedStyle} testID={testID}>
-      <GlassCard style={getCardStyle()}>
-        <View style={styles.content}>
-          {/* Step number badge */}
-          <View style={[styles.stepBadge, getStepBadgeStyle()]}>
-            <Text style={[styles.stepNumber, getStepNumberStyle()]}>
-              {stepNumber}
-            </Text>
-          </View>
+    <Animated.View 
+      entering={FadeIn.delay(forceReveal && !isRevealed ? 0 : revealDelay)} 
+      style={[styles.wrapper, forceReveal && !isRevealed ? victoryAnimatedStyle : undefined]} 
+      testID={testID}
+    >
+        <GlassCard 
+            intensity={20} 
+            style={getCardStyle()}
+            borderColor={getBorderColor()}
+            contentStyle={{ paddingHorizontal: 12, paddingVertical: 8 }}
+            testID={testID ? `${testID}-glass` : undefined}
+        >
+           <View style={styles.contentPadding}>
+             {/* TOP ROW: Name | Year */}
+             <View style={styles.topRow}>
+               <Text style={styles.clubName} numberOfLines={1}>
+                 {step.text}
+               </Text>
 
-          {/* Step details */}
-          <View style={styles.details}>
-            <View style={styles.topRow}>
-              <Text style={styles.clubName}>{step.text}</Text>
-              {isLoan && (
-                <View style={styles.loanBadge}>
-                  <Text style={styles.loanText}>LOAN</Text>
+               {/* Right Side: Year Only */}
+               <View style={styles.yearContainer}>
+                 {/* Pulse for current club */}
+                 {isCurrentClub && (
+                   <Animated.View style={[styles.activeDot, pulseStyle]} />
+                 )}
+                 <Text style={[
+                   styles.yearText, 
+                   isCurrentClub && styles.yearTextCurrent
+                 ]}>
+                   {formattedYear}
+                 </Text>
+               </View>
+             </View>
+
+             {/* BOTTOM ROW: Stats | LOAN Badge */}
+             <View style={styles.bottomRow}>
+               <View style={styles.statsContainer}>
+                  {(step.apps !== undefined || step.goals !== undefined) && (
+                    <>
+                      {step.apps !== undefined && (
+                        <View style={styles.statPill}>
+                           <Footprints size={12} color={colors.textSecondary} /> 
+                           <Text style={styles.statText}>{step.apps}</Text>
+                        </View>
+                      )}
+                      
+                      {step.goals !== undefined && (
+                        <View style={styles.statPill}>
+                           <FootballIcon size={12} color={colors.textSecondary} />
+                           <Text style={styles.statText}>{step.goals}</Text>
+                        </View>
+                      )}
+                    </>
+                  )}
+               </View>
+                  
+                {/* Loan Badge - Right Aligned */}
+                {isLoan && (
+                  <View style={styles.loanBadge}>
+                    <Text style={styles.loanText}>LOAN</Text>
+                  </View>
+                )}
+             </View>
+             
+              {/* Review Mode Icon */}
+              {isWinningStep && (
+                <View style={styles.reviewIconContainer}>
+                   <CheckCircle size={20} color={colors.pitchGreen} />
                 </View>
               )}
-            </View>
-            <Text style={styles.year}>{step.year}</Text>
-            {/* Stats row (apps/goals) - only render if either exists */}
-            {(step.apps !== undefined || step.goals !== undefined) && (
-              <View style={styles.statsRow}>
-                {step.apps !== undefined && (
-                  <Text style={styles.statText}>{step.apps} Apps</Text>
-                )}
-                {step.apps !== undefined && step.goals !== undefined && (
-                  <Text style={styles.statSeparator}>•</Text>
-                )}
-                {step.goals !== undefined && (
-                  <Text style={styles.statText}>{step.goals} Gls</Text>
-                )}
-              </View>
-            )}
-          </View>
+           </View>
+        </GlassCard>
 
-          {/* Winning badge */}
-          {isWinningStep && (
-            <View style={styles.winningBadge} testID="winning-badge">
-              <CheckCircle size={20} color={colors.stadiumNavy} strokeWidth={2.5} />
-            </View>
-          )}
-        </View>
-      </GlassCard>
-
-      {/* Missed badge - positioned outside GlassCard for overlap */}
+      {/* Missed Badge */}
       {isMissedStep && (
-        <View style={styles.missedBadge} testID="missed-badge">
-          <Text style={styles.missedBadgeText}>MISSED</Text>
-        </View>
+          <View style={styles.missedBadge} testID="missed-badge">
+            <Text style={styles.missedBadgeText}>MISSED</Text>
+          </View>
       )}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  latestCard: {
-    borderColor: colors.pitchGreen,
-    borderWidth: 2,
-    ...glows.green,
-  },
-  // Victory reveal card style - shown during victory sequence animation
-  victoryCard: {
-    borderColor: colors.pitchGreen,
-    borderWidth: 2,
-    ...glows.green,
-    shadowOpacity: 0.5,
-  },
-  stepBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.glassBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepBadgeLatest: {
-    backgroundColor: colors.pitchGreen,
-  },
-  stepNumber: {
-    ...textStyles.subtitle,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  stepNumberLatest: {
-    color: colors.stadiumNavy,
-  },
-  details: {
+  wrapper: {
+    marginBottom: spacing.md, // Increased spacing per feedback
     flex: 1,
-    gap: spacing.xs,
+  },
+  lockedWrapper: {
+    marginBottom: spacing.md, // Increased spacing for locked cards too
+  },
+  contentPadding: {
+    padding: 0, 
+    gap: 4, 
   },
   topRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start', 
+  },
+  metaContainer: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
+    marginTop: 2,
   },
   clubName: {
-    ...textStyles.subtitle,
-    fontSize: 16,
+    fontFamily: fonts.body,
+    fontWeight: '700',
+    fontSize: 14,
+    color: colors.floodlightWhite,
     flex: 1,
+    marginRight: spacing.sm,
+    paddingTop: 2, 
+  },
+  yearContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  yearText: {
+    fontFamily: fonts.headline, 
+    fontSize: 14,
+    color: colors.textSecondary,
+    opacity: 0.9,
+    letterSpacing: 0.5,
+  },
+  yearTextCurrent: {
+    color: colors.floodlightWhite,
+  },
+  yearTextLoan: {
+    color: 'rgba(255, 255, 255, 0.5)', 
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.pitchGreen,
   },
   loanBadge: {
     backgroundColor: colors.cardYellow,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
   loanText: {
-    ...textStyles.caption,
+    fontFamily: fonts.headline,
+    fontSize: 10,
     color: colors.stadiumNavy,
-    fontWeight: '600',
+    includeFontPadding: false,
   },
-  year: {
-    ...textStyles.bodySmall,
+  statsContainer: {
+    flexDirection: 'row',
+    gap: spacing.md,
   },
-  statsRow: {
+  statPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
   },
   statText: {
-    ...textStyles.caption,
-    color: 'rgba(248, 250, 252, 0.8)', // floodlightWhite at 80% opacity
-  },
-  statSeparator: {
-    ...textStyles.caption,
-    color: 'rgba(248, 250, 252, 0.5)', // muted separator
-  },
-  // Winning step styles (review mode)
-  winningCard: {
-    borderColor: colors.pitchGreen,
-    borderWidth: 2,
-    ...glows.green,
-    shadowOpacity: 0.6, // Stronger glow for winning state
-    shadowRadius: 16,
-  },
-  stepBadgeWinning: {
-    backgroundColor: colors.pitchGreen,
-  },
-  winningBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.pitchGreen,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Missed step styles (review mode)
-  missedCard: {
-    borderColor: colors.redCard,
-    borderWidth: 2,
-    ...glows.red,
-    shadowOpacity: 0.4,
+    fontFamily: fonts.body,
+    fontSize: 10,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
   missedBadge: {
     position: 'absolute',
-    top: -8,
-    right: -8,
+    top: -6,
+    right: -6,
     backgroundColor: colors.redCard,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    zIndex: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    transform: [{rotate: '12deg'}],
+    zIndex: 10,
   },
   missedBadgeText: {
-    ...textStyles.caption,
+    fontFamily: fonts.body,
     color: colors.floodlightWhite,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    fontSize: 10,
   },
+  reviewIconContainer: {
+      position: 'absolute',
+      right: 0,
+      bottom: 0,
+  }
 });

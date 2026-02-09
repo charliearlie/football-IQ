@@ -6,7 +6,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useHaptics } from '@/hooks/useHaptics';
-import { colors, textStyles, borderRadius, depthOffset } from '@/theme';
+import { colors, textStyles, borderRadius } from '@/theme';
+import { depthOffset } from '@/theme/spacing';
 
 /**
  * Semantic button variants for consistent styling across the app.

@@ -10,7 +10,7 @@ import {
   Linking,
   ActivityIndicator,
 } from 'react-native';
-import { PurchasesPackage } from 'react-native-purchases';
+import { PurchasesPackage, IntroEligibility } from 'react-native-purchases';
 import {
   Zap,
   Ban,
@@ -31,6 +31,7 @@ interface PremiumUpsellContentProps {
   onPurchase: (pkg: PurchasesPackage) => void;
   onRestore: () => void;
   packages: PurchasesPackage[];
+  eligibility?: Record<string, IntroEligibility>;
   state: 'loading' | 'selecting' | 'purchasing' | 'success' | 'error';
   errorMessage?: string | null;
   onRetry?: () => void;
@@ -42,6 +43,7 @@ export function PremiumUpsellContent({
   onPurchase,
   onRestore,
   packages,
+  eligibility = {},
   state,
   errorMessage,
   onRetry,
@@ -51,7 +53,7 @@ export function PremiumUpsellContent({
   const isSmallScreen = height < 700;
   
   // Best practice: Pre-select Annual (Best Value).
-  const processedOffers = React.useMemo(() => processPackagesWithOffers(packages, 'ANNUAL'), [packages]);
+  const processedOffers = React.useMemo(() => processPackagesWithOffers(packages, 'ANNUAL', eligibility), [packages, eligibility]);
   
   const annualOffer = processedOffers.find(o => o.package.packageType === 'ANNUAL');
   const monthlyOffer = processedOffers.find(o => o.package.packageType === 'MONTHLY');
@@ -72,6 +74,66 @@ export function PremiumUpsellContent({
           onPurchase(pkg);
       }
   };
+
+  /**
+   * Helper to simple-format currency (e.g. 1.50 -> £1.50).
+   * Uses Intl if available, otherwise fallback.
+   */
+  const formatMonthlyPrice = (price: number, currencyCode: string) => {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: currencyCode,
+      }).format(price);
+    } catch (e) {
+      return `${currencyCode} ${(price).toFixed(2)}`;
+    }
+  };
+
+  // Calculate dynamic text for Annual card
+  let annualMonthlyText = '';
+  let annualBadgeText = '';
+
+  if (annualOffer) {
+    // 1. Calculate Monthly Equivalent
+    // Use intro price if active, otherwise standard price
+    const currentPrice = annualOffer.offer.isOfferActive && annualOffer.package.product.introPrice
+      ? annualOffer.package.product.introPrice.price
+      : annualOffer.package.product.price;
+    
+    const monthlyEq = currentPrice / 12;
+    // Check if currencyCode exists, otherwise use fallback logic or empty string if crucial
+    // Assuming standard PurchasesStoreProduct has currencyCode
+    const currencyCode = annualOffer.package.product.currencyCode || 'USD'; // Fallback just in case
+    const formattedMonthly = formatMonthlyPrice(monthlyEq, currencyCode);
+    annualMonthlyText = `Just ${formattedMonthly} / month`;
+
+    // 2. Badge Text
+    if (annualOffer.offer.isOfferActive) {
+      // Intro Offer Active -> "LIMITED OFFER • SAVE X%"
+      // savingsText from detectOffer is e.g. "Save 44%"
+      annualBadgeText = `LIMITED OFFER • ${annualOffer.offer.savingsText.toUpperCase()}`;
+    } else if (monthlyOffer) {
+      // Standard Price -> Compare vs Monthly for "BEST VALUE"
+      // Monthly * 12 vs Annual
+      const annualPrice = annualOffer.package.product.price;
+      const monthlyPrice = monthlyOffer.package.product.price;
+      const annualizedMonthly = monthlyPrice * 12;
+      
+      if (annualizedMonthly > 0) {
+        const savingsVsMonthly = Math.round((1 - annualPrice / annualizedMonthly) * 100);
+        if (savingsVsMonthly > 0) {
+           annualBadgeText = `BEST VALUE • SAVE ${savingsVsMonthly}%`;
+        } else {
+           annualBadgeText = 'BEST VALUE';
+        }
+      } else {
+        annualBadgeText = 'BEST VALUE';
+      }
+    } else {
+      annualBadgeText = 'BEST VALUE';
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -185,11 +247,12 @@ export function PremiumUpsellContent({
                         title="ANNUAL"
                         price={annualOffer.offer.discountedPriceString} // e.g. $9.99
                         period="/yr"
-                        savingsText="Just $0.83 / month"
+                        savingsText={annualMonthlyText}
                         originalPrice={annualOffer.offer.originalPriceString}
                         isSelected={selectedIdentifier === annualOffer.package.identifier}
                         onSelect={() => setSelectedIdentifier(annualOffer.package.identifier)}
                         isBestValue
+                        badgeText={annualBadgeText}
                      />
                  )}
                  {monthlyOffer && (
@@ -265,7 +328,8 @@ function PlanCard({
     subtitle,
     isSelected,
     onSelect,
-    isBestValue
+    isBestValue,
+    badgeText,
 }: {
     title: string,
     price: string,
@@ -275,15 +339,16 @@ function PlanCard({
     subtitle?: string,
     isSelected: boolean,
     onSelect: () => void,
-    isBestValue?: boolean
+    isBestValue?: boolean,
+    badgeText?: string,
 }) {
     return (
         <Pressable onPress={onSelect} style={[styles.planCard, isSelected && styles.planCardSelected]}>
-             {isBestValue && (
+             {isBestValue && badgeText ? (
                  <View style={styles.bestValueBadge}>
-                     <Text style={styles.bestValueText}>BEST VALUE • SAVE 50%</Text>
+                     <Text style={styles.bestValueText}>{badgeText}</Text>
                  </View>
-             )}
+             ) : null}
              
              <View style={styles.planCardContent}>
                  {/* Radio Circle */}
@@ -307,7 +372,7 @@ function PlanCard({
                              <Text style={styles.planSubtitle}>{subtitle}</Text>
                          )}
                          
-                         {originalPrice && (
+                         {originalPrice && originalPrice !== price && (
                              <Text style={styles.originalPrice}>{originalPrice}</Text>
                          )}
                      </View>

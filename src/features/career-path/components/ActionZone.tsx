@@ -1,6 +1,7 @@
 import { View, StyleSheet, Platform, Pressable, Text } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { colors, spacing, fonts } from '@/theme';
+import { BlurView } from 'expo-blur';
+import { colors, spacing, fonts, layout } from '@/theme';
 import { PlayerAutocomplete } from '@/components';
 import { UnifiedPlayer } from '@/services/oracle/types';
 
@@ -34,7 +35,7 @@ export interface ActionZoneProps {
  * - PlayerAutocomplete (inline input + submit button with dropdown)
  * - "Reveal next step" text link (amber, only shown when more steps available)
  *
- * The input field shakes on incorrect guesses for visual feedback.
+ * Positioned absolutely at the bottom with glass effect.
  */
 export function ActionZone({
   onPlayerSelect,
@@ -49,55 +50,61 @@ export function ActionZone({
   testID,
 }: ActionZoneProps) {
   return (
-    <View style={styles.container} testID={testID}>
-      <PlayerAutocomplete
-        onSelect={onPlayerSelect}
-        onSubmitText={onTextSubmit}
-        shouldShake={shouldShake}
-        isGameOver={isGameOver}
-        onFocus={onFocus}
-        testID={testID ? `${testID}-autocomplete` : undefined}
-      />
+    <View style={styles.wrapper} testID={testID}>
+      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+      <View style={styles.container}>
+        <PlayerAutocomplete
+          onSelect={onPlayerSelect}
+          onSubmitText={onTextSubmit}
+          shouldShake={shouldShake}
+          isGameOver={isGameOver}
+          onFocus={onFocus}
+          testID={testID ? `${testID}-autocomplete` : undefined}
+          // The component handles its own internal styling, but we ensure it contrasts well
+        />
 
-      {/* Reveal Next - subtle text link (costly action) */}
-      {canRevealMore && !isGameOver && (
-        <Pressable
-          onPress={onRevealNext}
-          style={({ pressed }) => [
-            styles.revealLink,
-            pressed && styles.revealLinkPressed,
-          ]}
-          testID={`${testID}-reveal`}
-        >
-          <ChevronRight size={18} color={colors.amber} />
-          <Text style={styles.revealText}>Reveal next step</Text>
-        </Pressable>
-      )}
+        {/* Reveal Next - subtle text link (costly action) */}
+        {canRevealMore && !isGameOver && (
+          <Pressable
+            onPress={onRevealNext}
+            style={({ pressed }) => [
+              styles.revealLink,
+              pressed && styles.revealLinkPressed,
+            ]}
+            testID={`${testID}-reveal`}
+          >
+            <ChevronRight size={18} color={colors.amber} />
+            <Text style={styles.revealText}>Reveal next step</Text>
+          </Pressable>
+        )}
 
-      {/* Give Up - shown only when all clues revealed */}
-      {allCluesRevealed && !isGameOver && onGiveUp && (
-        <Pressable
-          onPress={onGiveUp}
-          style={({ pressed }) => [
-            styles.revealLink,
-            pressed && styles.revealLinkPressed,
-          ]}
-          testID={testID ? `${testID}-giveup` : undefined}
-        >
-          <Text style={styles.giveUpText}>Give up</Text>
-        </Pressable>
-      )}
+        {/* Give Up - shown only when all clues revealed */}
+        {allCluesRevealed && !isGameOver && onGiveUp && (
+          <Pressable
+            onPress={onGiveUp}
+            style={({ pressed }) => [
+              styles.revealLink,
+              pressed && styles.revealLinkPressed,
+            ]}
+            testID={testID ? `${testID}-giveup` : undefined}
+          >
+            <Text style={styles.giveUpText}>Give up</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
-    backgroundColor: colors.stadiumNavy,
+  wrapper: {
+    backgroundColor: 'rgba(15, 23, 42, 0.8)', // Semi-transparent stadiumNavy
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
+  },
+  container: {
+    padding: spacing.lg,
+    paddingBottom: spacing.sm,
     gap: spacing.md,
   },
   revealLink: {

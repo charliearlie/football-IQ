@@ -16,6 +16,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Purchases, {
   PurchasesPackage,
   PURCHASES_ERROR_CODE,
+  IntroEligibility,
 } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
 import { Confetti } from '@/components/Confetti';
@@ -49,6 +50,7 @@ export default function PremiumModalScreen() {
 
   const [state, setState] = useState<ModalState>('loading');
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [eligibility, setEligibility] = useState<Record<string, IntroEligibility>>({});
   const [_selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -76,7 +78,7 @@ export default function PremiumModalScreen() {
         Purchases.getOfferings(),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Request timed out')), API_TIMEOUT_MS)
-        ),
+        )
       ]);
 
       if (!isMountedRef.current) return;
@@ -84,8 +86,24 @@ export default function PremiumModalScreen() {
       const offering = offerings.all[PREMIUM_OFFERING_ID] || offerings.current;
 
       if (offering?.availablePackages.length) {
-        setPackages(offering.availablePackages);
-        setState('selecting');
+        const availablePackages = offering.availablePackages;
+        setPackages(availablePackages);
+        
+        // Fetch eligibility for these packages
+        try {
+          const productIdentifiers = availablePackages.map(p => p.product.identifier);
+          const eligibilityMap = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIdentifiers);
+          if (isMountedRef.current) {
+             setEligibility(eligibilityMap);
+          }
+        } catch (e) {
+          console.warn('[PremiumModal] Failed to check intro eligibility:', e);
+          // Fallback: don't set eligibility, defaults to safe state (no offer)
+        }
+
+        if (isMountedRef.current) {
+          setState('selecting');
+        }
       } else {
         setErrorMessage('No subscription plans available');
         setState('error');
@@ -233,6 +251,7 @@ export default function PremiumModalScreen() {
           onPurchase={handlePurchase}
           onRestore={handleRestore}
           packages={packages}
+          eligibility={eligibility}
           state={state}
           errorMessage={errorMessage}
           onRetry={fetchOfferings}

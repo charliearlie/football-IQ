@@ -10,6 +10,10 @@ export interface GlassCardProps {
   intensity?: number;
   /** Additional container styles */
   style?: ViewStyle;
+  /** Additional content styles (e.g. padding) */
+  contentStyle?: ViewStyle;
+  /** Inner border color override */
+  borderColor?: string;
   /** Enable drop shadow for depth (default: true) */
   showShadow?: boolean;
   /** Shadow intensity level (default: 'lg' for prominent depth) */
@@ -31,12 +35,17 @@ export function GlassCard({
   children,
   intensity = 10,
   style,
+  contentStyle,
+  borderColor,
   showShadow = true,
   shadowLevel = 'lg',
   testID,
 }: GlassCardProps) {
   // Get shadow style based on level
   const shadowStyle = showShadow ? shadows[shadowLevel] : undefined;
+  
+  // Use provided borderColor or default from styles
+  const borderStyle = borderColor ? { borderColor } : undefined;
 
   // Web doesn't support BlurView well, use fallback
   if (Platform.OS === 'web') {
@@ -47,10 +56,11 @@ export function GlassCard({
           styles.fallback,
           shadowStyle,
           style,
+          borderStyle
         ]}
         testID={testID}
       >
-        {children}
+        <View style={[styles.webContent, contentStyle]}>{children}</View>
       </View>
     );
   }
@@ -62,9 +72,9 @@ export function GlassCard({
       style={[styles.shadowWrapper, shadowStyle, style]}
       testID={testID}
     >
-      <View style={styles.innerContainer}>
+      <View style={[styles.innerContainer, borderStyle]}>
         <BlurView intensity={intensity} style={styles.blur} tint="dark" />
-        <View style={styles.content}>{children}</View>
+        <View style={[styles.content, contentStyle]}>{children}</View>
       </View>
     </View>
   );
@@ -93,8 +103,14 @@ const styles = StyleSheet.create({
   },
   fallback: {
     backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+    // Padding moved to inner content wrapper for consistency if needed, 
+    // or just applied to fallback. Let's keep fallback simple but support contentStyle.
+    // Actually, fallback currently applies padding directly.
+    padding: 0, // Reset padding here, apply to inner view
+  },
+  webContent: {
+    padding: spacing.lg,
   },
 });

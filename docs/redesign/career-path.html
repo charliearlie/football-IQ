@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Football IQ - Career Path Redesign</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pitchGreen: '#58CC02',
+                        grassShadow: '#46A302',
+                        stadiumNavy: '#0F172A',
+                        floodlightWhite: '#F8FAFC',
+                        cardYellow: '#FACC15',
+                        redCard: '#EF4444',
+                        glassBg: 'rgba(255, 255, 255, 0.05)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)',
+                        textSecondary: 'rgba(248, 250, 252, 0.7)',
+                    },
+                    fontFamily: {
+                        bebas: ['"Bebas Neue"', 'sans-serif'],
+                        montserrat: ['"Montserrat"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 15px rgba(88, 204, 2, 0.3)',
+                        '3d': '0 4px 0 #46A302',
+                        '3d-active': '0 2px 0 #46A302',
+                        'card-depth': '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+                    },
+                    backgroundImage: {
+                        'pitch-pattern': "radial-gradient(circle at 50% 50%, rgba(88, 204, 2, 0.03) 0%, transparent 70%)",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* 3D Button Interaction */
+        .btn-3d {
+            transition: all 0.1s ease;
+        }
+        .btn-3d:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #46A302;
+        }
+
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Timeline Logic */
+        .timeline-container {
+            position: relative;
+        }
+        /* The vertical line */
+        .timeline-line {
+            position: absolute;
+            left: 19px; /* Centers in the 40px wide sidebar */
+            top: 24px;  /* Starts at first dot */
+            bottom: 60px; /* Ends near last dot */
+            width: 2px;
+            background: linear-gradient(to bottom, #58CC02 0%, #58CC02 85%, rgba(88, 204, 2, 0.1) 100%);
+            z-index: 0;
+            box-shadow: 0 0 8px rgba(88, 204, 2, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center bg-stadiumNavy bg-pitch-pattern relative">
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-md relative z-10 h-screen flex flex-col">
+
+        <!-- HEADER -->
+        <header class="glass-panel pt-12 pb-3 px-4 flex justify-between items-center z-50 sticky top-0 shadow-lg">
+            <button class="w-9 h-9 rounded-lg glass-card flex items-center justify-center active:scale-95 transition-transform text-white border-white/10">
+                <i class="fa-solid fa-arrow-left text-sm"></i>
+            </button>
+            
+            <div class="text-center">
+                <div class="flex items-center justify-center gap-2 mb-0.5">
+                    <span class="text-[10px] bg-pitchGreen text-stadiumNavy font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Lvl 3</span>
+                    <span class="font-bebas text-lg text-textSecondary tracking-widest">Step 3 of 9</span>
+                </div>
+                <h1 class="font-bebas text-2xl text-floodlightWhite leading-none tracking-wide">Career Path</h1>
+            </div>
+
+            <button class="w-9 h-9 rounded-lg glass-card flex items-center justify-center active:scale-95 transition-transform text-textSecondary border-white/10">
+                <i class="fa-regular fa-circle-question text-sm"></i>
+            </button>
+        </header>
+
+        <!-- GAME AREA -->
+        <div class="flex-1 overflow-y-auto no-scrollbar relative pt-4 pb-28 px-3" id="scroll-container">
+            
+            <!-- Timeline Container -->
+            <div class="relative pl-10">
+                
+                <!-- The Continuous Vertical Line -->
+                <div class="absolute left-0 top-0 bottom-0 w-10">
+                    <div class="timeline-line"></div>
+                </div>
+
+                <!-- --- CAREER NODES --- -->
+
+                <!-- Node 1: Celtic -->
+                <div class="relative mb-3 group animate-fade-in-up" style="animation-delay: 0.05s;">
+                    <!-- Timeline Dot -->
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10 shadow-[0_0_8px_#58CC02]"></div>
+                    
+                    <!-- Slim Card -->
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth active:bg-white/10 transition-colors">
+                        <!-- Logo Placeholder -->
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex-shrink-0 flex items-center justify-center border border-white/10 shadow-inner">
+                            <i class="fa-solid fa-shield text-xs text-white/40"></i>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <!-- Top Row: Name & Year -->
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Celtic</h3>
+                                <span class="font-bebas text-sm text-pitchGreen tracking-wide whitespace-nowrap opacity-90">2004 - 10</span>
+                            </div>
+                            
+                            <!-- Bottom Row: Stats -->
+                            <div class="flex items-center gap-3 text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-solid fa-shoe-prints text-pitchGreen text-[9px]"></i>
+                                    <span>200</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-regular fa-futbol text-pitchGreen text-[9px]"></i>
+                                    <span>35</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node 2: Spartak Moscow -->
+                <div class="relative mb-3 animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10"></div>
+                    
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex-shrink-0 flex items-center justify-center border border-white/10 shadow-inner">
+                            <i class="fa-solid fa-shield text-xs text-white/40"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Spartak Moscow</h3>
+                                <span class="font-bebas text-sm text-pitchGreen tracking-wide whitespace-nowrap opacity-90">2010 - 14</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-solid fa-shoe-prints text-white/40 text-[9px]"></i>
+                                    <span>103</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-regular fa-futbol text-white/40 text-[9px]"></i>
+                                    <span>15</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node 3: Everton -->
+                <div class="relative mb-3 animate-fade-in-up" style="animation-delay: 0.15s;">
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10"></div>
+                    
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex-shrink-0 flex items-center justify-center border border-white/10 shadow-inner">
+                            <i class="fa-solid fa-shield text-xs text-white/40"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Everton</h3>
+                                <span class="font-bebas text-sm text-pitchGreen tracking-wide whitespace-nowrap opacity-90">2014 - 17</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-solid fa-shoe-prints text-white/40 text-[9px]"></i>
+                                    <span>43</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-regular fa-futbol text-white/40 text-[9px]"></i>
+                                    <span>5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node 4: Sheffield Wed (LOAN) -->
+                <div class="relative mb-3 animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10"></div>
+                    
+                    <!-- Loan Style: Slight yellow tint border -->
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth border-l-[3px] border-l-cardYellow">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cardYellow/10 to-transparent flex-shrink-0 flex items-center justify-center border border-cardYellow/20 shadow-inner">
+                            <i class="fa-solid fa-plane-departure text-xs text-cardYellow/80"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Sheffield Wed</h3>
+                                <span class="bg-cardYellow text-stadiumNavy text-[9px] font-bebas px-1.5 py-0.5 rounded leading-none tracking-wider">LOAN</span>
+                            </div>
+                            <!-- Combined Stats & Year line for density -->
+                            <div class="flex items-center justify-between text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex gap-2">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-shoe-prints text-white/30 text-[9px]"></i> 13</span>
+                                    <span class="flex items-center gap-1"><i class="fa-regular fa-futbol text-white/30 text-[9px]"></i> 1</span>
+                                </div>
+                                <span class="font-bebas text-white/50 tracking-wide">2016</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node 5: Preston North End (LOAN) -->
+                <div class="relative mb-3 animate-fade-in-up" style="animation-delay: 0.25s;">
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10"></div>
+                    
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth border-l-[3px] border-l-cardYellow">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cardYellow/10 to-transparent flex-shrink-0 flex items-center justify-center border border-cardYellow/20 shadow-inner">
+                            <i class="fa-solid fa-plane-departure text-xs text-cardYellow/80"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Preston North End</h3>
+                                <span class="bg-cardYellow text-stadiumNavy text-[9px] font-bebas px-1.5 py-0.5 rounded leading-none tracking-wider">LOAN</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex gap-2">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-shoe-prints text-white/30 text-[9px]"></i> 34</span>
+                                    <span class="flex items-center gap-1"><i class="fa-regular fa-futbol text-white/30 text-[9px]"></i> 8</span>
+                                </div>
+                                <span class="font-bebas text-white/50 tracking-wide">2016 - 17</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Node 6: Sunderland -->
+                 <div class="relative mb-3 animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10"></div>
+                    
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex-shrink-0 flex items-center justify-center border border-white/10 shadow-inner">
+                            <i class="fa-solid fa-shield text-xs text-white/40"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Sunderland</h3>
+                                <span class="font-bebas text-sm text-pitchGreen tracking-wide whitespace-nowrap opacity-90">2017 - 22</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-solid fa-shoe-prints text-white/40 text-[9px]"></i>
+                                    <span>141</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <i class="fa-regular fa-futbol text-white/40 text-[9px]"></i>
+                                    <span>40</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node 7: Charlton (LOAN) -->
+                <div class="relative mb-3 animate-fade-in-up" style="animation-delay: 0.35s;">
+                    <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadiumNavy border-2 border-pitchGreen rounded-full z-10"></div>
+                    
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth border-l-[3px] border-l-cardYellow">
+                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cardYellow/10 to-transparent flex-shrink-0 flex items-center justify-center border border-cardYellow/20 shadow-inner">
+                            <i class="fa-solid fa-plane-departure text-xs text-cardYellow/80"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Charlton Athletic</h3>
+                                <span class="bg-cardYellow text-stadiumNavy text-[9px] font-bebas px-1.5 py-0.5 rounded leading-none tracking-wider">LOAN</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex gap-2">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-shoe-prints text-white/30 text-[9px]"></i> 10</span>
+                                    <span class="flex items-center gap-1"><i class="fa-regular fa-futbol text-white/30 text-[9px]"></i> 0</span>
+                                </div>
+                                <span class="font-bebas text-white/50 tracking-wide">2020</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node 8: Active Node (Ayr United) -->
+                <div class="relative mb-8 animate-fade-in-up" style="animation-delay: 0.4s;">
+                     <!-- Pulse Animation on Line Endpoint -->
+                     <div class="absolute -left-[26px] top-[16px] w-4 h-4 rounded-full bg-pitchGreen/30 animate-ping z-0"></div>
+                     <div class="absolute -left-[24px] top-[18px] w-3 h-3 bg-pitchGreen border-2 border-white rounded-full z-20 shadow-[0_0_12px_#58CC02]"></div>
+                    
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-[0_0_20px_rgba(88,204,2,0.15)] border border-pitchGreen/40 bg-gradient-to-r from-pitchGreen/10 to-transparent">
+                        <div class="w-10 h-10 rounded-full bg-pitchGreen/20 flex-shrink-0 flex items-center justify-center border border-pitchGreen/30 shadow-inner">
+                            <i class="fa-solid fa-shield text-xs text-pitchGreen"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h3 class="font-montserrat font-bold text-sm text-white truncate pr-2">Ayr United</h3>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 bg-pitchGreen rounded-full animate-pulse"></span>
+                                    <span class="font-bebas text-sm text-pitchGreen tracking-wide whitespace-nowrap">2023 - 24</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 text-[10px] font-montserrat text-textSecondary">
+                                <div class="flex items-center gap-1.5 bg-pitchGreen/10 border border-pitchGreen/20 px-1.5 py-0.5 rounded text-white">
+                                    <i class="fa-solid fa-shoe-prints text-pitchGreen text-[9px]"></i>
+                                    <span>16</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-pitchGreen/10 border border-pitchGreen/20 px-1.5 py-0.5 rounded text-white">
+                                    <i class="fa-regular fa-futbol text-pitchGreen text-[9px]"></i>
+                                    <span>2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- FOOTER: ANSWER INPUT -->
+        <div class="glass-panel p-3 pb-8 z-50 fixed bottom-0 w-full max-w-md shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/10">
+            <!-- Hint Row -->
+            <div class="flex justify-between items-center mb-2 px-1">
+                <span class="text-[10px] text-textSecondary uppercase tracking-widest font-bold opacity-70">Guess the player</span>
+                <span class="text-[10px] text-cardYellow cursor-pointer hover:text-white transition-colors flex items-center gap-1 bg-cardYellow/10 px-2 py-0.5 rounded-full border border-cardYellow/20">
+                    <i class="fa-solid fa-lightbulb"></i> Hint (-50)
+                </span>
+            </div>
+
+            <!-- Input Row -->
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-white/30 text-sm"></i>
+                    </div>
+                    <input type="text" 
+                           class="w-full h-11 pl-9 pr-3 bg-stadiumNavy/50 border border-white/10 rounded-lg text-sm text-white placeholder-white/20 font-montserrat focus:outline-none focus:border-pitchGreen focus:bg-white/5 transition-all"
+                           placeholder="Type player name..."
+                           value="Aiden McGeady"
+                    >
+                </div>
+                <!-- 3D Submit Button -->
+                <button class="h-11 px-5 bg-pitchGreen rounded-lg font-bebas text-lg text-stadiumNavy tracking-wide shadow-3d btn-3d active:shadow-3d-active transform translate-y-0 hover:-translate-y-0.5 flex items-center gap-2">
+                    Submit <i class="fa-solid fa-check text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Styles for Animations -->
+    <style>
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</body>
+</html>
