@@ -76,23 +76,14 @@ export default function ArchiveScreen() {
   // Load archive data with 'all' filter (we filter client-side for more flexibility)
   const {
     dateGroups: rawDateGroups,
+    totalCount,
+    completedCount,
     isLoading,
     isRefreshing,
     hasMore,
     loadMore,
     refresh,
   } = useArchivePuzzles('all');
-
-  // Calculate Global Stats
-  const stats = useMemo(() => {
-    let completed = 0;
-    let total = 0;
-    rawDateGroups.forEach(group => {
-      total += group.puzzles.length;
-      completed += group.puzzles.filter(p => p.status === 'done').length;
-    });
-    return { completed, total };
-  }, [rawDateGroups]);
 
   // Apply client-side filtering to the date groups
   const filteredDateGroups = useMemo((): ArchiveDateGroup[] => {
@@ -197,9 +188,9 @@ export default function ArchiveScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header with Stats */}
-      <ArchiveHeader 
-        completedCount={stats.completed}
-        totalCount={stats.total}
+      <ArchiveHeader
+        completedCount={completedCount}
+        totalCount={totalCount}
       />
 
       {/* Premium Upsell Banner (non-premium only) */}

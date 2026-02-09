@@ -473,6 +473,61 @@ export async function getPuzzleCount(): Promise<number> {
 }
 
 /**
+ * Get the total number of available puzzles (on or before today).
+ * Prefers puzzle_catalog (complete, bypasses RLS) with fallback to puzzles table.
+ */
+export async function getTotalPuzzleCount(): Promise<number> {
+  const database = getDatabase();
+
+  const catalogResult = await database.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM puzzle_catalog
+     WHERE puzzle_date <= date('now', 'localtime') AND is_special = 0`
+  );
+
+  if (catalogResult && catalogResult.count > 0) {
+    return catalogResult.count;
+  }
+
+  // Fallback: catalog not synced yet, use puzzles table
+  const fallback = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM puzzles WHERE is_special = 0'
+  );
+  return fallback?.count ?? 0;
+}
+
+/**
+ * Get the number of completed puzzles (on or before today).
+ * Prefers puzzle_catalog JOIN (complete, bypasses RLS) with fallback to puzzles table.
+ */
+export async function getCompletedPuzzleCount(): Promise<number> {
+  const database = getDatabase();
+
+  // Check if catalog is populated
+  const catalogCheck = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM puzzle_catalog LIMIT 1'
+  );
+  const hasCatalog = (catalogCheck?.count ?? 0) > 0;
+
+  if (hasCatalog) {
+    const result = await database.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM attempts a
+       JOIN puzzle_catalog pc ON a.puzzle_id = pc.id
+       WHERE a.completed = 1 AND pc.is_special = 0
+         AND pc.puzzle_date <= date('now', 'localtime')`
+    );
+    return result?.count ?? 0;
+  }
+
+  // Fallback: catalog not synced yet, use puzzles table
+  const fallback = await database.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM attempts a
+     JOIN puzzles p ON a.puzzle_id = p.id
+     WHERE a.completed = 1 AND p.is_special = 0`
+  );
+  return fallback?.count ?? 0;
+}
+
+/**
  * Lightweight timestamp query for staleness detection.
  * Returns only id and updated_at for puzzles in the given date range.
  * Used by light sync to minimize memory usage during foreground checks.

@@ -90,6 +90,10 @@ export interface UseArchivePuzzlesResult {
   sections: ArchiveSection[];
   /** Date groups for Match Calendar accordion */
   dateGroups: ArchiveDateGroup[];
+  /** Total number of available puzzles (from DB, not paginated) */
+  totalCount: number;
+  /** Number of completed puzzles (from DB, not paginated) */
+  completedCount: number;
   /** Whether initial data is loading */
   isLoading: boolean;
   /** Whether a refresh is in progress */

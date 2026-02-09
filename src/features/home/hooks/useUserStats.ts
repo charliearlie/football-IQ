@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { getAllCompletedAttemptsWithDates, getPuzzleCount } from '@/lib/database';
+import { getAllCompletedAttemptsWithDates, getTotalPuzzleCount, getCompletedPuzzleCount } from '@/lib/database';
 import { getAuthorizedDateUnsafe } from '@/lib/time';
 
 /**
@@ -193,14 +193,17 @@ export function useUserStats(): UseUserStatsResult {
       // Get last played date
       const lastPlayedDate = attemptDates.length > 0 ? attemptDates[0] : null;
 
-      // Get total puzzles available
-      const totalPuzzlesAvailable = await getPuzzleCount();
+      // Use catalog-backed counts for consistency with Archive screen
+      const [totalPuzzlesAvailable, totalGamesPlayed] = await Promise.all([
+        getTotalPuzzleCount(),
+        getCompletedPuzzleCount(),
+      ]);
 
       setStats({
         currentStreak: current,
         longestStreak: longest,
         gamesPlayedToday,
-        totalGamesPlayed: attempts.length,
+        totalGamesPlayed,
         totalPuzzlesAvailable,
         lastPlayedDate,
       });
