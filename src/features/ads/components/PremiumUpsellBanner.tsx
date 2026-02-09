@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { ChevronRight, X, Crown, Sparkles } from "lucide-react-native";
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn } from "react-native-reanimated";
+import { X } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/features/auth";
-import { HOME_COLORS, HOME_FONTS } from "@/theme/home-design";
+import { colors, textStyles, spacing, borderRadius } from "@/theme";
+import { ProBadge } from "@/components/ProBadge/ProBadge";
 
 export function PremiumUpsellBanner({ testID }: { testID?: string }) {
   const router = useRouter();
@@ -24,45 +25,60 @@ export function PremiumUpsellBanner({ testID }: { testID?: string }) {
     });
   };
 
+  const handleDismiss = () => {
+    setIsDismissed(true);
+  };
+
   return (
-    <Animated.View entering={FadeIn.duration(300)} style={styles.wrapper}>
+    <Animated.View 
+      entering={FadeIn.duration(300)} 
+      exiting={FadeOut.duration(300)}
+      style={styles.wrapper}
+    >
       <Pressable
         onPress={handlePress}
-        style={({ pressed }) => [styles.container, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+        style={({ pressed }) => [
+          styles.container,
+          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+        ]}
         testID={testID}
       >
         <LinearGradient
-            colors={['rgba(250, 204, 21, 0.1)', 'rgba(15, 23, 42, 0.6)']}
-            style={styles.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          colors={["#FACC15", "#EAB308"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradient}
         >
-             {/* Dismiss button - top right corner */}
-            <Pressable
-                onPress={(e) => {
-                    e.stopPropagation();
-                    setIsDismissed(true);
-                }}
-                style={styles.dismissButton}
-                hitSlop={12}
-            >
-                <X size={14} color="rgba(255, 255, 255, 0.5)" />
-            </Pressable>
+          {/* Subtle texture overlay */}
+          <View style={styles.textureOverlay} />
 
-            {/* Icon Box */}
-            <View style={styles.iconBox}>
-                <Sparkles size={24} color={HOME_COLORS.stadiumNavy} fill={HOME_COLORS.stadiumNavy} />
+          {/* Close Button */}
+          <Pressable 
+            onPress={handleDismiss} 
+            style={styles.closeButton}
+            hitSlop={12}
+            testID={`${testID || 'premium-banner'}-close`}
+          >
+            <X size={16} color={colors.stadiumNavy} strokeWidth={2.5} style={{ opacity: 0.6 }} />
+          </Pressable>
+          
+          <View style={styles.contentContainer}>
+            {/* Left Content */}
+            <View style={styles.leftContent}>
+              <View style={styles.headerRow}>
+                <ProBadge size={20} color={colors.stadiumNavy} />
+                <Text style={styles.headerText}>GO PRO</Text>
+              </View>
+              <Text style={styles.subtext}>
+                Unlock the full archive & remove ads.
+              </Text>
             </View>
 
-            {/* Content */}
-            <View style={styles.content}>
-                <Text style={styles.title}>GO PRO</Text>
-                <Text style={styles.subtitle}>Unlock the full archive</Text>
+            {/* Right Button Visual */}
+            <View style={styles.actionButton}>
+              <Text style={styles.actionButtonText}>UPGRADE</Text>
             </View>
-
-             {/* Arrow */}
-             <ChevronRight size={20} color={HOME_COLORS.cardYellow} />
-
+          </View>
         </LinearGradient>
       </Pressable>
     </Animated.View>
@@ -71,56 +87,79 @@ export function PremiumUpsellBanner({ testID }: { testID?: string }) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginHorizontal: 20,
-    marginBottom: 6, // Spacing above game list
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   container: {
-    borderRadius: 16,
-    // Yellow glow border
-    borderWidth: 1,
-    borderColor: HOME_COLORS.cardYellow,
-    overflow: 'hidden',
+    borderRadius: borderRadius.lg, // 12
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#FACC15",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   gradient: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      paddingVertical: 20,
+    padding: spacing.lg, // 16
+    minHeight: 80,
+    justifyContent: "center",
   },
-  dismissButton: {
-      position: 'absolute',
-      top: 8,
-      right: 8,
-      zIndex: 10,
+  textureOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    // Simple texture effect using a rotated view or just noise if we had an image
+    // For now, just a subtle overlay on the right
+    left: "50%",
+    transform: [{ skewX: "-20deg" }],
   },
-  iconBox: {
-      width: 48,
-      height: 48,
-      borderRadius: 12, // Squircle
-      backgroundColor: HOME_COLORS.cardYellow,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 16,
-      // Shadow
-      shadowColor: '#CA8A04',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.5,
-      shadowRadius: 4,
-      elevation: 4,
+  closeButton: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    zIndex: 10,
+    padding: 4,
   },
-  content: {
-      flex: 1,
+  contentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  title: {
-      fontFamily: HOME_FONTS.heading,
-      fontSize: 20,
-      color: HOME_COLORS.cardYellow,
-      letterSpacing: 0.5,
+  leftContent: {
+    flex: 1,
+    marginRight: spacing.md,
   },
-  subtitle: {
-      fontFamily: HOME_FONTS.body,
-      fontSize: 12,
-      color: '#cbd5e1',
-      marginTop: 2,
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+    gap: 6,
+  },
+  headerText: {
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 24,
+    color: colors.stadiumNavy,
+    includeFontPadding: false,
+    marginBottom: -4, // Adjustment for Bebas line height
+  },
+  subtext: {
+    fontFamily: "Montserrat",
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.stadiumNavy,
+    opacity: 0.9,
+  },
+  actionButton: {
+    backgroundColor: colors.stadiumNavy,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtonText: {
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 14,
+    color: colors.floodlightWhite,
+    letterSpacing: 0.5,
   },
 });

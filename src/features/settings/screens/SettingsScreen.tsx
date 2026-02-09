@@ -2,9 +2,7 @@
  * SettingsScreen
  *
  * Main settings screen with Privacy Policy, Terms, and Rate App.
- * Provides legal compliance and user support features.
- *
- * Secret dev menu: Tap version text 7 times to reveal developer options.
+ * Redesigned with "Manager's Office" aesthetic.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
@@ -38,9 +36,11 @@ import * as StoreReview from "expo-store-review";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
-import { colors, textStyles, spacing } from "@/theme";
+import { colors, textStyles, spacing, borderRadius } from "@/theme";
 import { deleteAttemptsByGameMode, clearAllLocalData } from "@/lib/database";
 import { useAuth, useSubscriptionSync } from "@/features/auth";
+import { useProfile } from "@/features/auth/hooks/useProfile";
+import { usePerformanceStats } from "@/features/stats/hooks/usePerformanceStats";
 import { supabase } from "@/lib/supabase";
 import {
   scheduleNotification,
@@ -50,9 +50,11 @@ import {
   requestPermissions,
 } from "@/features/notifications";
 import { useOnboardingContext, usePuzzleContext } from "@/features/puzzles";
+import { useIQRank } from "@/features/home/hooks/useIQRank";
 import { SettingsRow } from "../components/SettingsRow";
 import { SettingsSection } from "../components/SettingsSection";
 import { RateAppModal } from "../components/RateAppModal";
+import { PremiumUpsellBanner } from "@/features/ads/components/PremiumUpsellBanner";
 
 export interface SettingsScreenProps {
   testID?: string;
@@ -65,24 +67,30 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   const [rateModalVisible, setRateModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Dev mode state (tap version 7 times to enable)
+  // Dev mode state
   const [devModeEnabled, setDevModeEnabled] = useState(false);
   const tapCountRef = useRef(0);
   const lastTapTimeRef = useRef(0);
 
-  // Auth context for user data and sign out
+  // Auth context
   const { session, signOut } = useAuth();
-
-  // Subscription sync for restoring purchases
+  
+  // Profile & Stats data for Header
+  const { profile } = useProfile(session?.user?.id ?? null);
+  const { stats } = usePerformanceStats();
+  
+  // Calculate Rank
+  const rank = useIQRank(stats?.totalPuzzlesSolved ?? 0);
+  
+  // Subscription sync
   const { forceSync, restorePurchases } = useSubscriptionSync();
   const [isRestoring, setIsRestoring] = useState(false);
 
-  // Onboarding context for resetting intro screens
+  // Onboarding & Puzzle context
   const { resetAllIntros } = useOnboardingContext();
-  // Puzzle context for refreshing local state after data operations
   const { refreshLocalPuzzles } = usePuzzleContext();
 
-  // Notifications toggle — reflects OS permission status
+  // Notifications
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
@@ -117,7 +125,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     }
   }, []);
 
-  // Sound effects toggle (dev only, OFF by default)
+  // Sound effects
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   useEffect(() => {
@@ -137,7 +145,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     );
   }, []);
 
-  // Get app version from expo config
+  // App version
   const appVersion = Constants.expoConfig?.version ?? "1.0.1";
 
   /**
@@ -145,7 +153,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
    */
   const handleVersionTap = useCallback(() => {
     const now = Date.now();
-    // Reset counter if more than 2 seconds since last tap
     if (now - lastTapTimeRef.current > 2000) {
       tapCountRef.current = 0;
     }
@@ -159,27 +166,18 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     }
   }, []);
 
-  /**
-   * Handle Restore Purchases - explicitly triggers restore with RevenueCat
-   */
   const handleRestorePurchases = useCallback(async () => {
     if (isRestoring) return;
-
     setIsRestoring(true);
     try {
       const { success, hasPremium } = await restorePurchases();
-
       if (success) {
         if (hasPremium) {
           Alert.alert("Success", "Pro status restored successfully!");
         } else {
-          Alert.alert(
-            "Restore Complete",
-            "No active subscriptions were found.",
-          );
+          Alert.alert("Restore Complete", "No active subscriptions were found.");
         }
       } else {
-        // Error handled in service, but we show generic alert
         Alert.alert("Error", "Failed to restore purchases. Please try again.");
       }
     } catch (error) {
@@ -190,9 +188,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     }
   }, [isRestoring, restorePurchases]);
 
-  /**
-   * Clear attempts for a specific game mode
-   */
   const handleClearAttempts = useCallback(
     async (gameMode: string, displayName: string) => {
       Alert.alert(
@@ -206,15 +201,10 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             onPress: async () => {
               try {
                 const count = await deleteAttemptsByGameMode(gameMode);
-                // Refresh local state so UI updates immediately (back to "Play" state)
                 await refreshLocalPuzzles();
-                Alert.alert(
-                  "Success",
-                  `Deleted ${count} ${displayName} attempts.`,
-                );
+                Alert.alert("Success", `Deleted ${count} ${displayName} attempts.`);
               } catch (error) {
                 Alert.alert("Error", "Failed to delete attempts.");
-                console.error("Failed to delete attempts:", error);
               }
             },
           },
@@ -224,27 +214,18 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     [refreshLocalPuzzles],
   );
 
-  /**
-   * Send a test notification (5 seconds from now)
-   */
   const handleTestNotification = useCallback(
     async (type: "morning" | "streak") => {
       try {
-        // Check and request permission if needed
         let status = await getPermissionStatus();
         if (status !== "granted") {
           status = await requestPermissions();
           if (status !== "granted") {
-            Alert.alert(
-              "Notifications Disabled",
-              "Please enable notifications in your device settings to test this feature.",
-            );
+            Alert.alert("Notifications Disabled", "Please enable notifications.");
             return;
           }
         }
-
-        const triggerDate = new Date(Date.now() + 5000); // 5 seconds from now
-
+        const triggerDate = new Date(Date.now() + 5000);
         if (type === "morning") {
           const { title, body } = getMorningMessage();
           await scheduleNotification({
@@ -254,10 +235,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             triggerDate,
             priority: "default",
           });
-          Alert.alert(
-            "Test Scheduled",
-            `Morning notification will appear in 5 seconds.\n\nTitle: "${title}"`,
-          );
+          Alert.alert("Test Scheduled", "Morning notification in 5s.");
         } else {
           const { title, body } = getStreakSaverMessage(7);
           await scheduleNotification({
@@ -267,177 +245,78 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             triggerDate,
             priority: "high",
           });
-          Alert.alert(
-            "Test Scheduled",
-            `Streak saver notification will appear in 5 seconds.\n\nTitle: "${title}"`,
-          );
+          Alert.alert("Test Scheduled", "Streak saver notification in 5s.");
         }
       } catch (error) {
-        Alert.alert(
-          "Error",
-          "Failed to schedule test notification. Make sure notifications are enabled.",
-        );
         console.error("Test notification error:", error);
       }
     },
     [],
   );
 
-  /**
-   * Reset all onboarding intro screens
-   */
   const handleResetAllIntros = useCallback(async () => {
     Alert.alert(
       "Reset Intros",
-      'Reset all game intro screens? You will see the "Pre-Match Briefing" again for each game.',
+      "Reset all game intro screens?",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Reset",
           onPress: async () => {
-            try {
-              await resetAllIntros();
-              Alert.alert(
-                "Success",
-                "All intro screens have been reset. You will see them again when entering each game.",
-              );
-            } catch (error) {
-              Alert.alert("Error", "Failed to reset intro screens.");
-              console.error("Failed to reset intros:", error);
-            }
+            await resetAllIntros();
+            Alert.alert("Success", "Intro screens reset.");
           },
         },
       ],
     );
   }, [resetAllIntros]);
 
-  /**
-   * Handle Privacy Policy row press - opens external URL
-   */
-  const handlePrivacyPress = useCallback(() => {
-    Linking.openURL("https://football-iq.app/privacy");
-  }, []);
-
-  /**
-   * Handle Terms of Service row press - opens external URL
-   */
-  const handleTermsPress = useCallback(() => {
-    Linking.openURL("https://football-iq.app/terms");
-  }, []);
-
-  /**
-   * Handle Rate App row press
-   * Attempts native review first, falls back to modal
-   */
-  const handleRateAppPress = useCallback(async () => {
-    // Check if native review is available
-    const isAvailable = await StoreReview.isAvailableAsync();
-
-    if (isAvailable) {
-      // Use native review dialog
-      await StoreReview.requestReview();
-    } else {
-      // Fall back to custom modal
-      setRateModalVisible(true);
-    }
-  }, []);
-
-  /**
-   * Close modals
-   */
-  const closeRateModal = useCallback(() => {
-    setRateModalVisible(false);
-  }, []);
-
-  /**
-   * Handle Delete My Data - removes all user data from Supabase and local storage
-   */
   const handleDeleteData = useCallback(() => {
     Alert.alert(
       "Delete My Data",
-      "This will permanently delete all your data including:\n\n• Your profile\n• All puzzle attempts\n• All streaks\n• Local app data\n\nThis action cannot be undone.",
+      "Permanently delete all data? This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete Everything",
           style: "destructive",
           onPress: () => {
-            // Second confirmation
-            Alert.alert(
-              "Are you sure?",
-              "All your progress will be lost forever.",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Yes, Delete",
-                  style: "destructive",
-                  onPress: async () => {
-                    setIsDeleting(true);
-                    try {
-                      // 1. Delete from Supabase (if authenticated)
-                      const userId = session?.user?.id;
-                      if (userId) {
-                        await supabase
-                          .from("puzzle_attempts")
-                          .delete()
-                          .eq("user_id", userId);
-                        await supabase
-                          .from("user_streaks")
-                          .delete()
-                          .eq("user_id", userId);
-                        await supabase
-                          .from("profiles")
-                          .delete()
-                          .eq("id", userId);
-                      }
-
-                      // 2. Clear local SQLite database
-                      await clearAllLocalData();
-
-                      // 3. Clear AsyncStorage
-                      await AsyncStorage.clear();
-
-                      // 4. Sign out (will auto-create new anonymous account)
-                      await signOut();
-
-                      // 5. Restore any purchases tied to this device's App Store account
-                      // This preserves Pro status even after data deletion
-                      if (Platform.OS !== "web") {
-                        // Small delay to let auth re-initialize with new anonymous account
-                        setTimeout(async () => {
-                          try {
-                            await Purchases.restorePurchases();
-                            await forceSync();
-                            console.log(
-                              "[Settings] Purchases restored after data deletion",
-                            );
-                          } catch (restoreError) {
-                            // Not an error if no purchases to restore
-                            console.log(
-                              "[Settings] No purchases to restore:",
-                              restoreError,
-                            );
-                          }
-                        }, 1500);
-                      }
-
-                      Alert.alert(
-                        "Data Deleted",
-                        "All your data has been deleted.",
-                      );
-                    } catch (error) {
-                      console.error("Failed to delete data:", error);
-                      Alert.alert(
-                        "Error",
-                        "Failed to delete some data. Please try again.",
-                      );
-                    } finally {
-                      setIsDeleting(false);
+            Alert.alert("Are you sure?", "All progress will be lost.", [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Yes, Delete",
+                style: "destructive",
+                onPress: async () => {
+                  setIsDeleting(true);
+                  try {
+                    const userId = session?.user?.id;
+                    if (userId) {
+                      await supabase.from("puzzle_attempts").delete().eq("user_id", userId);
+                      await supabase.from("user_streaks").delete().eq("user_id", userId);
+                      await supabase.from("profiles").delete().eq("id", userId);
                     }
-                  },
+                    await clearAllLocalData();
+                    await AsyncStorage.clear();
+                    await signOut();
+                    if (Platform.OS !== "web") {
+                       setTimeout(async () => {
+                            try {
+                              await Purchases.restorePurchases();
+                              await forceSync();
+                            } catch (e) {
+                                console.log(e);
+                            }
+                       }, 1500);
+                    }
+                    Alert.alert("Data Deleted", "All your data has been deleted.");
+                  } catch (error) {
+                    Alert.alert("Error", "Failed to delete data.");
+                  } finally {
+                    setIsDeleting(false);
+                  }
                 },
-              ],
-            );
+              },
+            ]);
           },
         },
       ],
@@ -453,102 +332,107 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
           accessibilityRole="header"
           testID={testID ? `${testID}-title` : undefined}
         >
-          Settings
+          SETTINGS
         </Text>
       </View>
 
-      {/* Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Subscription Section */}
-        <SettingsSection title="Subscription">
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
+             {/* Placeholder Avatar */}
+             <Text style={styles.avatarText}>
+                {profile?.display_name?.charAt(0).toUpperCase() ?? "G"}
+             </Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>
+                {profile?.display_name || "Guest Manager"}
+            </Text>
+            <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>{rank}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Premium Banner */}
+        <PremiumUpsellBanner />
+
+        {/* Subscription */}
+        <SettingsSection title="SUBSCRIPTION">
           <SettingsRow
-            icon={
-              <RotateCcw size={20} color={colors.pitchGreen} strokeWidth={2} />
-            }
+            icon={<RotateCcw size={20} color={colors.pitchGreen} strokeWidth={2} />}
             label={isRestoring ? "Restoring..." : "Restore Purchases"}
             onPress={handleRestorePurchases}
             testID={testID ? `${testID}-restore-purchases-row` : undefined}
           />
         </SettingsSection>
 
-        {/* Notifications Section */}
-        <SettingsSection title="Notifications">
-          <View
-            style={styles.toggleRow}
-            testID={testID ? `${testID}-notif-toggle` : undefined}
-          >
-            <View style={styles.toggleIconContainer}>
-              {notificationsEnabled ? (
-                <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
-              ) : (
-                <BellOff
-                  size={20}
-                  color={colors.textSecondary}
-                  strokeWidth={2}
-                />
-              )}
-            </View>
-            <Text style={styles.toggleLabel}>Push Notifications</Text>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={handleToggleNotifications}
-              trackColor={{
-                false: colors.glassBorder,
-                true: colors.pitchGreen,
-              }}
-              thumbColor={colors.floodlightWhite}
-            />
+        {/* Notifications */}
+        <SettingsSection title="NOTIFICATIONS">
+          <View style={styles.toggleRow}>
+             <View style={styles.toggleIconContainer}>
+               <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
+             </View>
+             <Text style={styles.toggleLabel}>Push Notifications</Text>
+             <Switch
+                value={notificationsEnabled}
+                onValueChange={handleToggleNotifications}
+                trackColor={{ false: colors.glassBorder, true: colors.pitchGreen }}
+                thumbColor={colors.floodlightWhite}
+             />
           </View>
         </SettingsSection>
 
-        {/* Legal Section */}
-        <SettingsSection title="Legal">
+        {/* Legal */}
+        <SettingsSection title="LEGAL">
           <SettingsRow
-            icon={
-              <Shield size={20} color={colors.pitchGreen} strokeWidth={2} />
-            }
+            icon={<Shield size={20} color={colors.pitchGreen} strokeWidth={2} />}
             label="Privacy Policy"
-            onPress={handlePrivacyPress}
+            onPress={() => Linking.openURL("https://football-iq.app/privacy")}
             testID={testID ? `${testID}-privacy-row` : undefined}
           />
           <SettingsRow
-            icon={
-              <FileText size={20} color={colors.pitchGreen} strokeWidth={2} />
-            }
+            icon={<FileText size={20} color={colors.pitchGreen} strokeWidth={2} />}
             label="Terms of Service"
-            onPress={handleTermsPress}
+            onPress={() => Linking.openURL("https://football-iq.app/terms")}
             testID={testID ? `${testID}-terms-row` : undefined}
           />
         </SettingsSection>
 
-        {/* Support Section */}
-        <SettingsSection title="Support">
+        {/* Support */}
+        <SettingsSection title="SUPPORT">
           <SettingsRow
             icon={<Star size={20} color={colors.cardYellow} strokeWidth={2} />}
             label="Rate App"
-            onPress={handleRateAppPress}
+            onPress={async () => {
+                const isAvailable = await StoreReview.isAvailableAsync();
+                if (isAvailable) {
+                    await StoreReview.requestReview();
+                } else {
+                    setRateModalVisible(true);
+                }
+            }}
             testID={testID ? `${testID}-rate-row` : undefined}
           />
         </SettingsSection>
 
-        {/* Community Section */}
-        <SettingsSection title="Community">
+        {/* Community */}
+        <SettingsSection title="COMMUNITY">
           <SettingsRow
-            icon={
-              <Lightbulb size={20} color={colors.pitchGreen} strokeWidth={2} />
-            }
+            icon={<Lightbulb size={20} color={colors.pitchGreen} strokeWidth={2} />}
             label="Submit Game Idea"
             onPress={() => router.push("/submit-idea")}
             testID={testID ? `${testID}-submit-idea-row` : undefined}
           />
         </SettingsSection>
 
-        {/* Data Section */}
-        <SettingsSection title="Data">
+        {/* Data */}
+        <SettingsSection title="DATA">
           <SettingsRow
             icon={<UserX size={20} color={colors.redCard} strokeWidth={2} />}
             label="Delete My Data"
@@ -557,108 +441,45 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
           />
         </SettingsSection>
 
-        {/* Developer Section (hidden until activated) */}
+        {/* Developer Items */}
         {devModeEnabled && (
-          <SettingsSection title="Developer">
-            <View
-              style={styles.toggleRow}
-              testID={testID ? `${testID}-sound-toggle` : undefined}
-            >
-              <View style={styles.toggleIconContainer}>
-                {soundEnabled ? (
-                  <Volume2
-                    size={20}
-                    color={colors.pitchGreen}
-                    strokeWidth={2}
-                  />
-                ) : (
-                  <VolumeX
-                    size={20}
-                    color={colors.textSecondary}
-                    strokeWidth={2}
-                  />
-                )}
-              </View>
-              <Text style={styles.toggleLabel}>Sound Effects</Text>
-              <Switch
-                value={soundEnabled}
-                onValueChange={handleToggleSound}
-                trackColor={{
-                  false: colors.glassBorder,
-                  true: colors.pitchGreen,
-                }}
-                thumbColor={colors.floodlightWhite}
-              />
-            </View>
-            <SettingsRow
-              icon={
-                <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
-              }
-              label="Test Morning Notification"
-              onPress={() => handleTestNotification("morning")}
-              testID={testID ? `${testID}-test-morning-notif` : undefined}
-            />
-            <SettingsRow
-              icon={
-                <Bell size={20} color={colors.cardYellow} strokeWidth={2} />
-              }
-              label="Test Streak Saver Notification"
-              onPress={() => handleTestNotification("streak")}
-              testID={testID ? `${testID}-test-streak-notif` : undefined}
-            />
-            <SettingsRow
-              icon={
-                <RotateCcw
-                  size={20}
-                  color={colors.pitchGreen}
-                  strokeWidth={2}
-                />
-              }
-              label="Reset All Game Intros"
-              onPress={handleResetAllIntros}
-              testID={testID ? `${testID}-reset-intros` : undefined}
-            />
-            <SettingsRow
-              icon={<Trash2 size={20} color={colors.redCard} strokeWidth={2} />}
-              label="Clear Goalscorer Recall Data"
-              onPress={() =>
-                handleClearAttempts(
-                  "guess_the_goalscorers",
-                  "Goalscorer Recall",
-                )
-              }
-              testID={testID ? `${testID}-clear-goalscorer-row` : undefined}
-            />
-            <SettingsRow
-              icon={<Trash2 size={20} color={colors.redCard} strokeWidth={2} />}
-              label="Clear Career Path Data"
-              onPress={() => handleClearAttempts("career_path", "Career Path")}
-              testID={testID ? `${testID}-clear-career-row` : undefined}
-            />
-            <SettingsRow
-              icon={<Trash2 size={20} color={colors.redCard} strokeWidth={2} />}
-              label="Clear Transfer Guess Data"
-              onPress={() =>
-                handleClearAttempts("guess_the_transfer", "Transfer Guess")
-              }
-              testID={testID ? `${testID}-clear-transfer-row` : undefined}
-            />
-          </SettingsSection>
+            <SettingsSection title="DEVELOPER">
+                 <View style={styles.toggleRow}>
+                    <Text style={[styles.toggleLabel, { marginLeft: 0 }]}>Sound Effects</Text>
+                    <Switch
+                        value={soundEnabled}
+                        onValueChange={handleToggleSound}
+                        trackColor={{ false: colors.glassBorder, true: colors.pitchGreen }}
+                    />
+                 </View>
+                 <SettingsRow
+                    icon={<Bell size={20} color={colors.pitchGreen} />}
+                    label="Test Morning Notif"
+                    onPress={() => handleTestNotification("morning")}
+                 />
+                 <SettingsRow
+                    icon={<Bell size={20} color={colors.cardYellow} />}
+                    label="Test Streak Notif"
+                    onPress={() => handleTestNotification("streak")}
+                 />
+                 <SettingsRow
+                    icon={<RotateCcw size={20} color={colors.pitchGreen} />}
+                    label="Reset Intros"
+                    onPress={handleResetAllIntros}
+                 />
+            </SettingsSection>
         )}
 
-        {/* App Version (tap 7 times for dev menu) */}
+        {/* Footer */}
         <Pressable style={styles.footer} onPress={handleVersionTap}>
           <Text style={styles.versionText}>Version {appVersion}</Text>
-          <Text style={styles.copyrightText}>
-            Football IQ {new Date().getFullYear()}
-          </Text>
+          <Text style={styles.copyrightText}>Football IQ {new Date().getFullYear()}</Text>
         </Pressable>
       </ScrollView>
 
-      {/* Modals */}
       <RateAppModal
         visible={rateModalVisible}
-        onClose={closeRateModal}
+        onClose={() => setRateModalVisible(false)}
         testID="rate-modal"
       />
     </SafeAreaView>
@@ -675,8 +496,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   headerTitle: {
-    ...textStyles.h1,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 40,
     color: colors.floodlightWhite,
+    includeFontPadding: false,
   },
   scrollView: {
     flex: 1,
@@ -685,20 +508,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing["3xl"],
   },
-  footer: {
+  profileCard: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingTop: spacing["2xl"],
-    paddingBottom: spacing.xl,
+    backgroundColor: colors.glassBackground,
+    borderColor: colors.glassBorder,
+    borderWidth: 1,
+    borderRadius: borderRadius.lg, // 12
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
   },
-  versionText: {
-    ...textStyles.bodySmall,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
+  avatarContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.glassBorder,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(88, 204, 2, 0.5)",
+    marginRight: spacing.lg,
   },
-  copyrightText: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-    opacity: 0.6,
+  avatarText: {
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 24,
+    color: colors.floodlightWhite,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 24,
+    color: colors.floodlightWhite,
+    marginBottom: 4,
+  },
+  badgeContainer: {
+    backgroundColor: "rgba(88, 204, 2, 0.2)",
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(88, 204, 2, 0.3)",
+    alignSelf: "flex-start",
+  },
+  badgeText: {
+    color: colors.pitchGreen,
+    fontSize: 10,
+    fontFamily: "Montserrat",
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   toggleRow: {
     flexDirection: "row",
@@ -720,5 +579,22 @@ const styles = StyleSheet.create({
     ...textStyles.body,
     color: colors.floodlightWhite,
     flex: 1,
+  },
+  footer: {
+    alignItems: "center",
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl,
+  },
+  versionText: {
+    fontFamily: "Montserrat",
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  copyrightText: {
+    fontFamily: "Montserrat",
+    fontSize: 10,
+    color: colors.textSecondary,
+    opacity: 0.6,
   },
 });

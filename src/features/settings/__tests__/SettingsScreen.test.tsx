@@ -117,6 +117,38 @@ jest.mock("lucide-react-native", () => ({
     const { View } = require("react-native");
     return <View testID={testID || "x-icon"} />;
   },
+  RotateCcw: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "rotate-ccw-icon"} />;
+  },
+  Bell: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "bell-icon"} />;
+  },
+  BellOff: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "bell-off-icon"} />;
+  },
+  UserX: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "user-x-icon"} />;
+  },
+  Lightbulb: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "lightbulb-icon"} />;
+  },
+  Volume2: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "volume-2-icon"} />;
+  },
+  VolumeX: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "volume-x-icon"} />;
+  },
+  Trash2: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "trash-2-icon"} />;
+  },
 }));
 
 // Mock expo-store-review
@@ -154,6 +186,15 @@ jest.mock("react-native-reanimated", () => {
   };
 });
 
+// Mock expo-router
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+  }),
+}));
+
 // Mock haptics
 jest.mock("@/hooks/useHaptics", () => ({
   useHaptics: () => ({
@@ -161,6 +202,93 @@ jest.mock("@/hooks/useHaptics", () => ({
     triggerSelection: jest.fn(),
     triggerNotification: jest.fn(),
   }),
+}));
+
+// Mock React Native Linking
+jest.mock("react-native/Libraries/Linking/Linking", () => ({
+  openURL: jest.fn(),
+  canOpenURL: jest.fn().mockResolvedValue(true),
+  openSettings: jest.fn(),
+}));
+
+// Mock Auth
+jest.mock("@/features/auth", () => ({
+  useAuth: () => ({
+    session: { user: { id: "test-user-id" } },
+    signOut: jest.fn(),
+  }),
+  useSubscriptionSync: () => ({
+    forceSync: jest.fn(),
+    restorePurchases: jest.fn(),
+  }),
+}));
+
+// Mock Profile
+jest.mock("@/features/auth/hooks/useProfile", () => ({
+  useProfile: () => ({
+    profile: { display_name: "Test Manager" },
+  }),
+}));
+
+// Mock Performance Stats
+jest.mock("@/features/stats/hooks/usePerformanceStats", () => ({
+  usePerformanceStats: () => ({
+    stats: { totalPuzzlesSolved: 5 },
+  }),
+}));
+
+// Mock IQ Rank
+jest.mock("@/features/home/hooks/useIQRank", () => ({
+  useIQRank: () => "Bench Warmer",
+}));
+
+// Mock Puzzles
+jest.mock("@/features/puzzles", () => ({
+  useOnboardingContext: () => ({
+    resetAllIntros: jest.fn(),
+  }),
+  usePuzzleContext: () => ({
+    refreshLocalPuzzles: jest.fn(),
+  }),
+}));
+
+// Mock Notifications
+jest.mock("@/features/notifications", () => ({
+  scheduleNotification: jest.fn(),
+  getMorningMessage: jest.fn().mockReturnValue({ title: "Morning", body: "Wake up" }),
+  getStreakSaverMessage: jest.fn().mockReturnValue({ title: "Streak", body: "Save it" }),
+  getPermissionStatus: jest.fn().mockResolvedValue("granted"),
+  requestPermissions: jest.fn().mockResolvedValue("granted"),
+}));
+
+// Mock Database
+jest.mock("@/lib/database", () => ({
+  deleteAttemptsByGameMode: jest.fn().mockResolvedValue(10),
+  clearAllLocalData: jest.fn(),
+}));
+
+// Mock Supabase
+jest.mock("@/lib/supabase", () => ({
+  supabase: {
+    from: () => ({
+      delete: () => ({
+        eq: jest.fn().mockResolvedValue({}),
+      }),
+    }),
+  },
+}));
+
+// Mock RevenueCat since it's used directly
+jest.mock("react-native-purchases", () => ({
+  restorePurchases: jest.fn(),
+}));
+
+// Mock PremiumUpsellBanner
+jest.mock("@/features/ads/components/PremiumUpsellBanner", () => ({
+  PremiumUpsellBanner: () => {
+    const { View } = require("react-native");
+    return <View testID="premium-upsell" />;
+  },
 }));
 
 describe("SettingsScreen", () => {
@@ -171,132 +299,72 @@ describe("SettingsScreen", () => {
   describe("rendering", () => {
     it("renders Settings title", () => {
       const { getByText } = render(<SettingsScreen />);
-
-      expect(getByText("Settings")).toBeTruthy();
+      expect(getByText("SETTINGS")).toBeTruthy();
     });
 
-    it("renders Privacy Policy row", () => {
+    it("renders Profile section with Test Manager", () => {
       const { getByText } = render(<SettingsScreen />);
-
-      expect(getByText("Privacy Policy")).toBeTruthy();
+      expect(getByText("Test Manager")).toBeTruthy();
+      expect(getByText(/Bench Warmer/i)).toBeTruthy();
     });
 
-    it("renders Terms of Service row", () => {
+    it("renders Subscription section header", () => {
       const { getByText } = render(<SettingsScreen />);
-
-      expect(getByText("Terms of Service")).toBeTruthy();
+      expect(getByText("SUBSCRIPTION")).toBeTruthy();
     });
 
-    it("renders Rate App row", () => {
+    it("renders Notifications section header", () => {
       const { getByText } = render(<SettingsScreen />);
-
-      expect(getByText("Rate App")).toBeTruthy();
-    });
-
-    it("renders app version at bottom", () => {
-      const { getByText } = render(<SettingsScreen />);
-
-      expect(getByText(/Version 1\.0\.0/)).toBeTruthy();
+      expect(getByText("NOTIFICATIONS")).toBeTruthy();
     });
 
     it("renders Legal section header", () => {
       const { getByText } = render(<SettingsScreen />);
-
-      expect(getByText("Legal")).toBeTruthy();
+      expect(getByText("LEGAL")).toBeTruthy();
     });
 
     it("renders Support section header", () => {
       const { getByText } = render(<SettingsScreen />);
+      expect(getByText("SUPPORT")).toBeTruthy();
+    });
 
-      expect(getByText("Support")).toBeTruthy();
+    it("renders Community section header", () => {
+      const { getByText } = render(<SettingsScreen />);
+      expect(getByText("COMMUNITY")).toBeTruthy();
+    });
+
+    it("renders Data section header", () => {
+      const { getByText } = render(<SettingsScreen />);
+      expect(getByText("DATA")).toBeTruthy();
     });
   });
 
-  describe("Privacy Policy modal", () => {
-    it("opens modal when Privacy Policy row pressed", async () => {
-      const { getByText, getByTestId } = render(<SettingsScreen />);
+  describe("Privacy Policy", () => {
+    it("opens URL when Privacy Policy row pressed", async () => {
+      const { getByText } = render(<SettingsScreen />);
+      const Linking = require("react-native").Linking;
 
       fireEvent.press(getByText("Privacy Policy"));
 
       await waitFor(() => {
-        expect(getByTestId("legal-modal")).toBeTruthy();
-      });
-    });
-
-    it("displays privacy policy content in modal", async () => {
-      const { getAllByText, getByTestId } = render(<SettingsScreen />);
-
-      // Find the row by text (first match) and press it
-      fireEvent.press(getAllByText("Privacy Policy")[0]);
-
-      await waitFor(() => {
-        // Modal should be visible and show privacy policy content
-        expect(getByTestId("legal-modal")).toBeTruthy();
-      });
-    });
-
-    it("closes modal when close button pressed", async () => {
-      const { getByText, getByTestId, queryByTestId } = render(
-        <SettingsScreen />,
-      );
-
-      // Open modal
-      fireEvent.press(getByText("Privacy Policy"));
-
-      await waitFor(() => {
-        expect(getByTestId("legal-modal")).toBeTruthy();
-      });
-
-      // Close modal
-      fireEvent.press(getByTestId("legal-modal-close"));
-
-      await waitFor(() => {
-        expect(queryByTestId("legal-modal")).toBeNull();
-      });
-    });
-  });
-
-  describe("Terms of Service modal", () => {
-    it("opens modal when Terms of Service row pressed", async () => {
-      const { getByText, getByTestId } = render(<SettingsScreen />);
-
-      fireEvent.press(getByText("Terms of Service"));
-
-      await waitFor(() => {
-        expect(getByTestId("legal-modal")).toBeTruthy();
-      });
-    });
-
-    it("displays terms content in modal", async () => {
-      const { getByText, getAllByText } = render(<SettingsScreen />);
-
-      fireEvent.press(getByText("Terms of Service"));
-
-      await waitFor(() => {
-        // Should have Terms of Service text (row label + modal title)
-        expect(getAllByText("Terms of Service").length).toBeGreaterThanOrEqual(
-          1,
+        expect(Linking.openURL).toHaveBeenCalledWith(
+          "https://football-iq.app/privacy"
         );
       });
     });
+  });
 
-    it("closes modal when close button pressed", async () => {
-      const { getByText, getByTestId, queryByTestId } = render(
-        <SettingsScreen />,
-      );
+  describe("Terms of Service", () => {
+    it("opens URL when Terms of Service row pressed", async () => {
+      const { getByText } = render(<SettingsScreen />);
+      const Linking = require("react-native").Linking;
 
-      // Open modal
       fireEvent.press(getByText("Terms of Service"));
 
       await waitFor(() => {
-        expect(getByTestId("legal-modal")).toBeTruthy();
-      });
-
-      // Close modal
-      fireEvent.press(getByTestId("legal-modal-close"));
-
-      await waitFor(() => {
-        expect(queryByTestId("legal-modal")).toBeNull();
+        expect(Linking.openURL).toHaveBeenCalledWith(
+          "https://football-iq.app/terms"
+        );
       });
     });
   });
