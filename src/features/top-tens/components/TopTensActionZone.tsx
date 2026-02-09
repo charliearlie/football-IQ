@@ -1,10 +1,9 @@
 /**
  * TopTensActionZone - Input and action buttons for Top Tens.
  *
- * Layout:
- * - Input field + Submit button (inline row)
- * - Feedback messages (duplicate/incorrect)
- * - Give Up text link (red, subtle)
+ * Stadium Night layout:
+ * - Playing: Stats row, input + guess button, feedback, give up link
+ * - Game Over: Stats row, "See how you scored" button
  */
 
 import { useEffect } from 'react';
@@ -35,7 +34,9 @@ export interface TopTensActionZoneProps {
   onSubmit: () => void;
   /** Handler for giving up */
   onGiveUp: () => void;
-  /** Number of answers found (0-10) */
+  /** Handler to view score breakdown */
+  onSeeScore: () => void;
+  /** Number of answers found by user (0-10) */
   foundCount: number;
   /** Whether to trigger shake animation (incorrect guess) */
   shouldShake: boolean;
@@ -52,6 +53,7 @@ export function TopTensActionZone({
   onGuessChange,
   onSubmit,
   onGiveUp,
+  onSeeScore,
   foundCount,
   shouldShake,
   showDuplicate,
@@ -84,52 +86,70 @@ export function TopTensActionZone({
 
   return (
     <View style={styles.container} testID={testID}>
-      {/* Input + Submit inline row */}
-      <View style={styles.inputRow}>
-        <Animated.View style={[styles.inputContainer, shakeStyle]}>
-          <TextInput
-            style={styles.input}
-            value={currentGuess}
-            onChangeText={onGuessChange}
-            placeholder="Enter your guess..."
-            placeholderTextColor={colors.textSecondary}
-            editable={!isGameOver}
-            autoCapitalize="words"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={handleSubmit}
-            testID={`${testID}-input`}
-          />
-        </Animated.View>
-        <ElevatedButton
-          title="Submit"
-          onPress={handleSubmit}
-          disabled={isGameOver || !currentGuess.trim()}
-          size="medium"
-          testID={`${testID}-submit`}
-        />
+      {/* Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statsLeft}>
+          <View style={styles.greenDot} />
+          <Text style={styles.statsText}>{foundCount}/10 FOUND</Text>
+        </View>
       </View>
 
-      {/* Feedback messages */}
-      {showDuplicate && (
-        <Text style={styles.duplicateText}>Already found!</Text>
-      )}
-      {shouldShake && !showDuplicate && (
-        <Text style={styles.incorrectText}>Incorrect!</Text>
-      )}
+      {isGameOver ? (
+        /* Game Over: "See how you scored" button */
+        <ElevatedButton
+          title="See how you scored"
+          onPress={onSeeScore}
+          fullWidth
+          testID={`${testID}-score-button`}
+        />
+      ) : (
+        <>
+          {/* Input + Guess inline row */}
+          <View style={styles.inputRow}>
+            <Animated.View style={[styles.inputContainer, shakeStyle]}>
+              <TextInput
+                style={styles.input}
+                value={currentGuess}
+                onChangeText={onGuessChange}
+                placeholder="ENTER PLAYER NAME..."
+                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                autoCapitalize="words"
+                autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit}
+                testID={`${testID}-input`}
+              />
+            </Animated.View>
+            <ElevatedButton
+              title="GUESS"
+              onPress={handleSubmit}
+              disabled={!currentGuess.trim()}
+              size="medium"
+              borderRadius={borderRadius.lg}
+              testID={`${testID}-submit`}
+            />
+          </View>
 
-      {/* Give Up - red text link */}
-      {!isGameOver && (
-        <Pressable
-          onPress={onGiveUp}
-          style={({ pressed }) => [
-            styles.giveUpLink,
-            pressed && styles.giveUpLinkPressed,
-          ]}
-          testID={`${testID}-giveup`}
-        >
-          <Text style={styles.giveUpText}>Give up</Text>
-        </Pressable>
+          {/* Feedback messages */}
+          {showDuplicate && (
+            <Text style={styles.duplicateText}>Already found!</Text>
+          )}
+          {shouldShake && !showDuplicate && (
+            <Text style={styles.incorrectText}>Incorrect!</Text>
+          )}
+
+          {/* Give Up - red text link */}
+          <Pressable
+            onPress={onGiveUp}
+            style={({ pressed }) => [
+              styles.giveUpLink,
+              pressed && styles.giveUpLinkPressed,
+            ]}
+            testID={`${testID}-giveup`}
+          >
+            <Text style={styles.giveUpText}>Give up</Text>
+          </Pressable>
+        </>
       )}
     </View>
   );
@@ -139,10 +159,36 @@ const styles = StyleSheet.create({
   container: {
     padding: spacing.lg,
     paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
-    backgroundColor: colors.stadiumNavy,
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     gap: spacing.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  statsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  greenDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.pitchGreen,
+  },
+  statsText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.6)',
+    letterSpacing: 1.5,
   },
   inputRow: {
     flexDirection: 'row',
@@ -151,10 +197,10 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    borderColor: colors.glassBorder,
-    backgroundColor: colors.glassBackground,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     overflow: 'hidden',
     justifyContent: 'center',
   },
@@ -162,7 +208,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 18,
     color: colors.floodlightWhite,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     letterSpacing: 0.5,
     textAlignVertical: 'center',

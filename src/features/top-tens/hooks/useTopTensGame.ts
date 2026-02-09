@@ -71,6 +71,7 @@ export function topTensReducer(state: TopTensState, action: TopTensAction): TopT
       newRankSlots[action.payload.rankIndex] = {
         ...newRankSlots[action.payload.rankIndex],
         found: true,
+        autoRevealed: false,
         answer: action.payload.answer,
       };
 
@@ -121,10 +122,11 @@ export function topTensReducer(state: TopTensState, action: TopTensAction): TopT
       };
 
     case 'GIVE_UP': {
-      // Reveal all remaining answers
+      // Reveal all remaining answers, marking unfound as auto-revealed
       const revealedSlots = state.rankSlots.map((slot, i) => ({
         ...slot,
         found: true,
+        autoRevealed: !slot.found,
         answer: action.payload.content.answers[i],
       }));
 
@@ -145,11 +147,14 @@ export function topTensReducer(state: TopTensState, action: TopTensAction): TopT
       };
 
     case 'RESTORE_PROGRESS': {
-      // Restore found indices
+      // Restore found indices and fill in answers from puzzle content
       const restoredSlots = state.rankSlots.map((slot, i) => ({
         ...slot,
         found: action.payload.foundIndices.includes(i),
-        // Note: answer will be filled in by the hook after restoration
+        autoRevealed: false,
+        answer: action.payload.foundIndices.includes(i)
+          ? action.payload.answers[i] ?? null
+          : null,
       }));
 
       return {
@@ -174,6 +179,7 @@ export function topTensReducer(state: TopTensState, action: TopTensAction): TopT
         rankSlots: Array.from({ length: 10 }, (_, i) => ({
           rank: i + 1,
           found: false,
+          autoRevealed: false,
           answer: null,
         })),
         foundCount: 0,
@@ -204,6 +210,7 @@ function createInitialGameState(): TopTensState {
     rankSlots: Array.from({ length: 10 }, (_, i) => ({
       rank: i + 1,
       found: false,
+      autoRevealed: false,
       answer: null,
     })),
     foundCount: 0,
@@ -276,20 +283,8 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
                 startedAt: metadata.startedAt || existingAttempt.started_at || new Date().toISOString(),
                 foundIndices: metadata.foundIndices,
                 wrongGuessCount: metadata.wrongGuessCount || 0,
+                answers: puzzleContent.answers,
               },
-            });
-
-            // Fill in the answers for found indices
-            metadata.foundIndices.forEach((index) => {
-              if (puzzleContent.answers[index]) {
-                dispatch({
-                  type: 'CORRECT_GUESS',
-                  payload: {
-                    rankIndex: index as RankIndex,
-                    answer: puzzleContent.answers[index],
-                  },
-                });
-              }
             });
           }
         }

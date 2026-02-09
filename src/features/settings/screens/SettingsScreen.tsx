@@ -26,6 +26,7 @@ import {
   RotateCcw,
   UserX,
   Lightbulb,
+  Trash2,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
@@ -462,6 +463,11 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
                     icon={<RotateCcw size={20} color={colors.pitchGreen} />}
                     label="Reset Intros"
                     onPress={handleResetAllIntros}
+                 />
+                 <SettingsRow
+                    icon={<Trash2 size={20} color={colors.redCard} />}
+                    label="Clear Top Tens Data"
+                    onPress={() => handleClearAttempts("top_tens", "Top Tens")}
                  />
             </SettingsSection>
         )}

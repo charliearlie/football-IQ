@@ -45,6 +45,8 @@ export interface RankSlotState {
   rank: number;
   /** Whether this slot has been found/revealed */
   found: boolean;
+  /** Whether this slot was auto-revealed on give up (not guessed by user) */
+  autoRevealed: boolean;
   /** The answer (revealed when found) */
   answer: TopTensAnswer | null;
 }
@@ -125,6 +127,8 @@ export interface RestoreProgressPayload {
   /** Indices of found answers (0-9) */
   foundIndices: number[];
   wrongGuessCount: number;
+  /** Full answers array from puzzle content, used to fill in found slots */
+  answers: TopTensAnswer[];
 }
 
 /**
@@ -179,6 +183,7 @@ export function createInitialState(): TopTensState {
     rankSlots: Array.from({ length: 10 }, (_, i) => ({
       rank: i + 1,
       found: false,
+      autoRevealed: false,
       answer: null,
     })),
     foundCount: 0,

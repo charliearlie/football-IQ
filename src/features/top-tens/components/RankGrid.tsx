@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { spacing, layout } from '@/theme';
 import { RankSlotState } from '../types/topTens.types';
 import { RankCard, HighlightType } from './RankCard';
@@ -145,20 +145,23 @@ export function RankGrid({
   }, [isClimbing, climbTargetRank, onClimbComplete]);
 
   return (
-    <View style={styles.container} testID={testID}>
-      <View style={styles.grid}>
-        {rankSlots.map((slot, index) => (
-          <RankCard
-            key={slot.rank}
-            slot={slot}
-            isLatest={index === latestFoundIndex && !isClimbing}
-            isHighlighted={index === highlightIndex}
-            highlightType={index === highlightIndex ? highlightType : null}
-            testID={`${testID}-rank-${slot.rank}`}
-          />
-        ))}
-      </View>
-    </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.grid}
+      showsVerticalScrollIndicator={false}
+      testID={testID}
+    >
+      {rankSlots.map((slot, index) => (
+        <RankCard
+          key={slot.rank}
+          slot={slot}
+          isLatest={index === latestFoundIndex && !isClimbing}
+          isHighlighted={index === highlightIndex}
+          highlightType={index === highlightIndex ? highlightType : null}
+          testID={`${testID}-rank-${slot.rank}`}
+        />
+      ))}
+    </ScrollView>
   );
 }
 
@@ -169,7 +172,7 @@ const styles = StyleSheet.create({
   },
   grid: {
     flex: 1,
-    gap: spacing.xs,
+    gap: 6,
     paddingVertical: spacing.sm,
   },
 });

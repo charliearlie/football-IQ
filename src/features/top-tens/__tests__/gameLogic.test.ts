@@ -407,6 +407,7 @@ describe('topTensReducer', () => {
           startedAt: '2024-01-01T00:00:00Z',
           foundIndices: [0, 2, 5],
           wrongGuessCount: 3,
+          answers: mockPuzzleContent.answers,
         },
       };
 
@@ -428,6 +429,7 @@ describe('topTensReducer', () => {
           startedAt: '2024-01-01T00:00:00Z',
           foundIndices: [1],
           wrongGuessCount: 2,
+          answers: mockPuzzleContent.answers,
         },
       };
 
@@ -446,6 +448,7 @@ describe('topTensReducer', () => {
           startedAt: '2024-01-01T00:00:00Z',
           foundIndices: [],
           wrongGuessCount: 7,
+          answers: mockPuzzleContent.answers,
         },
       };
 

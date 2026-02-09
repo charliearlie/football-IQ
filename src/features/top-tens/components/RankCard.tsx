@@ -2,8 +2,10 @@
  * RankCard - Displays a single rank slot in the Top Tens grid.
  *
  * States:
- * - Hidden: Shows rank number with muted styling
- * - Found: Shows answer name with green glow background
+ * - Hidden: Glass background with muted rank number
+ * - Found (rank > 1): Solid pitch green, navy text
+ * - Found (rank 1): Solid gold, navy text
+ * - Auto-revealed (give up): Blue background, white text
  * - Highlighted: Full illumination during climbing animation
  */
 
@@ -18,7 +20,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { colors, textStyles, borderRadius, glows } from '@/theme';
+import { colors, textStyles, borderRadius, glows, fonts } from '@/theme';
 import { RankSlotState } from '../types/topTens.types';
 
 /** Highlight type during climbing animation */
@@ -40,10 +42,11 @@ export interface RankCardProps {
 /**
  * RankCard - A single rank in the Top Tens grid.
  *
- * Compact design with full-card illumination effects:
- * - Hidden state: Dark background with muted rank number
- * - Found state: Green glow background
- * - Climbing highlight: Full green illumination
+ * Stadium Night design with left-aligned row layout:
+ * - Hidden state: Glass background with muted rank number
+ * - Found state: Solid green (or gold for #1) with name + stat
+ * - Auto-revealed state: Blue background with white text (give-up)
+ * - Climbing highlight: Full-card illumination
  * - Error flash: Red illumination
  */
 export function RankCard({
@@ -53,6 +56,8 @@ export function RankCard({
   highlightType,
   testID,
 }: RankCardProps) {
+  const isGold = slot.rank === 1;
+
   // Animation values
   const highlightOpacity = useSharedValue(0);
   const cardScale = useSharedValue(1);
@@ -109,7 +114,7 @@ export function RankCard({
     transform: [{ scale: cardScale.value }],
   }));
 
-  // Animated styles for content reveal
+  // Animated styles for content reveal (name + stat)
   const contentAnimatedStyle = useAnimatedStyle(() => ({
     opacity: revealProgress.value,
     transform: [
@@ -126,20 +131,36 @@ export function RankCard({
 
   // Determine highlight color based on type
   const highlightColor =
-    highlightType === 'error' ? colors.redCard : colors.pitchGreen;
+    highlightType === 'error'
+      ? colors.redCard
+      : isGold
+        ? colors.cardYellow
+        : colors.pitchGreen;
+
+  // Text color depends on found state
+  const isAutoRevealed = slot.found && slot.autoRevealed;
+  const textColor = isAutoRevealed ? colors.floodlightWhite : colors.stadiumNavy;
 
   // Build card style based on state
   const getCardStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = { ...styles.card };
 
-    if (slot.found) {
-      // Found cards have permanent green glow
+    if (slot.found && slot.autoRevealed) {
+      // Auto-revealed on give up — dark navy with subtle white border
       return {
         ...baseStyle,
-        backgroundColor: 'rgba(34, 197, 94, 0.2)',
-        borderColor: colors.pitchGreen,
-        borderWidth: 1.5,
-        ...glows.green,
+        backgroundColor: colors.stadiumNavy,
+        borderColor: 'rgba(255, 255, 255, 0.25)',
+      };
+    }
+
+    if (slot.found) {
+      const glow = isGold ? glows.yellow : glows.green;
+      return {
+        ...baseStyle,
+        backgroundColor: isGold ? colors.cardYellow : colors.pitchGreen,
+        borderColor: isGold ? colors.cardYellow : colors.pitchGreen,
+        ...glow,
         shadowOpacity: isLatest ? 0.7 : 0.4,
         shadowRadius: isLatest ? 14 : 8,
       };
@@ -161,16 +182,32 @@ export function RankCard({
           pointerEvents="none"
         />
 
-        {/* Card content - centered rank number OR answer name */}
-        {slot.found && slot.answer ? (
+        {/* Rank number - always visible */}
+        <Text
+          style={[
+            styles.rankNumber,
+            slot.found && !isAutoRevealed && styles.rankNumberFound,
+            isAutoRevealed && styles.rankNumberAutoRevealed,
+          ]}
+        >
+          {slot.rank}
+        </Text>
+
+        {/* Player name - revealed on find */}
+        <Animated.View style={[styles.nameContainer, contentAnimatedStyle]}>
+          <Text style={[styles.answerName, { color: textColor }]} numberOfLines={1}>
+            {slot.answer?.name?.toUpperCase() ?? ''}
+          </Text>
+        </Animated.View>
+
+        {/* Stat badge - revealed on find */}
+        {slot.answer?.info && (
           <Animated.Text
-            style={[styles.answerName, contentAnimatedStyle]}
+            style={[styles.statBadge, { color: textColor }, contentAnimatedStyle]}
             numberOfLines={1}
           >
-            {slot.answer.name}
+            {slot.answer.info}
           </Animated.Text>
-        ) : (
-          <Text style={styles.rankNumber}>{slot.rank}</Text>
         )}
       </View>
     </Animated.View>
@@ -185,35 +222,53 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    paddingHorizontal: 16,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.glassBackground,
     borderWidth: 1,
     borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   highlightOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     opacity: 0.3,
   },
   rankNumber: {
-    ...textStyles.h3,
-    color: colors.textSecondary,
-    textAlign: 'center',
+    fontFamily: fonts.headline,
+    fontSize: 20,
+    lineHeight: 28,
+    color: 'rgba(255, 255, 255, 0.3)',
+    width: 32,
     includeFontPadding: false,
     textAlignVertical: 'center',
-    marginTop: -2, // Optical adjustment for visual centering
+  },
+  rankNumberFound: {
+    color: 'rgba(15, 23, 42, 0.5)',
+  },
+  rankNumberAutoRevealed: {
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  nameContainer: {
+    flex: 1,
   },
   answerName: {
-    ...textStyles.h3,
-    color: colors.text,
-    textAlign: 'center',
+    fontFamily: fonts.headline,
+    fontSize: 18,
+    lineHeight: 24,
+    color: colors.stadiumNavy,
+    letterSpacing: 0.5,
     includeFontPadding: false,
     textAlignVertical: 'center',
-    marginTop: -2, // Optical adjustment for visual centering
+  },
+  statBadge: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.stadiumNavy,
+    opacity: 0.6,
+    includeFontPadding: false,
   },
 });

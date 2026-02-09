@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Football IQ - Top Tens Ultimate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pitch: '#58CC02',
+                        pitchShadow: '#46A302',
+                        navy: '#0F172A',
+                        white: '#F8FAFC',
+                        gold: '#FACC15',
+                        red: '#EF4444',
+                        glass: 'rgba(255, 255, 255, 0.05)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    fontFamily: {
+                        bebas: ['"Bebas Neue"', 'sans-serif'],
+                        montserrat: ['"Montserrat"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        '3d': '0 4px 0 #46A302',
+                        '3d-pressed': '0 0 0 #46A302',
+                        'glow': '0 0 15px rgba(88, 204, 2, 0.5)',
+                        'gold-glow': '0 0 20px rgba(250, 204, 21, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0F172A;
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0F172A 60%);
+            color: #F8FAFC;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Scrollbar for the list */
+        .scroller::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scroller::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+        }
+        .scroller::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        /* Animation Keyframes */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .shake-anim { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .pop-anim { animation: pop 0.3s ease-out; }
+
+        /* The flying element style */
+        .flying-guess {
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="flex flex-col font-montserrat">
+
+    <!-- Top Bar -->
+    <header class="flex-none px-4 pt-4 pb-2 z-10">
+        <div class="flex justify-between items-center mb-4">
+            <button class="w-10 h-10 rounded-full glass-panel flex items-center justify-center active:scale-95 transition">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            
+            <div class="bg-gold text-navy font-bebas px-4 py-1 rounded-full text-sm tracking-wider shadow-gold-glow">
+                TOP TENS
+            </div>
+
+            <button class="w-10 h-10 rounded-full glass-panel flex items-center justify-center active:scale-95 transition">
+                <span class="font-bold text-lg">?</span>
+            </button>
+        </div>
+
+        <div class="text-center">
+            <div class="text-xs font-bold text-white/50 tracking-[0.2em] mb-1 uppercase">Aston Villa</div>
+            <h1 class="font-bebas text-3xl leading-none tracking-wide text-white drop-shadow-lg">
+                PL APPEARANCE MAKERS
+            </h1>
+        </div>
+    </header>
+
+    <!-- Game Board (The Tower) -->
+    <main class="flex-grow relative overflow-hidden flex flex-col items-center justify-center w-full max-w-md mx-auto px-4 pb-2">
+        <div id="game-list" class="scroller w-full h-full overflow-y-auto space-y-1.5 py-2 pr-1">
+            <!-- Slots will be injected here by JS -->
+        </div>
+    </main>
+
+    <!-- Bottom Controls -->
+    <footer class="flex-none glass-panel border-t border-white/10 rounded-t-3xl shadow-2xl z-20">
+        <div class="p-4 max-w-md mx-auto w-full">
+            
+            <!-- Stats Row -->
+            <div class="flex justify-between items-center mb-3 px-2 text-xs font-bold tracking-wider text-white/60">
+                <div class="flex items-center gap-2">
+                    <span class="text-pitch">●</span> <span id="found-count">2</span>/10 FOUND
+                </div>
+                <div class="flex items-center gap-1">
+                    LIVES <span class="text-red-500 text-sm">❤❤❤</span>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="flex gap-2 h-14 relative">
+                <input type="text" id="guess-input" 
+                    class="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 font-bebas text-xl text-white placeholder-white/30 outline-none focus:border-pitch focus:bg-white/15 transition-all uppercase tracking-wide"
+                    placeholder="ENTER PLAYER NAME..." 
+                    autocomplete="off"
+                >
+                <button id="submit-btn" 
+                    class="bg-pitch text-navy font-bebas text-xl px-6 rounded-xl shadow-3d active:shadow-3d-pressed active:translate-y-[4px] transition-all uppercase tracking-wide min-w-[100px]">
+                    GUESS
+                </button>
+            </div>
+            
+            <!-- Dev Helper (Optional, for demo) -->
+            <button onclick="revealRandom()" class="w-full text-center text-white/20 text-[10px] mt-3 font-mono hover:text-white/50 transition">
+                [DEV: REVEAL RANDOM ANSWER]
+            </button>
+        </div>
+    </footer>
+
+    <!-- Audio Elements (Optional) -->
+    <!-- <audio id="sfx-success" src="..."></audio> -->
+
+    <script>
+        // Game Data
+        const gameData = [
+            { rank: 1, name: "Gareth Barry", matches: 365 },
+            { rank: 2, name: "Gabby Agbonlahor", matches: 322 },
+            { rank: 3, name: "Dwight Yorke", matches: 232 },
+            { rank: 4, name: "Olof Mellberg", matches: 232 },
+            { rank: 5, name: "Lee Hendrie", matches: 251 },
+            { rank: 6, name: "Thomas Sorensen", matches: 139 },
+            { rank: 7, name: "Jlloyd Samuel", matches: 169 },
+            { rank: 8, name: "Ashley Westwood", matches: 124 },
+            { rank: 9, name: "Brad Friedel", matches: 114 },
+            { rank: 10, name: "Dion Dublin", matches: 155 }
+        ];
+
+        // State
+        const foundSet = new Set();
+        // Pre-fill the first two answers
+        foundSet.add(1);
+        foundSet.add(2);
+
+        const listContainer = document.getElementById('game-list');
+        const input = document.getElementById('guess-input');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // Initialize Board
+        function initBoard() {
+            listContainer.innerHTML = '';
+            gameData.forEach(item => {
+                const isFound = foundSet.has(item.rank);
+                const slot = document.createElement('div');
+                // Added 'found' class if already in the set
+                slot.className = `slot-row w-full h-11 flex items-center rounded-lg relative transition-all duration-300 group ${isFound ? 'found' : ''}`;
+                slot.dataset.rank = item.rank;
+                slot.dataset.name = item.name.toUpperCase();
+                
+                // Determine styling based on state (for demo, we start empty)
+                const isGold = item.rank === 1;
+                
+                slot.innerHTML = `
+                    <!-- Content Area (Unified) -->
+                    <div class="flex-1 h-full flex items-center px-4 relative overflow-hidden rounded-lg border border-white/10 group-[.found]:border-none transition-all">
+                        
+                        <!-- Empty State Background -->
+                        <div class="absolute inset-0 glass-panel group-[.found]:opacity-0 transition-opacity duration-500"></div>
+                        
+                        <!-- Filled State Background -->
+                        <div class="absolute inset-0 ${isGold ? 'bg-gold shadow-gold-glow' : 'bg-pitch shadow-glow'} opacity-0 group-[.found]:opacity-100 transition-opacity duration-300 transform scale-95 group-[.found]:scale-100 origin-center"></div>
+
+                        <!-- Rank Number (Inside) -->
+                        <span class="relative z-10 w-8 font-bebas text-xl text-white/30 group-[.found]:text-navy/50 transition-colors duration-300">
+                            ${item.rank}
+                        </span>
+
+                        <!-- Player Name Text -->
+                        <span class="relative z-10 flex-1 font-bebas text-lg tracking-wide opacity-0 group-[.found]:opacity-100 transition-all duration-500 translate-y-2 group-[.found]:translate-y-0 text-navy">
+                            ${item.name.toUpperCase()}
+                        </span>
+                        
+                        <!-- Stats Badge -->
+                         <span class="relative z-10 font-montserrat text-xs font-bold opacity-0 group-[.found]:opacity-60 transition-all duration-700 delay-100 text-navy">
+                            ${item.matches}
+                        </span>
+                    </div>
+                `;
+                listContainer.appendChild(slot);
+            });
+            updateStats();
+        }
+
+        // Handle Guess Logic
+        function handleGuess() {
+            const guess = input.value.trim().toLowerCase();
+            if (!guess) return;
+
+            const target = gameData.find(p => p.name.toLowerCase() === guess || p.name.toLowerCase().includes(guess));
+            
+            if (target) {
+                if (foundSet.has(target.rank)) {
+                    triggerShake("ALREADY FOUND!");
+                } else {
+                    triggerSuccess(target);
+                }
+            } else {
+                triggerError();
+            }
+            
+            input.value = '';
+            input.focus();
+        }
+
+        // Animation Logic: Flying Pill
+        function triggerSuccess(targetItem) {
+            foundSet.add(targetItem.rank);
+            const targetSlot = document.querySelector(`.slot-row[data-rank="${targetItem.rank}"]`);
+            
+            // 1. Create flying element
+            const rectInput = input.getBoundingClientRect();
+            const rectSlot = targetSlot.getBoundingClientRect();
+            
+            const flyer = document.createElement('div');
+            const isGold = targetItem.rank === 1;
+            
+            flyer.className = `flying-guess fixed z-50 flex items-center justify-start font-bebas text-lg text-navy rounded-lg uppercase tracking-wide px-4 shadow-xl`;
+            flyer.style.backgroundColor = isGold ? '#FACC15' : '#58CC02';
+            flyer.style.height = rectInput.height + 'px';
+            flyer.style.width = rectInput.width + 'px';
+            flyer.style.top = rectInput.top + 'px';
+            flyer.style.left = rectInput.left + 'px';
+            flyer.textContent = targetItem.name;
+
+            document.body.appendChild(flyer);
+
+            // 2. Animate
+            requestAnimationFrame(() => {
+                flyer.style.top = rectSlot.top + 'px';
+                flyer.style.left = rectSlot.left + 'px'; 
+                flyer.style.width = rectSlot.width + 'px';
+                flyer.style.height = rectSlot.height + 'px';
+            });
+
+            // 3. On arrival
+            setTimeout(() => {
+                flyer.remove();
+                targetSlot.classList.add('found');
+                targetSlot.classList.add('pop-anim');
+                updateStats();
+            }, 600);
+        }
+
+        function triggerError() {
+            const container = input.parentElement;
+            container.classList.add('shake-anim');
+            input.classList.add('border-red-500', 'text-red-500');
+            
+            setTimeout(() => {
+                container.classList.remove('shake-anim');
+                input.classList.remove('border-red-500', 'text-red-500');
+            }, 400);
+        }
+
+        function triggerShake(msg) {
+            // Simple visual feedback for duplicates
+            triggerError(); 
+        }
+
+        function updateStats() {
+            document.getElementById('found-count').textContent = foundSet.size;
+        }
+
+        // Dev Helper
+        function revealRandom() {
+            const available = gameData.filter(d => !foundSet.has(d.rank));
+            if (available.length > 0) {
+                const random = available[Math.floor(Math.random() * available.length)];
+                input.value = random.name;
+                handleGuess();
+            }
+        }
+
+        // Event Listeners
+        submitBtn.addEventListener('click', handleGuess);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleGuess();
+        });
+
+        // Initialize
+        initBoard();
+
+    </script>
+</body>
+</html>

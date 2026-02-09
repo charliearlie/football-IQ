@@ -7,7 +7,7 @@
  * Premium-only game mode.
  */
 
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useStablePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
@@ -19,7 +19,6 @@ import {
   ReviewModeBanner,
   ReviewModeActionZone,
 } from '@/components';
-import { AdBanner } from '@/features/ads';
 import { useTopTensGame } from '../hooks/useTopTensGame';
 import { RankGrid } from '../components/RankGrid';
 import { RankCard } from '../components/RankCard';
@@ -62,6 +61,7 @@ export function TopTensScreen({
   const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('top_tens');
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
 
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'top_tens');
   const {
@@ -103,12 +103,25 @@ export function TopTensScreen({
 
   const handleGiveUpConfirm = useCallback(() => {
     setShowGiveUpModal(false);
-    giveUp();
+    // Delay giveUp to let ConfirmationModal dismiss first
+    setTimeout(() => giveUp(), 350);
   }, [giveUp]);
 
   const handleGiveUpCancel = useCallback(() => {
     setShowGiveUpModal(false);
   }, []);
+
+  const handleSeeScore = useCallback(() => {
+    setShowResultModal(true);
+  }, []);
+
+  // Auto-show result modal on win (after a brief celebration delay)
+  useEffect(() => {
+    if (state.gameStatus === 'won') {
+      const timer = setTimeout(() => setShowResultModal(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [state.gameStatus]);
 
   // Onboarding loading state (prevent flash)
   if (!isOnboardingReady) {
@@ -182,6 +195,7 @@ export function TopTensScreen({
     const reviewSlots = puzzleContent.answers.map((answer, i) => ({
       rank: i + 1,
       found: reviewMetadata?.foundIndices.includes(i) ?? false,
+      autoRevealed: !(reviewMetadata?.foundIndices.includes(i) ?? false),
       answer,
     }));
 
@@ -243,10 +257,10 @@ export function TopTensScreen({
     >
       {/* Puzzle title */}
       <View style={styles.titleContainer}>
-        <Text style={styles.puzzleTitle}>{puzzleContent.title}</Text>
         {puzzleContent.category && (
           <Text style={styles.puzzleCategory}>{puzzleContent.category}</Text>
         )}
+        <Text style={styles.puzzleTitle}>{puzzleContent.title}</Text>
       </View>
 
       {/* Rank Grid */}
@@ -259,10 +273,10 @@ export function TopTensScreen({
         testID="rank-grid"
       />
 
-      {/* Game Result Modal */}
+      {/* Game Result Modal (shown on demand via "See how you scored") */}
       {state.score && (
         <TopTensResultModal
-          visible={isGameOver}
+          visible={showResultModal}
           won={state.gameStatus === 'won'}
           score={state.score}
           rankSlots={state.rankSlots}
@@ -280,7 +294,8 @@ export function TopTensScreen({
         onGuessChange={setCurrentGuess}
         onSubmit={submitGuess}
         onGiveUp={handleGiveUpPress}
-        foundCount={state.foundCount}
+        onSeeScore={handleSeeScore}
+        foundCount={state.rankSlots.filter(s => s.found && !s.autoRevealed).length}
         shouldShake={state.lastGuessIncorrect}
         showDuplicate={state.lastGuessDuplicate}
         isGameOver={isGameOver || isClimbing}
@@ -295,9 +310,6 @@ export function TopTensScreen({
         onCancel={handleGiveUpCancel}
         testID="give-up-modal"
       />
-
-      {/* Banner Ad (non-premium only) */}
-      <AdBanner testID="top-tens-ad-banner" />
 
       {/* Help Modal */}
       <GameIntroModal
@@ -339,7 +351,7 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
   reviewContent: {
     paddingHorizontal: layout.screenPadding,
