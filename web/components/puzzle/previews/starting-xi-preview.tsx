@@ -4,6 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import type { StartingXIContent } from "@/lib/schemas";
 import { getFormationDefaultCoords } from "@/lib/schemas/puzzle-defaults";
 
+interface StartingXIPreviewProps {
+  content: unknown;
+}
+
 export function StartingXIPreview({ content }: StartingXIPreviewProps) {
   const data = content as StartingXIContent;
 
