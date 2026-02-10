@@ -36,8 +36,6 @@ import { ActionZone } from "../components/ActionZone";
 import { GameOverActionZone } from "../components/GameOverActionZone";
 import { GameResultModal } from "../components/GameResultModal";
 import { ScoutingDisclaimer } from "../components/ScoutingDisclaimer";
-import { ReportErrorSheet, ReportType } from "../components/ReportErrorSheet";
-import { submitReport } from "../services/reportService";
 import { CareerStep } from "../types/careerPath.types";
 import { AdBanner } from "@/features/ads";
 
@@ -149,9 +147,6 @@ export function CareerPathScreen({
   const [showResultModal, setShowResultModal] = useState(false);
   const [viewingFullPath, setViewingFullPath] = useState(false);
 
-  // Report error sheet state
-  const [showReportSheet, setShowReportSheet] = useState(false);
-
   // Give up confirmation modal state
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
@@ -259,29 +254,15 @@ export function CareerPathScreen({
     setShowGiveUpModal(false);
   }, []);
 
-  // Report error handlers
+  // Report error handler - navigate to native formSheet
   const handleOpenReportSheet = useCallback(() => {
-    setShowReportSheet(true);
-  }, []);
-
-  const handleCloseReportSheet = useCallback(() => {
-    setShowReportSheet(false);
-  }, []);
-
-  const handleSubmitReport = useCallback(
-    async (reportType: ReportType, comment?: string) => {
-      if (!puzzle?.id) return;
-      const result = await submitReport(puzzle.id, reportType, comment);
-      if (!result.success) {
-        console.error(
-          "[CareerPathScreen] Report submission failed:",
-          result.error,
-        );
-        throw new Error(result.error);
-      }
-    },
-    [puzzle?.id],
-  );
+    if (puzzle?.id) {
+      router.push({
+        pathname: '/report-error-sheet',
+        params: { puzzleId: puzzle.id },
+      });
+    }
+  }, [router, puzzle?.id]);
 
   // Fetch saved attempt data for review mode
   const { metadata: reviewMetadata, isLoading: isReviewLoading } =
@@ -585,13 +566,6 @@ export function CareerPathScreen({
         />
 
         {/* Report Error Sheet */}
-        <ReportErrorSheet
-          visible={showReportSheet}
-          puzzleId={puzzle?.id ?? null}
-          onDismiss={handleCloseReportSheet}
-          onSubmit={handleSubmitReport}
-          testID="report-error-sheet"
-        />
       </KeyboardAvoidingView>
     </GameContainer>
   );

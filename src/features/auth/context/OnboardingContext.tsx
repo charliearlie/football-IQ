@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, use, useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePostHog } from 'posthog-react-native';
 import { useAuth, ONBOARDING_STORAGE_KEY, FirstRunModal } from '@/features/auth';
@@ -26,7 +26,7 @@ interface OnboardingContextValue {
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function useOnboarding() {
-  const context = useContext(OnboardingContext);
+  const context = use(OnboardingContext);
   if (!context) {
     throw new Error('useOnboarding must be used within OnboardingProvider');
   }
@@ -171,7 +171,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const isOnboardingActive = currentState === 'SHOW_MODAL';
 
   return (
-    <OnboardingContext.Provider value={{ isLoading, isOnboardingActive }}>
+    <OnboardingContext value={{ isLoading, isOnboardingActive }}>
       {children}
       <FirstRunModal
         visible={isOnboardingActive}
@@ -179,6 +179,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         error={submissionError}
         testID="first-run-modal-root"
       />
-    </OnboardingContext.Provider>
+    </OnboardingContext>
   );
 }

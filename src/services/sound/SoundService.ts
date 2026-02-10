@@ -1,7 +1,7 @@
 /**
  * SoundService - Football-themed audio for game interactions.
  *
- * Provides percussive soundscape using expo-av:
+ * Provides percussive soundscape using expo-audio:
  * - Correct: Ball-hitting-net thwack
  * - Wrong: Referee's whistle double-blow
  * - Heartbeat: Rhythmic low-frequency loop for time-pressure modes
@@ -10,7 +10,7 @@
  * Sound assets in assets/sounds/ (replace placeholders with real SFX).
  */
 
-import { Audio, AVPlaybackSource } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type SoundName = 'correct' | 'wrong' | 'heartbeat';
@@ -19,15 +19,13 @@ type SoundName = 'correct' | 'wrong' | 'heartbeat';
 const SOUND_DEV_ENABLED_KEY = '@sound_dev_enabled';
 
 class SoundServiceClass {
-  private sounds: Map<SoundName, Audio.Sound> = new Map();
+  private players: Map<SoundName, AudioPlayer> = new Map();
   private initialized = false;
   private muted = true; // OFF by default — enabled via developer menu
 
   /**
    * Initialize the sound system. Call once on app startup.
    * Configures audio session and preloads all sound assets.
-   * Sound files are loaded lazily here (not at module scope) to avoid
-   * runtime errors if assets can't be resolved during import.
    *
    * Sound is muted by default. Only unmuted when the developer menu
    * toggle (@sound_dev_enabled) is set to 'true'.
@@ -39,24 +37,23 @@ class SoundServiceClass {
     const enabled = await AsyncStorage.getItem(SOUND_DEV_ENABLED_KEY);
     this.muted = enabled !== 'true';
 
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: false,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
+    await setAudioModeAsync({
+      playsInSilentMode: false,
+      shouldPlayInBackground: false,
     });
 
     /* eslint-disable @typescript-eslint/no-var-requires */
-    const soundFiles: Record<SoundName, AVPlaybackSource> = {
+    const soundFiles: Record<SoundName, number> = {
       correct: require('../../../assets/sounds/correct.mp3'),
       wrong: require('../../../assets/sounds/wrong.mp3'),
       heartbeat: require('../../../assets/sounds/heartbeat.mp3'),
     };
     /* eslint-enable @typescript-eslint/no-var-requires */
 
-    const entries = Object.entries(soundFiles) as [SoundName, AVPlaybackSource][];
+    const entries = Object.entries(soundFiles) as [SoundName, number][];
     for (const [name, source] of entries) {
-      const { sound } = await Audio.Sound.createAsync(source, { shouldPlay: false });
-      this.sounds.set(name, sound);
+      const player = createAudioPlayer(source);
+      this.players.set(name, player);
     }
 
     this.initialized = true;
@@ -74,18 +71,19 @@ class SoundServiceClass {
 
   /** Start looping the heartbeat sound for time-pressure modes. */
   async playHeartbeat(): Promise<void> {
-    const sound = this.sounds.get('heartbeat');
-    if (!sound || this.muted) return;
-    await sound.setIsLoopingAsync(true);
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
+    const player = this.players.get('heartbeat');
+    if (!player || this.muted) return;
+    player.loop = true;
+    player.seekTo(0);
+    player.play();
   }
 
   /** Stop the looping heartbeat sound. */
   async stopHeartbeat(): Promise<void> {
-    const sound = this.sounds.get('heartbeat');
-    if (!sound) return;
-    await sound.stopAsync();
+    const player = this.players.get('heartbeat');
+    if (!player) return;
+    player.pause();
+    player.loop = false;
   }
 
   /** Toggle mute state. When muted, all play methods are no-ops. */
@@ -95,18 +93,18 @@ class SoundServiceClass {
 
   /** Play a one-shot sound by name. */
   private async play(name: SoundName): Promise<void> {
-    const sound = this.sounds.get(name);
-    if (!sound || this.muted) return;
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
+    const player = this.players.get(name);
+    if (!player || this.muted) return;
+    player.seekTo(0);
+    player.play();
   }
 
-  /** Unload all sounds and reset state. */
+  /** Release all players and reset state. */
   async dispose(): Promise<void> {
-    for (const sound of this.sounds.values()) {
-      await sound.unloadAsync();
+    for (const player of this.players.values()) {
+      player.release();
     }
-    this.sounds.clear();
+    this.players.clear();
     this.initialized = false;
   }
 }

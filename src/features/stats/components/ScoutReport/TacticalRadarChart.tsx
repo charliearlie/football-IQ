@@ -10,7 +10,7 @@
  */
 
 import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
-import { memo, useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Svg, { Path, Circle, Line, G, Polygon } from 'react-native-svg';
 import Animated, {
   useSharedValue,
@@ -107,7 +107,7 @@ export interface TacticalRadarChartProps {
   testID?: string;
 }
 
-function TacticalRadarChartComponent({ proficiencies, testID }: TacticalRadarChartProps) {
+export function TacticalRadarChart({ proficiencies, testID }: TacticalRadarChartProps) {
   const { width: screenWidth } = useWindowDimensions();
   const [highlightedAxis, setHighlightedAxis] = useState<string | null>(null);
 
@@ -322,12 +322,6 @@ function TacticalRadarChartComponent({ proficiencies, testID }: TacticalRadarCha
     </View>
   );
 }
-
-// Memoize to prevent unnecessary re-renders
-export const TacticalRadarChart = memo(TacticalRadarChartComponent, (prev, next) => {
-  // Only re-render if proficiency values actually change
-  return JSON.stringify(prev.proficiencies) === JSON.stringify(next.proficiencies);
-});
 
 const styles = StyleSheet.create({
   container: {

@@ -1,7 +1,7 @@
 // Sentry temporarily disabled for testing
 // import * as Sentry from "@sentry/react-native";
 
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import { initDatabase } from "@/lib/database";
 import { syncEliteIndex } from "@/services/player/SyncService";
@@ -144,7 +144,7 @@ function PostHogScreenTracker() {
   return null;
 }
 
-const AuthGate = React.memo(function AuthGate({ children }: { children: React.ReactNode }) {
+function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading: isOnboardingLoading } = useOnboarding();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const attRequested = useRef(false); // Prevent duplicate ATT requests
@@ -220,7 +220,7 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
       </RehydrationProvider>
     </IntegrityGuardProvider>
   );
-});
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -283,7 +283,7 @@ export default function RootLayout() {
     }
   }, []);
 
-  // SoundService initialization disabled until expo-av native module is linked.
+  // SoundService initialization disabled — migrated to expo-audio.
   // Run `npx expo prebuild` and rebuild to enable.
   // See src/services/sound/SoundService.ts for the implementation.
 
@@ -375,7 +375,14 @@ export default function RootLayout() {
                 <View style={styles.container}>
                   <Stack
                     screenOptions={{
-                      headerStyle: { backgroundColor: colors.stadiumNavy },
+                      // Liquid Glass translucent headers on iOS, solid on Android
+                      headerStyle: Platform.select({
+                        ios: { backgroundColor: "transparent" },
+                        default: { backgroundColor: colors.stadiumNavy },
+                      }),
+                      headerTransparent: Platform.OS === "ios",
+                      headerBlurEffect:
+                        Platform.OS === "ios" ? "systemMaterial" : undefined,
                       headerTintColor: colors.floodlightWhite,
                       headerTitleStyle: { fontFamily: fonts.headline },
                       contentStyle: { backgroundColor: colors.stadiumNavy },
@@ -405,6 +412,22 @@ export default function RootLayout() {
                       options={{
                         title: "Submit Idea",
                         headerShown: false,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="day-detail-sheet"
+                      options={{
+                        presentation: "formSheet",
+                        headerShown: false,
+                        gestureEnabled: true,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="report-error-sheet"
+                      options={{
+                        presentation: "formSheet",
+                        headerShown: false,
+                        gestureEnabled: true,
                       }}
                     />
                     <Stack.Screen name="+not-found" />

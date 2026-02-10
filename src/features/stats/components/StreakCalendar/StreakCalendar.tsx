@@ -11,7 +11,7 @@
  * - Single-month navigation with arrows
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar } from 'lucide-react-native';
@@ -19,10 +19,10 @@ import { colors, fonts, spacing, borderRadius } from '@/theme';
 import { GlassCard } from '@/components';
 import { triggerLight } from '@/lib/haptics';
 import { useStreakCalendar } from '../../hooks/useStreakCalendar';
+import { setDayDetailData } from '../../stores/dayDetailStore';
 import { CalendarDay, CalendarMonth, CellPosition } from '../../types/calendar.types';
 import { MonthGrid } from './MonthGrid';
 import { MonthHeader } from './MonthHeader';
-import { DayDetailSheet } from './DayDetailSheet';
 import { LockedMonthOverlay } from './LockedMonthOverlay';
 
 export interface StreakCalendarProps {
@@ -91,36 +91,17 @@ export function StreakCalendar({
   const router = useRouter();
   const { data, isLoading, error } = useStreakCalendar();
 
-  // Bottom sheet state (replaces tooltip)
-  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
-  const [sheetVisible, setSheetVisible] = useState(false);
-
   // Month navigation state (single month view)
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
 
   // Get current month for comparison
   const currentMonthKey = useMemo(() => getCurrentMonthKey(), []);
 
-  // Handle day cell press - show bottom sheet
+  // Handle day cell press - navigate to native formSheet
   const handleDayPress = useCallback((day: CalendarDay, _position: CellPosition) => {
     triggerLight();
-    setSelectedDay(day);
-    setSheetVisible(true);
-  }, []);
-
-  // Dismiss bottom sheet
-  const handleDismissSheet = useCallback(() => {
-    setSheetVisible(false);
-    setSelectedDay(null);
-  }, []);
-
-  // Navigate to archive with date filter for incomplete games
-  const handleCompleteGames = useCallback((date: string) => {
-    setSheetVisible(false);
-    router.push({
-      pathname: '/(tabs)/archive',
-      params: { filterDate: date },
-    });
+    setDayDetailData(day);
+    router.push('/day-detail-sheet');
   }, [router]);
 
   // Month navigation handlers
@@ -255,14 +236,6 @@ export function StreakCalendar({
         </View>
       )}
 
-      {/* Bottom sheet for day details */}
-      <DayDetailSheet
-        day={selectedDay}
-        visible={sheetVisible}
-        onDismiss={handleDismissSheet}
-        onCompleteGames={handleCompleteGames}
-        testID="day-detail-sheet"
-      />
     </Wrapper>
   );
 }

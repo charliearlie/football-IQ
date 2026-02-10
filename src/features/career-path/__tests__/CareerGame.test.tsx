@@ -110,11 +110,6 @@ jest.mock('../components/ScoutingDisclaimer', () => ({
   ScoutingDisclaimer: jest.fn(() => null),
 }));
 
-jest.mock('../components/ReportErrorSheet', () => ({
-  ReportErrorSheet: jest.fn(() => null),
-  ReportType: {},
-}));
-
 jest.mock('../services/reportService', () => ({
   submitReport: jest.fn(),
 }));

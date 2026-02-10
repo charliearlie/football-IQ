@@ -1,95 +1,66 @@
-import { View, StyleSheet } from "react-native";
-import { Tabs } from "expo-router";
-import { Home, Archive, Brain, Settings } from "lucide-react-native";
-import { colors, fonts } from "@/theme";
+import { View, StyleSheet, Platform } from "react-native";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useHaptics } from "@/hooks/useHaptics";
 import { AdBanner } from "@/features/ads";
+import { colors } from "@/theme";
+
+const isLiquidGlass =
+  Platform.OS === "ios" && parseInt(String(Platform.Version), 10) >= 26;
 
 /**
- * Tab Navigator Layout
+ * Tab Navigator Layout — Native Tabs with Liquid Glass
  *
- * Bottom tab navigation with 4 tabs: Home, Archive, My IQ, Settings.
- * Uses lucide-react-native icons with 2px stroke for bold look.
- * Includes haptic feedback on tab press.
+ * Uses the system-native tab bar via NativeTabs:
+ * - iOS 26: Liquid Glass translucent tab bar with auto-hide on scroll
+ * - Android: Material 3 native tab bar
+ *
+ * SF Symbols for iOS, Material icon names for Android.
+ * AdBanner rendered below the tab bar as a standard full-width banner.
  */
 export default function TabLayout() {
   const { triggerSelection } = useHaptics();
 
   return (
     <View style={styles.container}>
-      <Tabs
+      <NativeTabs
+        minimizeBehavior="onScrollDown"
+        backgroundColor={isLiquidGlass ? undefined : colors.stadiumNavy}
+        blurEffect={isLiquidGlass ? "systemMaterial" : "none"}
+        disableTransparentOnScrollEdge={!isLiquidGlass}
+        iconColor={{
+          selected: colors.pitchGreen,
+          default: colors.floodlightWhite,
+        }}
+        labelStyle={{
+          selected: { color: colors.pitchGreen },
+          default: { color: colors.floodlightWhite },
+        }}
         screenListeners={{
           tabPress: () => triggerSelection(),
         }}
-        screenOptions={{
-          tabBarActiveTintColor: colors.pitchGreen,
-          tabBarInactiveTintColor: colors.floodlightWhite,
-          tabBarStyle: {
-            backgroundColor: colors.stadiumNavy,
-            borderTopColor: colors.glassBorder,
-            borderTopWidth: 1,
-            paddingTop: 8,
-            paddingBottom: 8,
-            height: 80,
-          },
-          tabBarLabelStyle: {
-            fontFamily: fonts.body,
-            fontSize: 12,
-            marginTop: 4,
-          },
-          headerStyle: {
-            backgroundColor: colors.stadiumNavy,
-          },
-          headerTintColor: colors.floodlightWhite,
-          headerTitleStyle: {
-            fontFamily: fonts.headline,
-            fontSize: 24,
-          },
-        }}
       >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "Home",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Home color={color} size={size} strokeWidth={2} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="archive"
-          options={{
-            title: "Archive",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Archive color={color} size={size} strokeWidth={2} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="stats"
-          options={{
-            title: "My IQ",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Brain color={color} size={size} strokeWidth={2} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: "Settings",
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Settings color={color} size={size} strokeWidth={2} />
-            ),
-          }}
-        />
-      </Tabs>
+        <NativeTabs.Trigger name="index">
+          <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+        </NativeTabs.Trigger>
 
-      {/* Global banner ad - hidden for premium users, positioned above home indicator */}
+        <NativeTabs.Trigger name="archive">
+          <NativeTabs.Trigger.Label>Archive</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon sf="archivebox.fill" md="archive" />
+        </NativeTabs.Trigger>
+
+        <NativeTabs.Trigger name="stats">
+          <NativeTabs.Trigger.Label>My IQ</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon sf="brain.head.profile" md="psychology" />
+        </NativeTabs.Trigger>
+
+        <NativeTabs.Trigger name="settings">
+          <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon sf="gearshape.fill" md="settings" />
+        </NativeTabs.Trigger>
+      </NativeTabs>
+
+      {/* Global banner ad — below tab bar, above home indicator */}
       <AdBanner testID="global-banner-ad" />
     </View>
   );

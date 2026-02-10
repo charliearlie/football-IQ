@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, use, useEffect, useState, useCallback, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useProfile } from '../hooks/useProfile';
@@ -230,9 +230,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext value={value}>
       {children}
-    </AuthContext.Provider>
+    </AuthContext>
   );
 }
 
@@ -241,7 +241,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
  * Must be used within an AuthProvider.
  */
 export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
+  const context = use(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

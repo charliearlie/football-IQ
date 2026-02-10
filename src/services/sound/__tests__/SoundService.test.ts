@@ -7,44 +7,42 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn().mockResolvedValue(undefined),
 }));
 
-// Mock expo-av
-const mockPlayAsync = jest.fn().mockResolvedValue({});
-const mockStopAsync = jest.fn().mockResolvedValue({});
-const mockSetPositionAsync = jest.fn().mockResolvedValue({});
-const mockSetIsLoopingAsync = jest.fn().mockResolvedValue({});
-const mockUnloadAsync = jest.fn().mockResolvedValue({});
+// Mock expo-audio
+const mockPlay = jest.fn();
+const mockPause = jest.fn();
+const mockSeekTo = jest.fn();
+const mockRelease = jest.fn();
 
-const mockSoundInstance = {
-  playAsync: mockPlayAsync,
-  stopAsync: mockStopAsync,
-  setPositionAsync: mockSetPositionAsync,
-  setIsLoopingAsync: mockSetIsLoopingAsync,
-  unloadAsync: mockUnloadAsync,
-};
+const mockSetAudioModeAsync = jest.fn().mockResolvedValue(undefined);
+const mockCreateAudioPlayer = jest.fn().mockReturnValue({
+  play: mockPlay,
+  pause: mockPause,
+  seekTo: mockSeekTo,
+  release: mockRelease,
+  loop: false,
+});
 
-jest.mock('expo-av', () => ({
-  Audio: {
-    setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
-    Sound: {
-      createAsync: jest.fn().mockResolvedValue({ sound: mockSoundInstance }),
-    },
-  },
+jest.mock('expo-audio', () => ({
+  setAudioModeAsync: (...args: unknown[]) => mockSetAudioModeAsync(...args),
+  createAudioPlayer: (...args: unknown[]) => mockCreateAudioPlayer(...args),
 }));
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Audio } = require('expo-av');
 
 describe('SoundService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Re-add mock implementations after clearAllMocks
-    mockPlayAsync.mockResolvedValue({});
-    mockStopAsync.mockResolvedValue({});
-    mockSetPositionAsync.mockResolvedValue({});
-    mockSetIsLoopingAsync.mockResolvedValue({});
-    mockUnloadAsync.mockResolvedValue({});
-    Audio.setAudioModeAsync.mockResolvedValue(undefined);
-    Audio.Sound.createAsync.mockResolvedValue({ sound: mockSoundInstance });
+    mockPlay.mockReturnValue(undefined);
+    mockPause.mockReturnValue(undefined);
+    mockSeekTo.mockReturnValue(undefined);
+    mockRelease.mockReturnValue(undefined);
+    mockSetAudioModeAsync.mockResolvedValue(undefined);
+    mockCreateAudioPlayer.mockReturnValue({
+      play: mockPlay,
+      pause: mockPause,
+      seekTo: mockSeekTo,
+      release: mockRelease,
+      loop: false,
+    });
 
     // Get a fresh singleton by re-requiring the module
     jest.isolateModules(() => {
@@ -55,24 +53,24 @@ describe('SoundService', () => {
   describe('init', () => {
     it('configures audio mode', async () => {
       await SoundService.init();
-      expect(Audio.setAudioModeAsync).toHaveBeenCalledWith(
+      expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
         expect.objectContaining({
-          playsInSilentModeIOS: false,
-          staysActiveInBackground: false,
+          playsInSilentMode: false,
+          shouldPlayInBackground: false,
         })
       );
     });
 
-    it('preloads 3 sounds', async () => {
+    it('creates 3 audio players', async () => {
       await SoundService.init();
-      expect(Audio.Sound.createAsync).toHaveBeenCalledTimes(3);
+      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(3);
     });
 
     it('does not re-initialize if already initialized', async () => {
       await SoundService.init();
       await SoundService.init();
       // Should only be called once (3 sounds)
-      expect(Audio.Sound.createAsync).toHaveBeenCalledTimes(3);
+      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -80,8 +78,8 @@ describe('SoundService', () => {
     it('plays the correct sound', async () => {
       await SoundService.init();
       await SoundService.playCorrect();
-      expect(mockSetPositionAsync).toHaveBeenCalledWith(0);
-      expect(mockPlayAsync).toHaveBeenCalled();
+      expect(mockSeekTo).toHaveBeenCalledWith(0);
+      expect(mockPlay).toHaveBeenCalled();
     });
   });
 
@@ -89,8 +87,8 @@ describe('SoundService', () => {
     it('plays the wrong sound', async () => {
       await SoundService.init();
       await SoundService.playWrong();
-      expect(mockSetPositionAsync).toHaveBeenCalledWith(0);
-      expect(mockPlayAsync).toHaveBeenCalled();
+      expect(mockSeekTo).toHaveBeenCalledWith(0);
+      expect(mockPlay).toHaveBeenCalled();
     });
   });
 
@@ -98,9 +96,8 @@ describe('SoundService', () => {
     it('sets looping and plays the heartbeat sound', async () => {
       await SoundService.init();
       await SoundService.playHeartbeat();
-      expect(mockSetIsLoopingAsync).toHaveBeenCalledWith(true);
-      expect(mockSetPositionAsync).toHaveBeenCalledWith(0);
-      expect(mockPlayAsync).toHaveBeenCalled();
+      expect(mockSeekTo).toHaveBeenCalledWith(0);
+      expect(mockPlay).toHaveBeenCalled();
     });
   });
 
@@ -108,7 +105,7 @@ describe('SoundService', () => {
     it('stops the heartbeat sound', async () => {
       await SoundService.init();
       await SoundService.stopHeartbeat();
-      expect(mockStopAsync).toHaveBeenCalled();
+      expect(mockPause).toHaveBeenCalled();
     });
   });
 
@@ -124,10 +121,10 @@ describe('SoundService', () => {
       });
 
       await FreshService!.init();
-      mockPlayAsync.mockClear();
-      mockSetPositionAsync.mockClear();
+      mockPlay.mockClear();
+      mockSeekTo.mockClear();
       await FreshService!.playCorrect();
-      expect(mockPlayAsync).not.toHaveBeenCalled();
+      expect(mockPlay).not.toHaveBeenCalled();
     });
   });
 
@@ -135,27 +132,27 @@ describe('SoundService', () => {
     it('prevents playback when muted', async () => {
       await SoundService.init();
       SoundService.setMuted(true);
-      mockPlayAsync.mockClear();
-      mockSetPositionAsync.mockClear();
+      mockPlay.mockClear();
+      mockSeekTo.mockClear();
       await SoundService.playCorrect();
-      expect(mockPlayAsync).not.toHaveBeenCalled();
+      expect(mockPlay).not.toHaveBeenCalled();
     });
 
     it('allows playback when unmuted', async () => {
       await SoundService.init();
       SoundService.setMuted(true);
       SoundService.setMuted(false);
-      mockPlayAsync.mockClear();
+      mockPlay.mockClear();
       await SoundService.playCorrect();
-      expect(mockPlayAsync).toHaveBeenCalled();
+      expect(mockPlay).toHaveBeenCalled();
     });
   });
 
   describe('dispose', () => {
-    it('unloads all sounds', async () => {
+    it('releases all players', async () => {
       await SoundService.init();
       await SoundService.dispose();
-      expect(mockUnloadAsync).toHaveBeenCalledTimes(3);
+      expect(mockRelease).toHaveBeenCalledTimes(3);
     });
   });
 });

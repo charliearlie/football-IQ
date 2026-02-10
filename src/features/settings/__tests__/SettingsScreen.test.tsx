@@ -161,7 +161,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "2.0.0",
+      version: "2.1.0",
     },
   },
 }));
@@ -255,8 +255,12 @@ jest.mock("@/features/puzzles", () => ({
 // Mock Notifications
 jest.mock("@/features/notifications", () => ({
   scheduleNotification: jest.fn(),
-  getMorningMessage: jest.fn().mockReturnValue({ title: "Morning", body: "Wake up" }),
-  getStreakSaverMessage: jest.fn().mockReturnValue({ title: "Streak", body: "Save it" }),
+  getMorningMessage: jest
+    .fn()
+    .mockReturnValue({ title: "Morning", body: "Wake up" }),
+  getStreakSaverMessage: jest
+    .fn()
+    .mockReturnValue({ title: "Streak", body: "Save it" }),
   getPermissionStatus: jest.fn().mockResolvedValue("granted"),
   requestPermissions: jest.fn().mockResolvedValue("granted"),
 }));
@@ -348,7 +352,7 @@ describe("SettingsScreen", () => {
 
       await waitFor(() => {
         expect(Linking.openURL).toHaveBeenCalledWith(
-          "https://football-iq.app/privacy"
+          "https://football-iq.app/privacy",
         );
       });
     });
@@ -363,7 +367,7 @@ describe("SettingsScreen", () => {
 
       await waitFor(() => {
         expect(Linking.openURL).toHaveBeenCalledWith(
-          "https://football-iq.app/terms"
+          "https://football-iq.app/terms",
         );
       });
     });

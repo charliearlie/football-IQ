@@ -2,12 +2,11 @@
   "expo": {
     "name": "Football IQ",
     "slug": "football-iq",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/footballiq-icon.png",
     "scheme": "footballiq",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -101,10 +100,12 @@
       ],
       "expo-tracking-transparency",
       "expo-notifications",
-      "expo-localization"
+      "expo-localization",
+      "expo-asset"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "extra": {
       "router": {

@@ -1218,6 +1218,12 @@ interface CalendarDay {
 // low: 1-3 games (Pitch Green 50% opacity)
 // high: 4+ games (Pitch Green 100%)
 
+// Day Detail — native formSheet route (Liquid Glass on iOS 26)
+// Tap a day cell → navigates to route-based sheet:
+import { setDayDetailData } from '@/features/stats/stores/dayDetailStore';
+setDayDetailData(day);
+router.push('/day-detail-sheet');
+
 // Premium gating: Free users see 60 days, older months blurred
 ```
 
@@ -1544,6 +1550,8 @@ app/
   top-tens/             # Top Tens game routes (premium-only)
   starting-xi/          # Starting XI game routes
   submit-idea.tsx       # Game idea submission screen
+  day-detail-sheet.tsx  # Calendar day detail (formSheet, Liquid Glass)
+  report-error-sheet.tsx # Error report (formSheet, Liquid Glass)
   leaderboard/          # Leaderboard screen with Daily/Global toggle
   design-lab.tsx        # Component showcase
 src/
@@ -2042,7 +2050,7 @@ web/
 ### Mobile: Error Reporting
 ```typescript
 import { ScoutingDisclaimer } from '@/features/career-path/components/ScoutingDisclaimer';
-import { ReportErrorSheet, ReportType } from '@/features/career-path/components/ReportErrorSheet';
+import { ReportType } from '@/features/career-path/components/ReportErrorSheet';
 import { submitReport, hasUserReportedPuzzle } from '@/features/career-path/services/reportService';
 
 // Report types
@@ -2061,14 +2069,16 @@ const alreadyReported = await hasUserReportedPuzzle(puzzleId);
   onReportError={() => setShowReportSheet(true)}
 />
 
-// ReportErrorSheet component (modal for submitting reports)
+// ReportErrorSheet — native formSheet route (Liquid Glass on iOS 26)
+// Navigate from CareerPathScreen:
+router.push({ pathname: '/report-error-sheet', params: { puzzleId: puzzle.id } });
+
+// Content component (used by route, can also be used standalone):
+import { ReportErrorSheet } from '@/features/career-path/components/ReportErrorSheet';
 <ReportErrorSheet
-  visible={showReportSheet}
   puzzleId={puzzle.id}
-  onDismiss={() => setShowReportSheet(false)}
-  onSubmit={async (type, comment) => {
-    await submitReport(puzzle.id, type, comment);
-  }}
+  onSubmit={handleSubmit}
+  isSuccess={isSuccess}
 />
 ```
 

@@ -19,7 +19,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 
 | Layer         | Technology                                |
 | ------------- | ----------------------------------------- |
-| Mobile App    | React Native 0.76.5 + Expo SDK 52         |
+| Mobile App    | React Native 0.83.1 + Expo SDK 55 (beta)  |
 | Routing       | Expo Router 4.x (file-based)              |
 | Backend       | Supabase (PostgreSQL + Auth + Realtime)   |
 | Local Storage | Expo SQLite (offline-first)               |
@@ -443,7 +443,7 @@ Mobile-optimized calendar showing daily completion history on Scout Report tab.
 
 - **Cell intensity**: 0 games (navy), 1-3 (green 50%), 4+ (green 100%)
 - **3D depth**: Uses Solid Layer architecture (1px sunk, 3px filled)
-- **Tooltips**: Tap cell to see date, IQ earned, game mode completion icons
+- **Day Detail Sheet**: Tap cell to see date, IQ earned, game mode completion icons (native formSheet via `app/day-detail-sheet.tsx`, Liquid Glass on iOS 26)
 - **Perfect Week**: Gold left border on weeks with Mon-Sun completions
 - **Flame Icon**: Shows longest streak within each month
 - **Premium Gating**: Free users see 60 days, older months blurred with upsell
@@ -572,6 +572,8 @@ app/
   top-tens/            # Top Tens routes (premium)
   starting-xi/         # Starting XI routes
   premium-modal.tsx    # Native subscription sheet
+  day-detail-sheet.tsx # Calendar day detail (formSheet, Liquid Glass)
+  report-error-sheet.tsx # Error report (formSheet, Liquid Glass)
   submit-idea.tsx      # Game idea submission screen
   leaderboard/         # Leaderboard screen
 
@@ -638,9 +640,9 @@ AI-powered bulk puzzle generation and user error reporting system.
   - Report triage section in PuzzleEditorModal with Resolve/Dismiss actions
 - **Mobile Features**:
   - ScoutingDisclaimer footer showing data provenance date
-  - ReportErrorSheet for submitting error reports (5 quick-select types)
+  - ReportErrorSheet for submitting error reports (5 quick-select types, native formSheet via `app/report-error-sheet.tsx`, Liquid Glass on iOS 26)
 - **Database**: `content_reports` table with RLS (users can insert, admins can read/update)
-- **Files**: `web/lib/ai/oracle.ts`, `web/hooks/use-reports.ts`, `src/features/career-path/components/ScoutingDisclaimer.tsx`, `src/features/career-path/components/ReportErrorSheet.tsx`
+- **Files**: `web/lib/ai/oracle.ts`, `web/hooks/use-reports.ts`, `src/features/career-path/components/ScoutingDisclaimer.tsx`, `src/features/career-path/components/ReportErrorSheet.tsx`, `app/report-error-sheet.tsx`
 - **See**: `docs/memory/decisions/content-oracle.md` for full documentation
 
 ### Intelligent Scheduler
