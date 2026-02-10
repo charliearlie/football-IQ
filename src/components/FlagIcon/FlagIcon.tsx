@@ -5,7 +5,7 @@
  * Supports ISO 3166-1 alpha-2 codes and GB home nations.
  */
 
-import React, { memo, useMemo } from 'react';
+import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { HOME_NATION_FLAGS } from './homeNationFlags';
@@ -37,7 +37,7 @@ function getFlagSvg(code: string): string | null {
   return FLAG_SVG_MAP[upperCode] ?? null;
 }
 
-function FlagIconComponent({ code, size = 16, testID }: FlagIconProps) {
+export function FlagIcon({ code, size = 16, testID }: FlagIconProps) {
   const svg = useMemo(() => getFlagSvg(code), [code]);
 
   if (!svg) return null;
@@ -60,4 +60,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export const FlagIcon = memo(FlagIconComponent);

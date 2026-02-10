@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, use, useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePostHog } from 'posthog-react-native';
 import { useRouter, type Href } from 'expo-router';
@@ -31,7 +31,7 @@ interface OnboardingContextValue {
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function useOnboarding() {
-  const context = useContext(OnboardingContext);
+  const context = use(OnboardingContext);
   if (!context) {
     throw new Error('useOnboarding must be used within OnboardingProvider');
   }
@@ -224,7 +224,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const isOnboardingActive = currentState === 'SHOW_MODAL';
 
   return (
-    <OnboardingContext.Provider value={{ isLoading, isOnboardingActive, isTutorialComplete, completeTutorial }}>
+    <OnboardingContext value={{ isLoading, isOnboardingActive, isTutorialComplete, completeTutorial }}>
       {children}
       <FirstRunModal
         visible={isOnboardingActive}
@@ -233,6 +233,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         error={submissionError}
         testID="first-run-modal-root"
       />
-    </OnboardingContext.Provider>
+    </OnboardingContext>
   );
 }

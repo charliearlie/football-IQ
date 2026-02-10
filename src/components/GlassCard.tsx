@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { BlurView, BlurTargetView } from 'expo-blur';
 import { colors, borderRadius, spacing, shadows, type ShadowLevel } from '@/theme';
 
 export interface GlassCardProps {
@@ -66,16 +66,19 @@ export function GlassCard({
   }
 
   // Use wrapper approach: outer view for shadow (no overflow:hidden),
-  // inner view for blur clipping (overflow:hidden)
+  // inner view for blur clipping (overflow:hidden).
+  // Android uses BlurTargetView for stable RenderNode-based blur (SDK 55+).
+  const InnerWrapper = Platform.OS === 'android' ? BlurTargetView : View;
+
   return (
     <View
       style={[styles.shadowWrapper, shadowStyle, style]}
       testID={testID}
     >
-      <View style={[styles.innerContainer, borderStyle]}>
+      <InnerWrapper style={[styles.innerContainer, borderStyle]}>
         <BlurView intensity={intensity} style={styles.blur} tint="dark" />
         <View style={[styles.content, contentStyle]}>{children}</View>
-      </View>
+      </InnerWrapper>
     </View>
   );
 }

@@ -15,7 +15,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useState,
   useEffect,
   useCallback,
@@ -627,9 +627,9 @@ export function NotificationProvider({
   );
 
   return (
-    <NotificationContext.Provider value={value}>
+    <NotificationContext value={value}>
       {children}
-    </NotificationContext.Provider>
+    </NotificationContext>
   );
 }
 
@@ -638,7 +638,7 @@ export function NotificationProvider({
  * Must be used within a NotificationProvider.
  */
 export function useNotifications(): NotificationContextValue {
-  const context = useContext(NotificationContext);
+  const context = use(NotificationContext);
   if (context === undefined) {
     throw new Error('useNotifications must be used within a NotificationProvider');
   }

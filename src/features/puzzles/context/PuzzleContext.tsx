@@ -1,6 +1,6 @@
 import React, {
   createContext,
-  useContext,
+  use,
   useEffect,
   useState,
   useCallback,
@@ -353,7 +353,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
   );
 
   return (
-    <PuzzleContext.Provider value={value}>{children}</PuzzleContext.Provider>
+    <PuzzleContext value={value}>{children}</PuzzleContext>
   );
 }
 
@@ -362,7 +362,7 @@ export function PuzzleProvider({ children }: PuzzleProviderProps) {
  * Must be used within a PuzzleProvider.
  */
 export function usePuzzleContext(): PuzzleContextValue {
-  const context = useContext(PuzzleContext);
+  const context = use(PuzzleContext);
   if (!context) {
     throw new Error('usePuzzleContext must be used within a PuzzleProvider');
   }

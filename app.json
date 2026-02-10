@@ -7,7 +7,6 @@
     "icon": "./assets/images/footballiq-icon.png",
     "scheme": "footballiq",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/footballiq-icon.png",
       "resizeMode": "contain",
@@ -101,10 +100,12 @@
       ],
       "expo-tracking-transparency",
       "expo-notifications",
-      "expo-localization"
+      "expo-localization",
+      "expo-asset"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "extra": {
       "router": {

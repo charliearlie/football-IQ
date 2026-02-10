@@ -1,12 +1,15 @@
 /**
  * DayDetailSheet Component Tests
  *
- * Tests for the bottom sheet that displays day details.
+ * Tests for the day detail content rendered inside a native formSheet.
  * Covers:
- * - Rendering states (visible/hidden)
+ * - Content rendering (date, IQ, game modes)
  * - Empty game modes handling
  * - CTA button behavior
- * - Accessibility
+ * - Date formatting
+ *
+ * Note: Visibility and dismiss behavior are now handled by the native
+ * formSheet route (app/day-detail-sheet.tsx), not the component itself.
  *
  * @audit SDET Review - Critical UI component tests
  */
@@ -34,7 +37,6 @@ jest.mock('@/components', () => ({
 }));
 
 describe('DayDetailSheet', () => {
-  const mockOnDismiss = jest.fn();
   const mockOnCompleteGames = jest.fn();
 
   const createMockDay = (overrides?: Partial<CalendarDay>): CalendarDay => ({
@@ -56,54 +58,22 @@ describe('DayDetailSheet', () => {
     jest.clearAllMocks();
   });
 
-  describe('Visibility', () => {
-    it('returns null when not visible', () => {
-      const { toJSON } = render(
-        <DayDetailSheet
-          day={createMockDay()}
-          visible={false}
-          onDismiss={mockOnDismiss}
-          onCompleteGames={mockOnCompleteGames}
-        />
-      );
-
-      expect(toJSON()).toBeNull();
-    });
-
-    it('returns null when day is null', () => {
-      const { toJSON } = render(
-        <DayDetailSheet
-          day={null}
-          visible={true}
-          onDismiss={mockOnDismiss}
-          onCompleteGames={mockOnCompleteGames}
-        />
-      );
-
-      expect(toJSON()).toBeNull();
-    });
-
-    it('renders when visible with valid day', () => {
+  describe('Content Display', () => {
+    it('renders with valid day data', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay()}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
 
       expect(getByText('+250 IQ')).toBeTruthy();
     });
-  });
 
-  describe('Content Display', () => {
     it('displays correct completion count', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay({ count: 3 })}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -115,8 +85,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay({ totalIQ: 500 })}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -128,8 +96,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay({ totalIQ: 0 })}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -143,8 +109,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay({ count: 3 })}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -156,8 +120,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay({ count: 3 })} // 3 of 6 = 3 remaining
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -181,8 +143,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={day}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -194,8 +154,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={createMockDay({ date: '2026-01-20' })}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -225,8 +183,6 @@ describe('DayDetailSheet', () => {
       const { getByText, queryByText } = render(
         <DayDetailSheet
           day={perfectDay}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -246,8 +202,6 @@ describe('DayDetailSheet', () => {
       const { queryByText } = render(
         <DayDetailSheet
           day={emptyDay}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -267,8 +221,6 @@ describe('DayDetailSheet', () => {
       const { getByText, queryByText } = render(
         <DayDetailSheet
           day={emptyDay}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -277,23 +229,6 @@ describe('DayDetailSheet', () => {
       expect(getByText('No games available for this day')).toBeTruthy();
       // Should NOT show CTA button
       expect(queryByText('Complete Missing Games')).toBeNull();
-    });
-  });
-
-  describe('Dismiss Behavior', () => {
-    it('calls onDismiss when close button pressed', () => {
-      const { getByLabelText } = render(
-        <DayDetailSheet
-          day={createMockDay()}
-          visible={true}
-          onDismiss={mockOnDismiss}
-          onCompleteGames={mockOnCompleteGames}
-        />
-      );
-
-      fireEvent.press(getByLabelText('Close'));
-
-      expect(mockOnDismiss).toHaveBeenCalled();
     });
   });
 
@@ -314,8 +249,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={day}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -343,8 +276,6 @@ describe('DayDetailSheet', () => {
       const { getByText } = render(
         <DayDetailSheet
           day={day}
-          visible={true}
-          onDismiss={mockOnDismiss}
           onCompleteGames={mockOnCompleteGames}
         />
       );
@@ -355,7 +286,6 @@ describe('DayDetailSheet', () => {
 });
 
 describe('DayDetailSheet - Date Formatting', () => {
-  const mockOnDismiss = jest.fn();
   const mockOnCompleteGames = jest.fn();
 
   it('formats date correctly with ordinal suffix (1st)', () => {
@@ -367,8 +297,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -386,8 +314,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -404,8 +330,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -422,8 +346,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -440,8 +362,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -456,8 +376,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -472,8 +390,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );
@@ -490,8 +406,6 @@ describe('DayDetailSheet - Date Formatting', () => {
           totalIQ: 0,
           gameModes: [{ gameMode: 'career_path', completed: false, iqEarned: 0 }],
         }}
-        visible={true}
-        onDismiss={mockOnDismiss}
         onCompleteGames={mockOnCompleteGames}
       />
     );

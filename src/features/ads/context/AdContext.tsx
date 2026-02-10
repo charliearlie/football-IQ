@@ -10,7 +10,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useEffect,
   useState,
   useCallback,
@@ -278,7 +278,7 @@ export function AdProvider({ children }: AdProviderProps) {
     ]
   );
 
-  return <AdContext.Provider value={value}>{children}</AdContext.Provider>;
+  return <AdContext value={value}>{children}</AdContext>;
 }
 
 /**
@@ -288,7 +288,7 @@ export function AdProvider({ children }: AdProviderProps) {
  * @throws Error if used outside of AdProvider
  */
 export function useAds(): AdContextValue {
-  const context = useContext(AdContext);
+  const context = use(AdContext);
   if (!context) {
     throw new Error('useAds must be used within an AdProvider');
   }
@@ -300,5 +300,5 @@ export function useAds(): AdContextValue {
  * Useful for components that may or may not have ad support.
  */
 export function useAdsOptional(): AdContextValue | null {
-  return useContext(AdContext);
+  return use(AdContext);
 }

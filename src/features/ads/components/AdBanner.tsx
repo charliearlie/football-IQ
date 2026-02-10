@@ -130,6 +130,8 @@ export function AdBanner({ position = 'bottom', testID }: AdBannerProps) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    maxHeight: 70,
+    overflow: 'hidden',
     backgroundColor: colors.stadiumNavy,
     alignItems: 'center',
     justifyContent: 'center',

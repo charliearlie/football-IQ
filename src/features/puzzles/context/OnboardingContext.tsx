@@ -12,7 +12,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useState,
   useEffect,
   useCallback,
@@ -152,9 +152,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   );
 
   return (
-    <OnboardingContext.Provider value={value}>
+    <OnboardingContext value={value}>
       {children}
-    </OnboardingContext.Provider>
+    </OnboardingContext>
   );
 }
 
@@ -165,7 +165,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
  * @throws Error if used outside OnboardingProvider
  */
 export function useOnboardingContext(): OnboardingContextValue {
-  const context = useContext(OnboardingContext);
+  const context = use(OnboardingContext);
   if (!context) {
     throw new Error(
       'useOnboardingContext must be used within an OnboardingProvider. ' +

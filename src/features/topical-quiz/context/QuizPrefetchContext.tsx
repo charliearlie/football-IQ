@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, use, useEffect, useState, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { usePuzzleContext } from '@/features/puzzles';
 import { extractImageUrls, prefetchQuizImages, PrefetchResult } from '../utils/imagePrefetch';
@@ -134,9 +134,9 @@ export function QuizPrefetchProvider({ children }: { children: React.ReactNode }
   };
 
   return (
-    <QuizPrefetchContext.Provider value={value}>
+    <QuizPrefetchContext value={value}>
       {children}
-    </QuizPrefetchContext.Provider>
+    </QuizPrefetchContext>
   );
 }
 
@@ -144,7 +144,7 @@ export function QuizPrefetchProvider({ children }: { children: React.ReactNode }
  * Hook to access quiz prefetch context.
  */
 export function useQuizPrefetch(): QuizPrefetchContextValue {
-  const context = useContext(QuizPrefetchContext);
+  const context = use(QuizPrefetchContext);
 
   if (!context) {
     // Return default values if not in provider (graceful degradation)

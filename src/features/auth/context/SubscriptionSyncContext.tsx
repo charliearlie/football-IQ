@@ -15,7 +15,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useEffect,
   useRef,
   useCallback,
@@ -250,14 +250,14 @@ export function SubscriptionSyncProvider({
   }, [user?.id, isInitialized, startSync, stopSync]);
 
   return (
-    <SubscriptionSyncContext.Provider 
-      value={{ 
-        forceSync, 
-        restorePurchases: handleRestorePurchases 
+    <SubscriptionSyncContext
+      value={{
+        forceSync,
+        restorePurchases: handleRestorePurchases
       }}
     >
       {children}
-    </SubscriptionSyncContext.Provider>
+    </SubscriptionSyncContext>
   );
 }
 
@@ -268,7 +268,7 @@ export function SubscriptionSyncProvider({
  * @throws Error if used outside SubscriptionSyncProvider
  */
 export function useSubscriptionSync(): SubscriptionSyncContextValue {
-  const context = useContext(SubscriptionSyncContext);
+  const context = use(SubscriptionSyncContext);
   if (!context) {
     throw new Error(
       'useSubscriptionSync must be used within a SubscriptionSyncProvider'
