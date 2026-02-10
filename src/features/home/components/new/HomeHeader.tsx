@@ -14,18 +14,25 @@ export function HomeHeader({ streak, isPremium, onProPress }: HomeHeaderProps) {
   return (
     <View style={styles.container}>
       {/* Left: Brand */}
-      <View>
+      <View style={styles.brandRow}>
         <Text style={styles.brand}>FOOTBALL IQ</Text>
+        {isPremium && (
+          <View style={styles.proBrandBadge}>
+            <Text style={styles.proBrandText}>PRO</Text>
+            <ProBadge size={18} color={HOME_COLORS.cardYellow} />
+          </View>
+        )}
       </View>
 
       {/* Right: Status Cluster */}
       <View style={styles.rightCluster}>
-        {/* Pro Badge (only if free, or maybe always? Design says "Pro Badge: Yellow pill". Usually for upsell or status) */}
-        {/* If premium, show Gold PRO badge. If free, maybe show "Go Pro" button? Spec says "Active: Opens PremiumModal". */}
-        <Pressable onPress={onProPress} style={({ pressed }) => [styles.proPill, pressed && { opacity: 0.8 }]}>
-           <ProBadge size={16} color={HOME_COLORS.stadiumNavy} /> 
-           <Text style={styles.proText}>{isPremium ? 'PRO' : 'GO PRO'}</Text>
-        </Pressable>
+        {/* Go Pro upsell pill - hidden for premium users */}
+        {!isPremium && (
+          <Pressable onPress={onProPress} style={({ pressed }) => [styles.proPill, pressed && { opacity: 0.8 }]}>
+            <ProBadge size={16} color={HOME_COLORS.stadiumNavy} />
+            <Text style={styles.proText}>GO PRO</Text>
+          </Pressable>
+        )}
 
         {/* Streak */}
         <View style={styles.streakPill}>
@@ -45,10 +52,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   brand: {
     fontFamily: HOME_FONTS.heading,
     fontSize: 28,
     color: HOME_COLORS.textMain,
+    letterSpacing: 1,
+  },
+  proBrandBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 8,
+  },
+  proBrandText: {
+    fontFamily: HOME_FONTS.heading,
+    fontSize: 28,
+    color: HOME_COLORS.cardYellow,
     letterSpacing: 1,
   },
   rightCluster: {
@@ -57,22 +80,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   proPill: {
-    backgroundColor: HOME_COLORS.cardYellow, // Solid Yellow
+    backgroundColor: HOME_COLORS.cardYellow,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 999, // 'badge' usually full rounded
+    borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    // Add bottom shadow
     borderBottomWidth: 2,
-    borderBottomColor: '#cda412', // var(--card-yellow-shadow)
+    borderBottomColor: '#cda412',
   },
   proText: {
     fontFamily: HOME_FONTS.heading,
-    color: HOME_COLORS.stadiumNavy, // Contrast text
+    color: HOME_COLORS.stadiumNavy,
     fontSize: 14,
-    marginTop: 2, 
+    marginTop: 2,
   },
   streakPill: {
     backgroundColor: HOME_COLORS.glassBg,
@@ -89,6 +111,6 @@ const styles = StyleSheet.create({
     fontFamily: HOME_FONTS.heading,
     color: HOME_COLORS.textMain,
     fontSize: 16,
-     marginTop: 2,
-  }
+    marginTop: 2,
+  },
 });

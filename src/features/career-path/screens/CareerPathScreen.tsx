@@ -218,12 +218,11 @@ export function CareerPathScreen({
     flatListRef,
   ]);
 
-  // Show modal immediately for loss (no victory reveal)
-  useEffect(() => {
-    if (state.gameStatus === "lost") {
-      setShowResultModal(true);
-    }
-  }, [state.gameStatus]);
+  // NOTE: No auto-show for losses. The GameOverActionZone displays the answer
+  // and the user taps "See how you scored" to open the result modal.
+  // Previously, an auto-show useEffect here caused a dual-Modal animation
+  // conflict with the ConfirmationModal (give-up flow), leaving an invisible
+  // Modal overlay that blocked all touch events (scroll + button presses).
 
   // Handlers for view path toggle
   const handleViewPath = useCallback(() => {

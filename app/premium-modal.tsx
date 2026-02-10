@@ -7,9 +7,9 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
+  View,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 
@@ -20,10 +20,12 @@ import Purchases, {
 } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
 import { Confetti } from '@/components/Confetti';
+import { usePostHog } from 'posthog-react-native';
 import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/features/auth';
 import {
   PremiumUpsellContent,
 } from '@/features/subscription';
+import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
 import { colors } from '@/theme/colors';
 import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 
@@ -42,6 +44,7 @@ export default function PremiumModalScreen() {
     mode?: string;
   }>();
   const router = useRouter();
+  const posthog = usePostHog();
   const { user } = useAuth();
   const { forceSync } = useSubscriptionSync();
 
@@ -123,7 +126,12 @@ export default function PremiumModalScreen() {
 
   useEffect(() => {
     fetchOfferings();
-  }, [fetchOfferings]);
+    try {
+      posthog?.capture(ANALYTICS_EVENTS.PREMIUM_OFFER_SHOWN, {
+        trigger_source: mode ?? 'direct',
+      });
+    } catch { /* analytics should never crash the app */ }
+  }, [fetchOfferings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (state === 'success') {
@@ -166,6 +174,11 @@ export default function PremiumModalScreen() {
 
           if (isMountedRef.current) {
             setState('success');
+            try {
+              posthog?.capture(ANALYTICS_EVENTS.PREMIUM_PURCHASE_COMPLETED, {
+                product_id: pkg.product.identifier,
+              });
+            } catch { /* analytics should never crash the app */ }
           }
         } else {
           // Purchase completed but entitlement pending - still try to sync
@@ -243,7 +256,7 @@ export default function PremiumModalScreen() {
   }, [forceSync]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <View style={styles.container}>
       <Confetti active={state === 'success'} />
       
        <PremiumUpsellContent
@@ -256,7 +269,7 @@ export default function PremiumModalScreen() {
           errorMessage={errorMessage}
           onRetry={fetchOfferings}
        />
-    </SafeAreaView>
+    </View>
   );
 }
 

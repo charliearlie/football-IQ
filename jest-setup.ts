@@ -309,6 +309,17 @@ jest.mock('expo-notifications', () => mockNotifications);
 
 export { mockNotifications };
 
+// Mock posthog-react-native
+jest.mock('posthog-react-native', () => ({
+  usePostHog: jest.fn(() => ({
+    capture: jest.fn(),
+    identify: jest.fn(),
+    reset: jest.fn(),
+    screen: jest.fn(),
+  })),
+  PostHogProvider: ({ children }: any) => children,
+}));
+
 // Suppress specific console warnings in tests
 const originalWarn = console.warn;
 console.warn = (...args: unknown[]) => {

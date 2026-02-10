@@ -1,7 +1,9 @@
 # Football IQ - Project Context
 
 ## Overview
+
 Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes:
+
 1. **Career Path** - Guess player from sequential career clues
 2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
 3. **The Grid** - Fill 3x3 matrix with players matching criteria
@@ -14,37 +16,40 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 10. **Starting XI** - Identify hidden players on a tactical pitch lineup
 
 ## Tech Stack
-| Layer | Technology |
-|-------|------------|
-| Mobile App | React Native 0.76.5 + Expo SDK 52 |
-| Routing | Expo Router 4.x (file-based) |
-| Backend | Supabase (PostgreSQL + Auth + Realtime) |
-| Local Storage | Expo SQLite (offline-first) |
-| Payments | RevenueCat |
-| Ads | Google AdMob |
-| CMS | `tools/content-creator.html` (standalone) |
+
+| Layer         | Technology                                |
+| ------------- | ----------------------------------------- |
+| Mobile App    | React Native 0.76.5 + Expo SDK 52         |
+| Routing       | Expo Router 4.x (file-based)              |
+| Backend       | Supabase (PostgreSQL + Auth + Realtime)   |
+| Local Storage | Expo SQLite (offline-first)               |
+| Payments      | RevenueCat                                |
+| Ads           | Google AdMob                              |
+| CMS           | `tools/content-creator.html` (standalone) |
 
 ## Database Schema
 
 ### Supabase Tables
-| Table | RLS | Purpose |
-|-------|-----|---------|
-| `daily_puzzles` | Yes | One puzzle per game mode per day (+ special event puzzles via `is_special` flag) |
-| `profiles` | Yes | User profiles with `is_premium` flag |
-| `puzzle_attempts` | Yes | User puzzle attempts with scores |
-| `user_streaks` | Yes | Streak tracking per game mode |
-| `content_reports` | Yes | User error reports for puzzle content |
-| `game_submissions` | Yes | User-submitted game mode ideas |
-| `players` | Yes (SELECT) | Wikidata player graph (QID PK) |
-| `clubs` | Yes (SELECT) | Club identity (QID PK) |
-| `player_appearances` | Yes (SELECT) | Player ↔ Club junction with years |
-| `achievements` | Yes (SELECT) | Curated football achievements (Wikidata QID PK) |
-| `player_achievements` | Yes (SELECT) | Player ↔ Achievement junction with year/club |
-| `app_config` | Yes (SELECT) | App versioning (Elite Index version) |
-| `agent_runs` | Blocked | AI agent logs (admin-only) |
-| `match_data` | Blocked | Football match data (admin-only) |
+
+| Table                 | RLS          | Purpose                                                                          |
+| --------------------- | ------------ | -------------------------------------------------------------------------------- |
+| `daily_puzzles`       | Yes          | One puzzle per game mode per day (+ special event puzzles via `is_special` flag) |
+| `profiles`            | Yes          | User profiles with `is_premium` flag                                             |
+| `puzzle_attempts`     | Yes          | User puzzle attempts with scores                                                 |
+| `user_streaks`        | Yes          | Streak tracking per game mode                                                    |
+| `content_reports`     | Yes          | User error reports for puzzle content                                            |
+| `game_submissions`    | Yes          | User-submitted game mode ideas                                                   |
+| `players`             | Yes (SELECT) | Wikidata player graph (QID PK)                                                   |
+| `clubs`               | Yes (SELECT) | Club identity (QID PK)                                                           |
+| `player_appearances`  | Yes (SELECT) | Player ↔ Club junction with years                                                |
+| `achievements`        | Yes (SELECT) | Curated football achievements (Wikidata QID PK)                                  |
+| `player_achievements` | Yes (SELECT) | Player ↔ Achievement junction with year/club                                     |
+| `app_config`          | Yes (SELECT) | App versioning (Elite Index version)                                             |
+| `agent_runs`          | Blocked      | AI agent logs (admin-only)                                                       |
+| `match_data`          | Blocked      | Football match data (admin-only)                                                 |
 
 ### SQLite Tables (Local)
+
 ```sql
 puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at, is_special, event_title, event_subtitle, event_tag, event_theme)
 attempts (id, puzzle_id, completed, score, score_display, metadata, started_at, completed_at, synced)
@@ -57,37 +62,44 @@ _metadata (key, value, updated_at)  -- Version tracking (Elite Index version)
 ```
 
 ### Migrations
+
 **Supabase:** 001-009 + 012 + 019-022 + 033 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync, achievements + stats_cache, special events)
 **SQLite:** v1-v13 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding, stats_cache column, special event columns)
 
 ## Authentication
 
 ### Flow
+
 1. App mount → Check existing session
 2. No session → Auto `signInAnonymously()`
 3. First run → Full-screen Briefing (BriefingScreen) with weekly schedule + display name
 4. Optional → Email OTP to link account and preserve data
 
 ### Onboarding Briefing
+
 Full-screen experience shown on first launch to introduce the app and collect display name.
 
 **Components:**
+
 - `BriefingScreen` - Main full-screen composition with header, schedule grid, and name input
 - `BriefingBackground` - SVG tactical formation pattern (4-3-3 shape)
 - `WeeklyFixturesGrid` - Two-column grid showing all 7 game modes with schedule
 - `FixtureCard` - MiniCard-style game mode display with premium badges
 
 **Trigger Logic:**
+
 - Shown when `needsDisplayName` (no profile.display_name) OR `!hasCompletedOnboarding` (AsyncStorage)
 - AsyncStorage key: `@app_onboarding_completed`
 - Persists immediately on "START YOUR CAREER" press
 
 **Validation:**
+
 - Display name: 3-30 characters (minimum increased from 2)
 - Success haptic on submit
 - Sentry event: `User Onboarded` with `display_name_length` tag
 
 ### Key Files
+
 - `src/features/auth/context/AuthContext.tsx` - AuthProvider + useAuth hook
 - `src/features/auth/components/BriefingScreen.tsx` - Full-screen onboarding experience
 - `src/features/auth/components/FirstRunModal.tsx` - Modal wrapper for BriefingScreen
@@ -97,6 +109,7 @@ Full-screen experience shown on first launch to introduce the app and collect di
 ## Shared Systems
 
 ### IQ Progression System
+
 Cumulative points system with 10 football-themed tiers from Trialist (0) to GOAT (20,000).
 
 **Tier Thresholds:**
@@ -118,15 +131,19 @@ Cumulative points system with 10 football-themed tiers from Trialist (0) to GOAT
 **Files:** `src/features/stats/utils/tierProgression.ts`, `supabase/migrations/018_total_iq_progression.sql`
 
 ### Fuzzy Name Validation
+
 All game modes use `src/lib/validation.ts` for player name matching:
+
 - Case insensitive, accent normalization (Özil = Ozil)
 - Partial name matching (surname only: "Messi" = "Lionel Messi")
 - Typo tolerance via Dice coefficient (threshold: 0.85)
 
 ### Elite Index (Player Search)
+
 Pre-bundled database of ~4,900 elite players for instant autocomplete across all game modes.
 
 **Architecture:**
+
 1. **Bundled Asset**: `assets/data/elite-index.json` (~783 KB) exported from Supabase `players` table
 2. **Seeding**: SQLite migration v8 loads JSON into `player_search_cache` on first launch
 3. **Local Search**: `searchPlayerCache()` — LIKE on search_name, ORDER BY scout_rank DESC
@@ -135,6 +152,7 @@ Pre-bundled database of ~4,900 elite players for instant autocomplete across all
 6. **Delta Sync**: Calendar-aware background check via `SyncService` + `SyncScheduler` — weekly during transfer windows/awards season (Jan, May-Jun, Aug), monthly otherwise — downloads deltas including `stats_cache` when server version bumps
 
 **Search Flow:**
+
 ```
 User types 3+ chars → searchPlayerCache() (instant, ~4,900 players)
   ↓ (if < 3 results)
@@ -148,6 +166,7 @@ Cache Oracle results to player_search_cache
 **Zero-Spoiler**: Only flag, birth year, position shown. No club history in autocomplete.
 
 **Files:**
+
 - `assets/data/elite-index.json` — Bundled player data
 - `src/lib/database.ts` — Migration v8, `searchPlayerCache()`, `getEliteIndexVersion()`
 - `src/services/player/HybridSearchEngine.ts` — Local + Oracle waterfall
@@ -157,9 +176,11 @@ Cache Oracle results to player_search_cache
 - `supabase/migrations/022_achievements.sql` — Achievements schema, stats_cache, calculate_player_stats RPC
 
 ### Club Search (for The Thread game mode)
+
 Hybrid search for clubs with nickname support and fuzzy matching.
 
 **Architecture:**
+
 1. **Local Cache**: ~200 elite clubs pre-seeded in `club_colors` table from `elite-index.json`
 2. **Nickname Map**: Hardcoded `CLUB_NICKNAME_MAP` for common aliases (e.g., "Spurs" → Tottenham)
 3. **Local Search**: `searchClubColors()` — LIKE on name with diacritic normalization
@@ -167,6 +188,7 @@ Hybrid search for clubs with nickname support and fuzzy matching.
 5. **Deduplication**: Results merged by club ID, sorted by relevance score
 
 **Search Flow:**
+
 ```
 User types 2+ chars → searchClubColors() (instant, ~200 clubs)
   ↓
@@ -178,12 +200,14 @@ Merge + dedupe by ID → sort by relevance
 ```
 
 **Nickname Examples:**
+
 - "Spurs" → Tottenham Hotspur F.C.
 - "Gunners" → Arsenal F.C.
 - "Barca" → FC Barcelona
 - "Bayern" / "FCB" → FC Bayern Munich
 
 **Files:**
+
 - `src/services/club/ClubSearchEngine.ts` — Hybrid search with callback pattern
 - `src/services/club/clubNicknames.ts` — `CLUB_NICKNAME_MAP` + `NICKNAME_TO_CLUB_ID` reverse lookup
 - `src/services/club/types.ts` — `UnifiedClub`, `CachedClub` interfaces
@@ -191,24 +215,32 @@ Merge + dedupe by ID → sort by relevance
 - `src/components/ClubAutocomplete.tsx` — Neubrutalist autocomplete UI
 
 ### Access Control (3-Tier)
-| Tier | User Type | Puzzle Access |
-|------|-----------|---------------|
-| 1 | Anonymous | Today only |
-| 2 | Free (authenticated) | Last 7 days |
-| 3 | Premium | Full archive |
+
+| Tier | User Type            | Puzzle Access |
+| ---- | -------------------- | ------------- |
+| 1    | Anonymous            | Today only    |
+| 2    | Free (authenticated) | Last 7 days   |
+| 3    | Premium              | Full archive  |
 
 ```typescript
 // src/features/archive/utils/dateGrouping.ts
-function isPuzzleLocked(puzzleDate, isPremium, puzzleId?, adUnlocks?, hasCompletedAttempt?): boolean {
-  if (hasCompletedAttempt) return false;  // Completed = permanent unlock
+function isPuzzleLocked(
+  puzzleDate,
+  isPremium,
+  puzzleId?,
+  adUnlocks?,
+  hasCompletedAttempt?,
+): boolean {
+  if (hasCompletedAttempt) return false; // Completed = permanent unlock
   if (isPremium) return false;
-  if (isWithinFreeWindow(puzzleDate)) return false;  // 7-day window
-  if (hasValidAdUnlock(puzzleId, adUnlocks)) return false;  // Ad unlock
+  if (isWithinFreeWindow(puzzleDate)) return false; // 7-day window
+  if (hasValidAdUnlock(puzzleId, adUnlocks)) return false; // Ad unlock
   return true;
 }
 ```
 
 ### Sync Engine
+
 - **Puzzle sync**: Supabase → SQLite on app launch (RLS filters by tier)
 - **Light sync**: On app foreground, compares `updated_at` timestamps to detect CMS edits
 - **Attempt sync**: SQLite → Supabase via `safe_upsert_attempt()` RPC
@@ -217,10 +249,13 @@ function isPuzzleLocked(puzzleDate, isPremium, puzzleId?, adUnlocks?, hasComplet
 - **Key files**: `src/features/puzzles/context/PuzzleContext.tsx`, `services/puzzleLightSyncService.ts`
 
 ### Progressive Save
+
 All game modes save progress to SQLite on app background, restore on return. Uses `AppState` listener + `RESTORE_PROGRESS` action in game hooks.
 
 ### Time Integrity System
+
 Prevents clock manipulation to access future/past puzzles:
+
 - **Server time sources**: worldtimeapi.org (primary), Supabase RPC (fallback)
 - **Drift detection**: Compares Unix timestamps (timezone-agnostic), threshold ±5 minutes
 - **Local dates**: Puzzles use user's local timezone (Wordle-style midnight rollover)
@@ -232,6 +267,7 @@ Prevents clock manipulation to access future/past puzzles:
 ## Game Modes
 
 ### Career Path
+
 Guess player from sequential career steps. Each wrong guess reveals next step as penalty.
 
 **Content**: `{ answer, career_steps: [{ type, text, year, apps?, goals? }] }`
@@ -241,6 +277,7 @@ Guess player from sequential career steps. Each wrong guess reveals next step as
 **Files**: `src/features/career-path/`
 
 ### Career Path Pro (Premium Only)
+
 Premium version of Career Path using the same unified engine. Features harder/more obscure players.
 Uses `PremiumOnlyGate` wrapper - non-premium users cannot access regardless of puzzle date.
 
@@ -251,6 +288,7 @@ Uses `PremiumOnlyGate` wrapper - non-premium users cannot access regardless of p
 **Files**: `app/career-path-pro/`, `src/features/career-path/` (shared engine)
 
 ### Transfer Guess
+
 Identify player from transfer details. Hints revealed voluntarily (not on wrong guess).
 
 **Content**: `{ answer, from_club, to_club, fee, hints: [year, position, nationality_iso_code] }`
@@ -261,6 +299,7 @@ Identify player from transfer details. Hints revealed voluntarily (not on wrong 
 **Files**: `src/features/transfer-guess/`
 
 ### Goalscorer Recall
+
 Name all goalscorers from a match within 60 seconds. Own goals auto-revealed.
 
 **Content**: `{ home_team, away_team, scores, competition, match_date, goals: [{ scorer, minute, team, isOwnGoal? }] }`
@@ -269,6 +308,7 @@ Name all goalscorers from a match within 60 seconds. Own goals auto-revealed.
 **Files**: `src/features/goalscorer-recall/`
 
 ### The Grid
+
 Fill 3x3 matrix with players matching row (Y-axis) and column (X-axis) criteria.
 
 **Content**: `{ xAxis: [cat, cat, cat], yAxis: [cat, cat, cat], valid_answers: { "0": [...], ... } }`
@@ -278,9 +318,10 @@ Fill 3x3 matrix with players matching row (Y-axis) and column (X-axis) criteria.
 **Validation**: Uses `player_database` SQLite table for club/nation checks; `stats_cache` for trophy/stat checks
 **Files**: `src/features/the-grid/`, `src/features/the-grid/utils/achievementMapping.ts`
 
-*Note: Legacy Tic Tac Toe (`tic_tac_toe`) still exists for archive review but replaced by The Grid for daily play.*
+_Note: Legacy Tic Tac Toe (`tic_tac_toe`) still exists for archive review but replaced by The Grid for daily play._
 
 ### The Chain
+
 Connect two players through shared club history using Inverse Par scoring.
 
 **Content**: `{ start_player: { qid, name, nationality_code? }, end_player: { qid, name, nationality_code? }, par: number, solution_path?: [...], hint_player?: { qid, name, nationality_code? } }`
@@ -292,6 +333,7 @@ Connect two players through shared club history using Inverse Par scoring.
 **Files**: `src/features/the-chain/`, `app/the-chain/`, `web/lib/the-chain/scoring.ts`, `web/components/puzzle/forms/the-chain-form.tsx`, `supabase/migrations/028_the_chain.sql`
 
 ### The Thread
+
 Guess the football club from a chronological list of kit sponsors or suppliers.
 
 **Content**: `{ thread_type: 'sponsor' | 'supplier', path: [{ brand_name, years }], correct_club_id, correct_club_name, kit_lore: { fun_fact } }`
@@ -303,6 +345,7 @@ Guess the football club from a chronological list of kit sponsors or suppliers.
 **Files**: `src/features/the-thread/`, `web/lib/schemas/puzzle-schemas.ts`, `web/components/puzzle/forms/the-thread-form.tsx`, `web/components/puzzle/previews/the-thread-preview.tsx`, `web/app/(dashboard)/admin/the-thread/page.tsx`
 
 ### Topical Quiz
+
 5 multiple-choice questions on current events. Auto-advances after answer.
 
 **Content**: `{ questions: [{ id, question, imageUrl?, options: [4], correctIndex }] }`
@@ -311,6 +354,7 @@ Guess the football club from a chronological list of kit sponsors or suppliers.
 **Files**: `src/features/topical-quiz/`
 
 ### Top Tens (Premium Only)
+
 Guess all 10 items in a ranked list. Correct guesses reveal at rank position.
 
 **Content**: `{ title, category?, answers: [{ name, aliases?, info? }] }`
@@ -320,6 +364,7 @@ Guess all 10 items in a ranked list. Correct guesses reveal at rank position.
 **Files**: `src/features/top-tens/`
 
 ### Starting XI
+
 Identify hidden players in a historic match lineup displayed on a tactical pitch.
 
 **Content**: `{ match_name, competition, match_date, formation, team, players: [{ position_key, player_name, is_hidden, override_x?, override_y? }] }`
@@ -332,7 +377,9 @@ Identify hidden players in a historic match lineup displayed on a tactical pitch
 ## Features
 
 ### Daily Loop
+
 Home screen dashboard showing today's 6 puzzles with Play/Resume/Done states.
+
 - **StreakHeader**: Fire icon + count, daily progress (X/6)
 - **Card states**: Play (green), Resume (yellow), Done (emoji grid + Result button)
 - **Special Event Banner**: DB-driven EventBanner for `is_special` puzzles (hidden from daily feed)
@@ -340,7 +387,9 @@ Home screen dashboard showing today's 6 puzzles with Play/Resume/Done states.
 - **Files**: `src/features/home/`, `app/(tabs)/index.tsx`
 
 ### Special Events
+
 Database-driven system for time-limited event puzzles shown via a premium banner instead of the daily feed.
+
 - **Database**: `is_special` boolean on `daily_puzzles` + CMS-configurable banner fields (`event_title`, `event_subtitle`, `event_tag`, `event_theme`)
 - **Unique constraint**: `(puzzle_date, game_mode, is_special)` allows 1 regular + 1 special of same mode per day
 - **CMS**: "Special Event?" toggle in puzzle editor modal with conditional banner fields
@@ -351,7 +400,9 @@ Database-driven system for time-limited event puzzles shown via a premium banner
 - **Files**: `src/features/home/hooks/useSpecialEvent.ts`, `src/features/home/config/events.ts`, `src/features/home/components/new/EventBanner.tsx`, `supabase/migrations/033_special_events.sql`
 
 ### Archive Screen
+
 Historical puzzle browser with premium gating and "Velvet Rope" locked card design.
+
 - **Filters**: All, Incomplete, or by game mode
 - **Catalog sync**: `get_puzzle_catalog()` RPC bypasses RLS to show locked puzzle metadata
 - **Completed puzzles**: Always unlocked for viewing results
@@ -362,26 +413,34 @@ Historical puzzle browser with premium gating and "Velvet Rope" locked card desi
 - **Files**: `src/features/archive/`, `app/(tabs)/archive.tsx`
 
 ### Premium Gating
+
 Two-layer defense: UI hook (`useGatedNavigation`) + route HOC (`PremiumGate`).
+
 - Locked cards show gold border + Crown unlock button
 - Tapping locked → `UnlockChoiceModal` (Go Premium or Watch Ad)
 - Deep-link bypass blocked by `PremiumGate` on `[puzzleId].tsx` routes
 - **Files**: `src/features/archive/hooks/useGatedNavigation.ts`, `src/features/auth/components/PremiumGate.tsx`
 
 ### Leaderboard
+
 Daily (0-500 cumulative) and Global IQ (0-100 weighted) rankings.
+
 - DENSE_RANK with earliest completion as tiebreaker
 - Polling every 30s, sticky "Me" bar when scrolled
 - **Files**: `src/features/leaderboard/`, `app/leaderboard/index.tsx`
 
 ### Scout Report (My IQ Profile)
+
 Third tab displaying user's football identity with tier progression.
+
 - **Components**: ElitePlayerCard (FUT-style header) + StreakCalendar
 - **Tiers**: 10 football-themed tiers from Trialist (0) to GOAT (20,000)
 - **Files**: `src/features/stats/`, `app/(tabs)/stats.tsx`
 
 ### Streak Calendar
+
 Mobile-optimized calendar showing daily completion history on Scout Report tab.
+
 - **Cell intensity**: 0 games (navy), 1-3 (green 50%), 4+ (green 100%)
 - **3D depth**: Uses Solid Layer architecture (1px sunk, 3px filled)
 - **Tooltips**: Tap cell to see date, IQ earned, game mode completion icons
@@ -392,18 +451,24 @@ Mobile-optimized calendar showing daily completion history on Scout Report tab.
 - **Files**: `src/features/stats/components/StreakCalendar/`
 
 ### Score Distribution Graph
+
 Wordle-style "How You Compare" bar chart in result modals.
+
 - Per-puzzle distribution via `get_puzzle_score_distribution()` RPC
 - Scores bucketed 0-100 in 10s, user's bucket highlighted
 - **Files**: `src/features/stats/components/ScoreDistribution*.tsx`
 
 ### Settings
+
 Fourth tab with Privacy Policy, Terms, Rate App, and secret dev menu (7 taps on version).
+
 - **Dev menu**: Test Daily Reminder, Test Streak Saver, Reset Game Intros, Clear Data buttons
 - **Files**: `src/features/settings/`, `app/(tabs)/settings.tsx`
 
 ### Submit Game Ideas
+
 User-submitted game mode ideas with Pro subscription reward incentive.
+
 - **Entry Points**: Lightbulb icon in Home header, "Submit Game Idea" row in Settings > Community
 - **Reward**: 1 year of Pro if idea is used
 - **Form Fields**: Title (required), Description (required), Email (optional)
@@ -411,7 +476,9 @@ User-submitted game mode ideas with Pro subscription reward incentive.
 - **Files**: `src/features/ideas/`, `app/submit-idea.tsx`
 
 ### Local Notifications
+
 Push-style local notifications to maximize DAU and protect streaks.
+
 - **Notification IDs**: Stable numeric strings (`101`=Daily, `102`=Streak, `103`=Ad-hoc CMS reserved)
 - **Daily Kick-off** (08:30): Morning reminder if user hasn't played, rotating messages
 - **Streak Saver** (20:30): Evening alert 12h after Daily (configurable offset), if `streak > 0 AND gamesPlayedToday === 0`
@@ -423,7 +490,9 @@ Push-style local notifications to maximize DAU and protect streaks.
 - **Files**: `src/features/notifications/`
 
 ### Review Mode
+
 Visual replay of completed games showing user choices, hints used, and outcomes.
+
 - Career Path: Green winning step / red missed step
 - Transfer Guess: Shows only actually revealed hints
 - Goalscorer Recall: Found vs Missed comparison view
@@ -432,6 +501,7 @@ Visual replay of completed games showing user choices, hints used, and outcomes.
 ## Monetization
 
 ### RevenueCat (Subscriptions)
+
 - **Entitlement**: `premium_access`
 - **Offering**: `default_offering`
 - **Sync**: `SubscriptionSyncProvider` syncs entitlement → `profiles.is_premium` in Supabase
@@ -439,16 +509,18 @@ Visual replay of completed games showing user choices, hints used, and outcomes.
 - **Files**: `src/config/revenueCat.ts`, `src/features/subscription/`
 
 ### Google AdMob
+
 - **Banner**: Global in tab layout, auto-hides for premium
 - **Rewarded**: Watch-to-unlock for permanent archive puzzle access
 - **Files**: `src/features/ads/`
 
-| Type | iOS | Android |
-|------|-----|---------|
-| Banner | `ca-app-pub-9426782115883407/8614691809` | `ca-app-pub-9426782115883407/4156572045` |
+| Type     | iOS                                      | Android                                  |
+| -------- | ---------------------------------------- | ---------------------------------------- |
+| Banner   | `ca-app-pub-9426782115883407/8614691809` | `ca-app-pub-9426782115883407/4156572045` |
 | Rewarded | `ca-app-pub-9426782115883407/6782735388` | `ca-app-pub-9426782115883407/1028873493` |
 
 ### Sentry Error Monitoring
+
 - **Organization**: `football-iq`
 - **Project**: `football-iq-mobile`
 - **Region**: `de.sentry.io`
@@ -466,19 +538,22 @@ Visual replay of completed games showing user choices, hints used, and outcomes.
   "slug": "football-iq",
   "version": "1.0.0",
   "ios.bundleIdentifier": "com.charliearlie.footballiq.app",
-  "ios.buildNumber": "17"  // INCREMENT BEFORE EACH SUBMISSION
+  "ios.buildNumber": "7" // INCREMENT BEFORE EACH SUBMISSION
 }
 ```
 
 **RevenueCat Keys:**
+
 - Production: `appl_QWyaHOEVWcyFzTWkykxesWlqhDo`
 - Sandbox: `test_otNRIIDWLJwJlzISdCbUzGtwwlD`
 
 **AdMob App IDs:**
+
 - iOS: `ca-app-pub-9426782115883407~8797195643`
 - Android: `ca-app-pub-9426782115883407~1712062487`
 
 **OpenAI (CMS AI Scout):**
+
 - Model: `gpt-4o`
 - Temperature: `0.2` (factual accuracy)
 - Env var: `OPENAI_API_KEY` (server-side only in `web/.env.local`)
@@ -525,6 +600,7 @@ A Next.js 15 web application for managing puzzle content.
 **Location**: `/web` directory (excluded from mobile build)
 
 **Features**:
+
 - Master Calendar view showing 8 game modes per day
 - Green/Red dot indicators for puzzle status
 - Quick View sidebar for puzzle details
@@ -533,7 +609,9 @@ A Next.js 15 web application for managing puzzle content.
 - **Intelligent Scheduler**: Schedule-aware puzzle management (see below)
 
 ### AI Scout Feature
+
 Extracts career data from Wikipedia using MediaWiki API + OpenAI gpt-4o.
+
 - **Input**: Wikipedia player URL (e.g., `https://en.wikipedia.org/wiki/Andrea_Pirlo`)
 - **Output**: Populated career timeline with clubs, years, apps, goals, and trivia
 - **Confidence scoring**: High/Medium/Low indicators per step
@@ -543,7 +621,9 @@ Extracts career data from Wikipedia using MediaWiki API + OpenAI gpt-4o.
 - **See**: `docs/memory/decisions/ai-scout.md` for full documentation
 
 ### Content Oracle
+
 AI-powered bulk puzzle generation and user error reporting system.
+
 - **Oracle Engine**: Suggests players for Career Path/Pro based on game mode difficulty
   - `career_path`: High-profile players (Ballon d'Or nominees, league legends)
   - `career_path_pro`: Cult heroes, journeymen, obscure legends
@@ -564,7 +644,9 @@ AI-powered bulk puzzle generation and user error reporting system.
 - **See**: `docs/memory/decisions/content-oracle.md` for full documentation
 
 ### Intelligent Scheduler
+
 Schedule-aware puzzle management system for efficient content creation.
+
 - **Weekly Schedule**: Defines which game modes run on which days (see `web/lib/scheduler.ts`)
 - **Backlog Puzzles**: Create puzzles without dates, assign later from the Backlog panel
 - **Progress Indicators**: Each day shows `populatedRequired/requiredCount` (e.g., "5/6")
@@ -580,9 +662,11 @@ Schedule-aware puzzle management system for efficient content creation.
 - **See**: `docs/memory/decisions/intelligent-scheduler.md` for full documentation
 
 ### Admin Command Center
+
 Player lookup and management tool for CMS administrators.
 
 **Features**:
+
 - **Universal Player Search**: Search across all ~4,900 elite players in the Supabase `players` table
 - **Pro Badge**: Gold badge (#FFBF00) indicates elite players (top ~5,000 by `scout_rank`)
 - **Player Detail Sheet**: Side drawer showing:
@@ -594,6 +678,7 @@ Player lookup and management tool for CMS administrators.
 **Elite Threshold**: Players with `scout_rank >= 50` are considered elite and display the Pro Badge.
 
 **Files**:
+
 - `web/components/admin/universal-answer-search.tsx` - Main search component with dropdown
 - `web/components/admin/player-detail-sheet.tsx` - Detail drawer with club history, trophies, appearances
 - `web/components/admin/pro-badge.tsx` - Reusable Pro Badge component
@@ -603,6 +688,7 @@ Player lookup and management tool for CMS administrators.
 **Tech Stack**: Next.js 15, Tailwind CSS, shadcn/ui, Supabase SSR
 
 **Running the CMS**:
+
 ```bash
 cd web
 npm install
@@ -611,6 +697,7 @@ npm run dev
 ```
 
 **Key Files**:
+
 - `web/app/(dashboard)/calendar/page.tsx` - Master Calendar
 - `web/hooks/use-puzzles.ts` - Data fetching
 - `web/components/calendar/` - Calendar components
@@ -618,19 +705,21 @@ npm run dev
 
 ## Design System ("Digital Pitch")
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Pitch Green | #58CC02 | Primary actions |
-| Stadium Navy | #0F172A | Background |
-| Floodlight White | #F8FAFC | Text |
-| Card Yellow | #FACC15 | Highlights, warnings |
-| Red Card | #EF4444 | Errors, destructive |
+| Token            | Value   | Usage                |
+| ---------------- | ------- | -------------------- |
+| Pitch Green      | #58CC02 | Primary actions      |
+| Stadium Navy     | #0F172A | Background           |
+| Floodlight White | #F8FAFC | Text                 |
+| Card Yellow      | #FACC15 | Highlights, warnings |
+| Red Card         | #EF4444 | Errors, destructive  |
 
 **Typography**: Bebas Neue (headlines), Inter (body)
 **Core Components**: `ElevatedButton` (3D neubrutalist), `GlassCard` (frosted blur)
 
 ### Solid Layer 3D Architecture
+
 All interactive elements use a two-layer View structure for cross-platform 3D depth:
+
 - **Shadow layer**: Fixed at bottom, solid darker color
 - **Top layer**: Animates `translateY` on press (squash effect)
 

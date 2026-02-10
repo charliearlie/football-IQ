@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { useCareerPathGame } from '../hooks/useCareerPathGame';
 import { ParsedLocalPuzzle } from '@/features/puzzles/types/puzzle.types';
 
@@ -30,10 +30,37 @@ jest.mock('@/hooks/useHaptics', () => ({
     triggerHeavy: jest.fn(),
     triggerSelection: jest.fn(),
     triggerNotification: jest.fn(),
+    triggerSuccess: jest.fn(),
+    triggerError: jest.fn(),
+    triggerCompletion: jest.fn(),
   }),
 }));
 
-describe('Auto-scroll behavior', () => {
+// Mock useGamePersistence to avoid database calls in tests
+jest.mock('@/hooks/useGamePersistence', () => ({
+  useGamePersistence: jest.fn(),
+}));
+
+jest.mock('@/features/puzzles', () => ({
+  usePuzzle: jest.fn(() => ({
+    puzzle: null,
+    isLoading: false,
+    refetch: jest.fn(),
+  })),
+  usePuzzleContext: jest.fn(() => ({
+    syncAttempts: jest.fn(),
+  })),
+}));
+
+jest.mock('@/features/auth', () => ({
+  useAuth: jest.fn(() => ({
+    refreshLocalIQ: jest.fn(),
+    profile: null,
+    totalIQ: 0,
+  })),
+}));
+
+describe('Scroll behavior', () => {
   beforeEach(() => {
     jest.useFakeTimers();
   });
@@ -49,17 +76,17 @@ describe('Auto-scroll behavior', () => {
     expect(result.current.flatListRef.current).toBeNull(); // Not attached yet
   });
 
-  it('triggers scrollToEnd when revealedCount changes via revealNext', async () => {
+  it('does not auto-scroll on reveal (auto-scroll was intentionally removed)', () => {
     const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
 
-    // Mock the ref
+    // Mock the ref with scroll methods
     const mockScrollToEnd = jest.fn();
+    const mockScrollToOffset = jest.fn();
     (result.current.flatListRef as any).current = {
       scrollToEnd: mockScrollToEnd,
+      scrollToOffset: mockScrollToOffset,
+      scrollToIndex: jest.fn(),
     };
-
-    // Initial state
-    expect(result.current.state.revealedCount).toBe(1);
 
     // Reveal next step
     act(() => {
@@ -68,114 +95,72 @@ describe('Auto-scroll behavior', () => {
 
     expect(result.current.state.revealedCount).toBe(2);
 
-    // Fast-forward the 100ms delay
+    // Advance timers well past any potential auto-scroll delay
     act(() => {
-      jest.advanceTimersByTime(100);
+      jest.advanceTimersByTime(500);
     });
 
-    await waitFor(() => {
-      expect(mockScrollToEnd).toHaveBeenCalledWith({ animated: true });
-    });
+    // No auto-scroll should have been triggered
+    expect(mockScrollToEnd).not.toHaveBeenCalled();
+    expect(mockScrollToOffset).not.toHaveBeenCalled();
   });
 
-  it('triggers scrollToEnd when revealedCount changes via incorrect guess', async () => {
+  it('does not auto-scroll on incorrect guess penalty reveal', () => {
     const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
 
-    // Mock the ref
     const mockScrollToEnd = jest.fn();
+    const mockScrollToOffset = jest.fn();
     (result.current.flatListRef as any).current = {
       scrollToEnd: mockScrollToEnd,
+      scrollToOffset: mockScrollToOffset,
+      scrollToIndex: jest.fn(),
     };
 
-    // Make an incorrect guess
+    // Make an incorrect guess (triggers penalty reveal)
     act(() => {
       result.current.setCurrentGuess('Wrong Answer');
     });
-
     act(() => {
       result.current.submitGuess();
     });
 
     expect(result.current.state.revealedCount).toBe(2);
 
-    // Fast-forward the 100ms delay
     act(() => {
-      jest.advanceTimersByTime(100);
+      jest.advanceTimersByTime(500);
     });
 
-    await waitFor(() => {
-      expect(mockScrollToEnd).toHaveBeenCalledWith({ animated: true });
-    });
+    expect(mockScrollToEnd).not.toHaveBeenCalled();
+    expect(mockScrollToOffset).not.toHaveBeenCalled();
   });
 
-  it('does not trigger scrollToEnd on initial render (revealedCount = 1)', () => {
+  it('does not auto-scroll after multiple reveals', () => {
     const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
 
-    // Mock the ref
     const mockScrollToEnd = jest.fn();
     (result.current.flatListRef as any).current = {
       scrollToEnd: mockScrollToEnd,
+      scrollToOffset: jest.fn(),
+      scrollToIndex: jest.fn(),
     };
 
-    // Fast-forward any potential timers
+    // Reveal 3 more steps
     act(() => {
-      jest.advanceTimersByTime(200);
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
     });
 
-    // Should not scroll on initial render
+    expect(result.current.state.revealedCount).toBe(4);
+
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
     expect(mockScrollToEnd).not.toHaveBeenCalled();
   });
 
-  it('triggers scrollToEnd multiple times for multiple reveals', async () => {
-    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
-
-    // Mock the ref
-    const mockScrollToEnd = jest.fn();
-    (result.current.flatListRef as any).current = {
-      scrollToEnd: mockScrollToEnd,
-    };
-
-    // Reveal step 2
-    act(() => {
-      result.current.revealNext();
-    });
-
-    act(() => {
-      jest.advanceTimersByTime(100);
-    });
-
-    await waitFor(() => {
-      expect(mockScrollToEnd).toHaveBeenCalledTimes(1);
-    });
-
-    // Reveal step 3
-    act(() => {
-      result.current.revealNext();
-    });
-
-    act(() => {
-      jest.advanceTimersByTime(100);
-    });
-
-    await waitFor(() => {
-      expect(mockScrollToEnd).toHaveBeenCalledTimes(2);
-    });
-
-    // Reveal step 4
-    act(() => {
-      result.current.revealNext();
-    });
-
-    act(() => {
-      jest.advanceTimersByTime(100);
-    });
-
-    await waitFor(() => {
-      expect(mockScrollToEnd).toHaveBeenCalledTimes(3);
-    });
-  });
-
-  it('handles null ref gracefully', () => {
+  it('handles null ref gracefully on reveal', () => {
     const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
 
     // Leave ref as null (not attached)
@@ -187,10 +172,9 @@ describe('Auto-scroll behavior', () => {
     });
 
     act(() => {
-      jest.advanceTimersByTime(100);
+      jest.advanceTimersByTime(200);
     });
 
-    // No error should occur
     expect(result.current.state.revealedCount).toBe(2);
   });
 });

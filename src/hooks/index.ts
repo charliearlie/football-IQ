@@ -7,3 +7,4 @@ export {
   type UseFeedbackResult,
 } from './useFeedback';
 export { useNetworkStatus, type NetworkStatus } from './useNetworkStatus';
+export { useAnalytics, ANALYTICS_EVENTS } from './useAnalytics';

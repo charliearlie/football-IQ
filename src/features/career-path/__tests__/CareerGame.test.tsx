@@ -25,12 +25,35 @@ const mockPuzzle: ParsedLocalPuzzle = {
   updated_at: null,
 };
 
-// Mock usePuzzle hook
+// Mock puzzles module
 jest.mock('@/features/puzzles', () => ({
   usePuzzle: jest.fn(() => ({
     puzzle: mockPuzzle,
     isLoading: false,
     refetch: jest.fn(),
+  })),
+  usePuzzleContext: jest.fn(() => ({
+    syncAttempts: jest.fn(),
+  })),
+  useStablePuzzle: jest.fn(() => ({
+    puzzle: mockPuzzle,
+    isLoading: false,
+  })),
+  useOnboarding: jest.fn(() => ({
+    shouldShowIntro: false,
+    isReady: true,
+    completeIntro: jest.fn(),
+  })),
+  GameIntroScreen: jest.fn(() => null),
+  GameIntroModal: jest.fn(() => null),
+}));
+
+// Mock auth
+jest.mock('@/features/auth', () => ({
+  useAuth: jest.fn(() => ({
+    refreshLocalIQ: jest.fn(),
+    profile: null,
+    totalIQ: 0,
   })),
 }));
 
@@ -42,12 +65,58 @@ jest.mock('@/hooks/useHaptics', () => ({
     triggerHeavy: jest.fn(),
     triggerSelection: jest.fn(),
     triggerNotification: jest.fn(),
+    triggerSuccess: jest.fn(),
+    triggerError: jest.fn(),
+    triggerCompletion: jest.fn(),
   }),
 }));
 
 // Mock safe area insets
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+
+// Mock navigation
+jest.mock('expo-router', () => ({
+  useRouter: jest.fn(() => ({
+    back: jest.fn(),
+    push: jest.fn(),
+    replace: jest.fn(),
+  })),
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  useIsFocused: jest.fn(() => true),
+}));
+
+// Mock review mode hook
+jest.mock('@/hooks', () => ({
+  useReviewMode: jest.fn(() => ({
+    metadata: null,
+    isLoading: false,
+  })),
+}));
+
+// Mock ads
+jest.mock('@/features/ads', () => {
+  const { View } = require('react-native');
+  return {
+    AdBanner: jest.fn(() => null),
+  };
+});
+
+// Mock career path components that aren't under test
+jest.mock('../components/ScoutingDisclaimer', () => ({
+  ScoutingDisclaimer: jest.fn(() => null),
+}));
+
+jest.mock('../components/ReportErrorSheet', () => ({
+  ReportErrorSheet: jest.fn(() => null),
+  ReportType: {},
+}));
+
+jest.mock('../services/reportService', () => ({
+  submitReport: jest.fn(),
 }));
 
 // Mock useGamePersistence to avoid database calls in tests
@@ -355,6 +424,127 @@ describe('useCareerPathGame Hook', () => {
 
       jest.useRealTimers();
     });
+  });
+});
+
+describe('give up flow', () => {
+  it('sets gameStatus to lost on give up', () => {
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    // Reveal all steps so give-up is available
+    act(() => {
+      result.current.revealNext(); // 2
+      result.current.revealNext(); // 3
+      result.current.revealNext(); // 4
+      result.current.revealNext(); // 5
+    });
+
+    expect(result.current.allCluesRevealed).toBe(true);
+    expect(result.current.state.gameStatus).toBe('playing');
+
+    act(() => {
+      result.current.giveUp();
+    });
+
+    expect(result.current.state.gameStatus).toBe('lost');
+  });
+
+  it('calculates score with 0 points on give up', () => {
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    // Reveal all steps
+    act(() => {
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
+    });
+
+    act(() => {
+      result.current.giveUp();
+    });
+
+    expect(result.current.state.score).not.toBeNull();
+    expect(result.current.state.score?.points).toBe(0);
+    expect(result.current.state.score?.won).toBe(false);
+    expect(result.current.state.score?.maxPoints).toBe(5);
+  });
+
+  it('does nothing if game is already over (won)', () => {
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    // Win the game first
+    act(() => {
+      result.current.setCurrentGuess('Morgan Rogers');
+    });
+    act(() => {
+      result.current.submitGuess();
+    });
+
+    expect(result.current.state.gameStatus).toBe('won');
+    const scoreAfterWin = result.current.state.score;
+
+    // Try to give up after winning - should have no effect
+    act(() => {
+      result.current.giveUp();
+    });
+
+    expect(result.current.state.gameStatus).toBe('won');
+    expect(result.current.state.score).toBe(scoreAfterWin);
+  });
+
+  it('does nothing if game is already over (lost)', () => {
+    jest.useFakeTimers();
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    // Reveal all and lose
+    act(() => {
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
+    });
+    act(() => { jest.advanceTimersByTime(500); });
+    act(() => {
+      result.current.setCurrentGuess('Wrong Player');
+    });
+    act(() => {
+      result.current.submitGuess();
+    });
+
+    expect(result.current.state.gameStatus).toBe('lost');
+    const scoreAfterLoss = result.current.state.score;
+
+    // Try to give up after losing - should have no effect
+    act(() => {
+      result.current.giveUp();
+    });
+
+    expect(result.current.state.gameStatus).toBe('lost');
+    expect(result.current.state.score).toBe(scoreAfterLoss);
+
+    jest.useRealTimers();
+  });
+
+  it('includes all required score fields on give up', () => {
+    const { result } = renderHook(() => useCareerPathGame(mockPuzzle));
+
+    act(() => {
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
+      result.current.revealNext();
+    });
+
+    act(() => {
+      result.current.giveUp();
+    });
+
+    const score = result.current.state.score;
+    expect(score).toHaveProperty('points');
+    expect(score).toHaveProperty('maxPoints');
+    expect(score).toHaveProperty('stepsRevealed');
+    expect(score).toHaveProperty('won');
   });
 });
 

@@ -17,7 +17,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { Platform, Alert } from 'react-native';
+import { Platform } from 'react-native';
 import { useAuth } from '@/features/auth';
 import { saveAdUnlock } from '@/lib/database';
 import { fetchAndSavePuzzle } from '../services/puzzleFetchService';
@@ -69,6 +69,7 @@ export function AdProvider({ children }: AdProviderProps) {
   // Refs for rewarded ad instance and callback
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rewardedAdRef = useRef<any>(null);
+  const rewardedAdLoadedRef = useRef(false);
   const rewardCallbackRef = useRef<((rewarded: boolean) => void) | null>(null);
   const unsubscribersRef = useRef<(() => void)[]>([]);
 
@@ -124,6 +125,7 @@ export function AdProvider({ children }: AdProviderProps) {
     unsubscribersRef.current.forEach((unsub) => unsub());
     unsubscribersRef.current = [];
     rewardedAdRef.current = null;
+    rewardedAdLoadedRef.current = false;
   }, []);
 
   // Load a rewarded ad using the actual SDK
@@ -148,6 +150,7 @@ export function AdProvider({ children }: AdProviderProps) {
     cleanupRewardedAd();
 
     setRewardedAdState('loading');
+    rewardedAdLoadedRef.current = false;
 
     // Return a Promise that resolves when ad is loaded
     return new Promise<void>((resolve, reject) => {
@@ -160,6 +163,7 @@ export function AdProvider({ children }: AdProviderProps) {
         const unsubscribeLoaded = rewarded.addAdEventListener(
           RewardedAdEventType.LOADED,
           () => {
+            rewardedAdLoadedRef.current = true;
             setRewardedAdState('loaded');
             resolve(); // Resolve when ad is loaded
           }
@@ -220,18 +224,15 @@ export function AdProvider({ children }: AdProviderProps) {
   }, [shouldShowAds, cleanupRewardedAd]);
 
   // Show the loaded rewarded ad
+  // Uses ref instead of state to avoid stale closure issues
   const showRewardedAd = useCallback(async (): Promise<boolean> => {
     if (!shouldShowAds) {
       return false;
     }
 
-    // Handle case where ad is not loaded yet
-    if (rewardedAdState !== 'loaded' || !rewardedAdRef.current) {
-      Alert.alert(
-        'Ad Not Ready',
-        'The ad is still loading. Please wait a moment and try again.',
-        [{ text: 'OK' }]
-      );
+    // Use ref for synchronous check - avoids stale closure issues
+    if (!rewardedAdLoadedRef.current || !rewardedAdRef.current) {
+      console.warn('[AdContext] showRewardedAd called but ad not ready');
       return false;
     }
 
@@ -244,17 +245,13 @@ export function AdProvider({ children }: AdProviderProps) {
         rewardedAdRef.current.show();
       } catch (error) {
         console.error('[AdContext] Failed to show rewarded ad:', error);
-        Alert.alert(
-          'Ad Error',
-          'Failed to show the ad. Please try again later.',
-          [{ text: 'OK' }]
-        );
+        rewardedAdLoadedRef.current = false;
         setRewardedAdState('error');
         rewardCallbackRef.current = null;
         resolve(false);
       }
     });
-  }, [shouldShowAds, rewardedAdState]);
+  }, [shouldShowAds]);
 
   // Check if rewarded ad is ready
   const isRewardedAdReady = useMemo(() => {

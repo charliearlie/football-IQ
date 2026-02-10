@@ -22,6 +22,7 @@ import {
   SubscriptionSyncProvider,
   OnboardingProvider as AuthOnboardingProvider,
   useOnboarding,
+  useAuth,
 } from "@/features/auth";
 import {
   PuzzleProvider,
@@ -94,6 +95,31 @@ function PostHogLogger() {
       console.log("[PostHog] SDK initialized successfully");
     }
   }, [posthog]);
+
+  return null;
+}
+
+/**
+ * PostHogIdentifier - Identifies users with person properties.
+ * Must be inside both AuthProvider and PostHogProvider.
+ */
+function PostHogIdentifier() {
+  const posthog = usePostHog();
+  const { user, profile, isAnonymous } = useAuth();
+
+  useEffect(() => {
+    if (!posthog) return;
+
+    if (user?.id) {
+      posthog.identify(user.id, {
+        is_premium: profile?.is_premium ?? false,
+        is_anonymous: isAnonymous,
+        display_name: profile?.display_name ?? null,
+      });
+    } else {
+      posthog.reset();
+    }
+  }, [posthog, user?.id, profile?.is_premium, profile?.display_name, isAnonymous]);
 
   return null;
 }
@@ -330,15 +356,17 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <SafePostHogProvider
-        apiKey="phc_u3vrkbSBmnx9m6bDDInC3XsFrnETkRAnNgO3iVLDWLE"
+        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY!}
         options={{
-          host: "https://eu.i.posthog.com",
+          host: process.env.EXPO_PUBLIC_POSTHOG_HOST!,
+          debug: __DEV__,
         }}
         autocapture={{
           captureScreens: false, // Manual tracking required for expo-router
         }}
       >
         <PostHogLogger />
+        <PostHogIdentifier />
         <SubscriptionSyncProvider>
           <AuthOnboardingProvider>
             <GestureHandlerRootView style={styles.container}>
@@ -360,7 +388,7 @@ export default function RootLayout() {
                     <Stack.Screen
                       name="premium-modal"
                       options={{
-                        presentation: "formSheet",
+                        presentation: "modal",
                         headerShown: false,
                         gestureEnabled: true,
                       }}

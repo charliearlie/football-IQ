@@ -15,7 +15,9 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Crypto from 'expo-crypto';
+import { usePostHog } from 'posthog-react-native';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
+import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
 import { LocalAttempt } from '@/types/database';
 import {
   ParsedLocalPuzzle,
@@ -181,6 +183,8 @@ export interface UseGamePersistenceConfig<TState extends BaseGameState, TMeta> {
 export function useGamePersistence<TState extends BaseGameState, TMeta>(
   config: UseGamePersistenceConfig<TState, TMeta>
 ): void {
+  const posthog = usePostHog();
+
   const {
     puzzle,
     isFocused,
@@ -200,8 +204,15 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
   useEffect(() => {
     if (state.gameStatus === 'playing' && !state.attemptId && puzzle) {
       dispatch({ type: 'SET_ATTEMPT_ID', payload: Crypto.randomUUID() });
+
+      try {
+        posthog?.capture(ANALYTICS_EVENTS.GAME_STARTED, {
+          game_mode: puzzle.game_mode,
+          puzzle_date: puzzle.puzzle_date,
+        });
+      } catch { /* analytics should never crash the game */ }
     }
-  }, [state.gameStatus, state.attemptId, puzzle, dispatch]);
+  }, [state.gameStatus, state.attemptId, puzzle, dispatch, posthog]);
 
   // 3. Restore progress from interrupted attempt on mount/focus
   useEffect(() => {
@@ -353,6 +364,19 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
 
         await saveAttempt(attempt);
         dispatch({ type: 'ATTEMPT_SAVED' });
+
+        try {
+          const timeSpent = state.startedAt
+            ? Math.round((Date.now() - new Date(state.startedAt).getTime()) / 1000)
+            : null;
+          posthog?.capture(ANALYTICS_EVENTS.GAME_COMPLETED, {
+            game_mode: puzzle.game_mode,
+            result: state.gameStatus,
+            score: JSON.stringify(state.score),
+            time_spent_seconds: timeSpent,
+            puzzle_date: puzzle.puzzle_date,
+          });
+        } catch { /* analytics should never crash the game */ }
 
         // Refresh local IQ immediately for instant UI update
         if (onLocalSaved) {
