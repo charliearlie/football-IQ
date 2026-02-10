@@ -26,7 +26,7 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Sentry from '@sentry/react-native';
 import { onMidnight, getAuthorizedDateUnsafe } from '@/lib/time';
-import { router } from 'expo-router';
+import { router, type Href, useRootNavigationState } from 'expo-router';
 import {
   initializeNotifications,
   requestPermissions,
@@ -104,9 +104,14 @@ export function NotificationProvider({
   const prevTotalGamesPlayed = useRef(totalGamesPlayed);
   const prevCompletedCount = useRef(completedPuzzlesToday);
   const pushTokenRegistered = useRef(false);
+  const pendingDeepLink = useRef<Record<string, unknown> | null>(null);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
+
+  // Navigation readiness — used for cold-start deep linking
+  const navigationState = useRootNavigationState();
+  const isNavigationReady = !!navigationState?.key;
 
   // ============================================================================
   // Push Token Registration
@@ -127,17 +132,26 @@ export function NotificationProvider({
   // ============================================================================
 
   const handleNotificationNavigation = useCallback((data: Record<string, unknown>) => {
-    const gameMode = data?.gameMode as string | undefined;
-    const puzzleId = data?.puzzleId as string | undefined;
+    const { gameMode, puzzleId } = data ?? {};
 
-    if (!gameMode) return;
+    // Validate gameMode is a recognised key in GAME_MODE_ROUTES
+    if (typeof gameMode !== 'string' || !(gameMode in GAME_MODE_ROUTES)) {
+      console.warn('[Notifications] Unknown or missing gameMode in notification data:', gameMode);
+      return;
+    }
 
-    // Map game_mode (database format) to route path if needed
-    const routePath = GAME_MODE_ROUTES[gameMode as GameMode] ?? gameMode;
+    const routePath = GAME_MODE_ROUTES[gameMode as GameMode];
 
-    const path = puzzleId ? `/${routePath}/${puzzleId}` : `/${routePath}`;
-    // Use href object to satisfy typed routes
-    router.push({ pathname: path } as Parameters<typeof router.push>[0]);
+    // Validate puzzleId if present: must be a non-empty alphanumeric/dash/underscore string
+    if (puzzleId !== undefined) {
+      if (typeof puzzleId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(puzzleId)) {
+        console.warn('[Notifications] Invalid puzzleId in notification data:', puzzleId);
+        return;
+      }
+    }
+
+    const pathname = puzzleId ? `/${routePath}/${puzzleId}` : `/${routePath}`;
+    router.push(pathname as Href);
   }, []);
 
   // ============================================================================
@@ -186,8 +200,7 @@ export function NotificationProvider({
         if (lastResponse) {
           const data = lastResponse.notification.request.content.data;
           if (data?.gameMode) {
-            // Small delay to let navigation mount
-            setTimeout(() => handleNotificationNavigation(data as Record<string, unknown>), 500);
+            pendingDeepLink.current = data as Record<string, unknown>;
           }
         }
 
@@ -200,6 +213,14 @@ export function NotificationProvider({
 
     init();
   }, [isSupported, currentStreak, gamesPlayedToday, handleNotificationNavigation]);
+
+  // Process pending cold-start deep link once the navigation tree is mounted
+  useEffect(() => {
+    if (isNavigationReady && pendingDeepLink.current) {
+      handleNotificationNavigation(pendingDeepLink.current);
+      pendingDeepLink.current = null;
+    }
+  }, [isNavigationReady, handleNotificationNavigation]);
 
   // ============================================================================
   // Notification Scheduling

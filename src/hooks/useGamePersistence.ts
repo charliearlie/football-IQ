@@ -400,5 +400,5 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
     saveGameAttempt();
     // Callback is stable via config object
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.gameStatus, state.score, state.attemptSaved, puzzle, dispatch]);
+  }, [state.gameStatus, state.score, state.attemptSaved, puzzle, dispatch, posthog]);
 }

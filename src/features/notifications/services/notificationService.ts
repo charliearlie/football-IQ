@@ -325,22 +325,19 @@ export async function registerForPushNotifications(): Promise<string | null> {
  * Uses upsert to handle token changes (same user, different token).
  */
 export async function savePushToken(userId: string, token: string): Promise<void> {
-  const platform = Platform.OS as 'ios' | 'android';
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+    console.warn(`[Notifications] savePushToken called on unsupported platform: ${Platform.OS}`);
+    return;
+  }
+
+  const platform = Platform.OS;
 
   try {
-    // Delete any existing tokens for this user on this platform,
-    // then insert the new one. This handles device changes cleanly.
-    await supabase
-      .from('push_tokens')
-      .delete()
-      .eq('user_id', userId)
-      .eq('platform', platform);
-
     const { error } = await supabase
       .from('push_tokens')
       .upsert(
         { user_id: userId, token, platform, updated_at: new Date().toISOString() },
-        { onConflict: 'token' }
+        { onConflict: 'user_id,platform' }
       );
 
     if (error) throw error;

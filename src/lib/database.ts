@@ -490,7 +490,8 @@ export async function getTotalPuzzleCount(): Promise<number> {
 
   // Fallback: catalog not synced yet, use puzzles table
   const fallback = await database.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) as count FROM puzzles WHERE is_special = 0'
+    `SELECT COUNT(*) as count FROM puzzles
+     WHERE is_special = 0 AND puzzle_date <= date('now', 'localtime')`
   );
   return fallback?.count ?? 0;
 }
@@ -522,7 +523,8 @@ export async function getCompletedPuzzleCount(): Promise<number> {
   const fallback = await database.getFirstAsync<{ count: number }>(
     `SELECT COUNT(*) as count FROM attempts a
      JOIN puzzles p ON a.puzzle_id = p.id
-     WHERE a.completed = 1 AND p.is_special = 0`
+     WHERE a.completed = 1 AND p.is_special = 0
+       AND p.puzzle_date <= date('now', 'localtime')`
   );
   return fallback?.count ?? 0;
 }

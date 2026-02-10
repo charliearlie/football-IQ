@@ -353,69 +353,88 @@ export default function RootLayout() {
     return null;
   }
 
+  const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "";
+  const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? "";
+  const posthogEnabled = posthogApiKey.length > 0 && posthogHost.length > 0;
+
+  if (!posthogEnabled) {
+    console.warn(
+      "[PostHog] Missing environment variables — analytics disabled.",
+      { apiKey: !!posthogApiKey, host: !!posthogHost }
+    );
+  }
+
+  const appContent = (
+    <SubscriptionSyncProvider>
+      <AuthOnboardingProvider>
+        <GestureHandlerRootView style={styles.container}>
+          <AuthGate>
+            {/* Sentry.ErrorBoundary temporarily disabled for testing */}
+            <View style={styles.container}>
+              <Stack
+                screenOptions={{
+                  headerStyle: { backgroundColor: colors.stadiumNavy },
+                  headerTintColor: colors.floodlightWhite,
+                  headerTitleStyle: { fontFamily: fonts.headline },
+                  contentStyle: { backgroundColor: colors.stadiumNavy },
+                }}
+              >
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="premium-modal"
+                  options={{
+                    presentation: "modal",
+                    headerShown: false,
+                    gestureEnabled: true,
+                  }}
+                />
+                <Stack.Screen
+                  name="design-lab"
+                  options={{
+                    title: "Design Lab",
+                    presentation: "modal",
+                  }}
+                />
+                <Stack.Screen
+                  name="submit-idea"
+                  options={{
+                    title: "Submit Idea",
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="light" />
+            </View>
+          </AuthGate>
+        </GestureHandlerRootView>
+      </AuthOnboardingProvider>
+    </SubscriptionSyncProvider>
+  );
+
   return (
     <AuthProvider>
-      <SafePostHogProvider
-        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY!}
-        options={{
-          host: process.env.EXPO_PUBLIC_POSTHOG_HOST!,
-          debug: __DEV__,
-        }}
-        autocapture={{
-          captureScreens: false, // Manual tracking required for expo-router
-        }}
-      >
-        <PostHogLogger />
-        <PostHogIdentifier />
-        <SubscriptionSyncProvider>
-          <AuthOnboardingProvider>
-            <GestureHandlerRootView style={styles.container}>
-              <AuthGate>
-                {/* Sentry.ErrorBoundary temporarily disabled for testing */}
-                <View style={styles.container}>
-                  <Stack
-                    screenOptions={{
-                      headerStyle: { backgroundColor: colors.stadiumNavy },
-                      headerTintColor: colors.floodlightWhite,
-                      headerTitleStyle: { fontFamily: fonts.headline },
-                      contentStyle: { backgroundColor: colors.stadiumNavy },
-                    }}
-                  >
-                    <Stack.Screen
-                      name="(tabs)"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="premium-modal"
-                      options={{
-                        presentation: "modal",
-                        headerShown: false,
-                        gestureEnabled: true,
-                      }}
-                    />
-                    <Stack.Screen
-                      name="design-lab"
-                      options={{
-                        title: "Design Lab",
-                        presentation: "modal",
-                      }}
-                    />
-                    <Stack.Screen
-                      name="submit-idea"
-                      options={{
-                        title: "Submit Idea",
-                        headerShown: false,
-                      }}
-                    />
-                    <Stack.Screen name="+not-found" />
-                  </Stack>
-                  <StatusBar style="light" />
-                </View>
-              </AuthGate>
-            </GestureHandlerRootView>
-          </AuthOnboardingProvider>
-        </SubscriptionSyncProvider>
-      </SafePostHogProvider>
+      {posthogEnabled ? (
+        <SafePostHogProvider
+          apiKey={posthogApiKey}
+          options={{
+            host: posthogHost,
+            debug: __DEV__,
+          }}
+          autocapture={{
+            captureScreens: false, // Manual tracking required for expo-router
+          }}
+        >
+          <PostHogLogger />
+          <PostHogIdentifier />
+          {appContent}
+        </SafePostHogProvider>
+      ) : (
+        appContent
+      )}
     </AuthProvider>
   );
 }
