@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePostHog } from 'posthog-react-native';
 import { useAuth, ONBOARDING_STORAGE_KEY, FirstRunModal } from '@/features/auth';
+import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
 import {
   isOnboardingCompletedSecure,
   setOnboardingCompleted,
@@ -32,6 +34,7 @@ export function useOnboarding() {
 }
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
+  const posthog = usePostHog();
   const { isInitialized, isLoading: isAuthLoading, profile, updateDisplayName, user } = useAuth();
 
   // The single source of truth for the onboarding flow
@@ -150,11 +153,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // 3. Transition State -> COMPLETED
       setCurrentState('COMPLETED');
 
+      try {
+        posthog?.capture(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
+          has_display_name: !!displayName,
+        });
+      } catch { /* analytics should never crash the app */ }
+
     } catch (error) {
       console.error('[OnboardingProvider] Submission failed:', error);
       throw error;
     }
-  }, [updateDisplayName]);
+  }, [updateDisplayName, posthog]);
 
   // Expose simplified state
   // isLoading is true if we haven't reached a final decision (Show or Complete)

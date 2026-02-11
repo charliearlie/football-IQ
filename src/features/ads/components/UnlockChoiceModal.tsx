@@ -35,6 +35,7 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react-native';
+import { usePostHog } from 'posthog-react-native';
 import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -61,6 +62,7 @@ export function UnlockChoiceModal({
   testID,
 }: UnlockChoiceModalProps) {
   const router = useRouter();
+  const posthog = usePostHog();
   const [state, setState] = useState<UnlockChoiceState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -68,6 +70,8 @@ export function UnlockChoiceModal({
 
   // Track mounted state to prevent state updates after unmount
   const isMountedRef = useRef(true);
+  // Prevent autoTriggerAd from re-firing after a failed first attempt
+  const hasAutoTriggeredRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -81,12 +85,14 @@ export function UnlockChoiceModal({
     if (!visible) {
       setState('idle');
       setErrorMessage(null);
+      hasAutoTriggeredRef.current = false;
     }
   }, [visible]);
 
-  // Handle auto-trigger
+  // Handle auto-trigger (fires once per modal open)
   useEffect(() => {
-    if (visible && autoTriggerAd && state === 'idle') {
+    if (visible && autoTriggerAd && state === 'idle' && !hasAutoTriggeredRef.current) {
+      hasAutoTriggeredRef.current = true;
       // Small timeout to ensure modal is visible/mounted before starting
       const timer = setTimeout(() => {
         handleWatchAd();
@@ -164,6 +170,13 @@ export function UnlockChoiceModal({
       if (rewarded) {
         // Grant the unlock
         await grantAdUnlock(puzzleId);
+
+        try {
+          posthog?.capture('ad_unlock_completed', {
+            game_mode: gameMode,
+            puzzle_id: puzzleId,
+          });
+        } catch { /* analytics should never crash the app */ }
 
         try {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

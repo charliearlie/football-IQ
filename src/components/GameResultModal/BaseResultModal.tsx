@@ -23,7 +23,9 @@ import { Confetti } from '@/components/Confetti';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
+import { usePostHog } from 'posthog-react-native';
 import { useHaptics } from '@/hooks/useHaptics';
+import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
 import { useShareStatus, ShareResult } from './useShareStatus';
 import {
   ResultShareData,
@@ -133,6 +135,7 @@ export function BaseResultModal({
   shareCardContent,
   shareData,
 }: BaseResultModalProps) {
+  const posthog = usePostHog();
   const { triggerNotification } = useHaptics();
 
   // ViewShot ref for image capture
@@ -159,6 +162,12 @@ export function BaseResultModal({
     if (result.success) {
       setImageShareStatus('shared');
       setTimeout(() => setImageShareStatus('idle'), 2000);
+      try {
+        posthog?.capture(ANALYTICS_EVENTS.SHARE_COMPLETED, {
+          game_mode: shareData.gameMode,
+          method: result.method,
+        });
+      } catch { /* analytics should never crash the app */ }
     } else {
       setImageShareStatus('error');
     }
@@ -222,6 +231,7 @@ export function BaseResultModal({
       transparent
       animationType="fade"
       statusBarTranslucent
+      onRequestClose={onClose}
       testID={testID}
     >
       <View style={styles.overlay}>

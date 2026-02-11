@@ -49,8 +49,11 @@ export function PremiumUpsellContent({
   onRetry,
   testID,
 }: PremiumUpsellContentProps) {
-  const { height, width } = useWindowDimensions();
-  const isSmallScreen = height < 700;
+  const { height: screenHeight } = useWindowDimensions();
+  const isSmallScreen = screenHeight < 700;
+
+  // Use actual container dimensions for SVG gradients (formSheet on iPad is smaller than screen)
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
   // Best practice: Pre-select Annual (Best Value).
   const processedOffers = React.useMemo(() => processPackagesWithOffers(packages, 'ANNUAL', eligibility), [packages, eligibility]);
@@ -136,42 +139,50 @@ export function PremiumUpsellContent({
   }
 
   return (
-    <View style={styles.container}>
-       {/* Background Glows via SVG for smooth gradient */}
-       <View style={styles.glowContainer} pointerEvents="none">
-          <Svg height={height} width={width} style={StyleSheet.absoluteFill}>
-            <Defs>
-              <RadialGradient
-                id="greenGlow"
-                cx="0"
-                cy="0"
-                rx="50%"
-                ry="30%"
-                fx="0"
-                fy="0"
-                gradientUnits="userSpaceOnUse"
-              >
-                <Stop offset="0" stopColor="#58CC02" stopOpacity="0.15" />
-                <Stop offset="1" stopColor="#58CC02" stopOpacity="0" />
-              </RadialGradient>
-              <RadialGradient
-                id="yellowGlow"
-                cx="100%"
-                cy="100%"
-                rx="50%"
-                ry="30%"
-                fx="100%"
-                fy="100%"
-                gradientUnits="userSpaceOnUse"
-              >
-                <Stop offset="0" stopColor="#FACC15" stopOpacity="0.1" />
-                <Stop offset="1" stopColor="#FACC15" stopOpacity="0" />
-              </RadialGradient>
-            </Defs>
-            <Rect x="0" y="0" width={width} height={height} fill="url(#greenGlow)" />
-            <Rect x="0" y="0" width={width} height={height} fill="url(#yellowGlow)" />
-          </Svg>
-       </View>
+    <View
+      style={styles.container}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        setContainerSize({ width, height });
+      }}
+    >
+       {/* Background Glows via SVG — sized to container, not screen */}
+       {containerSize.width > 0 && (
+         <View style={styles.glowContainer} pointerEvents="none">
+            <Svg height={containerSize.height} width={containerSize.width} style={StyleSheet.absoluteFill}>
+              <Defs>
+                <RadialGradient
+                  id="greenGlow"
+                  cx="0"
+                  cy="0"
+                  rx="50%"
+                  ry="30%"
+                  fx="0"
+                  fy="0"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor="#58CC02" stopOpacity="0.15" />
+                  <Stop offset="1" stopColor="#58CC02" stopOpacity="0" />
+                </RadialGradient>
+                <RadialGradient
+                  id="yellowGlow"
+                  cx="100%"
+                  cy="100%"
+                  rx="50%"
+                  ry="30%"
+                  fx="100%"
+                  fy="100%"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor="#FACC15" stopOpacity="0.1" />
+                  <Stop offset="1" stopColor="#FACC15" stopOpacity="0" />
+                </RadialGradient>
+              </Defs>
+              <Rect x="0" y="0" width={containerSize.width} height={containerSize.height} fill="url(#greenGlow)" />
+              <Rect x="0" y="0" width={containerSize.width} height={containerSize.height} fill="url(#yellowGlow)" />
+            </Svg>
+         </View>
+       )}
 
        {/* Header */}
        <View style={styles.header}>
@@ -186,6 +197,7 @@ export function PremiumUpsellContent({
       </View>
 
       <ScrollView
+         style={styles.scrollView}
          contentContainerStyle={[
             styles.scrollContent,
             isSmallScreen && styles.scrollContentSmall
@@ -395,8 +407,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F172A', // Stadium Navy
-    borderRadius: 48,
     overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
   },
   glowContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -405,7 +419,7 @@ const styles = StyleSheet.create({
   },
   header: {
       paddingHorizontal: 20,
-      paddingTop: 48, // Safe area approx
+      paddingTop: 16,
       alignItems: 'flex-end',
       zIndex: 10,
   },
@@ -579,7 +593,7 @@ const styles = StyleSheet.create({
   footer: {
       backgroundColor: '#0F172A',
       paddingHorizontal: 20,
-      paddingBottom: 32,
+      paddingBottom: 16,
       paddingTop: 8,
   },
   footerLinks: {

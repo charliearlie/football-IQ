@@ -27,6 +27,8 @@ export {
   scheduleNotification,
   cancelNotification,
   cancelAllNotifications,
+  registerForPushNotifications,
+  savePushToken,
   NOTIFICATION_IDS,
 } from './services/notificationService';
 

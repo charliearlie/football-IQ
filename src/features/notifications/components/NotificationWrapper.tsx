@@ -10,6 +10,7 @@
 import React from 'react';
 import { useUserStats } from '@/features/home/hooks/useUserStats';
 import { usePuzzleContext } from '@/features/puzzles';
+import { useAuth } from '@/features/auth';
 import { getAuthorizedDateUnsafe } from '@/lib/time';
 import { NotificationProvider, useNotifications } from '../context/NotificationContext';
 import { NotificationPermissionModal } from './NotificationPermissionModal';
@@ -83,6 +84,7 @@ function NotificationModals() {
  */
 export function NotificationWrapper({ children }: NotificationWrapperProps) {
   const { stats, isLoading: statsLoading } = useUserStats();
+  const { user } = useAuth();
   // Use PuzzleContext directly instead of useDailyPuzzles
   // (useDailyPuzzles uses useFocusEffect which requires navigation context)
   const { puzzles } = usePuzzleContext();
@@ -92,11 +94,6 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
   const todaysPuzzles = puzzles.filter((p) => p.puzzle_date === today);
   const totalPuzzlesToday = todaysPuzzles.length;
 
-  // Don't render provider until stats are loaded
-  if (statsLoading) {
-    return <>{children}</>;
-  }
-
   return (
     <NotificationProvider
       currentStreak={stats.currentStreak}
@@ -104,6 +101,7 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
       totalGamesPlayed={stats.totalGamesPlayed}
       completedPuzzlesToday={stats.gamesPlayedToday}
       totalPuzzlesToday={totalPuzzlesToday}
+      userId={user?.id ?? null}
     >
       {children}
       <NotificationModals />

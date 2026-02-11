@@ -1,13 +1,16 @@
 /**
  * Notification Service
  *
- * Wrapper around expo-notifications for scheduling local notifications.
- * Handles platform-specific configuration and permission requests.
+ * Wrapper around expo-notifications for scheduling local and push notifications.
+ * Handles platform-specific configuration, permission requests, and push token registration.
  */
 
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import * as Sentry from '@sentry/react-native';
 import { Platform } from 'react-native';
+import { supabase } from '@/lib/supabase';
 import type { NotificationType, PermissionStatus } from '../types';
 
 // Notification IDs (stable numeric IDs for precise overwriting)
@@ -267,4 +270,81 @@ export function addResponseListener(
 
     callback(response);
   });
+}
+
+/**
+ * Get the last notification response (for cold-start deep linking).
+ * Returns the notification the user tapped to open the app, if any.
+ */
+export async function getLastNotificationResponse(): Promise<Notifications.NotificationResponse | null> {
+  try {
+    return await Notifications.getLastNotificationResponseAsync();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Register for push notifications and return the Expo Push Token.
+ * Only works on physical devices (not simulators).
+ */
+export async function registerForPushNotifications(): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
+
+  if (!Device.isDevice) {
+    console.log('[Notifications] Push tokens require a physical device');
+    return null;
+  }
+
+  try {
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    if (!projectId) {
+      console.warn('[Notifications] No EAS projectId configured - push notifications unavailable');
+      return null;
+    }
+
+    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+
+    Sentry.addBreadcrumb({
+      category: 'notifications',
+      message: 'push_token_obtained',
+      level: 'info',
+    });
+
+    console.log('[Notifications] Push token obtained');
+    return token;
+  } catch (error) {
+    console.error('[Notifications] Failed to get push token:', error);
+    Sentry.captureException(error);
+    return null;
+  }
+}
+
+/**
+ * Save push token to Supabase for the given user.
+ * Uses upsert to handle token changes (same user, different token).
+ */
+export async function savePushToken(userId: string, token: string): Promise<void> {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+    console.warn(`[Notifications] savePushToken called on unsupported platform: ${Platform.OS}`);
+    return;
+  }
+
+  const platform = Platform.OS;
+
+  try {
+    const { error } = await supabase
+      .from('push_tokens')
+      .upsert(
+        { user_id: userId, token, platform, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,platform' }
+      );
+
+    if (error) throw error;
+
+    console.log('[Notifications] Push token saved to database');
+  } catch (error) {
+    console.error('[Notifications] Failed to save push token:', error);
+    Sentry.captureException(error);
+  }
 }

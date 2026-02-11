@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -19,7 +21,9 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
+import { goalscorerRecallContentSchema } from "@/lib/schemas";
 
 import type { GoalscorerRecallContent } from "@/lib/schemas";
 
@@ -28,15 +32,76 @@ interface FormValues {
 }
 
 export function GoalscorerRecallForm() {
-  const { control } = useFormContext<FormValues>();
+  const { control, setValue, trigger } = useFormContext<FormValues>();
+  const [jsonMode, setJsonMode] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "content.goals",
   });
 
+  function handleJsonImport() {
+    setJsonError(null);
+    try {
+      const parsed = JSON.parse(jsonInput);
+      const result = goalscorerRecallContentSchema.safeParse(parsed);
+      if (!result.success) {
+        setJsonError(result.error.issues.map((i) => i.message).join(", "));
+        return;
+      }
+      const data = result.data;
+      setValue("content.home_team", data.home_team);
+      setValue("content.away_team", data.away_team);
+      setValue("content.home_score", data.home_score);
+      setValue("content.away_score", data.away_score);
+      setValue("content.competition", data.competition);
+      setValue("content.match_date", data.match_date);
+      replace(data.goals);
+      trigger("content");
+      setJsonInput("");
+      setJsonMode(false);
+    } catch {
+      setJsonError("Invalid JSON");
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* Mode Toggle */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setJsonMode(!jsonMode)}
+        >
+          {jsonMode ? "Manual Input" : "Paste JSON"}
+        </Button>
+      </div>
+
+      {jsonMode ? (
+        <div className="space-y-3">
+          <FormDescription>
+            Paste the goalscorer recall JSON below and click Import.
+          </FormDescription>
+          <Textarea
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            placeholder={'{\n  "home_team": "Liverpool",\n  "away_team": "Barcelona",\n  "home_score": 4,\n  "away_score": 0,\n  "competition": "Champions League SF",\n  "match_date": "7 May 2019",\n  "goals": [\n    { "scorer": "Divock Origi", "minute": 7, "team": "home" },\n    { "scorer": "Georginio Wijnaldum", "minute": 54, "team": "home" },\n    { "scorer": "Georginio Wijnaldum", "minute": 56, "team": "home" },\n    { "scorer": "Divock Origi", "minute": 79, "team": "home" }\n  ]\n}'}
+            rows={14}
+            className="bg-white/5 border-white/10 font-mono text-sm"
+          />
+          {jsonError && (
+            <p className="text-sm text-destructive">{jsonError}</p>
+          )}
+          <Button type="button" onClick={handleJsonImport}>
+            Import JSON
+          </Button>
+        </div>
+      ) : (
+      <>
       {/* Match Info */}
       <div className="glass-card p-4 space-y-4">
         <h3 className="text-sm font-medium text-floodlight">Match Information</h3>
@@ -286,6 +351,8 @@ export function GoalscorerRecallForm() {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

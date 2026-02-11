@@ -15,6 +15,7 @@ import {
   getCatalogEntryCountIncomplete,
   getAttemptByPuzzleId,
   getValidAdUnlocks,
+  getCompletedPuzzleCount,
 } from '@/lib/database';
 import { LocalCatalogEntry, ParsedLocalAttempt, UnlockedPuzzle } from '@/types/database';
 import {
@@ -47,6 +48,8 @@ export function useArchivePuzzles(
   const [puzzles, setPuzzles] = useState<ArchivePuzzle[]>([]);
   const [sections, setSections] = useState<ArchiveSection[]>([]);
   const [dateGroups, setDateGroups] = useState<ArchiveDateGroup[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -152,6 +155,11 @@ export function useArchivePuzzles(
         // Check if there are more pages
         const loadedCount = offset + entries.length;
         setHasMore(loadedCount < totalCount);
+
+        // Update global stats from DB (not from paginated data)
+        setTotalCount(totalCount);
+        const completed = await getCompletedPuzzleCount();
+        setCompletedCount(completed);
 
         // Fetch ad unlocks ONCE for this page load (performance optimization)
         const allUnlocks = await getValidAdUnlocks();
@@ -298,6 +306,8 @@ export function useArchivePuzzles(
   return {
     sections,
     dateGroups,
+    totalCount,
+    completedCount,
     isLoading,
     isRefreshing,
     hasMore,
