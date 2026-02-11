@@ -250,7 +250,7 @@ export function QuickViewSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[400px] sm:w-[540px] bg-stadium-navy border-white/10">
+      <SheetContent className="w-full sm:w-[400px] md:w-[540px] bg-stadium-navy border-white/10">
         <SheetHeader>
           <SheetTitle className="text-floodlight">{formattedDate}</SheetTitle>
           <SheetDescription>

@@ -4,6 +4,7 @@ import { DayCell } from "./day-cell";
 import type { CalendarWeek } from "@/hooks/use-calendar-data";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAYS_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
 
 interface CalendarGridProps {
   weeks: CalendarWeek[];
@@ -16,12 +17,13 @@ export function CalendarGrid({ weeks, selectedDate, onSelectDate }: CalendarGrid
     <div className="glass-card overflow-hidden">
       {/* Weekday headers */}
       <div className="grid grid-cols-7 border-b border-white/10">
-        {WEEKDAYS.map((day) => (
+        {WEEKDAYS.map((day, i) => (
           <div
             key={day}
-            className="px-2 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider"
+            className="px-1 sm:px-2 py-2 sm:py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider"
           >
-            {day}
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden">{WEEKDAYS_SHORT[i]}</span>
           </div>
         ))}
       </div>

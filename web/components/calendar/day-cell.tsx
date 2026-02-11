@@ -29,7 +29,7 @@ export function DayCell({ day, isSelected, onSelect, pendingReports }: DayCellPr
       onClick={handleClick}
       disabled={!day.isCurrentMonth}
       className={cn(
-        "relative min-h-[80px] p-2 text-left border transition-all",
+        "relative min-h-[56px] sm:min-h-[80px] p-1 sm:p-2 text-left border transition-all",
         // Base border
         "border-white/5",
         // Upcoming gap warning (yellow border for days in next 14 days with missing required)
@@ -43,21 +43,21 @@ export function DayCell({ day, isSelected, onSelect, pendingReports }: DayCellPr
       )}
     >
       {/* Day number and progress indicator */}
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-between mb-0.5 sm:mb-1.5">
         <span
           className={cn(
-            "text-sm font-medium",
+            "text-xs sm:text-sm font-medium",
             day.isToday && "text-pitch-green font-bold",
             !day.isCurrentMonth && "text-muted-foreground"
           )}
         >
           {day.dayNumber}
         </span>
-        {/* Progress indicator */}
+        {/* Progress indicator - hidden on small screens */}
         {day.isCurrentMonth && hasRequiredContent && (
           <span
             className={cn(
-              "text-[10px] font-mono tabular-nums",
+              "hidden sm:inline text-[10px] font-mono tabular-nums",
               day.hasAllRequired
                 ? "text-pitch-green"
                 : day.isUpcomingGap
@@ -72,7 +72,7 @@ export function DayCell({ day, isSelected, onSelect, pendingReports }: DayCellPr
 
       {/* Game mode dots - flexible layout for scheduled modes + extras */}
       {day.isCurrentMonth && day.displayModes.length > 0 && (
-        <div className="flex flex-wrap gap-1 justify-center">
+        <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-center">
           {day.displayModes.map((gm) => {
             const reportCount = gm.puzzleId
               ? pendingReports?.get(gm.puzzleId) || 0

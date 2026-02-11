@@ -51,7 +51,11 @@ const navigation: NavSection[] = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -96,6 +100,7 @@ export function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={onNavigate}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
@@ -116,6 +121,7 @@ export function Sidebar() {
       <div className="border-t border-white/10 p-4 space-y-1">
         <Link
           href="/settings"
+          onClick={onNavigate}
           className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-floodlight transition-colors"
         >
           <Settings className="h-5 w-5" />

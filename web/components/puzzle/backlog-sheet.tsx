@@ -175,7 +175,7 @@ export function BacklogSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="w-[400px] sm:max-w-[400px]">
+      <SheetContent side="left" className="w-full sm:w-[400px] sm:max-w-[400px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             Puzzle Backlog

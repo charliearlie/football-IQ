@@ -344,7 +344,7 @@ export function PuzzleEditorModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="max-w-[95vw] w-[1400px] h-[90vh] p-0 bg-stadium-navy border-white/10"
+        className="w-full h-full md:max-w-[95vw] md:w-[1400px] md:h-[90vh] p-0 bg-stadium-navy border-white/10 rounded-none md:rounded-lg"
         hideCloseButton
         onOpenAutoFocus={(e) => {
           // Prevent default focus behavior and let the form handle focus naturally
@@ -359,9 +359,9 @@ export function PuzzleEditorModal({
         }}
       >
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b border-white/10">
-          <div className="flex items-center gap-4">
-            <DialogTitle className="text-xl font-semibold text-floodlight">
+        <DialogHeader className="px-4 md:px-6 py-3 md:py-4 border-b border-white/10">
+          <div className="flex flex-wrap items-center gap-2 md:gap-4">
+            <DialogTitle className="text-base md:text-xl font-semibold text-floodlight">
               {isEditMode ? "Edit" : "Create"} {GAME_MODE_DISPLAY_NAMES[gameMode]}
             </DialogTitle>
             {isPremium && (
@@ -376,23 +376,23 @@ export function PuzzleEditorModal({
                 Bonus
               </Badge>
             )}
-            <span className="text-muted-foreground">{formattedDate}</span>
+            <span className="text-sm md:text-base text-muted-foreground">{formattedDate}</span>
           </div>
         </DialogHeader>
 
-        {/* Main Content - Two Column Layout */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Column - Form */}
-          <div className="w-1/2 border-r border-white/10 flex flex-col">
+        {/* Main Content - Two Column on Desktop, Single Column on Mobile */}
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+          {/* Left Column - Form (full width on mobile) */}
+          <div className="flex-1 md:w-1/2 md:flex-none border-r-0 md:border-r border-white/10 flex flex-col min-h-0">
             {/* Form Meta Controls */}
-            <div className="px-6 py-3 border-b border-white/10 flex items-center gap-4 bg-white/[0.02]">
+            <div className="px-4 md:px-6 py-3 border-b border-white/10 flex items-center gap-3 md:gap-4 bg-white/[0.02]">
               <div className="flex items-center gap-2">
                 <Label className="text-sm text-muted-foreground">Difficulty</Label>
                 <Select
                   value={watchedDifficulty || ""}
                   onValueChange={(value) => setValue("difficulty", value || null)}
                 >
-                  <SelectTrigger className="w-28 h-8 bg-white/5 border-white/10">
+                  <SelectTrigger className="w-24 md:w-28 h-8 bg-white/5 border-white/10">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -415,7 +415,7 @@ export function PuzzleEditorModal({
             </div>
 
             {/* Scrollable Form Area */}
-            <ScrollArea className="flex-1 px-6 py-4">
+            <ScrollArea className="flex-1 px-4 md:px-6 py-4">
               {/* Special Event Section */}
               <div className={`rounded-lg border p-4 mb-4 ${isSpecial ? 'border-yellow-500 bg-yellow-500/10' : 'border-border'}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -568,8 +568,8 @@ export function PuzzleEditorModal({
             </ScrollArea>
           </div>
 
-          {/* Right Column - Preview */}
-          <div className="w-1/2 flex flex-col bg-[#0A1628]">
+          {/* Right Column - Preview (hidden on mobile) */}
+          <div className="hidden md:flex md:w-1/2 flex-col bg-[#0A1628]">
             <div className="px-6 py-3 border-b border-white/10">
               <span className="text-sm font-medium text-muted-foreground">
                 Live Preview
@@ -586,35 +586,36 @@ export function PuzzleEditorModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div className="px-4 md:px-6 py-3 md:py-4 border-t border-white/10 bg-white/[0.02]">
           {/* Error message */}
           {saveError && (
-            <div className="text-sm text-red-card flex-1 mr-4">
+            <div className="text-sm text-red-card mb-2 md:mb-0">
               {saveError}
             </div>
           )}
 
           {/* Debug: Show validation errors */}
           {Object.keys(formState.errors).length > 0 && (
-            <div className="text-xs text-red-400 flex-1 mr-4 max-w-md overflow-auto">
+            <div className="text-xs text-red-400 mb-2 md:mb-0 max-w-md overflow-auto">
               Validation errors: {JSON.stringify(formState.errors, null, 2)}
             </div>
           )}
 
-          <div className="flex items-center gap-3 ml-auto">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 justify-end">
             {/* Copy from Yesterday (only for scheduled puzzles) */}
             {!isBacklogMode && (
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={handleCopyFromYesterday}
                 disabled={isCopying || isSaving || isSavingNextGap}
-                className="border-white/10"
+                className="border-white/10 text-xs md:text-sm md:h-10 md:[&_svg]:h-4 md:[&_svg]:w-4"
               >
                 {isCopying ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-3 w-3 mr-1 md:mr-2 animate-spin" />
                 ) : (
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Copy className="h-3 w-3 mr-1 md:mr-2" />
                 )}
                 Copy Yesterday
               </Button>
@@ -624,8 +625,10 @@ export function PuzzleEditorModal({
             <Button
               type="button"
               variant="ghost"
+              size="sm"
               onClick={onClose}
               disabled={isSaving || isSavingNextGap}
+              className="text-xs md:text-sm md:h-10"
             >
               Cancel
             </Button>
@@ -634,13 +637,15 @@ export function PuzzleEditorModal({
             <Button
               type="button"
               variant="secondary"
+              size="sm"
               onClick={() => onSubmit("draft")}
               disabled={isSaving || isSavingNextGap || !formState.isValid}
+              className="text-xs md:text-sm md:h-10"
             >
               {isSaving && !isSavingNextGap ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-3 w-3 mr-1 md:mr-2 animate-spin" />
               ) : (
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-3 w-3 mr-1 md:mr-2" />
               )}
               Save Draft
             </Button>
@@ -650,14 +655,15 @@ export function PuzzleEditorModal({
               <Button
                 type="button"
                 variant="secondary"
+                size="sm"
                 onClick={handleSaveAndNextGap}
                 disabled={isSaving || isSavingNextGap || !formState.isValid}
-                className="bg-card-yellow/20 hover:bg-card-yellow/30 text-card-yellow border-card-yellow/30"
+                className="bg-card-yellow/20 hover:bg-card-yellow/30 text-card-yellow border-card-yellow/30 text-xs md:text-sm md:h-10"
               >
                 {isSavingNextGap ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-3 w-3 mr-1 md:mr-2 animate-spin" />
                 ) : (
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-3 w-3 mr-1 md:mr-2" />
                 )}
                 Save &amp; Next Gap
               </Button>
@@ -666,14 +672,15 @@ export function PuzzleEditorModal({
             {/* Publish */}
             <Button
               type="button"
+              size="sm"
               onClick={() => onSubmit("live")}
               disabled={isSaving || isSavingNextGap || !formState.isValid}
-              className="bg-pitch-green hover:bg-pitch-green/90"
+              className="bg-pitch-green hover:bg-pitch-green/90 text-xs md:text-sm md:h-10"
             >
               {isSaving && !isSavingNextGap ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-3 w-3 mr-1 md:mr-2 animate-spin" />
               ) : (
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-3 w-3 mr-1 md:mr-2" />
               )}
               Publish
             </Button>

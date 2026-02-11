@@ -559,7 +559,7 @@ export default function CalendarPage() {
 
       {/* Stats bar */}
       {isLoading ? (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
@@ -569,9 +569,9 @@ export default function CalendarPage() {
       )}
 
       {/* Main content area */}
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Calendar grid */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {isLoading ? (
             <div className="glass-card p-4">
               <Skeleton className="h-[500px] w-full" />
@@ -585,8 +585,8 @@ export default function CalendarPage() {
           )}
         </div>
 
-        {/* Legend sidebar */}
-        <div className="w-72 shrink-0">
+        {/* Legend sidebar - hidden on mobile/tablet */}
+        <div className="hidden lg:block w-72 shrink-0">
           <Legend />
         </div>
       </div>
