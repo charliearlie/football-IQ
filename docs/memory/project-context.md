@@ -39,7 +39,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 | `user_streaks`        | Yes          | Streak tracking per game mode                                                    |
 | `content_reports`     | Yes          | User error reports for puzzle content                                            |
 | `game_submissions`    | Yes          | User-submitted game mode ideas                                                   |
-| `players`             | Yes (SELECT) | Wikidata player graph (QID PK)                                                   |
+| `players`             | Yes (SELECT) | Wikidata player graph (QID PK) + `api_football_id` external mapping              |
 | `clubs`               | Yes (SELECT) | Club identity (QID PK)                                                           |
 | `player_appearances`  | Yes (SELECT) | Player ↔ Club junction with years                                                |
 | `achievements`        | Yes (SELECT) | Curated football achievements (Wikidata QID PK)                                  |
@@ -213,6 +213,26 @@ Merge + dedupe by ID → sort by relevance
 - `src/services/club/types.ts` — `UnifiedClub`, `CachedClub` interfaces
 - `src/lib/database.ts` — `searchClubColors()`, `getClubColorById()`
 - `src/components/ClubAutocomplete.tsx` — Neubrutalist autocomplete UI
+
+### API-Football ID Mapping
+
+External ID linkage between Wikidata QIDs and [API-Football v3](https://v3.football.api-sports.io) player IDs for data integrity verification.
+
+**Architecture:**
+1. **Column**: `players.api_football_id` (nullable integer, unique partial index) — migration 037
+2. **Pipeline**: `web/lib/data-pipeline/map-external-ids.ts` — batch search + birth year/nationality disambiguation
+3. **Safety**: 90-request budget per run (trial tier = 100/day), 1.2s delay between requests
+4. **Confidence Levels**: `high` (birth year + nationality match) auto-saved; `medium` flagged for admin review in `agent_runs` logs
+5. **Priority**: Players processed by `scout_rank DESC` (most notable first)
+6. **Source of Truth**: Wikidata QID remains the primary key; `api_football_id` is a join key for cross-referencing
+
+**Name Collision Prevention**: Searching by name alone fails for common names (e.g., "Ronaldo", "Gabriel"). The pipeline requires both `birth_year` and `nationality_code` to be present for disambiguation. Players missing either are skipped.
+
+**Files:**
+- `web/lib/data-pipeline/map-external-ids.ts` — Core mapping pipeline (types, scoring, batch runner)
+- `web/lib/data-pipeline/__tests__/map-external-ids.test.ts` — TDD tests (36 tests)
+- `web/app/(dashboard)/admin/actions.ts` — `runApiFootballMapping()` server action wrapper
+- `supabase/migrations/037_api_football_id.sql` — Column + unique partial index
 
 ### Access Control (3-Tier)
 

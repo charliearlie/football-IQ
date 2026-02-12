@@ -162,6 +162,7 @@ jest.mock('react-native-reanimated', () => {
       bounce: jest.fn(),
     },
     interpolate: jest.fn((val) => val),
+    runOnJS: jest.fn((fn) => fn),
   };
 });
 
@@ -191,6 +192,12 @@ jest.mock('react-native-purchases', () => ({
     NETWORK_ERROR: 'NETWORK_ERROR',
     PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR: 'PRODUCT_NOT_AVAILABLE',
     CONFIGURATION_ERROR: 'CONFIGURATION_ERROR',
+  },
+  INTRO_ELIGIBILITY_STATUS: {
+    INTRO_ELIGIBILITY_STATUS_UNKNOWN: 0,
+    INTRO_ELIGIBILITY_STATUS_INELIGIBLE: 1,
+    INTRO_ELIGIBILITY_STATUS_ELIGIBLE: 2,
+    INTRO_ELIGIBILITY_STATUS_NO_INTRO_OFFER_EXISTS: 3,
   },
 }));
 

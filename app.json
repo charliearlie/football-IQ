@@ -2,14 +2,14 @@
   "expo": {
     "name": "Football IQ",
     "slug": "football-iq",
-    "version": "2.0.0",
+    "version": "2.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/footballiq-icon.png",
     "scheme": "footballiq",
     "userInterfaceStyle": "dark",
     "newArchEnabled": false,
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/footballiq-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0F172A"
     },

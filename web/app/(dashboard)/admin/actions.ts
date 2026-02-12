@@ -5,6 +5,18 @@ import { createAdminClient } from "@/lib/supabase/server";
 import type { GameMode } from "@/lib/constants";
 import { GAME_MODES } from "@/lib/constants";
 import { extractAnswer } from "@/lib/admin-utils";
+import {
+  runMappingBatch,
+  runCareerValidationBatch,
+  fetchPlayerTeams,
+  apiTeamsToClubSummaries,
+  type MappingRunResult,
+  type CareerValidationResult,
+  type OurAppearance,
+  type ClubMapping,
+  type AmbiguousCandidate,
+  type ApiClubSummary,
+} from "@/lib/data-pipeline/map-external-ids";
 
 // ============================================================================
 // TYPES
@@ -562,6 +574,455 @@ export async function resyncPlayerFromWikidata(
     return {
       success: false,
       error: err instanceof Error ? err.message : "Failed to resync player",
+    };
+  }
+}
+
+// ============================================================================
+// API-FOOTBALL EXTERNAL ID MAPPING
+// ============================================================================
+
+/**
+ * Fetch players that don't yet have an api_football_id,
+ * ordered by scout_rank DESC (most notable first).
+ * Requires birth_year AND nationality_code for safe disambiguation.
+ */
+async function getUnmappedPlayers(
+  limit: number
+): Promise<Array<{ id: string; name: string; birth_year: number | null; nationality_code: string | null }>> {
+  const supabase = await createAdminClient();
+
+  const { data, error } = await supabase
+    .from("players")
+    .select("id, name, birth_year, nationality_code")
+    .is("api_football_id", null)
+    .is("mapping_status" as string, null)
+    .not("birth_year", "is", null)
+    .not("nationality_code", "is", null)
+    .order("scout_rank", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`Failed to fetch unmapped players: ${error.message}`);
+  return data ?? [];
+}
+
+/**
+ * Save high-confidence API-Football ID mappings to the players table.
+ */
+async function saveMappingsToSupabase(
+  mappings: Array<{ playerQid: string; apiFootballId: number | null }>
+): Promise<{ count: number }> {
+  const supabase = await createAdminClient();
+  let count = 0;
+
+  for (const mapping of mappings) {
+    if (mapping.apiFootballId == null) continue;
+
+    const { error } = await supabase
+      .from("players")
+      .update({ api_football_id: mapping.apiFootballId } as Record<string, unknown>)
+      .eq("id", mapping.playerQid);
+
+    if (error) {
+      console.error(`Failed to save mapping for ${mapping.playerQid}: ${error.message}`);
+    } else {
+      count++;
+    }
+  }
+
+  return { count };
+}
+
+/**
+ * Save mapping_status for flagged and skipped players so they
+ * aren't re-processed on subsequent runs.
+ */
+async function saveMappingStatuses(result: MappingRunResult) {
+  const supabase = await createAdminClient();
+
+  const updates: Array<{ qid: string; status: string }> = [];
+
+  for (const m of result.flaggedForReview) {
+    updates.push({ qid: m.playerQid, status: "flagged" });
+  }
+  for (const m of result.skipped) {
+    // Distinguish between "not found in API" and "skipped due to bad data"
+    const status = m.reason.includes("No API results") || m.reason.includes("none matched")
+      ? "not_found"
+      : "skipped";
+    updates.push({ qid: m.playerQid, status });
+  }
+
+  for (const { qid, status } of updates) {
+    await supabase
+      .from("players")
+      .update({ mapping_status: status } as Record<string, unknown>)
+      .eq("id", qid);
+  }
+}
+
+/**
+ * Run the API-Football external ID mapping pipeline.
+ * Fetches unmapped players (by scout_rank DESC), searches API-Football,
+ * and saves high-confidence matches.
+ *
+ * Safety: auto-stops at 90 requests to preserve trial quota (100/day).
+ */
+export async function runApiFootballMapping(
+  options: { limit?: number; dryRun?: boolean }
+): Promise<ActionResult<MappingRunResult & { savedCount: number }>> {
+  try {
+    const apiKey = process.env.API_FOOTBALL_KEY;
+    if (!apiKey) {
+      return { success: false, error: "API_FOOTBALL_KEY not configured in environment" };
+    }
+
+    const players = await getUnmappedPlayers(options.limit ?? 50);
+    if (players.length === 0) {
+      return {
+        success: true,
+        data: {
+          mapped: [],
+          flaggedForReview: [],
+          skipped: [],
+          requestsUsed: 0,
+          requestBudget: 90,
+          savedCount: 0,
+        },
+      };
+    }
+
+    const result = await runMappingBatch(players, apiKey);
+
+    let savedCount = 0;
+    if (!options.dryRun) {
+      const highConfidence = result.mapped.filter(
+        (m) => m.confidence === "high" && m.apiFootballId != null
+      );
+      if (highConfidence.length > 0) {
+        const saveResult = await saveMappingsToSupabase(highConfidence);
+        savedCount = saveResult.count;
+      }
+
+      // Mark flagged/skipped players so they don't get re-processed
+      await saveMappingStatuses(result);
+    }
+
+    // Log run to agent_runs table
+    try {
+      const supabase = await createAdminClient();
+      await supabase.from("agent_runs").insert({
+        run_date: new Date().toISOString().split("T")[0],
+        agent_name: "api_football_mapper",
+        status: "success",
+        puzzles_created: 0,
+        logs: {
+          mapped_count: result.mapped.length,
+          flagged_count: result.flaggedForReview.length,
+          skipped_count: result.skipped.length,
+          requests_used: result.requestsUsed,
+          saved_count: savedCount,
+          dry_run: options.dryRun ?? false,
+          flagged_players: result.flaggedForReview.map((f) => ({
+            qid: f.playerQid,
+            name: f.playerName,
+            reason: f.reason,
+            candidates: f.candidates,
+          })),
+        },
+      });
+    } catch {
+      // Non-fatal: logging failure shouldn't block the result
+    }
+
+    return {
+      success: true,
+      data: { ...result, savedCount },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "API-Football mapping failed",
+    };
+  }
+}
+
+// ============================================================================
+// ACCEPT FLAGGED MAPPING
+// ============================================================================
+
+/**
+ * Accept a flagged (medium-confidence) player mapping.
+ * Saves the api_football_id to the players table.
+ */
+export async function acceptFlaggedMapping(
+  playerQid: string,
+  apiFootballId: number
+): Promise<ActionResult> {
+  try {
+    const supabase = await createAdminClient();
+
+    const { error } = await supabase
+      .from("players")
+      .update({ api_football_id: apiFootballId, mapping_status: null } as Record<string, unknown>)
+      .eq("id", playerQid);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to save mapping",
+    };
+  }
+}
+
+// ============================================================================
+// INSPECT API PLAYER (for flagged review)
+// ============================================================================
+
+/**
+ * Fetch a player's team history from API-Football for manual review.
+ * Returns club summaries (national teams filtered out).
+ * Costs 1 API request.
+ */
+export async function inspectApiPlayer(
+  apiFootballId: number
+): Promise<ActionResult<{ clubs: ApiClubSummary[] }>> {
+  try {
+    const apiKey = process.env.API_FOOTBALL_KEY;
+    if (!apiKey) {
+      return { success: false, error: "API_FOOTBALL_KEY not configured" };
+    }
+
+    const teams = await fetchPlayerTeams(apiFootballId, apiKey);
+    const clubs = apiTeamsToClubSummaries(teams);
+
+    return { success: true, data: { clubs } };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to fetch player teams",
+    };
+  }
+}
+
+// ============================================================================
+// CAREER VALIDATION (Phase 2)
+// ============================================================================
+
+/**
+ * Fetch mapped players (those with api_football_id) and their appearances.
+ */
+async function getMappedPlayersWithAppearances(
+  limit: number
+): Promise<{
+  players: Array<{
+    playerQid: string;
+    playerName: string;
+    apiFootballId: number;
+    ourAppearances: OurAppearance[];
+  }>;
+  existingClubMap: Map<string, number>;
+}> {
+  const supabase = await createAdminClient();
+
+  // Get players that have been mapped
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: players, error } = await (supabase as any)
+    .from("players")
+    .select("id, name, api_football_id")
+    .not("api_football_id", "is", null)
+    .order("scout_rank", { ascending: false })
+    .limit(limit) as { data: Array<{ id: string; name: string; api_football_id: number }> | null; error: { message: string } | null };
+
+  if (error) throw new Error(`Failed to fetch mapped players: ${error.message}`);
+  if (!players || players.length === 0) {
+    return { players: [], existingClubMap: new Map() };
+  }
+
+  // Load existing club ID mappings
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: mappedClubs } = await (supabase as any)
+    .from("clubs")
+    .select("id, api_football_id")
+    .not("api_football_id", "is", null) as { data: Array<{ id: string; api_football_id: number }> | null };
+
+  const existingClubMap = new Map<string, number>();
+  for (const club of mappedClubs ?? []) {
+    existingClubMap.set(club.id, club.api_football_id);
+  }
+
+  // For each player, fetch their appearances with club names
+  const results = [];
+  for (const player of players) {
+    const { data: appearances } = await supabase
+      .from("player_appearances")
+      .select(`
+        club_id,
+        start_year,
+        end_year,
+        clubs (
+          id,
+          name
+        )
+      `)
+      .eq("player_id", player.id)
+      .order("start_year", { ascending: true, nullsFirst: true });
+
+    const ourAppearances: OurAppearance[] = (appearances ?? []).map((app) => {
+      const club = app.clubs as { id: string; name: string } | null;
+      return {
+        clubId: app.club_id,
+        clubName: club?.name ?? "Unknown Club",
+        startYear: app.start_year,
+        endYear: app.end_year,
+      };
+    });
+
+    results.push({
+      playerQid: player.id,
+      playerName: player.name,
+      apiFootballId: player.api_football_id,
+      ourAppearances,
+    });
+  }
+
+  return { players: results, existingClubMap };
+}
+
+/**
+ * Save discovered club API-Football ID mappings to the clubs table.
+ */
+async function saveClubMappings(
+  mappings: ClubMapping[]
+): Promise<{ saved: number; duplicates: string[] }> {
+  const supabase = await createAdminClient();
+  let saved = 0;
+  const duplicates: string[] = [];
+
+  for (const mapping of mappings) {
+    // Check if another club already has this API ID (potential duplicate)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (supabase as any)
+      .from("clubs")
+      .select("id, name")
+      .eq("api_football_id", mapping.apiFootballId)
+      .maybeSingle() as { data: { id: string; name: string } | null };
+
+    if (existing && existing.id !== mapping.clubQid) {
+      duplicates.push(
+        `${mapping.clubName} (${mapping.clubQid}) and ${existing.name} (${existing.id}) both map to API team ${mapping.apiFootballId}`
+      );
+      continue;
+    }
+
+    const { error } = await supabase
+      .from("clubs")
+      .update({ api_football_id: mapping.apiFootballId } as Record<string, unknown>)
+      .eq("id", mapping.clubQid);
+
+    if (error) {
+      console.error(`Failed to save club mapping for ${mapping.clubQid}: ${error.message}`);
+    } else {
+      saved++;
+    }
+  }
+
+  return { saved, duplicates };
+}
+
+/**
+ * Run career validation: fetch teams from API-Football for mapped players
+ * and compare against our player_appearances data.
+ *
+ * Side effect: discovers and saves club API-Football ID mappings.
+ * The career comparison itself is report-only — no player data changes.
+ */
+export async function runCareerValidation(
+  options: { limit?: number; dryRun?: boolean }
+): Promise<ActionResult<CareerValidationResult & { clubMappingsSaved: number; clubDuplicates: string[] }>> {
+  try {
+    const apiKey = process.env.API_FOOTBALL_KEY;
+    if (!apiKey) {
+      return { success: false, error: "API_FOOTBALL_KEY not configured in environment" };
+    }
+
+    const { players, existingClubMap } = await getMappedPlayersWithAppearances(options.limit ?? 50);
+    if (players.length === 0) {
+      return {
+        success: true,
+        data: {
+          validated: [],
+          errors: [],
+          clubMappingsDiscovered: [],
+          clubMappingsSaved: 0,
+          clubDuplicates: [],
+          requestsUsed: 0,
+          requestBudget: 7000,
+        },
+      };
+    }
+
+    const result = await runCareerValidationBatch(players, apiKey, {
+      existingClubMap,
+    });
+
+    // Save discovered club mappings (unless dry run)
+    let clubMappingsSaved = 0;
+    let clubDuplicates: string[] = [];
+    if (!options.dryRun && result.clubMappingsDiscovered.length > 0) {
+      const saveResult = await saveClubMappings(result.clubMappingsDiscovered);
+      clubMappingsSaved = saveResult.saved;
+      clubDuplicates = saveResult.duplicates;
+    }
+
+    // Log run to agent_runs table
+    try {
+      const supabase = await createAdminClient();
+      const totalDiscrepancies = result.validated.reduce(
+        (sum, v) => sum + v.totalDiscrepancies, 0
+      );
+      await supabase.from("agent_runs").insert({
+        run_date: new Date().toISOString().split("T")[0],
+        agent_name: "career_validator",
+        status: "success",
+        puzzles_created: 0,
+        logs: {
+          validated_count: result.validated.length,
+          error_count: result.errors.length,
+          total_discrepancies: totalDiscrepancies,
+          requests_used: result.requestsUsed,
+          club_mappings_discovered: result.clubMappingsDiscovered.length,
+          club_mappings_saved: clubMappingsSaved,
+          club_duplicates: clubDuplicates,
+          dry_run: options.dryRun ?? false,
+          players_with_issues: result.validated
+            .filter((v) => v.totalDiscrepancies > 0)
+            .map((v) => ({
+              qid: v.playerQid,
+              name: v.playerName,
+              discrepancies: v.totalDiscrepancies,
+              missing_from_ours: v.comparison.missingFromOurs.length,
+              missing_from_api: v.comparison.missingFromApi.length,
+            })),
+        },
+      });
+    } catch {
+      // Non-fatal
+    }
+
+    return {
+      success: true,
+      data: { ...result, clubMappingsSaved, clubDuplicates },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Career validation failed",
     };
   }
 }
