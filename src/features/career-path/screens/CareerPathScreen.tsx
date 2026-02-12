@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: layout.screenPadding,
-    paddingBottom: 220, // ActionZone + AdBanner height + buffer
+    paddingBottom: 300, // ActionZone/GameOverActionZone + AdBanner + safe area + buffer
     gap: 0, // Remove gap, as rows handle their own spacing/connecting
   },
   reviewContent: {

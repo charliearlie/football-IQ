@@ -1,7 +1,8 @@
-import type {
-  PurchasesPackage,
-  PurchasesStoreProduct,
-  IntroEligibility,
+import {
+  INTRO_ELIGIBILITY_STATUS,
+  type PurchasesPackage,
+  type PurchasesStoreProduct,
+  type IntroEligibility,
 } from 'react-native-purchases';
 import type { OfferInfo, PackageWithOffer } from '../types/subscription.types';
 
@@ -178,13 +179,9 @@ export function processPackagesWithOffers(
 ): PackageWithOffer[] {
   // First pass: detect offers on all packages
   const packagesWithOffers = packages.map((pkg) => {
-    // Check eligibility for this specific product
-    // RevenueCat returns key as productIdentifier
     const eligibility = eligibilityMap[pkg.product.identifier];
-    const isEligible = eligibility ? eligibility.status === 0 : true; // 0 = INTRO_ELIGIBILITY_STATUS_ELIGIBLE. Default to true if unknown to fail open? No, better fail safe, but previous behavior was always true. Let's strictly check status === 0 if we have the map. If map is empty (initial load), maybe assume true or false?
-    // Actually, if we don't have eligibility yet, we shouldn't show the offer price to be safe.
-    // However, the UI might flicker.
-    // Let's assume passed eligibility map is authoritative.
+    // ELIGIBLE = 2. Default to false when unknown (RevenueCat guidance: show non-intro pricing)
+    const isEligible = eligibility?.status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE;
 
     return {
       package: pkg,

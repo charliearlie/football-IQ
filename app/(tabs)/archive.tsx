@@ -2,7 +2,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors, spacing } from '@/theme';
 import {
   useArchivePuzzles,
@@ -18,6 +18,7 @@ import { ArchiveHeader } from '@/features/archive/components/ArchiveHeader';
 import { AdvancedFilterBar } from '@/features/archive/components/AdvancedFilterBar';
 import { useRandomPlay } from '@/features/archive/hooks/useRandomPlay';
 import { applyFilters, groupByDate } from '@/features/archive/utils/calendarTransformers';
+import { TabScreenWrapper } from '@/components/TabScreenWrapper';
 import { useAds, UnlockChoiceModal, PremiumUpsellBanner } from '@/features/ads';
 import { CompletedGameModal } from '@/features/home';
 import { useAuth } from '@/features/auth';
@@ -97,13 +98,9 @@ export default function ArchiveScreen() {
     return groupByDate(filteredPuzzles);
   }, [rawDateGroups, filters]);
 
-  // NUCLEAR OPTION: Refresh archive list when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      console.log('[Archive] Screen focused, refreshing list');
-      refresh();
-    }, [refresh])
-  );
+  // Removed duplicate useFocusEffect — the useArchivePuzzles hook has its own
+  // useFocusEffect that handles re-focus reloading with a guard to skip the
+  // initial focus event, preventing a double-fetch race condition.
 
   // Handle unlock params from deep-link gate redirects
   useEffect(() => {
@@ -186,11 +183,13 @@ export default function ArchiveScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header with Stats */}
-      <ArchiveHeader
+    <TabScreenWrapper>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Header with Stats */}
+        <ArchiveHeader
         completedCount={completedCount}
         totalCount={totalCount}
+        isLoading={isLoading}
       />
 
       {/* Premium Upsell Banner (non-premium only) */}
@@ -249,7 +248,8 @@ export default function ArchiveScreen() {
           testID="archive-completed-modal"
         />
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </TabScreenWrapper>
   );
 }
 

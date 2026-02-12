@@ -1,13 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
-import { IQRankTitle } from '../../hooks/useIQRank';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface StatsGridProps {
   gamesCompleted: number;
   totalGames: number;
-  iqTitle: IQRankTitle;
+  iqTitle: string;
   onPressGames?: () => void;
   onPressIQ?: () => void;
 }

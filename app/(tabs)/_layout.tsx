@@ -62,6 +62,7 @@ export default function TabLayout() {
           options={{
             title: "Archive",
             headerShown: false,
+            lazy: false,
             tabBarIcon: ({ color, size }) => (
               <Archive color={color} size={size} strokeWidth={2} />
             ),

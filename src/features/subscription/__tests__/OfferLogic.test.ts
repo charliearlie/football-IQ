@@ -320,14 +320,19 @@ describe('processPackagesWithOffers', () => {
   });
 
   it('removes BEST VALUE when any offer is active', () => {
+    const annualProduct = createMockPackage('ANNUAL', {
+      identifier: 'com.app.annual',
+      introPrice: createMockIntroPrice(),
+    });
     const packages = [
       createMockPackage('MONTHLY'),
-      createMockPackage('ANNUAL', {
-        introPrice: createMockIntroPrice(),
-      }),
+      annualProduct,
     ];
+    const eligibility = {
+      'com.app.annual': { status: 2, description: 'ELIGIBLE' },
+    };
 
-    const result = processPackagesWithOffers(packages, 'MONTHLY');
+    const result = processPackagesWithOffers(packages, 'MONTHLY', eligibility);
 
     // Monthly should NOT have BEST VALUE because Annual has an offer
     expect(result[0].offer.badgeText).toBeNull();
@@ -338,14 +343,20 @@ describe('processPackagesWithOffers', () => {
   it('handles multiple offers - each shows LIMITED OFFER', () => {
     const packages = [
       createMockPackage('MONTHLY', {
+        identifier: 'com.app.monthly',
         introPrice: createMockIntroPrice({ price: 2.99, priceString: '$2.99' }),
       }),
       createMockPackage('ANNUAL', {
+        identifier: 'com.app.annual',
         introPrice: createMockIntroPrice({ price: 14.99, priceString: '$14.99' }),
       }),
     ];
+    const eligibility = {
+      'com.app.monthly': { status: 2, description: 'ELIGIBLE' },
+      'com.app.annual': { status: 2, description: 'ELIGIBLE' },
+    };
 
-    const result = processPackagesWithOffers(packages);
+    const result = processPackagesWithOffers(packages, 'MONTHLY', eligibility);
 
     expect(result[0].offer.badgeText).toBe('LIMITED OFFER');
     expect(result[1].offer.badgeText).toBe('LIMITED OFFER');
@@ -357,6 +368,56 @@ describe('processPackagesWithOffers', () => {
     const result = processPackagesWithOffers(packages);
 
     expect(result[0].package).toBe(packages[0]);
+  });
+
+  describe('eligibility map handling', () => {
+    const annualWithIntro = createMockPackage('ANNUAL', {
+      identifier: 'com.app.annual',
+      price: 17.99,
+      priceString: '$17.99',
+      introPrice: createMockIntroPrice({ price: 9.99, priceString: '$9.99' }),
+    });
+
+    it('shows intro price when user is eligible (status 2)', () => {
+      const eligibility = {
+        'com.app.annual': { status: 2, description: 'ELIGIBLE' },
+      };
+
+      const result = processPackagesWithOffers([annualWithIntro], 'ANNUAL', eligibility);
+
+      expect(result[0].offer.isOfferActive).toBe(true);
+      expect(result[0].offer.discountedPriceString).toBe('$9.99');
+      expect(result[0].offer.originalPriceString).toBe('$17.99');
+    });
+
+    it('hides intro price when user is ineligible (status 1)', () => {
+      const eligibility = {
+        'com.app.annual': { status: 1, description: 'INELIGIBLE' },
+      };
+
+      const result = processPackagesWithOffers([annualWithIntro], 'ANNUAL', eligibility);
+
+      expect(result[0].offer.isOfferActive).toBe(false);
+      expect(result[0].offer.discountedPriceString).toBe('$17.99');
+    });
+
+    it('hides intro price when status is unknown (status 0)', () => {
+      const eligibility = {
+        'com.app.annual': { status: 0, description: 'UNKNOWN' },
+      };
+
+      const result = processPackagesWithOffers([annualWithIntro], 'ANNUAL', eligibility);
+
+      expect(result[0].offer.isOfferActive).toBe(false);
+      expect(result[0].offer.discountedPriceString).toBe('$17.99');
+    });
+
+    it('hides intro price when eligibility map is empty', () => {
+      const result = processPackagesWithOffers([annualWithIntro], 'ANNUAL', {});
+
+      expect(result[0].offer.isOfferActive).toBe(false);
+      expect(result[0].offer.discountedPriceString).toBe('$17.99');
+    });
   });
 });
 

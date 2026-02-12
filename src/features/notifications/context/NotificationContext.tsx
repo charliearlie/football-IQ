@@ -24,7 +24,6 @@ import React, {
 } from 'react';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Sentry from '@sentry/react-native';
 import { onMidnight, getAuthorizedDateUnsafe } from '@/lib/time';
 import { router, type Href, useRootNavigationState } from 'expo-router';
 import {
@@ -77,6 +76,8 @@ interface NotificationProviderProps {
   totalPuzzlesToday: number;
   /** User ID for push token registration */
   userId: string | null;
+  /** Whether the first-run onboarding modal is currently visible */
+  isOnboardingActive: boolean;
 }
 
 export function NotificationProvider({
@@ -87,6 +88,7 @@ export function NotificationProvider({
   completedPuzzlesToday,
   totalPuzzlesToday,
   userId,
+  isOnboardingActive,
 }: NotificationProviderProps) {
   // Permission state
   const [permissionStatus, setPermissionStatus] =
@@ -105,6 +107,7 @@ export function NotificationProvider({
   const prevCompletedCount = useRef(completedPuzzlesToday);
   const pushTokenRegistered = useRef(false);
   const pendingDeepLink = useRef<Record<string, unknown> | null>(null);
+  const pendingPermissionPrompt = useRef(false);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
@@ -188,11 +191,10 @@ export function NotificationProvider({
           await scheduleNotifications(currentStreak, gamesPlayedToday);
         }
 
-        // Show permission modal on first app load if not asked yet
+        // Mark that we need to show permission modal (actual display is
+        // gated by a separate effect that waits for onboarding to finish)
         if (!wasAsked && status !== 'granted') {
-          setTimeout(() => {
-            setShowPermissionModal(true);
-          }, 1500);
+          pendingPermissionPrompt.current = true;
         }
 
         // Handle cold-start deep linking (app opened via notification tap)
@@ -207,12 +209,24 @@ export function NotificationProvider({
         console.log('[Notifications] Provider initialized');
       } catch (error) {
         console.error('[Notifications] Init error:', error);
-        Sentry.captureException(error);
       }
     }
 
     init();
   }, [isSupported, currentStreak, gamesPlayedToday, handleNotificationNavigation]);
+
+  // Show permission modal only after onboarding completes (prevents dual-Modal
+  // stacking which corrupts the UIKit presentation stack and freezes touches)
+  useEffect(() => {
+    if (!isSupported || !pendingPermissionPrompt.current) return;
+    if (isOnboardingActive) return;
+
+    const timer = setTimeout(() => {
+      setShowPermissionModal(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [isSupported, isOnboardingActive]);
 
   // Process pending cold-start deep link once the navigation tree is mounted
   useEffect(() => {
@@ -312,12 +326,9 @@ export function NotificationProvider({
 
     // If user just started playing (0 -> 1+), cancel scheduled notifications
     if (gamesPlayedToday > 0) {
-      console.log('[Notifications] Cancelling reminders - user completed a puzzle today');
-      Sentry.addBreadcrumb({
-        category: 'notifications',
-        message: 'Cancelled reminders - puzzle completed',
-        level: 'info',
-        data: { gamesPlayedToday, completedPuzzlesToday },
+      console.log('[Notifications] Cancelling reminders - user completed a puzzle today', {
+        gamesPlayedToday,
+        completedPuzzlesToday,
       });
       cancelNotification(NOTIFICATION_IDS.DAILY_KICKOFF);
       cancelNotification(NOTIFICATION_IDS.STREAK_SAVER);

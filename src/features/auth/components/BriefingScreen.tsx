@@ -8,7 +8,6 @@
  * - Large Bebas Neue welcome header
  * - Weekly fixtures grid showing all game modes
  * - Display name input with Pitch Green accent
- * - Sentry analytics on completion
  */
 
 import React, { useState, useEffect } from 'react';
@@ -22,7 +21,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Sentry from '@sentry/react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { useHaptics } from '@/hooks/useHaptics';
 import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
@@ -94,15 +92,6 @@ export function BriefingScreen({ onSubmit, externalError, testID }: BriefingScre
     try {
       // Save display name to Supabase (AsyncStorage is handled by caller)
       await onSubmit(trimmedName);
-
-      // Log analytics event to Sentry
-      Sentry.captureMessage('User Onboarded', {
-        level: 'info',
-        tags: {
-          feature: 'onboarding',
-          display_name_length: String(trimmedName.length),
-        },
-      });
     } catch (err) {
       setError('Something went wrong. Please try again.');
       triggerNotification('error');
