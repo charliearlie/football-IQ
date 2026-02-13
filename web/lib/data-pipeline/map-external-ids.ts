@@ -7,57 +7,7 @@
  * Safety: auto-stops at REQUEST_SAFETY_LIMIT to preserve trial quota.
  */
 
-// ---------------------------------------------------------------------------
-// Nationality map — copied from player-scout/actions.ts to avoid importing
-// a "use server" module. Kept in sync manually.
-// ---------------------------------------------------------------------------
-const NATION_LABEL_TO_ISO: Record<string, string> = {
-  england: "GB-ENG", scotland: "GB-SCT", wales: "GB-WLS", "northern ireland": "GB-NIR",
-  afghanistan: "AF", albania: "AL", algeria: "DZ", andorra: "AD", angola: "AO",
-  "antigua and barbuda": "AG", argentina: "AR", armenia: "AM", australia: "AU", austria: "AT",
-  azerbaijan: "AZ", bahrain: "BH", bangladesh: "BD", barbados: "BB", belarus: "BY",
-  belgium: "BE", benin: "BJ", bermuda: "BM", bolivia: "BO",
-  "bosnia and herzegovina": "BA", botswana: "BW", brazil: "BR", bulgaria: "BG",
-  "burkina faso": "BF", burundi: "BI", cameroon: "CM", canada: "CA", "cape verde": "CV",
-  "central african republic": "CF", chad: "TD", chile: "CL", china: "CN", colombia: "CO",
-  comoros: "KM", congo: "CG", "democratic republic of the congo": "CD", "costa rica": "CR",
-  croatia: "HR", cuba: "CU", "curaçao": "CW", curacao: "CW", cyprus: "CY",
-  "czech republic": "CZ", czechia: "CZ", denmark: "DK", "dominican republic": "DO",
-  ecuador: "EC", egypt: "EG", "el salvador": "SV", "equatorial guinea": "GQ",
-  eritrea: "ER", estonia: "EE", ethiopia: "ET", "faroe islands": "FO", fiji: "FJ",
-  finland: "FI", france: "FR", gabon: "GA", gambia: "GM", georgia: "GE", germany: "DE",
-  ghana: "GH", gibraltar: "GI", greece: "GR", grenada: "GD", guatemala: "GT",
-  guinea: "GN", "guinea-bissau": "GW", guyana: "GY", haiti: "HT", honduras: "HN",
-  "hong kong": "HK", hungary: "HU", iceland: "IS", india: "IN", indonesia: "ID",
-  iran: "IR", iraq: "IQ", ireland: "IE", "republic of ireland": "IE", israel: "IL",
-  italy: "IT", "ivory coast": "CI", "côte d'ivoire": "CI", jamaica: "JM", japan: "JP",
-  jordan: "JO", kazakhstan: "KZ", kenya: "KE", kosovo: "XK", kuwait: "KW",
-  latvia: "LV", lebanon: "LB", liberia: "LR", libya: "LY", liechtenstein: "LI",
-  lithuania: "LT", luxembourg: "LU", "north macedonia": "MK", madagascar: "MG",
-  malawi: "MW", malaysia: "MY", mali: "ML", malta: "MT", mauritania: "MR",
-  mauritius: "MU", mexico: "MX", moldova: "MD", montenegro: "ME", morocco: "MA",
-  mozambique: "MZ", namibia: "NA", nepal: "NP", netherlands: "NL", "new zealand": "NZ",
-  nicaragua: "NI", niger: "NE", nigeria: "NG", norway: "NO", oman: "OM", pakistan: "PK",
-  palestine: "PS", panama: "PA", paraguay: "PY", peru: "PE", philippines: "PH",
-  poland: "PL", portugal: "PT", qatar: "QA", romania: "RO", russia: "RU", rwanda: "RW",
-  "saint kitts and nevis": "KN", "saint lucia": "LC", samoa: "WS", "san marino": "SM",
-  "saudi arabia": "SA", senegal: "SN", serbia: "RS", "serbia and montenegro": "RS",
-  seychelles: "SC", "sierra leone": "SL", singapore: "SG", slovakia: "SK", slovenia: "SI",
-  somalia: "SO", "south africa": "ZA", "south korea": "KR", "korea republic": "KR",
-  spain: "ES", "sri lanka": "LK", sudan: "SD", suriname: "SR", sweden: "SE",
-  switzerland: "CH", syria: "SY", taiwan: "TW", tanzania: "TZ", thailand: "TH",
-  togo: "TG", "trinidad and tobago": "TT", tunisia: "TN", turkey: "TR", "türkiye": "TR",
-  uganda: "UG", ukraine: "UA", "united arab emirates": "AE",
-  "united kingdom": "GB", "united states of america": "US", "united states": "US",
-  uruguay: "UY", uzbekistan: "UZ", venezuela: "VE", vietnam: "VN", zambia: "ZM",
-  zimbabwe: "ZW",
-  "soviet union": "RU", czechoslovakia: "CZ", yugoslavia: "RS",
-  "federal republic of yugoslavia": "RS", "socialist federal republic of yugoslavia": "RS",
-  "west germany": "DE", rhodesia: "ZW", "zimbabwe rhodesia": "ZW",
-  "french guiana": "GF", "kingdom of the netherlands": "NL", "kingdom of denmark": "DK",
-  "netherlands antilles": "NL", "people's republic of china": "CN", "the gambia": "GM",
-  "commonwealth of independent states": "RU", "united kingdom of great britain and ireland": "GB",
-};
+import { NATION_LABEL_TO_ISO } from "@/lib/nationality-map";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -469,8 +419,8 @@ export async function resolveOnePlayer(
   let requestsUsed = 0;
   try {
     // /players/profiles?search= — no league/team/season needed
-    let response = await searchApiFootballPlayer(player.name, apiKey);
     requestsUsed++;
+    let response = await searchApiFootballPlayer(player.name, apiKey);
 
     // Score candidates from full-name search
     let bestResult = scoreCandidates(response, player);
@@ -488,8 +438,8 @@ export async function resolveOnePlayer(
         if (options?.delayMs && options.delayMs > 0) {
           await new Promise((r) => setTimeout(r, options.delayMs));
         }
-        response = await searchApiFootballPlayer(lastName, apiKey);
         requestsUsed++;
+        response = await searchApiFootballPlayer(lastName, apiKey);
         const fallbackResult = scoreCandidates(response, player);
         // Use fallback if it got a better outcome
         if (outcomePriority(fallbackResult.outcome) > outcomePriority(bestResult.outcome)) {

@@ -190,9 +190,9 @@ export function TierLevelUpCelebration({
             default: { message: `${message}\n\nDownload: football-iq.app` },
           }) || { message },
         );
-      }
 
-      await onShare();
+        await onShare();
+      }
     } catch (error) {
       console.error("[TierLevelUp] Share error:", error);
     } finally {
