@@ -180,6 +180,13 @@ describe('Sync Engine', () => {
           status: 'published',
           source: 'manual',
           triggered_by: null,
+          is_special: false,
+          is_bonus: false,
+          is_premium: false,
+          event_title: null,
+          event_subtitle: null,
+          event_tag: null,
+          event_theme: null,
         };
 
         // Act

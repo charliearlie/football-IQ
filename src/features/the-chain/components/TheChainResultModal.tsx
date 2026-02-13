@@ -165,8 +165,8 @@ export function TheChainResultModal({
   const shareData: ResultShareData = {
     gameMode: "the_chain",
     scoreDisplay: `${emoji} ${score.stepsTaken} steps (${parDiffText})`,
-    puzzleDate,
-    displayName: profile?.display_name,
+    puzzleDate: puzzleDate ?? '',
+    displayName: profile?.display_name ?? 'Football Fan',
     totalIQ,
     won: score.parDifference <= 0,
     isPerfectScore: score.label === "Eagle",
@@ -183,7 +183,6 @@ export function TheChainResultModal({
 
   const shareCardContent = (
     <ResultShareCard
-      gameMode="the_chain"
       resultType={shareResultType}
       {...shareData}
     />

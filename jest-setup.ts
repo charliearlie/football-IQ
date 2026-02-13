@@ -420,7 +420,7 @@ jest.mock('moti/skeleton', () => {
 
 // Mock expo-secure-store
 const mockSecureStore = {
-  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  getItemAsync: jest.fn((): Promise<string | null> => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 };

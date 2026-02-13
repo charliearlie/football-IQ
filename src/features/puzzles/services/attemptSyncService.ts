@@ -56,7 +56,7 @@ export async function syncAttemptsToSupabase(userId: string): Promise<SyncResult
         // 1. New attempt: INSERT
         // 2. Existing incomplete attempt: UPDATE with new data
         // 3. Existing completed attempt: Preserve completion, ignore stale data
-        const { error } = await supabase.rpc('safe_upsert_attempt', {
+        const { error } = await supabase.rpc('safe_upsert_attempt' as any, {
           p_id: supabaseAttempt.id,
           p_puzzle_id: supabaseAttempt.puzzle_id,
           p_user_id: supabaseAttempt.user_id,

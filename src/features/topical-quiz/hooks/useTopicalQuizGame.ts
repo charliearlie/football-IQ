@@ -288,7 +288,7 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
               currentQuestionIndex: savedState.currentQuestionIndex,
               answers: savedState.answers,
               attemptId: existingAttempt.id,
-              startedAt: existingAttempt.started_at,
+              startedAt: existingAttempt.started_at ?? new Date().toISOString(),
             },
           });
         }

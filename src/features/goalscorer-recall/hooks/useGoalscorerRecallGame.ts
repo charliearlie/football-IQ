@@ -653,6 +653,7 @@ export function useGoalscorerRecallGame(puzzle: ParsedLocalPuzzle | null) {
 
     try {
       // Use clipboard as primary method
+      // @ts-expect-error - dynamic import supported at runtime by Metro bundler
       const Clipboard = await import('expo-clipboard');
       await Clipboard.setStringAsync(shareText);
       triggerSelection();

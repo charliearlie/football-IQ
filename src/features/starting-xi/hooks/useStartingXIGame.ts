@@ -277,7 +277,7 @@ export function useStartingXIGame(puzzle: ParsedLocalPuzzle | null) {
               payload: {
                 foundSlots: metadata.foundSlots,
                 attemptId: existingAttempt.id,
-                startedAt: metadata.startedAt || existingAttempt.started_at,
+                startedAt: metadata.startedAt || existingAttempt.started_at || new Date().toISOString(),
               },
             });
           }

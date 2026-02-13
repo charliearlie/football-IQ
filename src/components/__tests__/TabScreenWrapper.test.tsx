@@ -47,7 +47,8 @@ describe('TabScreenWrapper', () => {
 
     const tree = toJSON();
     // The root wrapper (MotiView mocked as View) should have flex: 1
-    const rootStyle = tree?.props?.style;
+    const node = Array.isArray(tree) ? tree[0] : tree;
+    const rootStyle = node?.props?.style;
     const flatStyle = Array.isArray(rootStyle)
       ? Object.assign({}, ...rootStyle.flat())
       : rootStyle;

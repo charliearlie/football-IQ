@@ -66,7 +66,7 @@ export async function syncCatalogFromSupabase(
   try {
     // Always do full sync (pass null) to enable orphan detection
     const { data: entries, error } = await supabase.rpc('get_puzzle_catalog', {
-      since_timestamp: null,
+      since_timestamp: undefined,
     });
 
     if (error) {
@@ -87,7 +87,7 @@ export async function syncCatalogFromSupabase(
 
     // Get local catalog IDs BEFORE saving new ones
     const localCatalogIds = await getAllLocalCatalogIds();
-    const serverCatalogIds = new Set(entries.map((e: SupabaseCatalogEntry) => e.id));
+    const serverCatalogIds = new Set((entries as SupabaseCatalogEntry[]).map((e) => e.id));
 
     // Find orphans (local entries not on server)
     const orphanIds = localCatalogIds.filter((id) => !serverCatalogIds.has(id));
@@ -99,7 +99,7 @@ export async function syncCatalogFromSupabase(
     }
 
     // Transform and save entries to SQLite
-    const localEntries = entries.map(transformSupabaseCatalogToLocal);
+    const localEntries = (entries as SupabaseCatalogEntry[]).map(transformSupabaseCatalogToLocal);
     await saveCatalogEntries(localEntries);
 
     // Update last sync timestamp on success

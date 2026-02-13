@@ -317,7 +317,9 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
       try {
         const existingAttempt = await getAttemptByPuzzleId(puzzle.id);
         if (existingAttempt && !existingAttempt.completed && existingAttempt.metadata) {
-          const savedState = JSON.parse(existingAttempt.metadata) as {
+          const savedState = (typeof existingAttempt.metadata === 'string'
+            ? JSON.parse(existingAttempt.metadata)
+            : existingAttempt.metadata) as {
             cells: CellArray;
             currentTurn: 'player' | 'ai';
           };
@@ -327,7 +329,7 @@ export function useTicTacToeGame(puzzle: ParsedLocalPuzzle | null) {
               cells: savedState.cells,
               currentTurn: savedState.currentTurn,
               attemptId: existingAttempt.id,
-              startedAt: existingAttempt.started_at,
+              startedAt: existingAttempt.started_at ?? new Date().toISOString(),
             },
           });
         }

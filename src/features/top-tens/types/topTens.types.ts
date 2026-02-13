@@ -60,10 +60,10 @@ export type TopTensGameStatus = 'playing' | 'won' | 'lost';
  * Score structure for Top Tens.
  */
 export interface TopTensScore {
-  /** Points earned (0-10, one per answer found) */
+  /** Points earned (0-8, flat tier scoring) */
   points: number;
-  /** Maximum possible points (always 10) */
-  maxPoints: 10;
+  /** Maximum possible points (always 8) */
+  maxPoints: 8;
   /** Number of answers found (0-10) */
   foundCount: number;
   /** Number of incorrect guesses made */
