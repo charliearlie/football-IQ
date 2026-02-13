@@ -165,22 +165,23 @@ describe('IQ Data Pipeline', () => {
     });
 
     describe('the_grid', () => {
-      it('returns 100 for win', () => {
-        const metadata = { result: 'win' };
+      it('returns 100 for 9 cells filled', () => {
+        const metadata = { cellsFilled: 9 };
         expect(normalizeScore('the_grid', metadata)).toBe(100);
       });
 
-      it('returns 50 for draw', () => {
-        const metadata = { result: 'draw' };
-        expect(normalizeScore('the_grid', metadata)).toBe(50);
+      it('returns 56 for 5 cells filled', () => {
+        const metadata = { cellsFilled: 5 };
+        // 5/9 * 100 = 55.56 -> Math.round = 56
+        expect(normalizeScore('the_grid', metadata)).toBe(56);
       });
 
-      it('returns 0 for loss', () => {
-        const metadata = { result: 'loss' };
+      it('returns 0 for 0 cells filled', () => {
+        const metadata = { cellsFilled: 0 };
         expect(normalizeScore('the_grid', metadata)).toBe(0);
       });
 
-      it('returns 0 for invalid result', () => {
+      it('returns 0 for invalid metadata', () => {
         const metadata = { result: 'invalid' };
         expect(normalizeScore('the_grid', metadata)).toBe(0);
       });
@@ -223,13 +224,13 @@ describe('IQ Data Pipeline', () => {
       expect(isPerfectScore('guess_the_goalscorers', metadata)).toBe(true);
     });
 
-    it('detects tic_tac_toe win as perfect', () => {
-      const metadata = { result: 'win' };
+    it('detects the_grid perfect score (9 cells filled)', () => {
+      const metadata = { cellsFilled: 9 };
       expect(isPerfectScore('the_grid', metadata)).toBe(true);
     });
 
-    it('detects tic_tac_toe draw as not perfect', () => {
-      const metadata = { result: 'draw' };
+    it('detects the_grid non-perfect score', () => {
+      const metadata = { cellsFilled: 7 };
       expect(isPerfectScore('the_grid', metadata)).toBe(false);
     });
   });
@@ -307,7 +308,7 @@ describe('IQ Data Pipeline', () => {
     });
 
     it('redistributes weights when only some modes played', () => {
-      // Play career_path (25% weight) and topical_quiz (15% weight)
+      // Play career_path (13% weight) and topical_quiz (9% weight)
       const proficiencies: GameProficiency[] = [
         {
           gameMode: 'career_path',
@@ -330,10 +331,10 @@ describe('IQ Data Pipeline', () => {
 
       const globalIQ = calculateGlobalIQ(proficiencies);
 
-      // Weights: career_path=0.25, topical_quiz=0.15, total=0.40
-      // Normalized: career_path=0.625, topical_quiz=0.375
-      // IQ = 80 * 0.625 + 60 * 0.375 = 50 + 22.5 = 72.5 ≈ 73
-      expect(globalIQ).toBe(73);
+      // Weights: career_path=0.13, topical_quiz=0.09, total=0.22
+      // Normalized: career_path=0.591, topical_quiz=0.409
+      // IQ = 80 * 0.591 + 60 * 0.409 = 47.27 + 24.55 = 71.82 -> Math.round = 72
+      expect(globalIQ).toBe(72);
     });
 
     it('returns 0 when no games played', () => {

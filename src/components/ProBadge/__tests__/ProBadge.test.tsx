@@ -69,27 +69,21 @@ describe('ProBadge', () => {
     expect(gradients.length).toBe(0);
   });
 
-  it('renders "P" text when size >= 24', () => {
+  it('renders only the star path without text', () => {
     const { toJSON } = render(<ProBadge size={24} testID="pro-badge" />);
     const tree = JSON.stringify(toJSON());
-    expect(tree).toContain('\"P\"');
-  });
-
-  it('renders "P" text at larger sizes', () => {
-    const { toJSON } = render(<ProBadge size={40} testID="pro-badge" />);
-    const tree = JSON.stringify(toJSON());
-    expect(tree).toContain('\"P\"');
-  });
-
-  it('does not render "P" text when size < 24', () => {
-    const { toJSON } = render(<ProBadge size={18} testID="pro-badge" />);
-    const tree = JSON.stringify(toJSON());
+    // Current implementation renders star only, no "P" text
+    expect(tree).toContain('Path');
     expect(tree).not.toContain('\"P\"');
   });
 
-  it('does not render "P" text at tiny sizes', () => {
-    const { toJSON } = render(<ProBadge size={7} testID="pro-badge" />);
-    const tree = JSON.stringify(toJSON());
-    expect(tree).not.toContain('\"P\"');
+  it('renders star at all sizes without text', () => {
+    const sizes = [7, 18, 24, 40];
+    sizes.forEach(size => {
+      const { toJSON } = render(<ProBadge size={size} testID={`pro-badge-${size}`} />);
+      const tree = JSON.stringify(toJSON());
+      expect(tree).toContain('Path');
+      expect(tree).not.toContain('\"P\"');
+    });
   });
 });

@@ -1,7 +1,7 @@
 // Sentry temporarily disabled for testing
 // import * as Sentry from "@sentry/react-native";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import { initDatabase } from "@/lib/database";
 import { syncEliteIndex } from "@/services/player/SyncService";
@@ -16,6 +16,7 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Purchases from "react-native-purchases";
 import { colors, fonts } from "@/theme";
+import { AnimatedSplash } from "@/components/AnimatedSplash";
 import {
   AuthProvider,
   AuthLoadingScreen,
@@ -144,6 +145,12 @@ function PostHogScreenTracker() {
   return null;
 }
 
+/** Signals that app content has mounted (AuthGate finished loading). */
+function ContentReadySignal({ onReady }: { onReady: () => void }) {
+  useEffect(() => { onReady(); }, []);
+  return null;
+}
+
 const AuthGate = React.memo(function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading: isOnboardingLoading } = useOnboarding();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
@@ -228,34 +235,25 @@ export default function RootLayout() {
     Montserrat: require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
   });
   const [dbReady, setDbReady] = useState(false);
-  const [rcReady, setRcReady] = useState(false);
-  const [adsReady, setAdsReady] = useState(false);
   const [initTimedOut, setInitTimedOut] = useState(false);
+  const [splashAnimationComplete, setSplashAnimationComplete] = useState(false);
+  const [contentReady, setContentReady] = useState(false);
 
-  // Global initialization timeout - prevents black screen if SDKs hang
+  // Global initialization timeout - prevents black screen if fonts/DB hang
+  // Only gates on fonts + DB (RC and Ads init in background, not blocking splash)
   useEffect(() => {
-    const INIT_TIMEOUT_MS = 10000; // 10 seconds max for initialization
+    const INIT_TIMEOUT_MS = 5000; // 5 seconds max (fonts + DB should be <500ms)
 
     const timeout = setTimeout(() => {
       const fontsReady = fontsLoaded || fontError;
-      if (!fontsReady || !dbReady || !rcReady || !adsReady) {
+      if (!fontsReady || !dbReady) {
         console.error("[RootLayout] Initialization timeout - forcing app to proceed");
-        // Sentry.captureMessage("RootLayout initialization timeout", {
-        //   level: "error",
-        //   extra: {
-        //     fontsLoaded,
-        //     fontError: !!fontError,
-        //     dbReady,
-        //     rcReady,
-        //     adsReady,
-        //   },
-        // });
         setInitTimedOut(true);
       }
     }, INIT_TIMEOUT_MS);
 
     return () => clearTimeout(timeout);
-  }, [fontsLoaded, fontError, dbReady, rcReady, adsReady]);
+  }, [fontsLoaded, fontError, dbReady]);
 
   // Initialize local SQLite database
   useEffect(() => {
@@ -287,77 +285,55 @@ export default function RootLayout() {
   // Run `npx expo prebuild` and rebuild to enable.
   // See src/services/sound/SoundService.ts for the implementation.
 
-  // Initialize RevenueCat SDK
+  // Initialize RevenueCat SDK (background — not blocking splash)
   useEffect(() => {
-    const initRevenueCat = async () => {
-      // Skip on web platform
-      if (Platform.OS === "web") {
-        setRcReady(true);
-        return;
-      }
+    if (Platform.OS === "web") return;
 
+    (async () => {
       try {
         const apiKey = getRevenueCatApiKey();
         await Purchases.configure({ apiKey });
         console.log("[RevenueCat] SDK initialized successfully");
-        setRcReady(true);
       } catch (error) {
         console.error("[RevenueCat] SDK initialization failed:", error);
-        // Continue in degraded mode - purchases won't work but app functions
-        setRcReady(true);
       }
-    };
-    initRevenueCat();
+    })();
   }, []);
 
-  // Initialize Google Mobile Ads SDK (with ATT on iOS)
+  // Initialize Google Mobile Ads SDK (background — not blocking splash)
   useEffect(() => {
-    const initMobileAds = async () => {
-      // Skip on web or if module not available
-      if (Platform.OS === "web" || !MobileAds) {
-        setAdsReady(true);
-        return;
-      }
+    if (Platform.OS === "web" || !MobileAds) return;
 
+    (async () => {
       try {
-        // Initialize ads immediately (non-personalized for first run until user grants permission in Onboarding)
         await MobileAds().initialize();
         console.log("[MobileAds] SDK initialized successfully");
-        setAdsReady(true);
       } catch (error) {
         console.error("[MobileAds] SDK initialization failed:", error);
-        // Continue in degraded mode - ads won't work but app functions
-        setAdsReady(true);
       }
-    };
-    initMobileAds();
+    })();
   }, []);
 
-  // Hide splash screen when fonts, database, RevenueCat, and ads are ready
+  // Hide native splash when fonts + DB are ready (RC and Ads init in background)
+  // Our AnimatedSplash component takes over from here with a branded animation
   useEffect(() => {
-    if ((fontsLoaded || fontError) && dbReady && rcReady && adsReady) {
+    if ((fontsLoaded || fontError) && dbReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, dbReady, rcReady, adsReady]);
+  }, [fontsLoaded, fontError, dbReady]);
 
-  // Show nothing (splash screen visible) while initializing
-  // But if timeout triggers, proceed anyway to prevent black screen
+  const handleSplashAnimationComplete = useCallback(() => {
+    setSplashAnimationComplete(true);
+  }, []);
+
   const fontsReady = fontsLoaded || fontError;
-  const sdksReady = dbReady && rcReady && adsReady;
-
-  if (!initTimedOut && !fontsReady) {
-    return null;
-  }
-
-  if (!initTimedOut && !sdksReady) {
-    return null;
-  }
+  const coreReady = (fontsReady && dbReady) || initTimedOut;
 
   const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "";
   const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? "";
   const posthogEnabled = posthogApiKey.length > 0 && posthogHost.length > 0;
 
-  if (!posthogEnabled) {
+  if (!posthogEnabled && coreReady) {
     console.warn(
       "[PostHog] Missing environment variables — analytics disabled.",
       { apiKey: !!posthogApiKey, host: !!posthogHost }
@@ -369,7 +345,7 @@ export default function RootLayout() {
       <AuthOnboardingProvider>
         <GestureHandlerRootView style={styles.container}>
           <AuthGate>
-            {/* Sentry.ErrorBoundary temporarily disabled for testing */}
+            <ContentReadySignal onReady={() => setContentReady(true)} />
             <View style={styles.container}>
               <Stack
                 screenOptions={{
@@ -415,27 +391,37 @@ export default function RootLayout() {
     </SubscriptionSyncProvider>
   );
 
+  // AnimatedSplash renders at the top level — always visible from the first frame.
+  // The full app tree only mounts once fonts + DB are ready, underneath the splash.
+  // This eliminates any blank navy gap between native splash and animated splash.
   return (
-    <AuthProvider>
-      {posthogEnabled ? (
-        <SafePostHogProvider
-          apiKey={posthogApiKey}
-          options={{
-            host: posthogHost,
-            debug: __DEV__,
-          }}
-          autocapture={{
-            captureScreens: false, // Manual tracking required for expo-router
-          }}
-        >
-          <PostHogLogger />
-          <PostHogIdentifier />
-          {appContent}
-        </SafePostHogProvider>
-      ) : (
-        appContent
+    <View style={styles.container}>
+      {coreReady && (
+        <AuthProvider>
+          {posthogEnabled ? (
+            <SafePostHogProvider
+              apiKey={posthogApiKey}
+              options={{
+                host: posthogHost,
+                debug: __DEV__,
+              }}
+              autocapture={{
+                captureScreens: false, // Manual tracking required for expo-router
+              }}
+            >
+              <PostHogLogger />
+              <PostHogIdentifier />
+              {appContent}
+            </SafePostHogProvider>
+          ) : (
+            appContent
+          )}
+        </AuthProvider>
       )}
-    </AuthProvider>
+      {!splashAnimationComplete && (
+        <AnimatedSplash onComplete={handleSplashAnimationComplete} ready={contentReady} fontsReady={!!fontsReady} />
+      )}
+    </View>
   );
 }
 

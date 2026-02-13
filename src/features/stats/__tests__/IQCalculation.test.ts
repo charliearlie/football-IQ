@@ -106,18 +106,19 @@ describe('normalizeScore', () => {
   });
 
   describe('the_grid', () => {
-    it('normalizes win to 100', () => {
-      const metadata = { result: 'win' };
+    it('normalizes 9 cells filled to 100', () => {
+      const metadata = { cellsFilled: 9 };
       expect(normalizeScore('the_grid', metadata)).toBe(100);
     });
 
-    it('normalizes draw to 50', () => {
-      const metadata = { result: 'draw' };
-      expect(normalizeScore('the_grid', metadata)).toBe(50);
+    it('normalizes 5 cells filled to 56', () => {
+      const metadata = { cellsFilled: 5 };
+      // 5/9 * 100 = 55.56 -> Math.round = 56
+      expect(normalizeScore('the_grid', metadata)).toBe(56);
     });
 
-    it('normalizes loss to 0', () => {
-      const metadata = { result: 'loss' };
+    it('normalizes 0 cells filled to 0', () => {
+      const metadata = { cellsFilled: 0 };
       expect(normalizeScore('the_grid', metadata)).toBe(0);
     });
   });
@@ -161,13 +162,13 @@ describe('isPerfectScore', () => {
     expect(isPerfectScore('guess_the_goalscorers', metadata)).toBe(true);
   });
 
-  it('returns true for tic_tac_toe win', () => {
-    const metadata = { result: 'win' };
+  it('returns true for the_grid perfect score (9 cells)', () => {
+    const metadata = { cellsFilled: 9 };
     expect(isPerfectScore('the_grid', metadata)).toBe(true);
   });
 
-  it('returns false for tic_tac_toe draw', () => {
-    const metadata = { result: 'draw' };
+  it('returns false for the_grid incomplete (7 cells)', () => {
+    const metadata = { cellsFilled: 7 };
     expect(isPerfectScore('the_grid', metadata)).toBe(false);
   });
 
@@ -192,7 +193,7 @@ describe('calculateProficiency', () => {
       { metadata: { won: true, totalSteps: 10, revealedCount: 3 } },  // 80%
     ];
     const result = calculateProficiency('career_path', attempts as any);
-    // Average: (100 + 50 + 80) / 3 = 76.67 rounded to 77
+    // Average: (100 + 50 + 80) / 3 = 76.67 -> Math.round = 77
     expect(result.percentage).toBe(77);
     expect(result.gamesPlayed).toBe(3);
   });
@@ -213,15 +214,15 @@ describe('calculateProficiency', () => {
     expect(result.gameMode).toBe('career_path');
   });
 
-  it('handles mixed tic_tac_toe results', () => {
+  it('handles mixed the_grid results', () => {
     const attempts = [
-      { metadata: { result: 'win' } },   // 100%
-      { metadata: { result: 'draw' } },  // 50%
-      { metadata: { result: 'loss' } },  // 0%
+      { metadata: { cellsFilled: 9 } },  // 100%
+      { metadata: { cellsFilled: 5 } },  // 56%
+      { metadata: { cellsFilled: 0 } },  // 0%
     ];
     const result = calculateProficiency('the_grid', attempts as any);
-    // Average: (100 + 50 + 0) / 3 = 50
-    expect(result.percentage).toBe(50);
+    // Average: (100 + 56 + 0) / 3 = 52 -> Math.round = 52
+    expect(result.percentage).toBe(52);
   });
 });
 
@@ -232,7 +233,6 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
-      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
     expect(calculateGlobalIQ(proficiencies)).toBe(0);
@@ -244,7 +244,6 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
-      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 100, gamesPlayed: 1, perfectScores: 1 },
     ];
     expect(calculateGlobalIQ(proficiencies)).toBe(100);
@@ -252,15 +251,16 @@ describe('calculateGlobalIQ', () => {
 
   it('calculates weighted average with varied scores', () => {
     const proficiencies: GameProficiency[] = [
-      { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 5, perfectScores: 2 },                // 80 * 0.25 = 20
-      { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 3, perfectScores: 0 },  // 60 * 0.25 = 15
-      { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 70, gamesPlayed: 4, perfectScores: 1 },   // 70 * 0.20 = 14
-      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 50, gamesPlayed: 2, perfectScores: 1 },          // 50 * 0.05 = 2.5
-      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 90, gamesPlayed: 3, perfectScores: 2 },         // 90 * 0.10 = 9
-      { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 40, gamesPlayed: 1, perfectScores: 0 },         // 40 * 0.15 = 6
+      { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 5, perfectScores: 2 },
+      { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 3, perfectScores: 0 },
+      { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 70, gamesPlayed: 4, perfectScores: 1 },
+      { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 50, gamesPlayed: 2, perfectScores: 1 },
+      { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 40, gamesPlayed: 1, perfectScores: 0 },
     ];
-    // Total: 20 + 15 + 14 + 2.5 + 9 + 6 = 66.5 -> rounds to 67
-    expect(calculateGlobalIQ(proficiencies)).toBe(67);
+    // Weights: career=0.13, transfer=0.13, goalscorers=0.10, grid=0.10, quiz=0.09, total=0.55
+    // Normalized: career=0.236, transfer=0.236, goalscorers=0.182, grid=0.182, quiz=0.164
+    // Weighted: 80*0.236 + 60*0.236 + 70*0.182 + 50*0.182 + 40*0.164 = 61.46 -> Math.round = 61
+    expect(calculateGlobalIQ(proficiencies)).toBe(61);
   });
 
   it('only uses modes that have been played', () => {
@@ -269,25 +269,24 @@ describe('calculateGlobalIQ', () => {
       { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
-      { gameMode: 'the_grid', displayName: 'Pattern Recognition', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },
     ];
-    // Only career_path played (100%), weight = 0.25
-    // Normalized: 100 * (0.25 / 0.25) = 100
+    // Only career_path played (100%), weight = 0.13
+    // Normalized: 100 * (0.13 / 0.13) = 100
     expect(calculateGlobalIQ(proficiencies)).toBe(100);
   });
 
   it('handles partial modes played with proper weight redistribution', () => {
     const proficiencies: GameProficiency[] = [
-      { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 1, perfectScores: 0 },           // 0.25
-      { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 1, perfectScores: 0 }, // 0.25
+      { gameMode: 'career_path', displayName: 'Deduction', percentage: 80, gamesPlayed: 1, perfectScores: 0 },           // 0.13
+      { gameMode: 'guess_the_transfer', displayName: 'Market Knowledge', percentage: 60, gamesPlayed: 1, perfectScores: 0 }, // 0.13
       { gameMode: 'guess_the_goalscorers', displayName: 'Rapid Recall', percentage: 0, gamesPlayed: 0, perfectScores: 0 },   // not played
       { gameMode: 'the_grid', displayName: 'Strategic Logic', percentage: 0, gamesPlayed: 0, perfectScores: 0 },          // not played
       { gameMode: 'topical_quiz', displayName: 'Current Affairs', percentage: 0, gamesPlayed: 0, perfectScores: 0 },         // not played
     ];
-    // Weights for played: 0.25 + 0.25 = 0.50
-    // Career: 80 * (0.25/0.50) = 40
-    // Transfer: 60 * (0.25/0.50) = 30
+    // Weights for played: 0.13 + 0.13 = 0.26
+    // Career: 80 * (0.13/0.26) = 40
+    // Transfer: 60 * (0.13/0.26) = 30
     // Total: 70
     expect(calculateGlobalIQ(proficiencies)).toBe(70);
   });

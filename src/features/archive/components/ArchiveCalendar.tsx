@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     padding: spacing.xl,
     alignItems: 'center',
-    justifyTop: spacing.xl,
+    paddingTop: spacing.xl,
   },
   emptyTitle: {
     ...textStyles.h2,

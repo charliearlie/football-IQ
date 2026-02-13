@@ -109,7 +109,8 @@ describe('SubscriptionSync Service', () => {
     it('updates profile to premium when isPremium is true', async () => {
       const mockEq = jest.fn().mockResolvedValue({ error: null });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate });
+      const mockSelect = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ single: jest.fn() }) });
+      mockSupabaseFrom.mockReturnValue({ update: mockUpdate, select: mockSelect });
 
       const result = await syncPremiumToSupabase('user-123', true);
 
@@ -127,7 +128,8 @@ describe('SubscriptionSync Service', () => {
     it('updates profile to non-premium when isPremium is false', async () => {
       const mockEq = jest.fn().mockResolvedValue({ error: null });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate });
+      const mockSelect = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ single: jest.fn() }) });
+      mockSupabaseFrom.mockReturnValue({ update: mockUpdate, select: mockSelect });
 
       const result = await syncPremiumToSupabase('user-123', false);
 
@@ -144,7 +146,8 @@ describe('SubscriptionSync Service', () => {
       const mockError = { message: 'Database error' };
       const mockEq = jest.fn().mockResolvedValue({ error: mockError });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate });
+      const mockSelect = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ single: jest.fn() }) });
+      mockSupabaseFrom.mockReturnValue({ update: mockUpdate, select: mockSelect });
 
       const result = await syncPremiumToSupabase('user-123', true);
 
@@ -198,14 +201,16 @@ describe('SubscriptionSync Service', () => {
 
   describe('addCustomerInfoListener', () => {
     it('wraps Purchases.addCustomerInfoUpdateListener', () => {
-      const mockUnsubscribe = jest.fn();
-      Purchases.addCustomerInfoUpdateListener.mockReturnValue(mockUnsubscribe);
       const callback = jest.fn();
 
       const unsubscribe = addCustomerInfoListener(callback);
 
       expect(Purchases.addCustomerInfoUpdateListener).toHaveBeenCalledWith(callback);
-      expect(unsubscribe).toBe(mockUnsubscribe);
+      expect(typeof unsubscribe).toBe('function');
+
+      // Calling the returned function should remove the listener
+      unsubscribe();
+      expect(Purchases.removeCustomerInfoUpdateListener).toHaveBeenCalledWith(callback);
     });
   });
 });

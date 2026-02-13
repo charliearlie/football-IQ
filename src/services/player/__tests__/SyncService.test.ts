@@ -31,11 +31,13 @@ jest.mock('@/lib/supabase', () => ({
 const mockGetEliteIndexVersion = jest.fn().mockResolvedValue(1);
 const mockSetEliteIndexVersion = jest.fn().mockResolvedValue(undefined);
 const mockUpsertPlayerCache = jest.fn().mockResolvedValue(undefined);
+const mockRecalculateEliteStatus = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('@/lib/database', () => ({
   getEliteIndexVersion: (...args: unknown[]) => mockGetEliteIndexVersion(...args),
   setEliteIndexVersion: (...args: unknown[]) => mockSetEliteIndexVersion(...args),
   upsertPlayerCache: (...args: unknown[]) => mockUpsertPlayerCache(...args),
+  recalculateEliteStatus: (...args: unknown[]) => mockRecalculateEliteStatus(...args),
 }));
 
 describe('SyncService', () => {

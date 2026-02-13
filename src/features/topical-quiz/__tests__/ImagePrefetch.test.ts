@@ -25,7 +25,7 @@ describe('ImagePrefetch', () => {
         ],
       };
 
-      const urls = extractImageUrls(content);
+      const urls = extractImageUrls(content as any);
 
       expect(urls).toEqual([
         'https://example.com/img1.jpg',
@@ -45,7 +45,7 @@ describe('ImagePrefetch', () => {
         ],
       };
 
-      const urls = extractImageUrls(content);
+      const urls = extractImageUrls(content as any);
 
       expect(urls).toEqual([]);
     });

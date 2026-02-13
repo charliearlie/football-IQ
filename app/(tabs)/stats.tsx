@@ -25,6 +25,7 @@ import { useAuth } from "@/features/auth";
 import { getUserRank } from "@/features/leaderboard";
 import { FullStatsSkeleton } from "@/components/ui/Skeletons";
 import { ElevatedButton } from "@/components/ElevatedButton";
+import { TabScreenWrapper } from "@/components/TabScreenWrapper";
 
 /**
  * Scout Report Screen (formerly My IQ)
@@ -163,24 +164,27 @@ export default function ScoutReportScreen() {
   // Loading state with skeleton
   if (isLoading && !stats) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Scout Report</Text>
-        </View>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <FullStatsSkeleton testID="stats-skeleton" />
-        </ScrollView>
-      </SafeAreaView>
+      <TabScreenWrapper>
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Scout Report</Text>
+          </View>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <FullStatsSkeleton testID="stats-skeleton" />
+          </ScrollView>
+        </SafeAreaView>
+      </TabScreenWrapper>
     );
   }
 
   // Empty state (no games played yet)
   if (!stats || stats.totalPuzzlesSolved === 0) {
     return (
+      <TabScreenWrapper>
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Scout Report</Text>
@@ -259,10 +263,12 @@ export default function ScoutReportScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+      </TabScreenWrapper>
     );
   }
 
   return (
+    <TabScreenWrapper>
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header with Leaderboard Button */}
       <View style={styles.header}>
@@ -334,6 +340,7 @@ export default function ScoutReportScreen() {
         />
       )}
     </SafeAreaView>
+    </TabScreenWrapper>
   );
 }
 

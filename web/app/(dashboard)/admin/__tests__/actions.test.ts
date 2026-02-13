@@ -70,6 +70,7 @@ const mockSupabase = {
 
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: vi.fn(() => Promise.resolve(mockSupabase)),
+  ensureAdmin: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("next/cache", () => ({

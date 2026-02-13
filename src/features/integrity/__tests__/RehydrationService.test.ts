@@ -52,7 +52,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockResolvedValue({ count: 5, error: null });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       const result = await needsRehydration('user-123');
 
@@ -92,7 +92,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockResolvedValue({ count: 0, error: null });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       const result = await needsRehydration('user-123');
 
@@ -111,7 +111,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockResolvedValue({ count: 0, error: null });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       await needsRehydration('user-123');
 
@@ -165,7 +165,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       const result = await performRehydration('user-123');
 
@@ -181,7 +181,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       await performRehydration('user-123');
 
@@ -196,7 +196,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       await performRehydration('user-123');
 
@@ -212,7 +212,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       await performRehydration('user-123');
 
@@ -225,7 +225,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       await performRehydration('user-123');
 
@@ -238,7 +238,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       await performRehydration('user-123');
 
@@ -254,7 +254,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       const result = await performRehydration('user-123');
 
@@ -269,7 +269,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       const result = await performRehydration('user-123');
 
@@ -290,7 +290,7 @@ describe('RehydrationService', () => {
       const mockGte = jest.fn().mockReturnValue({ order: mockOrder });
       const mockEq = jest.fn().mockReturnValue({ gte: mockGte });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseFrom.mockReturnValue({ select: mockSelect });
+      mockSupabaseFrom.mockReturnValue({ select: mockSelect, update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) }) });
 
       const result = await performRehydration('user-123');
 
@@ -349,9 +349,10 @@ describe('Fresh Install Simulation', () => {
     const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
 
     // First call for needsRehydration, second for performRehydration
+    const mockUpdate = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ single: jest.fn() }) }) });
     mockSupabaseFrom
-      .mockReturnValueOnce({ select: mockSelectCount })
-      .mockReturnValueOnce({ select: mockSelect });
+      .mockReturnValueOnce({ select: mockSelectCount, update: mockUpdate })
+      .mockReturnValueOnce({ select: mockSelect, update: mockUpdate });
 
     // Check if needs rehydration
     const needs = await needsRehydration('user-123');

@@ -38,11 +38,7 @@ jest.mock('@/components/ProBadge', () => ({
   ProBadge: 'ProBadge',
 }));
 
-// Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  return Reanimated;
-});
+// Note: react-native-reanimated is mocked globally in jest-setup.ts
 
 // Mock ElevatedButton to avoid Reanimated complexity
 jest.mock('@/components/ElevatedButton', () => ({
@@ -191,7 +187,7 @@ describe('Archive Gating', () => {
       );
 
       // Should show the subtitle (same as daily variant)
-      expect(getByText('Guess the player')).toBeTruthy();
+      expect(getByText('Follow the journey')).toBeTruthy();
     });
 
     it('displays the game mode title', () => {
@@ -294,7 +290,7 @@ describe('Archive Gating', () => {
       );
 
       // Archive variant now shows same subtitle as daily variant
-      expect(getByText('Guess the player')).toBeTruthy();
+      expect(getByText('Follow the journey')).toBeTruthy();
     });
 
     it('is pressable (onPress callback available)', () => {

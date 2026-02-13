@@ -70,7 +70,6 @@ export const TROPHY_TO_STATS_KEY: Record<string, string> = {
 
   // Individual Awards (as trophies)
   "Ballon d'Or": 'ballon_dor_count',
-  'Ballon d\'Or': 'ballon_dor_count',
   'Ballon dOr': 'ballon_dor_count',
   'European Golden Shoe': 'european_golden_shoe_count',
   'Golden Boot': 'wc_golden_boot_count',

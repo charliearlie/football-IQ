@@ -37,7 +37,6 @@ import { colors, textStyles, spacing, borderRadius } from "@/theme";
 import { deleteAttemptsByGameMode, clearAllLocalData } from "@/lib/database";
 import { useAuth, useSubscriptionSync } from "@/features/auth";
 import { useProfile } from "@/features/auth/hooks/useProfile";
-import { usePerformanceStats } from "@/features/stats/hooks/usePerformanceStats";
 import { supabase } from "@/lib/supabase";
 import {
   scheduleNotification,
@@ -47,7 +46,7 @@ import {
   requestPermissions,
 } from "@/features/notifications";
 import { useOnboardingContext, usePuzzleContext } from "@/features/puzzles";
-import { useIQRank } from "@/features/home/hooks/useIQRank";
+import { getTierForPoints } from "@/features/stats/utils/tierProgression";
 import { SettingsRow } from "../components/SettingsRow";
 import { SettingsSection } from "../components/SettingsSection";
 import { RateAppModal } from "../components/RateAppModal";
@@ -70,15 +69,14 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   const lastTapTimeRef = useRef(0);
 
   // Auth context
-  const { session, signOut } = useAuth();
-  
+  const { session, signOut, totalIQ } = useAuth();
+
   // Profile & Stats data for Header
   const { profile } = useProfile(session?.user?.id ?? null);
-  const { stats } = usePerformanceStats();
-  
+
   // Calculate Rank
-  const rank = useIQRank(stats?.totalPuzzlesSolved ?? 0);
-  
+  const rank = getTierForPoints(totalIQ).name;
+
   // Subscription sync
   const { forceSync, restorePurchases } = useSubscriptionSync();
   const [isRestoring, setIsRestoring] = useState(false);
@@ -142,8 +140,24 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     );
   }, []);
 
+  // Haptic feedback
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem("@haptics_enabled").then((val) => {
+      if (val !== null) {
+        setHapticsEnabled(val === "true");
+      }
+    });
+  }, []);
+
+  const handleToggleHaptics = useCallback(async (value: boolean) => {
+    setHapticsEnabled(value);
+    await AsyncStorage.setItem("@haptics_enabled", value ? "true" : "false");
+  }, []);
+
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "2.0.0";
+  const appVersion = Constants.expoConfig?.version ?? "2.2.0";
 
   /**
    * Handle version text tap for secret dev menu
@@ -172,7 +186,10 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         if (hasPremium) {
           Alert.alert("Success", "Pro status restored successfully!");
         } else {
-          Alert.alert("Restore Complete", "No active subscriptions were found.");
+          Alert.alert(
+            "Restore Complete",
+            "No active subscriptions were found.",
+          );
         }
       } else {
         Alert.alert("Error", "Failed to restore purchases. Please try again.");
@@ -199,7 +216,10 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
               try {
                 const count = await deleteAttemptsByGameMode(gameMode);
                 await refreshLocalPuzzles();
-                Alert.alert("Success", `Deleted ${count} ${displayName} attempts.`);
+                Alert.alert(
+                  "Success",
+                  `Deleted ${count} ${displayName} attempts.`,
+                );
               } catch (error) {
                 Alert.alert("Error", "Failed to delete attempts.");
               }
@@ -218,7 +238,10 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         if (status !== "granted") {
           status = await requestPermissions();
           if (status !== "granted") {
-            Alert.alert("Notifications Disabled", "Please enable notifications.");
+            Alert.alert(
+              "Notifications Disabled",
+              "Please enable notifications.",
+            );
             return;
           }
         }
@@ -252,20 +275,16 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   );
 
   const handleResetAllIntros = useCallback(async () => {
-    Alert.alert(
-      "Reset Intros",
-      "Reset all game intro screens?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reset",
-          onPress: async () => {
-            await resetAllIntros();
-            Alert.alert("Success", "Intro screens reset.");
-          },
+    Alert.alert("Reset Intros", "Reset all game intro screens?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Reset",
+        onPress: async () => {
+          await resetAllIntros();
+          Alert.alert("Success", "Intro screens reset.");
         },
-      ],
-    );
+      },
+    ]);
   }, [resetAllIntros]);
 
   const handleDeleteData = useCallback(() => {
@@ -288,24 +307,33 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
                   try {
                     const userId = session?.user?.id;
                     if (userId) {
-                      await supabase.from("puzzle_attempts").delete().eq("user_id", userId);
-                      await supabase.from("user_streaks").delete().eq("user_id", userId);
+                      await supabase
+                        .from("puzzle_attempts")
+                        .delete()
+                        .eq("user_id", userId);
+                      await supabase
+                        .from("user_streaks")
+                        .delete()
+                        .eq("user_id", userId);
                       await supabase.from("profiles").delete().eq("id", userId);
                     }
                     await clearAllLocalData();
                     await AsyncStorage.clear();
                     await signOut();
                     if (Platform.OS !== "web") {
-                       setTimeout(async () => {
-                            try {
-                              await Purchases.restorePurchases();
-                              await forceSync();
-                            } catch (e) {
-                                console.log(e);
-                            }
-                       }, 1500);
+                      setTimeout(async () => {
+                        try {
+                          await Purchases.restorePurchases();
+                          await forceSync();
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }, 1500);
                     }
-                    Alert.alert("Data Deleted", "All your data has been deleted.");
+                    Alert.alert(
+                      "Data Deleted",
+                      "All your data has been deleted.",
+                    );
                   } catch (error) {
                     Alert.alert("Error", "Failed to delete data.");
                   } finally {
@@ -341,17 +369,17 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-             {/* Placeholder Avatar */}
-             <Text style={styles.avatarText}>
-                {profile?.display_name?.charAt(0).toUpperCase() ?? "G"}
-             </Text>
+            {/* Placeholder Avatar */}
+            <Text style={styles.avatarText}>
+              {profile?.display_name?.charAt(0).toUpperCase() ?? "G"}
+            </Text>
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>
-                {profile?.display_name || "Guest Manager"}
+              {profile?.display_name || "Guest Manager"}
             </Text>
             <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>{rank}</Text>
+              <Text style={styles.badgeText}>{rank}</Text>
             </View>
           </View>
         </View>
@@ -362,39 +390,61 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Subscription */}
         <SettingsSection title="SUBSCRIPTION">
           <SettingsRow
-            icon={<RotateCcw size={20} color={colors.pitchGreen} strokeWidth={2} />}
+            icon={
+              <RotateCcw size={20} color={colors.pitchGreen} strokeWidth={2} />
+            }
             label={isRestoring ? "Restoring..." : "Restore Purchases"}
             onPress={handleRestorePurchases}
             testID={testID ? `${testID}-restore-purchases-row` : undefined}
           />
         </SettingsSection>
 
-        {/* Notifications */}
-        <SettingsSection title="NOTIFICATIONS">
+        {/* Preferences */}
+        <SettingsSection title="PREFERENCES">
           <View style={styles.toggleRow}>
-             <View style={styles.toggleIconContainer}>
-               <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
-             </View>
-             <Text style={styles.toggleLabel}>Push Notifications</Text>
-             <Switch
-                value={notificationsEnabled}
-                onValueChange={handleToggleNotifications}
-                trackColor={{ false: colors.glassBorder, true: colors.pitchGreen }}
-                thumbColor={colors.floodlightWhite}
-             />
+            <View style={styles.toggleIconContainer}>
+              <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
+            </View>
+            <Text style={styles.toggleLabel}>Push Notifications</Text>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleToggleNotifications}
+              trackColor={{
+                false: colors.glassBorder,
+                true: colors.pitchGreen,
+              }}
+              thumbColor={colors.floodlightWhite}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Haptic Feedback</Text>
+            <Switch
+              value={hapticsEnabled}
+              onValueChange={handleToggleHaptics}
+              trackColor={{
+                false: colors.glassBorder,
+                true: colors.pitchGreen,
+              }}
+              thumbColor={colors.floodlightWhite}
+              testID={testID ? `${testID}-haptics-toggle` : undefined}
+            />
           </View>
         </SettingsSection>
 
         {/* Legal */}
         <SettingsSection title="LEGAL">
           <SettingsRow
-            icon={<Shield size={20} color={colors.pitchGreen} strokeWidth={2} />}
+            icon={
+              <Shield size={20} color={colors.pitchGreen} strokeWidth={2} />
+            }
             label="Privacy Policy"
             onPress={() => Linking.openURL("https://football-iq.app/privacy")}
             testID={testID ? `${testID}-privacy-row` : undefined}
           />
           <SettingsRow
-            icon={<FileText size={20} color={colors.pitchGreen} strokeWidth={2} />}
+            icon={
+              <FileText size={20} color={colors.pitchGreen} strokeWidth={2} />
+            }
             label="Terms of Service"
             onPress={() => Linking.openURL("https://football-iq.app/terms")}
             testID={testID ? `${testID}-terms-row` : undefined}
@@ -407,12 +457,12 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             icon={<Star size={20} color={colors.cardYellow} strokeWidth={2} />}
             label="Rate App"
             onPress={async () => {
-                const isAvailable = await StoreReview.isAvailableAsync();
-                if (isAvailable) {
-                    await StoreReview.requestReview();
-                } else {
-                    setRateModalVisible(true);
-                }
+              const isAvailable = await StoreReview.isAvailableAsync();
+              if (isAvailable) {
+                await StoreReview.requestReview();
+              } else {
+                setRateModalVisible(true);
+              }
             }}
             testID={testID ? `${testID}-rate-row` : undefined}
           />
@@ -421,7 +471,9 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Community */}
         <SettingsSection title="COMMUNITY">
           <SettingsRow
-            icon={<Lightbulb size={20} color={colors.pitchGreen} strokeWidth={2} />}
+            icon={
+              <Lightbulb size={20} color={colors.pitchGreen} strokeWidth={2} />
+            }
             label="Submit Game Idea"
             onPress={() => router.push("/submit-idea")}
             testID={testID ? `${testID}-submit-idea-row` : undefined}
@@ -440,42 +492,49 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
 
         {/* Developer Items */}
         {devModeEnabled && (
-            <SettingsSection title="DEVELOPER">
-                 <View style={styles.toggleRow}>
-                    <Text style={[styles.toggleLabel, { marginLeft: 0 }]}>Sound Effects</Text>
-                    <Switch
-                        value={soundEnabled}
-                        onValueChange={handleToggleSound}
-                        trackColor={{ false: colors.glassBorder, true: colors.pitchGreen }}
-                    />
-                 </View>
-                 <SettingsRow
-                    icon={<Bell size={20} color={colors.pitchGreen} />}
-                    label="Test Morning Notif"
-                    onPress={() => handleTestNotification("morning")}
-                 />
-                 <SettingsRow
-                    icon={<Bell size={20} color={colors.cardYellow} />}
-                    label="Test Streak Notif"
-                    onPress={() => handleTestNotification("streak")}
-                 />
-                 <SettingsRow
-                    icon={<RotateCcw size={20} color={colors.pitchGreen} />}
-                    label="Reset Intros"
-                    onPress={handleResetAllIntros}
-                 />
-                 <SettingsRow
-                    icon={<Trash2 size={20} color={colors.redCard} />}
-                    label="Clear Top Tens Data"
-                    onPress={() => handleClearAttempts("top_tens", "Top Tens")}
-                 />
-            </SettingsSection>
+          <SettingsSection title="DEVELOPER">
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { marginLeft: 0 }]}>
+                Sound Effects
+              </Text>
+              <Switch
+                value={soundEnabled}
+                onValueChange={handleToggleSound}
+                trackColor={{
+                  false: colors.glassBorder,
+                  true: colors.pitchGreen,
+                }}
+              />
+            </View>
+            <SettingsRow
+              icon={<Bell size={20} color={colors.pitchGreen} />}
+              label="Test Morning Notif"
+              onPress={() => handleTestNotification("morning")}
+            />
+            <SettingsRow
+              icon={<Bell size={20} color={colors.cardYellow} />}
+              label="Test Streak Notif"
+              onPress={() => handleTestNotification("streak")}
+            />
+            <SettingsRow
+              icon={<RotateCcw size={20} color={colors.pitchGreen} />}
+              label="Reset Intros"
+              onPress={handleResetAllIntros}
+            />
+            <SettingsRow
+              icon={<Trash2 size={20} color={colors.redCard} />}
+              label="Clear Top Tens Data"
+              onPress={() => handleClearAttempts("top_tens", "Top Tens")}
+            />
+          </SettingsSection>
         )}
 
         {/* Footer */}
         <Pressable style={styles.footer} onPress={handleVersionTap}>
           <Text style={styles.versionText}>Version {appVersion}</Text>
-          <Text style={styles.copyrightText}>Football IQ {new Date().getFullYear()}</Text>
+          <Text style={styles.copyrightText}>
+            Football IQ {new Date().getFullYear()}
+          </Text>
         </Pressable>
       </ScrollView>
 

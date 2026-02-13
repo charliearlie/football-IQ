@@ -13,6 +13,22 @@ import type { ParsedLocalPuzzle } from '@/types/database';
 // Mock dependencies
 jest.mock('@/lib/database', () => ({
   saveAttempt: jest.fn().mockResolvedValue(undefined),
+  getAttemptByPuzzleId: jest.fn().mockResolvedValue(null),
+}));
+
+// Mock PuzzleContext
+jest.mock('@/features/puzzles/context/PuzzleContext', () => ({
+  usePuzzleContext: jest.fn(() => ({
+    syncAttempts: jest.fn(),
+  })),
+}));
+
+// Mock AuthContext
+jest.mock('@/features/auth/context/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: { id: 'test-user-id' },
+    profile: null,
+  })),
 }));
 
 jest.mock('@/hooks/useHaptics', () => ({
@@ -52,6 +68,11 @@ function createMockPuzzle(goals: Goal[]): ParsedLocalPuzzle {
     difficulty: null,
     synced_at: null,
     updated_at: null,
+    is_special: 0,
+    event_title: null,
+    event_subtitle: null,
+    event_tag: null,
+    event_theme: null,
   };
 }
 
@@ -545,8 +566,8 @@ describe('useGoalscorerRecallGame', () => {
         result.current.giveUp();
       });
 
-      // 1/2 = 50% = round(2.5) = 3 points
-      expect(result.current.state.score?.points).toBe(3);
+      // Scoring: scorersFound (1) + allFoundBonus (0) = 1 point
+      expect(result.current.state.score?.points).toBe(1);
       expect(result.current.state.score?.scorersFound).toBe(1);
     });
   });

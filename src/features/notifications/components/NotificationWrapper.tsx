@@ -10,11 +10,13 @@
 import React from 'react';
 import { useUserStats } from '@/features/home/hooks/useUserStats';
 import { usePuzzleContext } from '@/features/puzzles';
-import { useAuth } from '@/features/auth';
+import { useAuth, useOnboarding } from '@/features/auth';
 import { getAuthorizedDateUnsafe } from '@/lib/time';
 import { NotificationProvider, useNotifications } from '../context/NotificationContext';
 import { NotificationPermissionModal } from './NotificationPermissionModal';
 import { PerfectDayCelebration } from './PerfectDayCelebration';
+import { TierLevelUpCelebration } from '@/features/stats/components/TierLevelUpCelebration';
+import { FirstWinCelebration } from './FirstWinCelebration';
 
 interface NotificationWrapperProps {
   children: React.ReactNode;
@@ -30,6 +32,7 @@ interface NotificationWrapperProps {
  * instead of actual completed count.
  */
 function NotificationModals() {
+  const { isOnboardingActive } = useOnboarding();
   const {
     showPermissionModal,
     requestNotificationPermission,
@@ -37,10 +40,19 @@ function NotificationModals() {
     isPerfectDayCelebrating,
     dismissPerfectDayCelebration,
     completedPuzzlesToday, // Use context value, not local calculation
+    isTierUpCelebrating,
+    tierUpData,
+    dismissTierUpCelebration,
+    isFirstWinCelebrating,
+    dismissFirstWinCelebration,
   } = useNotifications();
 
   // Get stats for Perfect Day card (streak count only)
   const { stats } = useUserStats();
+
+  // Never mount notification modals while the onboarding modal is visible —
+  // concurrent RN Modals corrupt the UIKit presentation stack and freeze touches
+  if (isOnboardingActive) return null;
 
   return (
     <>
@@ -59,6 +71,26 @@ function NotificationModals() {
           // Share callback - celebration handles the actual sharing
         }}
         testID="perfect-day-celebration"
+      />
+      {tierUpData && (
+        <TierLevelUpCelebration
+          visible={isTierUpCelebrating}
+          tier={tierUpData.tier}
+          totalIQ={tierUpData.totalIQ}
+          onDismiss={dismissTierUpCelebration}
+          onShare={async () => {
+            // Share callback - celebration handles the actual sharing
+          }}
+          testID="tier-level-up-celebration"
+        />
+      )}
+      <FirstWinCelebration
+        visible={isFirstWinCelebrating}
+        onDismiss={dismissFirstWinCelebration}
+        onShare={async () => {
+          // Share callback - celebration handles the actual sharing
+        }}
+        testID="first-win-celebration"
       />
     </>
   );
@@ -84,7 +116,8 @@ function NotificationModals() {
  */
 export function NotificationWrapper({ children }: NotificationWrapperProps) {
   const { stats, isLoading: statsLoading } = useUserStats();
-  const { user } = useAuth();
+  const { user, totalIQ } = useAuth();
+  const { isOnboardingActive } = useOnboarding();
   // Use PuzzleContext directly instead of useDailyPuzzles
   // (useDailyPuzzles uses useFocusEffect which requires navigation context)
   const { puzzles } = usePuzzleContext();
@@ -102,6 +135,8 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
       completedPuzzlesToday={stats.gamesPlayedToday}
       totalPuzzlesToday={totalPuzzlesToday}
       userId={user?.id ?? null}
+      isOnboardingActive={isOnboardingActive}
+      totalIQ={totalIQ}
     >
       {children}
       <NotificationModals />

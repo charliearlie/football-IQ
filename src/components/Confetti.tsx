@@ -94,12 +94,11 @@ function ConfettiPiece({
     const translateY = interpolate(
       progress.value,
       [0, 1],
-      [-50, SCREEN_HEIGHT + 50]
+      [0, SCREEN_HEIGHT + 100] // Start at top of screen (0), fall past bottom
     );
 
     // Horizontal sway (sine wave pattern)
     const swayAmount = Math.sin(progress.value * Math.PI * 3) * 30;
-    const translateX = startX + swayAmount;
 
     // Fade out near the bottom
     const opacity = interpolate(progress.value, [0, 0.8, 1], [1, 1, 0]);
@@ -109,7 +108,7 @@ function ConfettiPiece({
 
     return {
       transform: [
-        { translateX },
+        { translateX: swayAmount }, // Apply sway from initial left position
         { translateY },
         { rotate: `${rotate.value + rotation}deg` },
         { scale },
@@ -123,6 +122,7 @@ function ConfettiPiece({
       style={[
         styles.confettiPiece,
         {
+          left: startX, // Set initial horizontal position
           width: size,
           height: size * 0.6, // Rectangular shape
           backgroundColor: color,
@@ -168,7 +168,7 @@ export function Confetti({ active, testID }: ConfettiProps) {
   if (!active) return null;
 
   return (
-    <View style={styles.container} pointerEvents="none" testID={testID}>
+    <View style={styles.container} pointerEvents="none" testID={testID} collapsable={false}>
       {pieces.map((piece) => (
         <ConfettiPiece key={piece.index} {...piece} />
       ))}
@@ -180,6 +180,8 @@ const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
+    elevation: 1000, // Android: Ensure confetti renders above modal content
+    overflow: 'visible', // Ensure confetti pieces aren't clipped
   },
   confettiPiece: {
     position: 'absolute',

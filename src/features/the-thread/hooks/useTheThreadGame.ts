@@ -143,7 +143,7 @@ export function useTheThreadGame(puzzle: ParsedLocalPuzzle | null, isFocused: bo
     puzzle,
     isFocused,
     state,
-    dispatch,
+    dispatch: dispatch as unknown as import('@/hooks/useGamePersistence').PersistenceDispatch,
     hasProgressToSave: (s) => s.guesses.length > 0 || s.hintsRevealed > 0,
     serializeProgress: (s) => ({
       guesses: s.guesses.map((g) => ({ id: g.id, name: g.name })),
@@ -318,7 +318,10 @@ export function useTheThreadGame(puzzle: ParsedLocalPuzzle | null, isFocused: bo
       };
     }
 
-    const { Share, Clipboard, Platform } = await import("react-native");
+    // @ts-expect-error - dynamic import supported at runtime by Metro bundler
+    const { Share, Platform } = await import("react-native");
+    // @ts-expect-error - dynamic import supported at runtime by Metro bundler
+    const ExpoClipboard = await import("expo-clipboard");
 
     const emojiGrid = generateThreadEmojiGrid(state.score);
     const dateStr = puzzle.puzzle_date;
@@ -335,7 +338,7 @@ Play at footballiq.app`;
     try {
       if (Platform.OS === "web") {
         // Web: copy to clipboard
-        await Clipboard.setStringAsync(shareText);
+        await ExpoClipboard.setStringAsync(shareText);
         return { success: true, method: "clipboard" };
       }
 
@@ -352,7 +355,7 @@ Play at footballiq.app`;
       console.error("[TheThread] Share failed:", error);
       // Fallback to clipboard
       try {
-        await Clipboard.setStringAsync(shareText);
+        await ExpoClipboard.setStringAsync(shareText);
         return { success: true, method: "clipboard" };
       } catch {
         return {

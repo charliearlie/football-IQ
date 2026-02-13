@@ -67,6 +67,11 @@ interface SupabaseAttemptWithPuzzle {
     content: unknown;
     difficulty: string | null;
     updated_at: string | null;
+    is_special: boolean;
+    event_title: string | null;
+    event_subtitle: string | null;
+    event_tag: string | null;
+    event_theme: string | null;
   } | null;
 }
 
@@ -183,7 +188,12 @@ export async function performRehydration(
           puzzle_date,
           content,
           difficulty,
-          updated_at
+          updated_at,
+          is_special,
+          event_title,
+          event_subtitle,
+          event_tag,
+          event_theme
         )
       `
       )
@@ -232,6 +242,11 @@ export async function performRehydration(
         difficulty: attempt.daily_puzzles.difficulty ?? null,
         synced_at: new Date().toISOString(),
         updated_at: attempt.daily_puzzles.updated_at ?? null,
+        is_special: attempt.daily_puzzles.is_special ? 1 : 0,
+        event_title: attempt.daily_puzzles.event_title ?? null,
+        event_subtitle: attempt.daily_puzzles.event_subtitle ?? null,
+        event_tag: attempt.daily_puzzles.event_tag ?? null,
+        event_theme: attempt.daily_puzzles.event_theme ?? null,
       };
       await savePuzzle(localPuzzle);
 

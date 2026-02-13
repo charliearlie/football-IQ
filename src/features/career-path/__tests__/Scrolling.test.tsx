@@ -20,6 +20,11 @@ const mockPuzzle: ParsedLocalPuzzle = {
   difficulty: 'medium',
   synced_at: null,
   updated_at: null,
+  is_special: 0,
+  event_title: null,
+  event_subtitle: null,
+  event_tag: null,
+  event_theme: null,
 };
 
 // Mock useHaptics

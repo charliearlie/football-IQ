@@ -16,6 +16,21 @@ jest.mock('@/lib/database', () => ({
   getAttemptByPuzzleId: jest.fn(),
 }));
 
+// Mock PuzzleContext
+jest.mock('@/features/puzzles/context/PuzzleContext', () => ({
+  usePuzzleContext: jest.fn(() => ({
+    syncAttempts: jest.fn(),
+  })),
+}));
+
+// Mock AuthContext
+jest.mock('@/features/auth/context/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: { id: 'test-user-id' },
+    profile: null,
+  })),
+}));
+
 // Mock haptics
 jest.mock('@/hooks/useHaptics', () => ({
   useHaptics: () => ({
@@ -42,6 +57,11 @@ const createMockPuzzle = (): ParsedLocalPuzzle => ({
   difficulty: 'medium',
   synced_at: new Date().toISOString(),
   updated_at: null,
+  is_special: 0,
+  event_title: null,
+  event_subtitle: null,
+  event_tag: null,
+  event_theme: null,
   content: {
     home_team: 'Arsenal',
     away_team: 'Liverpool',
@@ -189,7 +209,7 @@ describe('Progressive Save', () => {
       const existingAttempt: ParsedLocalAttempt = {
         id: 'existing-attempt-id',
         puzzle_id: 'puzzle-123',
-        completed: 0,
+        completed: false,
         score: null,
         score_display: null,
         metadata: {
@@ -199,7 +219,7 @@ describe('Progressive Save', () => {
         },
         started_at: '2024-01-15T10:00:00Z',
         completed_at: null,
-        synced: 0,
+        synced: false,
       };
 
       mockGetAttemptByPuzzleId.mockResolvedValue(existingAttempt);
@@ -227,7 +247,7 @@ describe('Progressive Save', () => {
       const existingAttempt: ParsedLocalAttempt = {
         id: 'existing-attempt-id',
         puzzle_id: 'puzzle-123',
-        completed: 0,
+        completed: false,
         score: null,
         score_display: null,
         metadata: {
@@ -237,7 +257,7 @@ describe('Progressive Save', () => {
         },
         started_at: '2024-01-15T10:00:00Z',
         completed_at: null,
-        synced: 0,
+        synced: false,
       };
 
       mockGetAttemptByPuzzleId.mockResolvedValue(existingAttempt);
@@ -258,7 +278,7 @@ describe('Progressive Save', () => {
       const existingAttempt: ParsedLocalAttempt = {
         id: 'existing-attempt-id',
         puzzle_id: 'puzzle-123',
-        completed: 0,
+        completed: false,
         score: null,
         score_display: null,
         metadata: {
@@ -268,7 +288,7 @@ describe('Progressive Save', () => {
         },
         started_at: '2024-01-15T10:00:00Z',
         completed_at: null,
-        synced: 0,
+        synced: false,
       };
 
       mockGetAttemptByPuzzleId.mockResolvedValue(existingAttempt);
@@ -303,7 +323,7 @@ describe('Progressive Save', () => {
       const completedAttempt: ParsedLocalAttempt = {
         id: 'completed-attempt-id',
         puzzle_id: 'puzzle-123',
-        completed: 1,
+        completed: true,
         score: 100,
         score_display: '100%',
         metadata: {
@@ -314,7 +334,7 @@ describe('Progressive Save', () => {
         },
         started_at: '2024-01-15T10:00:00Z',
         completed_at: '2024-01-15T10:00:30Z',
-        synced: 1,
+        synced: true,
       };
 
       mockGetAttemptByPuzzleId.mockResolvedValue(completedAttempt);

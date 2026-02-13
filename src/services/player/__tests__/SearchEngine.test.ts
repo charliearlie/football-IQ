@@ -170,6 +170,7 @@ describe('searchPlayers', () => {
   });
 
   it('returns empty array for queries under 3 characters', async () => {
+    mockDb.getAllAsync.mockClear();
     const results = await searchPlayers('ab');
     expect(results).toEqual([]);
     // Should not query database for short queries

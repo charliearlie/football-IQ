@@ -18,6 +18,7 @@ import * as Crypto from 'expo-crypto';
 import { usePostHog } from 'posthog-react-native';
 import { saveAttempt, getAttemptByPuzzleId } from '@/lib/database';
 import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
+import { emitStatsChanged } from '@/lib/statsEvents';
 import { LocalAttempt } from '@/types/database';
 import {
   ParsedLocalPuzzle,
@@ -364,6 +365,10 @@ export function useGamePersistence<TState extends BaseGameState, TMeta>(
 
         await saveAttempt(attempt);
         dispatch({ type: 'ATTEMPT_SAVED' });
+
+        // Notify useUserStats consumers (e.g. NotificationWrapper) so
+        // totalGamesPlayed updates and celebration/permission effects fire.
+        emitStatsChanged();
 
         try {
           const timeSpent = state.startedAt

@@ -36,6 +36,11 @@ const mockPuzzle: DailyPuzzle = {
   triggered_by: null,
   is_premium: false,
   is_bonus: false,
+  is_special: null,
+  event_title: null,
+  event_subtitle: null,
+  event_tag: null,
+  event_theme: null,
   created_at: "2024-01-14T10:00:00Z",
   updated_at: "2024-01-14T10:00:00Z",
 };

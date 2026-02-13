@@ -22,7 +22,7 @@ interface DailyLeaderboardRow {
   avatar_url: string | null;
   daily_score: number;
   games_played: number;
-  earliest_completion: string;
+  last_completed_at: string;
 }
 
 /**
@@ -57,7 +57,7 @@ function transformDailyEntry(row: DailyLeaderboardRow): LeaderboardEntry {
     avatarUrl: row.avatar_url,
     score: row.daily_score,
     gamesPlayed: row.games_played,
-    lastCompletedAt: row.earliest_completion,
+    lastCompletedAt: row.last_completed_at,
   };
 }
 

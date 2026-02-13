@@ -15,8 +15,13 @@
  * Score progression: 1 → 1 → 2 → 2 → 3 → 3 → 4 → 4 → 5 → 8
  */
 
+import type { TopTensScore } from '../types/topTens.types';
+
 /** Maximum possible points */
 export const MAX_POINTS = 8;
+
+// Re-export for consumers that import from scoring
+export type { TopTensScore };
 
 /**
  * Get the score for a given number of answers found.
@@ -30,22 +35,6 @@ function getScoreForFoundCount(foundCount: number): number {
   if (foundCount <= 8) return 4;
   if (foundCount === 9) return 5;
   return 8; // foundCount >= 10 (Jackpot!)
-}
-
-/**
- * Score structure for Top Tens.
- */
-export interface TopTensScore {
-  /** Points earned (0-8, flat tier scoring) */
-  points: number;
-  /** Maximum possible points (always 8) */
-  maxPoints: 8;
-  /** Number of answers found (0-10) */
-  foundCount: number;
-  /** Number of incorrect guesses made */
-  wrongGuessCount: number;
-  /** Whether player found all answers (won) */
-  won: boolean;
 }
 
 /**

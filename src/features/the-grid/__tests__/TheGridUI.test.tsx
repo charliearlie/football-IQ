@@ -145,7 +145,7 @@ describe('GridCell', () => {
     mockOnPress.mockClear();
   });
 
-  it('shows ? icon when empty', () => {
+  it('shows + icon when empty', () => {
     const { getByText } = render(
       <GridCell
         index={0}
@@ -156,7 +156,7 @@ describe('GridCell', () => {
       />
     );
 
-    expect(getByText('?')).toBeTruthy();
+    expect(getByText('+')).toBeTruthy();
   });
 
   it('shows player name when filled', () => {
@@ -171,7 +171,7 @@ describe('GridCell', () => {
     );
 
     expect(getByText('Lionel Messi')).toBeTruthy();
-    expect(queryByText('?')).toBeNull();
+    expect(queryByText('+')).toBeNull();
   });
 
   it('calls onPress when tapped (empty cell)', () => {
@@ -250,45 +250,44 @@ describe('CategoryHeader', () => {
     expect(getByText('Real Madrid')).toBeTruthy();
   });
 
-  it('renders icon for club category type', () => {
+  it('displays club category value', () => {
     const category: GridCategory = { type: 'club', value: 'Barcelona' };
 
-    const { getByTestId } = render(
+    const { getByText } = render(
       <CategoryHeader category={category} testID="header" />
     );
 
-    // Icon should be rendered - we verify via testID pattern
-    expect(getByTestId('header-icon')).toBeTruthy();
+    expect(getByText('Barcelona')).toBeTruthy();
   });
 
-  it('renders icon for nation category type', () => {
+  it('displays nation category value', () => {
     const category: GridCategory = { type: 'nation', value: 'France' };
 
-    const { getByTestId } = render(
+    const { getByText } = render(
       <CategoryHeader category={category} testID="header" />
     );
 
-    expect(getByTestId('header-icon')).toBeTruthy();
+    expect(getByText('France')).toBeTruthy();
   });
 
-  it('renders icon for stat category type', () => {
+  it('displays stat category value', () => {
     const category: GridCategory = { type: 'stat', value: '100+ Goals' };
 
-    const { getByTestId } = render(
+    const { getByText } = render(
       <CategoryHeader category={category} testID="header" />
     );
 
-    expect(getByTestId('header-icon')).toBeTruthy();
+    expect(getByText('100+ Goals')).toBeTruthy();
   });
 
-  it('renders icon for trophy category type', () => {
+  it('displays trophy category value', () => {
     const category: GridCategory = { type: 'trophy', value: 'Champions League' };
 
-    const { getByTestId } = render(
+    const { getByText } = render(
       <CategoryHeader category={category} testID="header" />
     );
 
-    expect(getByTestId('header-icon')).toBeTruthy();
+    expect(getByText('Champions League')).toBeTruthy();
   });
 });
 

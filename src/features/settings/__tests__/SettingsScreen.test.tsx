@@ -23,6 +23,17 @@ jest.mock("@/theme", () => ({
     textSecondary: "rgba(248, 250, 252, 0.7)",
     cardYellow: "#FACC15",
   },
+  fonts: {
+    headline: "BebasNeue-Regular",
+    body: "Montserrat",
+    subheading: "Montserrat",
+  },
+  fontWeights: {
+    regular: "400" as const,
+    medium: "500" as const,
+    semiBold: "600" as const,
+    bold: "700" as const,
+  },
   textStyles: {
     h1: { fontSize: 32, fontFamily: "BebasNeue-Regular" },
     h2: { fontSize: 24, fontFamily: "BebasNeue-Regular" },
@@ -46,6 +57,17 @@ jest.mock("@/theme", () => ({
     lg: 12,
     xl: 16,
     full: 9999,
+  },
+  depthOffset: {
+    none: 0,
+    sunk: 1,
+    card: 2,
+    cell: 3,
+    tictacCell: 4,
+    buttonTiny: 3,
+    buttonSmall: 5,
+    button: 8,
+    buttonLarge: 10,
   },
 }));
 
@@ -161,7 +183,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "2.0.0",
+      version: "2.2.0",
     },
   },
 }));
@@ -227,6 +249,8 @@ jest.mock("@/features/auth", () => ({
 jest.mock("@/features/auth/hooks/useProfile", () => ({
   useProfile: () => ({
     profile: { display_name: "Test Manager" },
+    totalIQ: 0,
+    isLoading: false,
   }),
 }));
 
@@ -235,11 +259,6 @@ jest.mock("@/features/stats/hooks/usePerformanceStats", () => ({
   usePerformanceStats: () => ({
     stats: { totalPuzzlesSolved: 5 },
   }),
-}));
-
-// Mock IQ Rank
-jest.mock("@/features/home/hooks/useIQRank", () => ({
-  useIQRank: () => "Bench Warmer",
 }));
 
 // Mock Puzzles
@@ -255,8 +274,12 @@ jest.mock("@/features/puzzles", () => ({
 // Mock Notifications
 jest.mock("@/features/notifications", () => ({
   scheduleNotification: jest.fn(),
-  getMorningMessage: jest.fn().mockReturnValue({ title: "Morning", body: "Wake up" }),
-  getStreakSaverMessage: jest.fn().mockReturnValue({ title: "Streak", body: "Save it" }),
+  getMorningMessage: jest
+    .fn()
+    .mockReturnValue({ title: "Morning", body: "Wake up" }),
+  getStreakSaverMessage: jest
+    .fn()
+    .mockReturnValue({ title: "Streak", body: "Save it" }),
   getPermissionStatus: jest.fn().mockResolvedValue("granted"),
   requestPermissions: jest.fn().mockResolvedValue("granted"),
 }));
@@ -305,7 +328,7 @@ describe("SettingsScreen", () => {
     it("renders Profile section with Test Manager", () => {
       const { getByText } = render(<SettingsScreen />);
       expect(getByText("Test Manager")).toBeTruthy();
-      expect(getByText(/Bench Warmer/i)).toBeTruthy();
+      expect(getByText(/Trialist/i)).toBeTruthy();
     });
 
     it("renders Subscription section header", () => {
@@ -313,9 +336,9 @@ describe("SettingsScreen", () => {
       expect(getByText("SUBSCRIPTION")).toBeTruthy();
     });
 
-    it("renders Notifications section header", () => {
+    it("renders Preferences section header", () => {
       const { getByText } = render(<SettingsScreen />);
-      expect(getByText("NOTIFICATIONS")).toBeTruthy();
+      expect(getByText("PREFERENCES")).toBeTruthy();
     });
 
     it("renders Legal section header", () => {
@@ -348,7 +371,7 @@ describe("SettingsScreen", () => {
 
       await waitFor(() => {
         expect(Linking.openURL).toHaveBeenCalledWith(
-          "https://football-iq.app/privacy"
+          "https://football-iq.app/privacy",
         );
       });
     });
@@ -363,7 +386,7 @@ describe("SettingsScreen", () => {
 
       await waitFor(() => {
         expect(Linking.openURL).toHaveBeenCalledWith(
-          "https://football-iq.app/terms"
+          "https://football-iq.app/terms",
         );
       });
     });

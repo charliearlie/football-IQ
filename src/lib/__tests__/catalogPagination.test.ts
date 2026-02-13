@@ -77,6 +77,7 @@ describe('Catalog Pagination - Future Date Filtering', () => {
         puzzle_date: getDateString(-i - 1), // Yesterday, 2 days ago, etc.
         difficulty: 'medium',
         synced_at: null,
+        is_special: 0,
       }));
       mockDb.getAllAsync.mockResolvedValueOnce(pastPuzzles);
 
@@ -99,8 +100,8 @@ describe('Catalog Pagination - Future Date Filtering', () => {
       // The SQL filters out future puzzles, so Page 0 returns valid past puzzles
 
       const pastPuzzles: LocalCatalogEntry[] = [
-        { id: 'puzzle-1', game_mode: 'mystery_player', puzzle_date: yesterday, difficulty: 'easy', synced_at: null },
-        { id: 'puzzle-2', game_mode: 'tic_tac_toe', puzzle_date: lastWeek, difficulty: 'medium', synced_at: null },
+        { id: 'puzzle-1', game_mode: 'mystery_player', puzzle_date: yesterday, difficulty: 'easy', synced_at: null, is_special: 0 },
+        { id: 'puzzle-2', game_mode: 'tic_tac_toe', puzzle_date: lastWeek, difficulty: 'medium', synced_at: null, is_special: 0 },
       ];
       mockDb.getAllAsync.mockResolvedValueOnce(pastPuzzles);
 
@@ -120,6 +121,7 @@ describe('Catalog Pagination - Future Date Filtering', () => {
         puzzle_date: today,
         difficulty: 'medium',
         synced_at: null,
+        is_special: 0,
       };
       mockDb.getAllAsync.mockResolvedValueOnce([todayPuzzle]);
 
@@ -134,8 +136,8 @@ describe('Catalog Pagination - Future Date Filtering', () => {
     it('TEST CASE 4: Game mode filter is applied correctly', async () => {
       // Arrange
       const mysteryPuzzles: LocalCatalogEntry[] = [
-        { id: 'mp-1', game_mode: 'mystery_player', puzzle_date: yesterday, difficulty: 'easy', synced_at: null },
-        { id: 'mp-2', game_mode: 'mystery_player', puzzle_date: lastWeek, difficulty: 'medium', synced_at: null },
+        { id: 'mp-1', game_mode: 'mystery_player', puzzle_date: yesterday, difficulty: 'easy', synced_at: null, is_special: 0 },
+        { id: 'mp-2', game_mode: 'mystery_player', puzzle_date: lastWeek, difficulty: 'medium', synced_at: null, is_special: 0 },
       ];
       mockDb.getAllAsync.mockResolvedValueOnce(mysteryPuzzles);
 
@@ -155,7 +157,7 @@ describe('Catalog Pagination - Future Date Filtering', () => {
     it('applies correct pagination with LIMIT and OFFSET', async () => {
       // Arrange
       const page2Puzzles: LocalCatalogEntry[] = [
-        { id: 'puzzle-20', game_mode: 'mystery_player', puzzle_date: getDateString(-20), difficulty: 'easy', synced_at: null },
+        { id: 'puzzle-20', game_mode: 'mystery_player', puzzle_date: getDateString(-20), difficulty: 'easy', synced_at: null, is_special: 0 },
       ];
       mockDb.getAllAsync.mockResolvedValueOnce(page2Puzzles);
 
@@ -267,6 +269,7 @@ describe('Catalog Pagination - Future Date Filtering', () => {
           puzzle_date: getDateString(-i - 1),
           difficulty: 'medium',
           synced_at: null,
+          is_special: 0,
         }))
       );
 

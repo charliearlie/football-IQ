@@ -32,7 +32,7 @@ jest.mock('expo-av', () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Audio } = require('expo-av');
+const { Audio: MockAudio } = require('expo-av') as { Audio: { setAudioModeAsync: jest.Mock; Sound: { createAsync: jest.Mock } } };
 
 describe('SoundService', () => {
   beforeEach(() => {
@@ -43,8 +43,8 @@ describe('SoundService', () => {
     mockSetPositionAsync.mockResolvedValue({});
     mockSetIsLoopingAsync.mockResolvedValue({});
     mockUnloadAsync.mockResolvedValue({});
-    Audio.setAudioModeAsync.mockResolvedValue(undefined);
-    Audio.Sound.createAsync.mockResolvedValue({ sound: mockSoundInstance });
+    MockAudio.setAudioModeAsync.mockResolvedValue(undefined);
+    MockAudio.Sound.createAsync.mockResolvedValue({ sound: mockSoundInstance });
 
     // Get a fresh singleton by re-requiring the module
     jest.isolateModules(() => {
@@ -55,7 +55,7 @@ describe('SoundService', () => {
   describe('init', () => {
     it('configures audio mode', async () => {
       await SoundService.init();
-      expect(Audio.setAudioModeAsync).toHaveBeenCalledWith(
+      expect(MockAudio.setAudioModeAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           playsInSilentModeIOS: false,
           staysActiveInBackground: false,
@@ -65,14 +65,14 @@ describe('SoundService', () => {
 
     it('preloads 3 sounds', async () => {
       await SoundService.init();
-      expect(Audio.Sound.createAsync).toHaveBeenCalledTimes(3);
+      expect(MockAudio.Sound.createAsync).toHaveBeenCalledTimes(3);
     });
 
     it('does not re-initialize if already initialized', async () => {
       await SoundService.init();
       await SoundService.init();
       // Should only be called once (3 sounds)
-      expect(Audio.Sound.createAsync).toHaveBeenCalledTimes(3);
+      expect(MockAudio.Sound.createAsync).toHaveBeenCalledTimes(3);
     });
   });
 

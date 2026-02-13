@@ -163,6 +163,28 @@ interface ClubAutocompleteProps {
 - Upserts to `players`, `clubs`, `player_appearances`, `achievements`, `player_achievements`
 - Recalculates `stats_cache` via `calculate_player_stats()` RPC
 
+### Admin: API-Football ID Mapping
+- Maps Wikidata QIDs → API-Football v3 player IDs (`players.api_football_id`)
+- Disambiguation: birth year + nationality (both required)
+- Confidence: `high` = auto-save, `medium` = flagged in `agent_runs` logs
+- Trial tier: 100 req/day, auto-stops at 90
+- Priority: `scout_rank DESC` (most notable players first)
+- Run: `runApiFootballMapping({ limit: 50 })` server action
+- Dry run: `runApiFootballMapping({ limit: 5, dryRun: true })` (no DB writes)
+- Results: `SELECT id, name, api_football_id FROM players WHERE api_football_id IS NOT NULL`
+- Flagged: `SELECT logs FROM agent_runs WHERE agent_name = 'api_football_mapper'`
+
+```typescript
+import { runApiFootballMapping } from '@/app/(dashboard)/admin/actions';
+
+// Map top 50 unmapped players (live)
+const result = await runApiFootballMapping({ limit: 50 });
+// result.data: { mapped, flaggedForReview, skipped, requestsUsed, savedCount }
+
+// Dry run (no DB writes, API calls still made)
+const preview = await runApiFootballMapping({ limit: 5, dryRun: true });
+```
+
 ## 3-Tier Puzzle Access
 ```
 Anonymous  → Today only

@@ -6,7 +6,12 @@
  */
 
 import { SettingsScreen } from '@/features/settings';
+import { TabScreenWrapper } from '@/components/TabScreenWrapper';
 
 export default function SettingsTab() {
-  return <SettingsScreen testID="settings" />;
+  return (
+    <TabScreenWrapper>
+      <SettingsScreen testID="settings" />
+    </TabScreenWrapper>
+  );
 }

@@ -27,14 +27,15 @@ import {
   SectionHeader,
 } from '@/features/home/components/new';
 import { useDailyProgress } from '@/features/home/hooks/useDailyProgress';
-import { useIQRank } from '@/features/home/hooks/useIQRank';
 import { useSpecialEvent } from '@/features/home/hooks/useSpecialEvent';
+import { getTierForPoints } from '@/features/stats/utils/tierProgression';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { PremiumUpsellBanner, UnlockChoiceModal } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
 import { useAuth } from '@/features/auth';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { HOME_COLORS } from '@/theme/home-design';
+
 
 /**
  * Get today's date in YYYY-MM-DD format.
@@ -77,7 +78,7 @@ const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premiu
  */
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile, user, signInAnonymously } = useAuth();
+  const { profile, user, signInAnonymously, totalIQ } = useAuth();
   const { isConnected } = useNetworkStatus();
   const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
   const { cards, completedCount, isSpecialCompleted, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
@@ -88,7 +89,7 @@ export default function HomeScreen() {
 
   // New Hooks
   const progress = useDailyProgress(cards);
-  const iqRank = useIQRank(stats.totalGamesPlayed);
+  const iqTier = getTierForPoints(totalIQ).name;
   const specialEvent = useSpecialEvent();
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
@@ -198,10 +199,12 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* 1. Header */}
-      <HomeHeader 
-        streak={stats.currentStreak} 
-        isPremium={isPremium} 
-        onProPress={handleProPress} 
+      <HomeHeader
+        streak={stats.currentStreak}
+        isPremium={isPremium}
+        onProPress={handleProPress}
+        gamesPlayedToday={stats.gamesPlayedToday}
+        availableFreezes={stats.availableFreezes}
       />
 
       {/* Scrollable Content */}
@@ -231,7 +234,7 @@ export default function HomeScreen() {
         <StatsGrid 
             gamesCompleted={stats.totalGamesPlayed} 
             totalGames={stats.totalPuzzlesAvailable}
-            iqTitle={iqRank}
+            iqTitle={iqTier}
             onPressGames={() => router.push('/archive')}
             onPressIQ={() => router.push('/stats')} 
         />

@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   triggerSuccess as hapticSuccess,
   triggerError as hapticError,
@@ -92,6 +93,15 @@ export function useFeedback(): UseFeedbackResult {
   });
 
   const shakeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@haptics_enabled').then((value) => {
+      if (value !== null) {
+        setHapticsEnabled(value === 'true');
+      }
+    });
+  }, []);
 
   /**
    * Clear shake animation state
@@ -123,7 +133,9 @@ export function useFeedback(): UseFeedbackResult {
    * Trigger success feedback
    */
   const onSuccess = useCallback((origin?: ParticleBurstOrigin) => {
-    hapticSuccess();
+    if (hapticsEnabled) {
+      hapticSuccess();
+    }
 
     if (origin) {
       setFeedbackState((prev) => ({
@@ -132,13 +144,15 @@ export function useFeedback(): UseFeedbackResult {
         particleBurstOrigin: origin,
       }));
     }
-  }, []);
+  }, [hapticsEnabled]);
 
   /**
    * Trigger error feedback with shake + flash
    */
   const onError = useCallback(() => {
-    hapticError();
+    if (hapticsEnabled) {
+      hapticError();
+    }
 
     // Clear any existing timer
     if (shakeTimerRef.current) {
@@ -160,13 +174,15 @@ export function useFeedback(): UseFeedbackResult {
       }));
       shakeTimerRef.current = null;
     }, SHAKE_AUTO_CLEAR_MS);
-  }, []);
+  }, [hapticsEnabled]);
 
   /**
    * Trigger completion feedback (puzzle finished)
    */
   const onCompletion = useCallback((origin?: ParticleBurstOrigin) => {
-    hapticCompletion();
+    if (hapticsEnabled) {
+      hapticCompletion();
+    }
 
     if (origin) {
       setFeedbackState((prev) => ({
@@ -175,21 +191,25 @@ export function useFeedback(): UseFeedbackResult {
         particleBurstOrigin: origin,
       }));
     }
-  }, []);
+  }, [hapticsEnabled]);
 
   /**
    * Trigger selection feedback
    */
   const onSelection = useCallback(() => {
-    hapticSelection();
-  }, []);
+    if (hapticsEnabled) {
+      hapticSelection();
+    }
+  }, [hapticsEnabled]);
 
   /**
    * Trigger incomplete action feedback
    */
   const onIncomplete = useCallback(() => {
-    hapticIncomplete();
-  }, []);
+    if (hapticsEnabled) {
+      hapticIncomplete();
+    }
+  }, [hapticsEnabled]);
 
   return {
     feedbackState,

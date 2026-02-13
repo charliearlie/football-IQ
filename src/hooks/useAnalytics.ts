@@ -17,6 +17,10 @@ export const ANALYTICS_EVENTS = {
   AD_UNLOCK_COMPLETED: 'ad_unlock_completed',
   SHARE_COMPLETED: 'share_completed',
   ONBOARDING_COMPLETED: 'onboarding_completed',
+  TIER_LEVEL_UP: 'tier_level_up',
+  FIRST_WIN_CELEBRATED: 'first_win_celebrated',
+  STREAK_FREEZE_USED: 'streak_freeze_used',
+  STREAK_FREEZE_EARNED: 'streak_freeze_earned',
 } as const;
 
 // Base type compatible with PostHog's event properties
@@ -55,6 +59,27 @@ interface ShareCompletedProps extends EventProps {
 
 interface OnboardingCompletedProps extends EventProps {
   has_display_name: boolean;
+}
+
+interface TierLevelUpProps extends EventProps {
+  new_tier: string;
+  new_tier_number: number;
+  total_iq: number;
+}
+
+interface FirstWinCelebratedProps extends EventProps {
+  game_mode?: string;
+  score?: number;
+}
+
+interface StreakFreezeUsedProps extends EventProps {
+  streak_length: number;
+  freeze_source: 'earned' | 'initial' | 'premium';
+}
+
+interface StreakFreezeEarnedProps extends EventProps {
+  streak_milestone: number;
+  total_freezes: number;
 }
 
 export function useAnalytics() {
@@ -110,6 +135,26 @@ export function useAnalytics() {
     [capture]
   );
 
+  const trackTierLevelUp = useCallback(
+    (props: TierLevelUpProps) => capture(ANALYTICS_EVENTS.TIER_LEVEL_UP, props),
+    [capture]
+  );
+
+  const trackFirstWinCelebrated = useCallback(
+    (props: FirstWinCelebratedProps) => capture(ANALYTICS_EVENTS.FIRST_WIN_CELEBRATED, props),
+    [capture]
+  );
+
+  const trackStreakFreezeUsed = useCallback(
+    (props: StreakFreezeUsedProps) => capture(ANALYTICS_EVENTS.STREAK_FREEZE_USED, props),
+    [capture]
+  );
+
+  const trackStreakFreezeEarned = useCallback(
+    (props: StreakFreezeEarnedProps) => capture(ANALYTICS_EVENTS.STREAK_FREEZE_EARNED, props),
+    [capture]
+  );
+
   return {
     capture,
     trackGameStarted,
@@ -119,5 +164,9 @@ export function useAnalytics() {
     trackAdUnlockCompleted,
     trackShareCompleted,
     trackOnboardingCompleted,
+    trackTierLevelUp,
+    trackFirstWinCelebrated,
+    trackStreakFreezeUsed,
+    trackStreakFreezeEarned,
   };
 }

@@ -165,19 +165,16 @@ describe('calculateFieldExperience', () => {
 
   describe('edge cases', () => {
     it('handles null/undefined attempts gracefully', () => {
-      // @ts-expect-error - Testing runtime safety
-      const resultNull = calculateFieldExperience(null);
+      const resultNull = calculateFieldExperience(null as any);
       expect(resultNull.totalAppearances).toBe(0);
 
-      // @ts-expect-error - Testing runtime safety
-      const resultUndefined = calculateFieldExperience(undefined);
+      const resultUndefined = calculateFieldExperience(undefined as any);
       expect(resultUndefined.totalAppearances).toBe(0);
     });
 
     it('handles attempts with unknown game_mode', () => {
       const attempts: AttemptWithGameMode[] = [
         createMockAttempt('career_path'),
-        // @ts-expect-error - Testing unknown mode handling
         createMockAttempt('unknown_mode'),
         createMockAttempt('the_grid'),
       ];

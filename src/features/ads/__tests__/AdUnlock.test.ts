@@ -67,9 +67,9 @@ describe('Ad Unlock Feature', () => {
       expect(execCall).toContain('PRAGMA user_version = 3');
     });
 
-    it('skips migration if already at version 3', async () => {
-      // Arrange
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+    it('skips migration if already at current version', async () => {
+      // Arrange - version 13 is current
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
 
       // Act
       await initDatabase();
@@ -81,7 +81,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('saveAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
       await initDatabase();
     });
 
@@ -104,8 +104,9 @@ describe('Ad Unlock Feature', () => {
       await saveAdUnlock('puzzle-123');
 
       // Assert
-      const callArgs = mockDb.runAsync.mock.calls[0][1];
-      const unlockedAt = new Date(callArgs.$unlocked_at);
+      // First call is PRAGMA busy_timeout, second is the actual INSERT
+      const insertCallArgs = mockDb.runAsync.mock.calls[1][1];
+      const unlockedAt = new Date(insertCallArgs.$unlocked_at);
 
       // Should be a valid ISO timestamp close to now
       expect(unlockedAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
@@ -117,8 +118,9 @@ describe('Ad Unlock Feature', () => {
       await saveAdUnlock('puzzle-123');
 
       // Assert
-      const callArgs = mockDb.runAsync.mock.calls[0][1];
-      expect(callArgs.$expires_at).toBeUndefined();
+      // First call is PRAGMA busy_timeout, second is the actual INSERT
+      const insertCallArgs = mockDb.runAsync.mock.calls[1][1];
+      expect(insertCallArgs.$expires_at).toBeUndefined();
     });
 
     it('uses INSERT OR REPLACE to allow re-unlocking (idempotent)', async () => {
@@ -135,7 +137,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('isAdUnlocked', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
       await initDatabase();
     });
 
@@ -183,7 +185,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('getValidAdUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
       await initDatabase();
     });
 
@@ -234,22 +236,25 @@ describe('Ad Unlock Feature', () => {
 
   describe('clearExpiredUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
       await initDatabase();
     });
 
     it('is a no-op since unlocks are permanent', async () => {
+      // Arrange - get call count before (initDatabase already called PRAGMA)
+      const callsBeforeCount = mockDb.runAsync.mock.calls.length;
+
       // Act
       await clearExpiredUnlocks();
 
-      // Assert - should not call runAsync (no database operation)
-      expect(mockDb.runAsync).not.toHaveBeenCalled();
+      // Assert - should not add any new calls (no database operation beyond init)
+      expect(mockDb.runAsync.mock.calls.length).toBe(callsBeforeCount);
     });
   });
 
   describe('removeAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
       await initDatabase();
     });
 
@@ -267,7 +272,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('clearAllAdUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 4 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
       await initDatabase();
     });
 

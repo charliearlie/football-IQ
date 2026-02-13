@@ -196,7 +196,7 @@ describe("createInitialState", () => {
   it("creates initial state with valid startedAt timestamp", () => {
     const state = createInitialState();
     expect(state.startedAt).toBeDefined();
-    expect(new Date(state.startedAt).getTime()).not.toBeNaN();
+    expect(new Date(state.startedAt!).getTime()).not.toBeNaN();
   });
 
   it("creates initial state with hintsRevealed 0", () => {
@@ -841,7 +841,7 @@ describe("theThreadReducer - RESET", () => {
   it("generates new startedAt timestamp on reset", () => {
     const originalState = createInitialState();
     const newState = theThreadReducer(originalState, { type: "RESET" });
-    expect(new Date(newState.startedAt).getTime()).not.toBeNaN();
+    expect(new Date(newState.startedAt!).getTime()).not.toBeNaN();
   });
 });
 

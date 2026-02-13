@@ -120,6 +120,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     if (result.success && result.method === 'clipboard') {
       // Could show a toast here
     }
+    return result;
   };
 
   // Onboarding loading state (prevent flash)

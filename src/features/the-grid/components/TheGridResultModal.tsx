@@ -12,7 +12,7 @@ import {
   ScoreDisplay,
   ResultShareCard,
 } from '@/components/GameResultModal';
-import type { ResultShareData } from '@/components/GameResultModal';
+import type { ResultShareData, ShareResult } from '@/components/GameResultModal';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
@@ -27,7 +27,7 @@ export interface TheGridResultModalProps {
   puzzleId: string;
   puzzleDate: string;
   onClose: () => void;
-  onShare: () => void;
+  onShare: () => Promise<ShareResult>;
   /** Whether the player gave up (affects title/icon) */
   gaveUp?: boolean;
   testID?: string;
@@ -75,7 +75,7 @@ export function TheGridResultModal({
   const shareCardContent = (
     <ResultShareCard
       gameMode="the_grid"
-      resultType={gaveUp ? 'loss' : isPerfect ? 'win' : 'partial'}
+      resultType={gaveUp ? 'loss' : isPerfect ? 'perfect' : 'complete'}
       scoreDisplay={emojiGrid}
       puzzleDate={puzzleDate}
       displayName={shareData.displayName}
@@ -87,7 +87,7 @@ export function TheGridResultModal({
   return (
     <BaseResultModal
       visible={visible}
-      resultType={gaveUp ? 'loss' : isPerfect ? 'win' : 'partial'}
+      resultType={gaveUp ? 'loss' : isPerfect ? 'win' : 'complete'}
       icon={
         gaveUp ? (
           <XCircle size={32} color={colors.floodlightWhite} strokeWidth={2} />

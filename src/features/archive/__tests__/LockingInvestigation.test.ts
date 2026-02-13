@@ -10,6 +10,14 @@
 
 import { isPuzzleLocked, isWithinFreeWindow } from '../utils/dateGrouping';
 
+// Mock @/lib/time so getAuthorizedDateUnsafe returns current fake timer date
+jest.mock('@/lib/time', () => ({
+  getAuthorizedDateUnsafe: jest.fn(() => {
+    const d = new Date();
+    return d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+  }),
+}));
+
 describe('7-Day Rolling Window', () => {
   beforeEach(() => {
     jest.useFakeTimers();

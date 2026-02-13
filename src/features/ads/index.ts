@@ -22,7 +22,6 @@ export {
   isPuzzleInUnlocks,
   revokePuzzleUnlock,
   clearAllUnlocks,
-  getUnlockTimeRemaining,
 } from './services/adUnlockService';
 
 // Context

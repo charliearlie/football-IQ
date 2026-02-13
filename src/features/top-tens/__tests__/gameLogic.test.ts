@@ -274,7 +274,7 @@ describe('topTensReducer', () => {
       const state = createInitialState();
       const score: TopTensScore = {
         points: 10,
-        maxPoints: 10,
+        maxPoints: 8,
         foundCount: 10,
         wrongGuessCount: 3,
         won: true,
@@ -290,7 +290,7 @@ describe('topTensReducer', () => {
       const state = createInitialState();
       const score: TopTensScore = {
         points: 10,
-        maxPoints: 10,
+        maxPoints: 8,
         foundCount: 10,
         wrongGuessCount: 5,
         won: true,
@@ -318,7 +318,7 @@ describe('topTensReducer', () => {
 
       const score: TopTensScore = {
         points: 3,
-        maxPoints: 10,
+        maxPoints: 8,
         foundCount: 3,
         wrongGuessCount: 5,
         won: false,
@@ -342,7 +342,7 @@ describe('topTensReducer', () => {
       const state = createInitialState();
       const score: TopTensScore = {
         points: 5,
-        maxPoints: 10,
+        maxPoints: 8,
         foundCount: 5,
         wrongGuessCount: 10,
         won: false,
@@ -361,7 +361,7 @@ describe('topTensReducer', () => {
       const state = createInitialState();
       const score: TopTensScore = {
         points: 7,
-        maxPoints: 10,
+        maxPoints: 8,
         foundCount: 7,
         wrongGuessCount: 4,
         won: false,
@@ -480,7 +480,7 @@ describe('topTensReducer', () => {
         lastGuessCorrect: true,
         lastGuessIncorrect: false,
         lastGuessDuplicate: false,
-        score: { points: 10, maxPoints: 10, foundCount: 10, wrongGuessCount: 5, won: true },
+        score: { points: 10, maxPoints: 8, foundCount: 10, wrongGuessCount: 5, won: true },
         attemptId: 'old-attempt',
         attemptSaved: true,
         startedAt: '2024-01-01T00:00:00Z',

@@ -223,7 +223,7 @@ export function CareerStepCard({
              
               {/* Review Mode Icon */}
               {isWinningStep && (
-                <View style={styles.reviewIconContainer}>
+                <View style={styles.reviewIconContainer} testID="winning-badge">
                    <CheckCircle size={20} color={colors.pitchGreen} />
                 </View>
               )}

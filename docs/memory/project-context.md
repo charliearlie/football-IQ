@@ -39,7 +39,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 | `user_streaks`        | Yes          | Streak tracking per game mode                                                    |
 | `content_reports`     | Yes          | User error reports for puzzle content                                            |
 | `game_submissions`    | Yes          | User-submitted game mode ideas                                                   |
-| `players`             | Yes (SELECT) | Wikidata player graph (QID PK)                                                   |
+| `players`             | Yes (SELECT) | Wikidata player graph (QID PK) + `api_football_id` external mapping              |
 | `clubs`               | Yes (SELECT) | Club identity (QID PK)                                                           |
 | `player_appearances`  | Yes (SELECT) | Player ↔ Club junction with years                                                |
 | `achievements`        | Yes (SELECT) | Curated football achievements (Wikidata QID PK)                                  |
@@ -214,6 +214,26 @@ Merge + dedupe by ID → sort by relevance
 - `src/lib/database.ts` — `searchClubColors()`, `getClubColorById()`
 - `src/components/ClubAutocomplete.tsx` — Neubrutalist autocomplete UI
 
+### API-Football ID Mapping
+
+External ID linkage between Wikidata QIDs and [API-Football v3](https://v3.football.api-sports.io) player IDs for data integrity verification.
+
+**Architecture:**
+1. **Column**: `players.api_football_id` (nullable integer, unique partial index) — migration 037
+2. **Pipeline**: `web/lib/data-pipeline/map-external-ids.ts` — batch search + birth year/nationality disambiguation
+3. **Safety**: 90-request budget per run (trial tier = 100/day), 1.2s delay between requests
+4. **Confidence Levels**: `high` (birth year + nationality match) auto-saved; `medium` flagged for admin review in `agent_runs` logs
+5. **Priority**: Players processed by `scout_rank DESC` (most notable first)
+6. **Source of Truth**: Wikidata QID remains the primary key; `api_football_id` is a join key for cross-referencing
+
+**Name Collision Prevention**: Searching by name alone fails for common names (e.g., "Ronaldo", "Gabriel"). The pipeline requires both `birth_year` and `nationality_code` to be present for disambiguation. Players missing either are skipped.
+
+**Files:**
+- `web/lib/data-pipeline/map-external-ids.ts` — Core mapping pipeline (types, scoring, batch runner)
+- `web/lib/data-pipeline/__tests__/map-external-ids.test.ts` — TDD tests (36 tests)
+- `web/app/(dashboard)/admin/actions.ts` — `runApiFootballMapping()` server action wrapper
+- `supabase/migrations/037_api_football_id.sql` — Column + unique partial index
+
 ### Access Control (3-Tier)
 
 | Tier | User Type            | Puzzle Access |
@@ -380,7 +400,7 @@ Identify hidden players in a historic match lineup displayed on a tactical pitch
 
 Home screen dashboard showing today's 6 puzzles with Play/Resume/Done states.
 
-- **StreakHeader**: Fire icon + count, daily progress (X/6)
+- **StreakHeader**: Fire icon + count + shield icon (when streak freezes available), daily progress (X/6)
 - **Card states**: Play (green), Resume (yellow), Done (emoji grid + Result button)
 - **Special Event Banner**: DB-driven EventBanner for `is_special` puzzles (hidden from daily feed)
 - **Midnight refresh**: AppState listener triggers refresh on date change
@@ -462,6 +482,7 @@ Wordle-style "How You Compare" bar chart in result modals.
 
 Fourth tab with Privacy Policy, Terms, Rate App, and secret dev menu (7 taps on version).
 
+- **Haptic Feedback toggle**: AsyncStorage `@haptics_enabled` (default: ON). Gates all haptic calls via `useFeedback` hook.
 - **Dev menu**: Test Daily Reminder, Test Streak Saver, Reset Game Intros, Clear Data buttons
 - **Files**: `src/features/settings/`, `app/(tabs)/settings.tsx`
 
@@ -488,6 +509,51 @@ Push-style local notifications to maximize DAU and protect streaks.
 - **Test Notifications**: Available in Settings dev menu (7-tap version) for verifying Daily/Streak triggers
 - **Cancellation**: Both reminders cancelled immediately when user completes any puzzle
 - **Files**: `src/features/notifications/`
+
+### Celebration Modals
+
+Full-screen celebration modals triggered at key engagement moments. All follow the same pattern: Modal + dark overlay + Confetti + ViewShot share card + haptic pattern + ElevatedButton CTA.
+
+- **Perfect Day**: All daily puzzles completed → confetti + share card with puzzle count + streak
+- **Tier Level-Up**: IQ crosses tier threshold (e.g., 250 → Impact Sub) → tier badge animation + tier-coloured card + share CTA
+- **First Win**: User's very first completed puzzle → "You're a natural!" + confetti + share CTA
+- **Priority order**: PerfectDay > TierUp > FirstWin (only one shows at a time)
+- **Duplicate prevention**: AsyncStorage keys per celebration type
+- **Detection hub**: All detection logic in `NotificationContext.tsx` using `prevRef` pattern
+- **Files**: `src/features/notifications/components/PerfectDayCelebration.tsx`, `src/features/stats/components/TierLevelUpCelebration.tsx`, `src/features/notifications/components/FirstWinCelebration.tsx`
+
+### Streak Freeze System
+
+AsyncStorage-backed streak protection mechanism (Duolingo-style).
+
+- **Starting inventory**: 1 free freeze granted on first app launch
+- **Earning**: +1 freeze per 7-day streak milestone (7, 14, 21...), cap at 3 for free users
+- **Premium**: Unlimited auto-freeze (never consumes inventory)
+- **Auto-apply**: When `calculateStreak()` detects a 1-day gap and freeze is available, it consumes it and maintains streak continuity
+- **UI indicators**: Shield icon in StreakHeader when freezes available; red "at risk" warning in HomeHeader after 20:00 with 0 plays
+- **AsyncStorage keys**: `@streak_freeze_count`, `@streak_freeze_used_dates`, `@streak_freeze_last_milestone`, `@streak_freeze_initial_granted`
+- **Files**: `src/features/streaks/services/streakFreezeService.ts`, `src/features/home/hooks/useUserStats.ts`
+
+### Dynamic Streak Warning
+
+In-app urgency indicator when a streak is at risk.
+
+- **Trigger**: After 20:00 local time, active streak > 0, 0 games played today
+- **Display**: HomeHeader streak pill turns red/amber with "X day streak at risk! Nh left" text
+- **Animation**: Pulsing opacity (Reanimated withRepeat) on at-risk pill
+- **Re-checks**: 60-second interval + on app foregrounding
+- **Files**: `src/features/home/hooks/useStreakAtRisk.ts`, `src/features/home/components/new/HomeHeader.tsx`
+
+### Guided First Game Tutorial
+
+Post-onboarding tutorial that auto-navigates to Career Path with overlay tooltips.
+
+- **Flow**: BriefingScreen submit → auto-navigate to today's Career Path → 3-step tooltip overlay → normal gameplay
+- **Steps**: (1) Clue area, (2) Search input, (3) Submit button
+- **Tracking**: AsyncStorage `@tutorial_completed`, OnboardingContext `isTutorialComplete`
+- **GameIntroScreen**: Skipped during tutorial flow
+- **Fallback**: If no Career Path puzzle exists, falls back to home screen
+- **Files**: `src/features/auth/components/TutorialOverlay.tsx`, `src/features/auth/context/OnboardingContext.tsx`, `src/features/auth/components/BriefingScreen.tsx`
 
 ### Review Mode
 

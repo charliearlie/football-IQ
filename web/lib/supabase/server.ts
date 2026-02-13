@@ -32,6 +32,24 @@ export async function createClient() {
   );
 }
 
+/**
+ * Verify the current session user has the is_admin flag.
+ * Throws if not authenticated or not an admin.
+ */
+export async function ensureAdmin(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized: not authenticated");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single() as { data: { is_admin?: boolean } | null };
+
+  if (!profile?.is_admin) throw new Error("Unauthorized: admin access required");
+}
+
 // Admin client with service role key for bypassing RLS
 // Uses the standard Supabase client (not SSR) to ensure RLS is bypassed
 export async function createAdminClient() {

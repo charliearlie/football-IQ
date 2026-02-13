@@ -4,6 +4,8 @@
  * Type definitions for the local notification system.
  */
 
+import type { IQTier } from "@/features/stats/utils/tierProgression";
+
 /**
  * Types of notifications the app can send
  */
@@ -38,6 +40,16 @@ export interface NotificationContextValue {
   completedPuzzlesToday: number;
   /** Total puzzles available today */
   totalPuzzlesToday: number;
+  /** Whether the Tier Level-Up celebration is showing */
+  isTierUpCelebrating: boolean;
+  /** Tier level-up data */
+  tierUpData: { tier: IQTier; totalIQ: number } | null;
+  /** Dismiss the Tier Level-Up celebration */
+  dismissTierUpCelebration: () => void;
+  /** Whether the First Win celebration is showing */
+  isFirstWinCelebrating: boolean;
+  /** Dismiss the First Win celebration */
+  dismissFirstWinCelebration: () => void;
 }
 
 /**
@@ -87,4 +99,36 @@ export interface ScheduledNotification {
   id: string;
   type: NotificationType;
   scheduledFor: Date;
+}
+
+/**
+ * Props for the Tier Level-Up celebration modal
+ */
+export interface TierLevelUpCelebrationProps {
+  /** Whether the celebration is visible */
+  visible: boolean;
+  /** The tier that was reached */
+  tier: IQTier;
+  /** The user's total IQ */
+  totalIQ: number;
+  /** Called when user dismisses */
+  onDismiss: () => void;
+  /** Called when user wants to share */
+  onShare: () => Promise<void>;
+  /** Test ID for testing */
+  testID?: string;
+}
+
+/**
+ * Props for the First Win celebration modal
+ */
+export interface FirstWinCelebrationProps {
+  /** Whether the celebration is visible */
+  visible: boolean;
+  /** Called when user dismisses */
+  onDismiss: () => void;
+  /** Called when user wants to share */
+  onShare: () => Promise<void>;
+  /** Test ID for testing */
+  testID?: string;
 }

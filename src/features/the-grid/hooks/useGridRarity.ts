@@ -33,20 +33,19 @@ export function useGridRarity(puzzleId: string | null) {
       if (!puzzleId) return;
 
       // Fire-and-forget: don't await, don't block UI
-      supabase
-        .rpc('record_grid_selection', {
+      (supabase.rpc as Function)('record_grid_selection', {
           p_puzzle_id: puzzleId,
           p_cell_index: cellIndex,
           p_player_id: playerId,
           p_player_name: playerName,
           p_nationality_code: nationalityCode ?? null,
         })
-        .then(({ error }) => {
+        .then(({ error }: { error: { message: string } | null }) => {
           if (error) {
             console.warn('[GridRarity] Failed to record selection:', error.message);
           }
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           console.warn('[GridRarity] Network error recording selection:', err);
         });
     },
@@ -64,11 +63,11 @@ export function useGridRarity(puzzleId: string | null) {
       if (!puzzleId) return null;
 
       try {
-        const { data, error } = await supabase.rpc('get_grid_cell_rarity', {
+        const { data, error } = await (supabase.rpc as Function)('get_grid_cell_rarity', {
           p_puzzle_id: puzzleId,
           p_cell_index: cellIndex,
           p_player_id: playerId,
-        });
+        }) as { data: { rarity_pct: number }[] | null; error: { message: string } | null };
 
         if (error) {
           console.warn('[GridRarity] Failed to fetch cell rarity:', error.message);
@@ -104,10 +103,10 @@ export function useGridRarity(puzzleId: string | null) {
       if (!puzzleId || selections.length === 0) return null;
 
       try {
-        const { data, error } = await supabase.rpc('get_grid_summary_rarity', {
+        const { data, error } = await (supabase.rpc as Function)('get_grid_summary_rarity', {
           p_puzzle_id: puzzleId,
           p_selections: selections,
-        });
+        }) as { data: CellRarityData[] | null; error: { message: string } | null };
 
         if (error) {
           console.warn('[GridRarity] Failed to fetch grid summary:', error.message);
