@@ -66,7 +66,7 @@ export async function syncCatalogFromSupabase(
   try {
     // Always do full sync (pass null) to enable orphan detection
     const { data: entries, error } = await supabase.rpc('get_puzzle_catalog', {
-      since_timestamp: undefined,
+      since_timestamp: null as unknown as string,
     });
 
     if (error) {
