@@ -466,10 +466,11 @@ export async function resolveOnePlayer(
     };
   }
 
+  let requestsUsed = 0;
   try {
     // /players/profiles?search= — no league/team/season needed
     let response = await searchApiFootballPlayer(player.name, apiKey);
-    let requestsUsed = 1;
+    requestsUsed++;
 
     // Score candidates from full-name search
     let bestResult = scoreCandidates(response, player);
@@ -569,7 +570,7 @@ export async function resolveOnePlayer(
       confidence: "none",
       reason: `API error: ${err instanceof Error ? err.message : String(err)}`,
       candidates: 0,
-      _requestsUsed: 1,
+      _requestsUsed: requestsUsed,
     };
   }
 }
@@ -807,7 +808,7 @@ export function apiTeamsToClubSummaries(
   teams: ApiFootballTeamEntry[]
 ): ApiClubSummary[] {
   return teams
-    .filter((t) => !isNationalTeam(t.team.name))
+    .filter((t) => !isNationalTeam(t.team.name) && t.seasons.length > 0)
     .map((t) => ({
       apiClubId: t.team.id,
       clubName: t.team.name,

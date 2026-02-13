@@ -103,12 +103,11 @@ export function calculateStreak(
   const yesterday = getYesterdayDate();
 
   // Check if the most recent attempt is today or yesterday
-  // If not, current streak is 0 (unless yesterday was a freeze day)
+  // If not, current streak is 0
   const mostRecent = uniqueDates[0];
   const streakIsActive =
     mostRecent === today ||
-    mostRecent === yesterday ||
-    (freezeDates.includes(yesterday) && mostRecent === today);
+    mostRecent === yesterday;
 
   let currentStreak = 0;
   let longestStreak = 0;
@@ -268,14 +267,32 @@ export function useUserStats(): UseUserStatsResult {
       // 1. Last play was 2+ days ago (gap exists)
       // 2. Yesterday is not already in freeze dates
       // 3. User has freezes available (or is premium)
-      // 4. User has an active streak that would break without the freeze
+      // 4. All days between lastPlayedDate and yesterday are already frozen,
+      //    so freezing yesterday completes the chain and protects the streak
+      const canBridgeToLastPlay = (() => {
+        if (!lastPlayedDate) return false;
+        const gap = getDaysDifference(yesterday, lastPlayedDate);
+        if (gap < 1) return false;
+        // Walk each intermediate day (lastPlayedDate+1 … yesterday-1)
+        for (let i = 1; i < gap; i++) {
+          const d = Date.UTC(
+            parseInt(lastPlayedDate.slice(0, 4)),
+            parseInt(lastPlayedDate.slice(5, 7)) - 1,
+            parseInt(lastPlayedDate.slice(8, 10)) + i
+          );
+          const dateStr = new Date(d).toISOString().slice(0, 10);
+          if (!freezeDates.includes(dateStr)) return false;
+        }
+        return true;
+      })();
+
       const needsFreeze =
         gamesPlayedToday === 0 &&
         lastPlayedDate !== today &&
         lastPlayedDate !== yesterday &&
         !freezeDates.includes(yesterday) &&
         (availableFreezes > 0 || isPremium) &&
-        current > 0;
+        canBridgeToLastPlay;
 
       if (needsFreeze) {
         const result = await consumeFreeze(yesterday, isPremium);

@@ -70,7 +70,9 @@ export function StreakHeader({
             {showTooltip && (
               <View style={styles.tooltip}>
                 <Text style={styles.tooltipText}>
-                  You have {availableFreezes} streak {availableFreezes === 1 ? 'freeze' : 'freezes'}
+                  {Number.isFinite(availableFreezes)
+                    ? `You have ${availableFreezes} streak ${availableFreezes === 1 ? 'freeze' : 'freezes'}`
+                    : 'You have unlimited streak freezes'}
                 </Text>
               </View>
             )}

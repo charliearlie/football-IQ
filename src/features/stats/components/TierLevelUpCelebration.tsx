@@ -37,6 +37,7 @@ import {
   formatTotalIQ,
 } from "@/features/stats/utils/tierProgression";
 import type { IQTier } from "@/features/stats/utils/tierProgression";
+import type { TierLevelUpCelebrationProps } from "@/features/notifications/types";
 import {
   colors,
   spacing,
@@ -70,15 +71,6 @@ const TIER_GRADIENT_COLORS: Record<number, { gradient: [string, string]; glow: s
   9: { gradient: ["#1e293b", "#431407"], glow: "#F97316" },
   10: { gradient: ["#1e293b", "#422006"], glow: "#FFD700" },
 };
-
-export interface TierLevelUpCelebrationProps {
-  visible: boolean;
-  tier: IQTier;
-  totalIQ: number;
-  onDismiss: () => void;
-  onShare: () => Promise<void>;
-  testID?: string;
-}
 
 /**
  * The shareable Tier Level-Up card component.

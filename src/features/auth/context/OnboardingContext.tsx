@@ -204,11 +204,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // The Career Path index route should redirect to today's puzzle
       router.push('/career-path' as Href);
     } catch (error) {
-      console.error('[OnboardingProvider] Navigation failed, falling back to home', error);
-      // Fallback: just go to home screen and mark tutorial as complete
-      completeTutorial();
+      console.warn('[OnboardingProvider] Navigation failed, falling back to home', error);
+      router.push('/' as Href);
     }
-  }, [router, completeTutorial]);
+  }, [router]);
 
   // Load tutorial completion status from AsyncStorage on mount
   useEffect(() => {
