@@ -200,3 +200,29 @@ export function getNextTier(currentTier: IQTier): IQTier | null {
 export function formatTotalIQ(points: number): string {
   return `${points.toLocaleString()} IQ`;
 }
+
+/**
+ * Detects if a user has crossed a tier threshold.
+ *
+ * @param oldIQ - Previous cumulative IQ
+ * @param newIQ - New cumulative IQ
+ * @returns Object with changed flag and newTier (if tier changed)
+ *
+ * @example
+ * didTierChange(24, 25)   // { changed: true, newTier: { tier: 2, name: 'Youth Team', ... } }
+ * didTierChange(50, 75)   // { changed: false, newTier: null }
+ * didTierChange(99, 100)  // { changed: true, newTier: { tier: 3, name: 'Reserve Team', ... } }
+ */
+export function didTierChange(
+  oldIQ: number,
+  newIQ: number
+): { changed: boolean; newTier: IQTier | null } {
+  const oldTier = getTierForPoints(oldIQ);
+  const newTier = getTierForPoints(newIQ);
+
+  if (oldTier.tier !== newTier.tier) {
+    return { changed: true, newTier };
+  }
+
+  return { changed: false, newTier: null };
+}

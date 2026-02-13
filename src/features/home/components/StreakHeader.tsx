@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Flame } from 'lucide-react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Flame, ShieldCheck } from 'lucide-react-native';
 import { colors, textStyles, spacing, fonts } from '@/theme';
 
 interface StreakHeaderProps {
@@ -16,6 +16,10 @@ interface StreakHeaderProps {
    * Total number of puzzles available today.
    */
   totalCount: number;
+  /**
+   * Number of streak freezes available.
+   */
+  availableFreezes?: number;
 }
 
 /**
@@ -23,6 +27,7 @@ interface StreakHeaderProps {
  *
  * Displays:
  * - Fire icon + current streak count (left side)
+ * - Shield icon if freezes available
  * - "Puzzles Today (X/Y)" progress (right side)
  *
  * Uses Bebas Neue for the streak number for strong visual impact.
@@ -31,7 +36,17 @@ export function StreakHeader({
   currentStreak,
   completedCount,
   totalCount,
+  availableFreezes = 0,
 }: StreakHeaderProps) {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+
+  const handleShieldPress = () => {
+    setShowTooltip(true);
+    setTimeout(() => setShowTooltip(false), 2000);
+  };
+
+  const hasFreezes = availableFreezes > 0;
+
   return (
     <View style={styles.container}>
       {/* Streak Section */}
@@ -43,6 +58,24 @@ export function StreakHeader({
         />
         <Text style={styles.streakCount}>{currentStreak}</Text>
         <Text style={styles.streakLabel}>day streak</Text>
+
+        {/* Freeze Shield Icon */}
+        {hasFreezes && (
+          <Pressable onPress={handleShieldPress} style={styles.shieldButton}>
+            <ShieldCheck
+              color={colors.pitchGreen}
+              size={24}
+              fill={colors.pitchGreen}
+            />
+            {showTooltip && (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>
+                  You have {availableFreezes} streak {availableFreezes === 1 ? 'freeze' : 'freezes'}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        )}
       </View>
 
       {/* Progress Section */}
@@ -81,6 +114,28 @@ const styles = StyleSheet.create({
   streakLabel: {
     ...textStyles.bodySmall,
     marginLeft: spacing.xs,
+  },
+  shieldButton: {
+    marginLeft: spacing.sm,
+    position: 'relative',
+  },
+  tooltip: {
+    position: 'absolute',
+    top: 30,
+    left: -50,
+    backgroundColor: colors.stadiumNavy,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.pitchGreen,
+    minWidth: 150,
+    zIndex: 1000,
+  },
+  tooltipText: {
+    ...textStyles.caption,
+    color: colors.floodlightWhite,
+    textAlign: 'center',
   },
   progressContainer: {
     alignItems: 'flex-end',

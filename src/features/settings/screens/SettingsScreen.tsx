@@ -140,6 +140,22 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
     );
   }, []);
 
+  // Haptic feedback
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem("@haptics_enabled").then((val) => {
+      if (val !== null) {
+        setHapticsEnabled(val === "true");
+      }
+    });
+  }, []);
+
+  const handleToggleHaptics = useCallback(async (value: boolean) => {
+    setHapticsEnabled(value);
+    await AsyncStorage.setItem("@haptics_enabled", value ? "true" : "false");
+  }, []);
+
   // App version
   const appVersion = Constants.expoConfig?.version ?? "2.2.0";
 
@@ -383,8 +399,8 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
           />
         </SettingsSection>
 
-        {/* Notifications */}
-        <SettingsSection title="NOTIFICATIONS">
+        {/* Preferences */}
+        <SettingsSection title="PREFERENCES">
           <View style={styles.toggleRow}>
             <View style={styles.toggleIconContainer}>
               <Bell size={20} color={colors.pitchGreen} strokeWidth={2} />
@@ -398,6 +414,19 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
                 true: colors.pitchGreen,
               }}
               thumbColor={colors.floodlightWhite}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Haptic Feedback</Text>
+            <Switch
+              value={hapticsEnabled}
+              onValueChange={handleToggleHaptics}
+              trackColor={{
+                false: colors.glassBorder,
+                true: colors.pitchGreen,
+              }}
+              thumbColor={colors.floodlightWhite}
+              testID={testID ? `${testID}-haptics-toggle` : undefined}
             />
           </View>
         </SettingsSection>

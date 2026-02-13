@@ -198,14 +198,16 @@ describe('SubscriptionSync Service', () => {
 
   describe('addCustomerInfoListener', () => {
     it('wraps Purchases.addCustomerInfoUpdateListener', () => {
-      const mockUnsubscribe = jest.fn();
-      Purchases.addCustomerInfoUpdateListener.mockReturnValue(mockUnsubscribe);
       const callback = jest.fn();
 
       const unsubscribe = addCustomerInfoListener(callback);
 
       expect(Purchases.addCustomerInfoUpdateListener).toHaveBeenCalledWith(callback);
-      expect(unsubscribe).toBe(mockUnsubscribe);
+      expect(typeof unsubscribe).toBe('function');
+
+      // Calling the returned function should remove the listener
+      unsubscribe();
+      expect(Purchases.removeCustomerInfoUpdateListener).toHaveBeenCalledWith(callback);
     });
   });
 });

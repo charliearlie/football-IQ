@@ -21,6 +21,12 @@ jest.mock('@/lib/supabase', () => ({
         error: null,
       })),
     })),
+    rpc: jest.fn(() => ({
+      maybeSingle: jest.fn(() => ({
+        data: null,
+        error: null,
+      })),
+    })),
   },
 }));
 
@@ -29,6 +35,8 @@ jest.mock('@/lib/database', () => ({
   savePuzzle: jest.fn().mockResolvedValue(undefined),
   getUnsyncedAttempts: jest.fn().mockResolvedValue([]),
   markAttemptSynced: jest.fn().mockResolvedValue(undefined),
+  getAllLocalPuzzleIds: jest.fn().mockResolvedValue([]),
+  deletePuzzlesByIds: jest.fn().mockResolvedValue(0),
 }));
 
 describe('Sync Engine', () => {
@@ -112,13 +120,12 @@ describe('Sync Engine', () => {
         expect(database.savePuzzle).not.toHaveBeenCalled();
       });
 
-      it('uses lastSyncedAt for incremental sync when provided', async () => {
-        // Arrange
+      it('fetches all puzzles without incremental sync', async () => {
+        // Arrange: The service now always fetches ALL puzzles (no incremental sync)
+        // to enable orphan detection
         const mockSelect = jest.fn().mockReturnValue({
-          gt: jest.fn().mockReturnValue({
-            data: [],
-            error: null,
-          }),
+          data: [],
+          error: null,
         });
 
         (supabase.from as jest.Mock).mockReturnValue({
@@ -132,11 +139,8 @@ describe('Sync Engine', () => {
           lastSyncedAt: '2024-01-14T00:00:00Z',
         });
 
-        // Assert
-        expect(mockSelect).toHaveBeenCalled();
-        // The .gt() method should be called for incremental sync
-        const selectReturnValue = mockSelect.mock.results[0].value;
-        expect(selectReturnValue.gt).toHaveBeenCalledWith('updated_at', '2024-01-14T00:00:00Z');
+        // Assert: Should fetch all puzzles, not use incremental sync
+        expect(mockSelect).toHaveBeenCalledWith('*');
       });
 
       it('returns error on Supabase failure', async () => {
@@ -223,13 +227,11 @@ describe('Sync Engine', () => {
 
         (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
 
-        const mockInsert = jest.fn().mockReturnValue({
+        const mockRpc = jest.fn().mockResolvedValue({
           data: null,
           error: null,
         });
-        (supabase.from as jest.Mock).mockReturnValue({
-          insert: mockInsert,
-        });
+        (supabase.rpc as jest.Mock).mockImplementation(mockRpc);
 
         // Act
         const result = await syncAttemptsToSupabase('user-123');
@@ -237,7 +239,8 @@ describe('Sync Engine', () => {
         // Assert
         expect(result.success).toBe(true);
         expect(result.syncedCount).toBe(2);
-        expect(mockInsert).toHaveBeenCalledTimes(2);
+        expect(mockRpc).toHaveBeenCalledTimes(2);
+        expect(mockRpc).toHaveBeenCalledWith('safe_upsert_attempt', expect.any(Object));
       });
 
       it('marks attempts as synced on success', async () => {
@@ -257,11 +260,9 @@ describe('Sync Engine', () => {
         ];
 
         (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
-        (supabase.from as jest.Mock).mockReturnValue({
-          insert: jest.fn().mockReturnValue({
-            data: null,
-            error: null,
-          }),
+        (supabase.rpc as jest.Mock).mockResolvedValue({
+          data: null,
+          error: null,
         });
 
         // Act
@@ -271,7 +272,7 @@ describe('Sync Engine', () => {
         expect(database.markAttemptSynced).toHaveBeenCalledWith('attempt-1');
       });
 
-      it('adds user_id to each attempt before insert', async () => {
+      it('adds user_id to each attempt before sync', async () => {
         // Arrange
         const mockAttempts: ParsedLocalAttempt[] = [
           {
@@ -289,21 +290,20 @@ describe('Sync Engine', () => {
 
         (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
 
-        const mockInsert = jest.fn().mockReturnValue({
+        const mockRpc = jest.fn().mockResolvedValue({
           data: null,
           error: null,
         });
-        (supabase.from as jest.Mock).mockReturnValue({
-          insert: mockInsert,
-        });
+        (supabase.rpc as jest.Mock).mockImplementation(mockRpc);
 
         // Act
         await syncAttemptsToSupabase('user-123');
 
         // Assert
-        expect(mockInsert).toHaveBeenCalledWith(
+        expect(mockRpc).toHaveBeenCalledWith(
+          'safe_upsert_attempt',
           expect.objectContaining({
-            user_id: 'user-123',
+            p_user_id: 'user-123',
           })
         );
       });
@@ -321,7 +321,7 @@ describe('Sync Engine', () => {
         expect(supabase.from).not.toHaveBeenCalled();
       });
 
-      it('handles Supabase insert failure gracefully and continues', async () => {
+      it('handles Supabase RPC failure gracefully and continues', async () => {
         // Arrange: Two attempts, first will fail, second should still sync
         const mockAttempts: ParsedLocalAttempt[] = [
           {
@@ -350,17 +350,15 @@ describe('Sync Engine', () => {
 
         (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
 
-        const mockError = new Error('Insert failed');
+        const mockError = new Error('RPC failed');
         let callCount = 0;
-        (supabase.from as jest.Mock).mockReturnValue({
-          insert: jest.fn().mockImplementation(() => {
-            callCount++;
-            // First call fails, second succeeds
-            if (callCount === 1) {
-              return { data: null, error: mockError };
-            }
-            return { data: null, error: null };
-          }),
+        (supabase.rpc as jest.Mock).mockImplementation(() => {
+          callCount++;
+          // First call fails, second succeeds
+          if (callCount === 1) {
+            return Promise.resolve({ data: null, error: mockError });
+          }
+          return Promise.resolve({ data: null, error: null });
         });
 
         // Act
@@ -373,8 +371,8 @@ describe('Sync Engine', () => {
         expect(database.markAttemptSynced).toHaveBeenCalledWith('attempt-2');
       });
 
-      it('handles duplicate key error gracefully (already synced from another device)', async () => {
-        // Arrange
+      it('uses safe_upsert_attempt RPC which handles duplicates automatically', async () => {
+        // Arrange: The RPC handles duplicate/conflict resolution internally
         const mockAttempts: ParsedLocalAttempt[] = [
           {
             id: 'attempt-1',
@@ -391,19 +389,16 @@ describe('Sync Engine', () => {
 
         (database.getUnsyncedAttempts as jest.Mock).mockResolvedValue(mockAttempts);
 
-        // Simulate PostgreSQL unique violation (already exists)
-        const duplicateError = { code: '23505', message: 'duplicate key' };
-        (supabase.from as jest.Mock).mockReturnValue({
-          insert: jest.fn().mockReturnValue({
-            data: null,
-            error: duplicateError,
-          }),
+        // The RPC returns success regardless of whether it inserted or updated
+        (supabase.rpc as jest.Mock).mockResolvedValue({
+          data: null,
+          error: null,
         });
 
         // Act
         const result = await syncAttemptsToSupabase('user-123');
 
-        // Assert: Should mark as synced since it already exists in Supabase
+        // Assert: Should mark as synced since RPC succeeded
         expect(result.success).toBe(true);
         expect(result.syncedCount).toBe(1);
         expect(database.markAttemptSynced).toHaveBeenCalledWith('attempt-1');

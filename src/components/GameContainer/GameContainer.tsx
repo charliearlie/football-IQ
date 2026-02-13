@@ -118,8 +118,10 @@ export function GameContainer({
     triggerLight();
     if (onBack) {
       onBack();
-    } else {
+    } else if (router.canGoBack()) {
       router.back();
+    } else {
+      router.replace('/(tabs)');
     }
   };
 

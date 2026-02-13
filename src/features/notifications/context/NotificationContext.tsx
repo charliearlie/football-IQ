@@ -49,12 +49,15 @@ import {
 } from '../utils/scheduleCalculator';
 import { getMorningMessage, getStreakSaverMessage } from '../utils/messageRotation';
 import type { NotificationContextValue, PermissionStatus } from '../types';
+import { didTierChange, type IQTier } from '@/features/stats/utils/tierProgression';
 
 // Storage keys
 const STORAGE_KEYS = {
   PERMISSION_ASKED: '@notifications_permission_asked',
   LAST_SCHEDULED_DATE: '@notifications_last_scheduled_date',
   PERFECT_DAY_SHOWN: '@notifications_perfect_day_shown',
+  TIER_UP_SHOWN_PREFIX: '@tier_up_shown_',
+  FIRST_WIN_CELEBRATED: '@first_win_celebrated',
 } as const;
 
 // Create context with undefined default
@@ -78,6 +81,8 @@ interface NotificationProviderProps {
   userId: string | null;
   /** Whether the first-run onboarding modal is currently visible */
   isOnboardingActive: boolean;
+  /** Total IQ points (for tier-up detection) */
+  totalIQ: number;
 }
 
 export function NotificationProvider({
@@ -89,6 +94,7 @@ export function NotificationProvider({
   totalPuzzlesToday,
   userId,
   isOnboardingActive,
+  totalIQ,
 }: NotificationProviderProps) {
   // Permission state
   const [permissionStatus, setPermissionStatus] =
@@ -100,6 +106,13 @@ export function NotificationProvider({
   const [isPerfectDayCelebrating, setIsPerfectDayCelebrating] = useState(false);
   const [perfectDayShownDates, setPerfectDayShownDates] = useState<string[]>([]);
 
+  // Tier Level-Up state
+  const [isTierUpCelebrating, setIsTierUpCelebrating] = useState(false);
+  const [tierUpData, setTierUpData] = useState<{ tier: IQTier; totalIQ: number } | null>(null);
+
+  // First Win state
+  const [isFirstWinCelebrating, setIsFirstWinCelebrating] = useState(false);
+
   // Refs for tracking state across renders
   const hasInitialized = useRef(false);
   const lastScheduledDate = useRef<string | null>(null);
@@ -108,6 +121,10 @@ export function NotificationProvider({
   const pushTokenRegistered = useRef(false);
   const pendingDeepLink = useRef<Record<string, unknown> | null>(null);
   const pendingPermissionPrompt = useRef(false);
+
+  // Refs for tier-up and first-win detection
+  const prevTotalIQRef = useRef(totalIQ);
+  const prevTotalGamesPlayedRef = useRef(totalGamesPlayed);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
@@ -215,18 +232,24 @@ export function NotificationProvider({
     init();
   }, [isSupported, currentStreak, gamesPlayedToday, handleNotificationNavigation]);
 
-  // Show permission modal only after onboarding completes (prevents dual-Modal
-  // stacking which corrupts the UIKit presentation stack and freezes touches)
+  // Show permission modal only after onboarding completes, user has played at least one game,
+  // AND no celebration modal is currently visible.
+  // (prevents dual-Modal stacking which corrupts the UIKit presentation stack and freezes touches,
+  // and ensures user has experienced the app before being asked for permissions)
   useEffect(() => {
     if (!isSupported || !pendingPermissionPrompt.current) return;
     if (isOnboardingActive) return;
+    if (totalGamesPlayed === 0) return;
+    // Wait until all celebration modals are dismissed before showing permission prompt
+    if (isFirstWinCelebrating || isTierUpCelebrating || isPerfectDayCelebrating) return;
 
     const timer = setTimeout(() => {
       setShowPermissionModal(true);
+      pendingPermissionPrompt.current = false;
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isSupported, isOnboardingActive]);
+  }, [isSupported, isOnboardingActive, totalGamesPlayed, isFirstWinCelebrating, isTierUpCelebrating, isPerfectDayCelebrating]);
 
   // Process pending cold-start deep link once the navigation tree is mounted
   useEffect(() => {
@@ -378,6 +401,82 @@ export function NotificationProvider({
   }, [isSupported, completedPuzzlesToday, totalPuzzlesToday, perfectDayShownDates]);
 
   // ============================================================================
+  // Tier Level-Up Detection
+  // ============================================================================
+
+  // One-time migration: clear stale tier-up guards set by the removed startup check
+  useEffect(() => {
+    if (!isSupported) return;
+    AsyncStorage.getItem('@tier_up_v3_migrated').then(async (migrated) => {
+      if (!migrated) {
+        const keys = await AsyncStorage.getAllKeys();
+        const tierKeys = keys.filter(k => k.startsWith(STORAGE_KEYS.TIER_UP_SHOWN_PREFIX));
+        if (tierKeys.length > 0) {
+          await AsyncStorage.multiRemove(tierKeys);
+        }
+        await AsyncStorage.setItem('@tier_up_v3_migrated', 'true');
+      }
+    });
+  }, [isSupported]);
+
+  useEffect(() => {
+    if (!isSupported) return;
+
+    const prevIQ = prevTotalIQRef.current;
+    prevTotalIQRef.current = totalIQ;
+
+    // Skip if IQ hasn't changed
+    if (prevIQ === totalIQ) return;
+
+    const result = didTierChange(prevIQ, totalIQ);
+    if (!result.changed || !result.newTier) return;
+
+    if (totalIQ > prevIQ) {
+      // Promotion: celebrate if not already shown
+      const storageKey = `${STORAGE_KEYS.TIER_UP_SHOWN_PREFIX}${result.newTier.tier}`;
+      const newTier = result.newTier;
+      AsyncStorage.getItem(storageKey).then((shown) => {
+        if (!shown && !isPerfectDayCelebrating) {
+          setTierUpData({ tier: newTier, totalIQ });
+          setIsTierUpCelebrating(true);
+          AsyncStorage.setItem(storageKey, 'true');
+        }
+      });
+    } else {
+      // Demotion: clear guards for tiers above new tier so re-promotion triggers celebration
+      const newTierNum = result.newTier.tier;
+      const keysToRemove = Array.from({ length: 10 - newTierNum }, (_, i) =>
+        `${STORAGE_KEYS.TIER_UP_SHOWN_PREFIX}${newTierNum + 1 + i}`
+      );
+      if (keysToRemove.length > 0) {
+        AsyncStorage.multiRemove(keysToRemove);
+      }
+    }
+  }, [isSupported, totalIQ, isPerfectDayCelebrating]);
+
+  // ============================================================================
+  // First Win Detection
+  // ============================================================================
+
+  useEffect(() => {
+    if (!isSupported) return;
+
+    const prev = prevTotalGamesPlayedRef.current;
+    prevTotalGamesPlayedRef.current = totalGamesPlayed;
+
+    // Only trigger on first completion (0 -> 1+)
+    if (prev === 0 && totalGamesPlayed > 0) {
+      AsyncStorage.getItem(STORAGE_KEYS.FIRST_WIN_CELEBRATED).then((shown) => {
+        // Don't show if Perfect Day or Tier Up is celebrating (priority system)
+        if (!shown && !isPerfectDayCelebrating && !isTierUpCelebrating) {
+          setIsFirstWinCelebrating(true);
+          AsyncStorage.setItem(STORAGE_KEYS.FIRST_WIN_CELEBRATED, 'true');
+        }
+      });
+    }
+  }, [isSupported, totalGamesPlayed, isPerfectDayCelebrating, isTierUpCelebrating]);
+
+  // ============================================================================
   // App State Monitoring (re-evaluate on foreground)
   // ============================================================================
 
@@ -465,6 +564,15 @@ export function NotificationProvider({
     setIsPerfectDayCelebrating(false);
   }, []);
 
+  const dismissTierUpCelebration = useCallback(() => {
+    setIsTierUpCelebrating(false);
+    setTierUpData(null);
+  }, []);
+
+  const dismissFirstWinCelebration = useCallback(() => {
+    setIsFirstWinCelebrating(false);
+  }, []);
+
   // ============================================================================
   // Context Value
   // ============================================================================
@@ -481,6 +589,11 @@ export function NotificationProvider({
       dismissPerfectDayCelebration,
       completedPuzzlesToday,
       totalPuzzlesToday,
+      isTierUpCelebrating,
+      tierUpData,
+      dismissTierUpCelebration,
+      isFirstWinCelebrating,
+      dismissFirstWinCelebration,
     }),
     [
       permissionStatus,
@@ -493,6 +606,11 @@ export function NotificationProvider({
       dismissPerfectDayCelebration,
       completedPuzzlesToday,
       totalPuzzlesToday,
+      isTierUpCelebrating,
+      tierUpData,
+      dismissTierUpCelebration,
+      isFirstWinCelebrating,
+      dismissFirstWinCelebration,
     ]
   );
 

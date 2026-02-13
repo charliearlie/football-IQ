@@ -23,6 +23,17 @@ jest.mock("@/theme", () => ({
     textSecondary: "rgba(248, 250, 252, 0.7)",
     cardYellow: "#FACC15",
   },
+  fonts: {
+    headline: "BebasNeue-Regular",
+    body: "Montserrat",
+    subheading: "Montserrat",
+  },
+  fontWeights: {
+    regular: "400" as const,
+    medium: "500" as const,
+    semiBold: "600" as const,
+    bold: "700" as const,
+  },
   textStyles: {
     h1: { fontSize: 32, fontFamily: "BebasNeue-Regular" },
     h2: { fontSize: 24, fontFamily: "BebasNeue-Regular" },
@@ -46,6 +57,17 @@ jest.mock("@/theme", () => ({
     lg: 12,
     xl: 16,
     full: 9999,
+  },
+  depthOffset: {
+    none: 0,
+    sunk: 1,
+    card: 2,
+    cell: 3,
+    tictacCell: 4,
+    buttonTiny: 3,
+    buttonSmall: 5,
+    button: 8,
+    buttonLarge: 10,
   },
 }));
 
@@ -227,6 +249,8 @@ jest.mock("@/features/auth", () => ({
 jest.mock("@/features/auth/hooks/useProfile", () => ({
   useProfile: () => ({
     profile: { display_name: "Test Manager" },
+    totalIQ: 0,
+    isLoading: false,
   }),
 }));
 
@@ -235,11 +259,6 @@ jest.mock("@/features/stats/hooks/usePerformanceStats", () => ({
   usePerformanceStats: () => ({
     stats: { totalPuzzlesSolved: 5 },
   }),
-}));
-
-// Mock IQ Rank
-jest.mock("@/features/home/hooks/useIQRank", () => ({
-  useIQRank: () => "Bench Warmer",
 }));
 
 // Mock Puzzles
@@ -309,7 +328,7 @@ describe("SettingsScreen", () => {
     it("renders Profile section with Test Manager", () => {
       const { getByText } = render(<SettingsScreen />);
       expect(getByText("Test Manager")).toBeTruthy();
-      expect(getByText(/Bench Warmer/i)).toBeTruthy();
+      expect(getByText(/Trialist/i)).toBeTruthy();
     });
 
     it("renders Subscription section header", () => {
@@ -317,9 +336,9 @@ describe("SettingsScreen", () => {
       expect(getByText("SUBSCRIPTION")).toBeTruthy();
     });
 
-    it("renders Notifications section header", () => {
+    it("renders Preferences section header", () => {
       const { getByText } = render(<SettingsScreen />);
-      expect(getByText("NOTIFICATIONS")).toBeTruthy();
+      expect(getByText("PREFERENCES")).toBeTruthy();
     });
 
     it("renders Legal section header", () => {

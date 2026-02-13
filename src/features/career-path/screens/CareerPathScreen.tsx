@@ -40,6 +40,7 @@ import { ReportErrorSheet, ReportType } from "../components/ReportErrorSheet";
 import { submitReport } from "../services/reportService";
 import { CareerStep } from "../types/careerPath.types";
 import { AdBanner } from "@/features/ads";
+import { useOnboarding as useAuthOnboarding } from "@/features/auth";
 
 /**
  * Content metadata structure embedded in puzzle content.
@@ -110,6 +111,9 @@ export function CareerPathScreen({
 }: CareerPathScreenProps) {
   const router = useRouter();
   const isFocused = useIsFocused();
+
+  // Auth onboarding for tutorial tracking
+  const { completeTutorial } = useAuthOnboarding();
 
   // Onboarding state - show intro for first-time users
   const {
@@ -230,10 +234,6 @@ export function CareerPathScreen({
     setViewingFullPath(true);
   }, []);
 
-  const handleBackToHome = useCallback(() => {
-    router.back();
-  }, [router]);
-
   // Focus-snap: scroll to center latest revealed step when input focuses
   const handleInputFocus = useCallback(() => {
     if (flatListRef.current && state.revealedCount > 0) {
@@ -347,7 +347,11 @@ export function CareerPathScreen({
     return (
       <GameIntroScreen
         gameMode={gameMode}
-        onStart={completeIntro}
+        subtitle="Welcome to Football IQ! Here's your first challenge."
+        onStart={() => {
+          completeIntro();
+          completeTutorial();
+        }}
         testID="career-path-intro"
       />
     );
@@ -461,7 +465,7 @@ export function CareerPathScreen({
 
   // Progress indicator for header (hidden when viewing full path)
   const progressIndicator = viewingFullPath ? (
-    <Pressable onPress={handleBackToHome} hitSlop={8}>
+    <Pressable onPress={() => router.back()} hitSlop={8}>
       <Text style={styles.backLink}>Home</Text>
     </Pressable>
   ) : (

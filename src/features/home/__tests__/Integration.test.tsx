@@ -9,12 +9,7 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { DailyStackCard } from '../components/DailyStackCard';
 
-// Mock the navigation
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-  }),
-}));
+// Note: expo-router is mocked globally in jest-setup.ts
 
 describe('DailyStackCard', () => {
   const mockOnPress = jest.fn();
@@ -48,7 +43,7 @@ describe('DailyStackCard', () => {
       );
 
       expect(getByText('Career Path')).toBeTruthy();
-      expect(getByText('Guess the player')).toBeTruthy();
+      expect(getByText('Follow the journey')).toBeTruthy();
     });
 
     it('shows correct title for guess_the_transfer', () => {
@@ -61,7 +56,7 @@ describe('DailyStackCard', () => {
       );
 
       expect(getByText('Transfer Guess')).toBeTruthy();
-      expect(getByText('Name the player')).toBeTruthy();
+      expect(getByText('Who made the move?')).toBeTruthy();
     });
 
     it('shows correct title for guess_the_goalscorers', () => {

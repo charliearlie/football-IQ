@@ -16,6 +16,21 @@ jest.mock('@/lib/database', () => ({
   getAttemptByPuzzleId: jest.fn(),
 }));
 
+// Mock PuzzleContext
+jest.mock('@/features/puzzles/context/PuzzleContext', () => ({
+  usePuzzleContext: jest.fn(() => ({
+    syncAttempts: jest.fn(),
+  })),
+}));
+
+// Mock AuthContext
+jest.mock('@/features/auth/context/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: { id: 'test-user-id' },
+    profile: null,
+  })),
+}));
+
 // Mock haptics
 jest.mock('@/hooks/useHaptics', () => ({
   useHaptics: () => ({

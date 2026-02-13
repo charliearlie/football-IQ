@@ -146,7 +146,7 @@ describe('OnboardingContext (State Machine)', () => {
 
       // Verification
       expect(mockUpdateDisplayName).toHaveBeenCalledWith('New User Name');
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('app_onboarding_completed', 'true');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@app_onboarding_completed', 'true');
       
       await waitFor(() => {
         expect(result.current.isOnboardingActive).toBe(false);

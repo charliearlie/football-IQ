@@ -163,8 +163,145 @@ jest.mock('react-native-reanimated', () => {
     },
     interpolate: jest.fn((val) => val),
     runOnJS: jest.fn((fn) => fn),
+    runOnUI: jest.fn((fn) => fn),
+    cancelAnimation: jest.fn(),
+    useAnimatedRef: jest.fn(() => ({ current: null })),
+    measure: jest.fn(),
+    useDerivedValue: jest.fn((fn) => ({ value: fn() })),
   };
 });
+
+// Mock expo-router (global — individual tests can override with local jest.mock)
+jest.mock('expo-router', () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+    canGoBack: jest.fn(() => false),
+    dismiss: jest.fn(),
+  })),
+  useLocalSearchParams: jest.fn(() => ({})),
+  useGlobalSearchParams: jest.fn(() => ({})),
+  useSegments: jest.fn(() => []),
+  usePathname: jest.fn(() => '/'),
+  useRootNavigationState: jest.fn(() => ({ key: 'test' })),
+  Link: jest.fn(({ children }: any) => children),
+  Redirect: jest.fn(() => null),
+  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn(), dismiss: jest.fn() },
+  Href: {},
+}));
+
+// Mock @/theme (comprehensive — prevents depthOffset.buttonTiny crash in ElevatedButton)
+jest.mock('@/theme', () => ({
+  colors: {
+    pitchGreen: '#58CC02',
+    grassShadow: '#46A302',
+    stadiumNavy: '#0F172A',
+    floodlightWhite: '#F8FAFC',
+    cardYellow: '#FACC15',
+    redCard: '#EF4444',
+    warningOrange: '#FF4D00',
+    warningOrangeShadow: '#CC3D00',
+    amber: '#F59E0B',
+    amberShadow: '#D97706',
+    glassBackground: 'rgba(255, 255, 255, 0.05)',
+    glassBorder: 'rgba(255, 255, 255, 0.1)',
+    primary: '#58CC02',
+    primaryShadow: '#46A302',
+    background: '#0F172A',
+    text: '#F8FAFC',
+    textSecondary: 'rgba(248, 250, 252, 0.7)',
+    warning: '#FACC15',
+    error: '#EF4444',
+    success: '#58CC02',
+  },
+  depthColors: {
+    pitchGreen: '#46A302',
+    stadiumNavy: '#0A1628',
+    redCard: '#B91C1C',
+    cardYellow: '#D4A500',
+    warningOrange: '#CC3D00',
+    amber: '#D97706',
+    glass: 'rgba(255, 255, 255, 0.02)',
+  },
+  getDepthColor: jest.fn((hex: string) => hex),
+  fonts: { headline: 'System', body: 'System', subheading: 'System' },
+  fontWeights: { regular: '400' as const, medium: '500' as const, semiBold: '600' as const, bold: '700' as const },
+  textStyles: {
+    h1: { fontFamily: 'System', fontSize: 32 },
+    h2: { fontFamily: 'System', fontSize: 24 },
+    h3: { fontFamily: 'System', fontSize: 20 },
+    subtitle: { fontFamily: 'System', fontSize: 18 },
+    body: { fontFamily: 'System', fontSize: 16 },
+    bodySmall: { fontFamily: 'System', fontSize: 14 },
+    caption: { fontFamily: 'System', fontSize: 12 },
+    button: { fontFamily: 'System', fontSize: 18 },
+    buttonLarge: { fontFamily: 'System', fontSize: 18 },
+    buttonSmall: { fontFamily: 'System', fontSize: 14 },
+    buttonTiny: { fontFamily: 'System', fontSize: 11, lineHeight: 14 },
+  },
+  spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, '2xl': 32, '3xl': 48, '4xl': 64 },
+  borderRadius: { sm: 4, md: 8, lg: 12, xl: 16, '2xl': 24, full: 9999 },
+  shadowOffset: { buttonSmall: 5, button: 8, buttonLarge: 10 },
+  depthOffset: {
+    none: 0, sunk: 1, card: 2, cell: 3, tictacCell: 4,
+    buttonTiny: 3, buttonSmall: 5, button: 8, buttonLarge: 10,
+  },
+  layout: { screenPadding: 16, cardPadding: 16, listGap: 12, tabBarHeight: 80 },
+  shadows: { none: {}, sm: {}, md: {}, lg: {}, xl: {}, '2xl': {} },
+  glows: { green: {}, yellow: {}, red: {}, amber: {} },
+  combineWithGlow: jest.fn(() => ({})),
+}));
+
+// Mock @/theme sub-paths (some tests import from these directly)
+jest.mock('@/theme/spacing', () => ({
+  spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, '2xl': 32, '3xl': 48, '4xl': 64 },
+  borderRadius: { sm: 4, md: 8, lg: 12, xl: 16, '2xl': 24, full: 9999 },
+  shadowOffset: { buttonSmall: 5, button: 8, buttonLarge: 10 },
+  depthOffset: {
+    none: 0, sunk: 1, card: 2, cell: 3, tictacCell: 4,
+    buttonTiny: 3, buttonSmall: 5, button: 8, buttonLarge: 10,
+  },
+  layout: { screenPadding: 16, cardPadding: 16, listGap: 12, tabBarHeight: 80 },
+}));
+
+jest.mock('@/theme/colors', () => ({
+  colors: {
+    pitchGreen: '#58CC02', grassShadow: '#46A302', stadiumNavy: '#0F172A',
+    floodlightWhite: '#F8FAFC', cardYellow: '#FACC15', redCard: '#EF4444',
+    warningOrange: '#FF4D00', warningOrangeShadow: '#CC3D00',
+    amber: '#F59E0B', amberShadow: '#D97706',
+    glassBackground: 'rgba(255, 255, 255, 0.05)',
+    glassBorder: 'rgba(255, 255, 255, 0.1)',
+    primary: '#58CC02', primaryShadow: '#46A302', background: '#0F172A',
+    text: '#F8FAFC', textSecondary: 'rgba(248, 250, 252, 0.7)',
+    warning: '#FACC15', error: '#EF4444', success: '#58CC02',
+  },
+  depthColors: {
+    pitchGreen: '#46A302', stadiumNavy: '#0A1628', redCard: '#B91C1C',
+    cardYellow: '#D4A500', warningOrange: '#CC3D00', amber: '#D97706',
+    glass: 'rgba(255, 255, 255, 0.02)',
+  },
+  getDepthColor: jest.fn((hex: string) => hex),
+}));
+
+jest.mock('@/theme/typography', () => ({
+  fonts: { headline: 'System', body: 'System', subheading: 'System' },
+  fontWeights: { regular: '400' as const, medium: '500' as const, semiBold: '600' as const, bold: '700' as const },
+  textStyles: {
+    h1: { fontFamily: 'System', fontSize: 32 },
+    h2: { fontFamily: 'System', fontSize: 24 },
+    h3: { fontFamily: 'System', fontSize: 20 },
+    subtitle: { fontFamily: 'System', fontSize: 18 },
+    body: { fontFamily: 'System', fontSize: 16 },
+    bodySmall: { fontFamily: 'System', fontSize: 14 },
+    caption: { fontFamily: 'System', fontSize: 12 },
+    button: { fontFamily: 'System', fontSize: 18 },
+    buttonLarge: { fontFamily: 'System', fontSize: 18 },
+    buttonSmall: { fontFamily: 'System', fontSize: 14 },
+    buttonTiny: { fontFamily: 'System', fontSize: 11, lineHeight: 14 },
+  },
+}));
 
 // Mock expo-sqlite
 jest.mock('expo-sqlite', () => ({
@@ -180,6 +317,7 @@ const mockPurchases = {
   purchasePackage: jest.fn(),
   restorePurchases: jest.fn(),
   addCustomerInfoUpdateListener: jest.fn(() => jest.fn()),
+  removeCustomerInfoUpdateListener: jest.fn(),
   getCustomerInfo: jest.fn(),
   syncPurchases: jest.fn(),
 };

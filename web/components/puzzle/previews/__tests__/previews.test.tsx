@@ -235,7 +235,8 @@ describe("TransferGuessPreview", () => {
   it("renders from and to clubs", () => {
     render(<TransferGuessPreview content={transferGuessData} />);
     expect(screen.getByText("Barcelona")).toBeInTheDocument();
-    expect(screen.getByText("PSG")).toBeInTheDocument();
+    // "PSG" appears as both the abbreviation and club name
+    expect(screen.getAllByText("PSG").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders fee", () => {
@@ -245,9 +246,9 @@ describe("TransferGuessPreview", () => {
 
   it("renders hints section", () => {
     render(<TransferGuessPreview content={transferGuessData} />);
-    expect(screen.getByText("Nationality")).toBeInTheDocument();
+    expect(screen.getByText("Year")).toBeInTheDocument();
     expect(screen.getByText("Position")).toBeInTheDocument();
-    expect(screen.getByText("Achievement")).toBeInTheDocument();
+    expect(screen.getByText("Nationality")).toBeInTheDocument();
   });
 
   it("renders hint values", () => {

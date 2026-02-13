@@ -28,6 +28,8 @@ export interface FirstRunModalProps {
   visible: boolean;
   /** Callback when user submits their display name */
   onSubmit: (displayName: string) => Promise<void>;
+  /** Callback fired after successful submission (for navigation) */
+  onSubmitSuccess?: () => void;
   /** External error message to display (e.g., from failed submission) */
   error?: string | null;
   /** Test ID for testing */
@@ -244,7 +246,7 @@ class OnboardingErrorBoundary extends Component<
  *
  * Includes error boundary to prevent invisible modal blocking touches.
  */
-export function FirstRunModal({ visible, onSubmit, error, testID }: FirstRunModalProps) {
+export function FirstRunModal({ visible, onSubmit, onSubmitSuccess, error, testID }: FirstRunModalProps) {
   return (
     <Modal
       visible={visible}
@@ -255,6 +257,7 @@ export function FirstRunModal({ visible, onSubmit, error, testID }: FirstRunModa
       <OnboardingErrorBoundary onSubmit={onSubmit} testID={testID}>
         <BriefingScreen
           onSubmit={onSubmit}
+          onSubmitSuccess={onSubmitSuccess}
           externalError={error}
           testID={testID ? `${testID}-content` : undefined}
         />

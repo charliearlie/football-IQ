@@ -32,6 +32,8 @@ interface GameIntroScreenProps {
   onStart: () => void;
   /** Button text override (default: "Start Game") */
   buttonText?: string;
+  /** Optional subtitle shown below the title (e.g. welcome message for first-time users) */
+  subtitle?: string;
   /** Whether this is being shown in a modal (affects some styling) */
   isModal?: boolean;
   /** Test ID for testing */
@@ -45,6 +47,7 @@ export function GameIntroScreen({
   gameMode,
   onStart,
   buttonText = 'Start Game',
+  subtitle,
   isModal = false,
   testID,
 }: GameIntroScreenProps) {
@@ -108,6 +111,16 @@ export function GameIntroScreen({
             {rules.displayTitle}
           </Animated.Text>
 
+          {/* Optional subtitle (e.g. welcome message for first-time users) */}
+          {subtitle && (
+            <Animated.Text
+              entering={FadeIn.delay(200).duration(300)}
+              style={styles.subtitle}
+            >
+              {subtitle}
+            </Animated.Text>
+          )}
+
           {/* Hero Icon */}
           <HeroSection rules={rules} testID={testID ? `${testID}-hero` : undefined} />
 
@@ -160,6 +173,14 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     textAlign: 'center',
     letterSpacing: 2,
+  },
+  subtitle: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   spacer: {
     flex: 1,

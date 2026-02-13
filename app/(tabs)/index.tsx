@@ -202,7 +202,9 @@ export default function HomeScreen() {
       <HomeHeader
         streak={stats.currentStreak}
         isPremium={isPremium}
-        onProPress={handleProPress} 
+        onProPress={handleProPress}
+        gamesPlayedToday={stats.gamesPlayedToday}
+        availableFreezes={stats.availableFreezes}
       />
 
       {/* Scrollable Content */}

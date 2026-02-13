@@ -211,6 +211,8 @@ export function useTopicalQuizGame(puzzle: ParsedLocalPuzzle | null) {
             state.answers.filter((a) => a.isCorrect).length + (isCorrect ? 1 : 0);
           const finalScore = calculateQuizScore(finalCorrectCount);
           dispatch({ type: 'GAME_COMPLETE', payload: finalScore });
+          // Haptic feedback for game completion is handled separately
+          // to avoid conflict with the answer feedback
         } else {
           // Move to next question
           dispatch({ type: 'NEXT_QUESTION' });

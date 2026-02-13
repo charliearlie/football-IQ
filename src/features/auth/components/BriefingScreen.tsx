@@ -30,6 +30,8 @@ import { WeeklyFixturesGrid } from './WeeklyFixturesGrid';
 export interface BriefingScreenProps {
   /** Callback when user submits their display name */
   onSubmit: (displayName: string) => Promise<void>;
+  /** Callback fired after successful submission (for navigation) */
+  onSubmitSuccess?: () => void;
   /** External error message (e.g., from parent when submission fails) */
   externalError?: string | null;
   /** Test ID for testing */
@@ -46,7 +48,7 @@ const MAX_NAME_LENGTH = 30;
  * Welcomes new users, shows the weekly schedule, and collects
  * their display name for the leaderboard.
  */
-export function BriefingScreen({ onSubmit, externalError, testID }: BriefingScreenProps) {
+export function BriefingScreen({ onSubmit, onSubmitSuccess, externalError, testID }: BriefingScreenProps) {
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +94,8 @@ export function BriefingScreen({ onSubmit, externalError, testID }: BriefingScre
     try {
       // Save display name to Supabase (AsyncStorage is handled by caller)
       await onSubmit(trimmedName);
+      // Call success callback for navigation (after onSubmit completes)
+      onSubmitSuccess?.();
     } catch (err) {
       setError('Something went wrong. Please try again.');
       triggerNotification('error');

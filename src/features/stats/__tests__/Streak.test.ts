@@ -7,6 +7,14 @@
 
 import { calculateStreak } from '@/features/home/hooks/useUserStats';
 
+// Mock @/lib/time so getAuthorizedDateUnsafe returns current fake timer date
+jest.mock('@/lib/time', () => ({
+  getAuthorizedDateUnsafe: jest.fn(() => {
+    const d = new Date();
+    return d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+  }),
+}));
+
 describe('calculateStreak', () => {
   // Fixed date for consistent testing
   const FIXED_NOW = new Date('2025-01-15T12:00:00Z');

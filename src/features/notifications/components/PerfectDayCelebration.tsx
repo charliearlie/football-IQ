@@ -18,6 +18,8 @@ import {
   Share,
   Platform,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import ViewShot from "react-native-view-shot";
 import Animated, {
   FadeIn,
@@ -25,7 +27,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import { Trophy, Share2, X, Flame, Calendar } from "lucide-react-native";
+import { Trophy, Share2, Flame, Calendar } from "lucide-react-native";
 import { Confetti } from "@/components/Confetti";
 import { ElevatedButton } from "@/components/ElevatedButton";
 import { triggerPerfectDay } from "@/lib/haptics";
@@ -35,7 +37,6 @@ import {
   spacing,
   borderRadius,
   fonts,
-  fontWeights,
   textStyles,
 } from "@/theme";
 import type { PerfectDayCelebrationProps } from "../types";
@@ -67,9 +68,21 @@ function PerfectDayCard({
   const formattedDate = formatDateForDisplay(today);
 
   return (
-    <View style={styles.shareCard}>
-      {/* Gradient-like background effect */}
-      <View style={styles.cardGlow} />
+    <LinearGradient
+      colors={["#1e293b", "#14332a"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.shareCard}
+    >
+      <Svg style={styles.cardGlow} width="200" height="200" viewBox="0 0 200 200">
+        <Defs>
+          <RadialGradient id="perfectGlow" cx="50%" cy="50%" rx="50%" ry="50%" gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor="#22C55E" stopOpacity="0.3" />
+            <Stop offset="1" stopColor="#22C55E" stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Rect x="0" y="0" width="200" height="200" fill="url(#perfectGlow)" />
+      </Svg>
 
       {/* Trophy Icon */}
       <View style={styles.trophyContainer}>
@@ -103,7 +116,7 @@ function PerfectDayCard({
       <View style={styles.cardFooter}>
         <Text style={styles.footerText}>Football IQ</Text>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -188,24 +201,8 @@ export function PerfectDayCelebration({
       testID={testID}
     >
       <View style={styles.overlay}>
-        {/* Confetti layer */}
-        <Confetti
-          active={showConfetti}
-          testID={testID ? `${testID}-confetti` : undefined}
-        />
-
-        {/* Content */}
-        <Animated.View entering={FadeIn.duration(200)} style={styles.container}>
-          {/* Close button */}
-          <Pressable
-            style={styles.closeButton}
-            onPress={onDismiss}
-            hitSlop={16}
-            testID={testID ? `${testID}-close` : undefined}
-          >
-            <X size={24} color={colors.textSecondary} />
-          </Pressable>
-
+        {/* Content - uses plain View so confetti z-index works above it */}
+        <View style={styles.container}>
           {/* Card */}
           <Animated.View style={[styles.cardWrapper, cardAnimatedStyle]}>
             <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
@@ -245,7 +242,13 @@ export function PerfectDayCelebration({
               <Text style={styles.dismissText}>Continue</Text>
             </Pressable>
           </Animated.View>
-        </Animated.View>
+        </View>
+
+        {/* Confetti layer - rendered last to ensure it's on top */}
+        <Confetti
+          active={showConfetti}
+          testID={testID ? `${testID}-confetti` : undefined}
+        />
       </View>
     </Modal>
   );
@@ -257,23 +260,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.85)",
     justifyContent: "center",
     alignItems: "center",
+    overflow: 'visible', // Ensure confetti isn't clipped
   },
   container: {
     width: "100%",
     alignItems: "center",
     paddingHorizontal: spacing.lg,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 60,
-    right: 24,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   cardWrapper: {
     marginBottom: spacing.lg,
@@ -282,7 +274,6 @@ const styles = StyleSheet.create({
   // Share Card Styles
   shareCard: {
     width: 280,
-    backgroundColor: colors.stadiumNavy,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     alignItems: "center",
@@ -292,14 +283,8 @@ const styles = StyleSheet.create({
   },
   cardGlow: {
     position: "absolute",
+    right: -50,
     top: -50,
-    left: "50%",
-    marginLeft: -100,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.cardYellow,
-    opacity: 0.1,
   },
   trophyContainer: {
     marginBottom: spacing.md,
@@ -371,12 +356,15 @@ const styles = StyleSheet.create({
   },
   dismissButton: {
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   dismissText: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
+    fontFamily: fonts.headline,
+    fontSize: 16,
+    color: colors.floodlightWhite,
+    textAlign: "center",
   },
 });

@@ -15,6 +15,8 @@ import { GameContainer } from '../GameContainer';
 
 // Track mock calls
 const mockRouterBack = jest.fn();
+const mockRouterReplace = jest.fn();
+const mockCanGoBack = jest.fn().mockReturnValue(true);
 const mockTriggerLight = jest.fn();
 
 // Mock theme
@@ -52,6 +54,8 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     back: mockRouterBack,
+    replace: mockRouterReplace,
+    canGoBack: mockCanGoBack,
     push: jest.fn(),
   }),
 }));
@@ -205,6 +209,20 @@ describe('GameContainer', () => {
       fireEvent.press(getByTestId('game-container-back-button'));
 
       expect(mockRouterBack).toHaveBeenCalled();
+    });
+
+    it('falls back to home when router cannot go back', () => {
+      mockCanGoBack.mockReturnValueOnce(false);
+      const { getByTestId } = render(
+        <GameContainer title="Test Game" testID="game-container">
+          <Text>Content</Text>
+        </GameContainer>
+      );
+
+      fireEvent.press(getByTestId('game-container-back-button'));
+
+      expect(mockRouterBack).not.toHaveBeenCalled();
+      expect(mockRouterReplace).toHaveBeenCalledWith('/(tabs)');
     });
 
     it('calls custom onBack handler when provided', () => {

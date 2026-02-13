@@ -132,3 +132,19 @@ export async function triggerRareFind(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 100));
   await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 }
+
+/**
+ * Tier level-up celebration - Fanfare-like pattern for tier progression
+ * Uses: Heavy -> Success -> Success -> Heavy (more intense than Perfect Day)
+ * Four-beat pattern creates a triumphant "fanfare" feeling
+ */
+export async function triggerLevelUp(): Promise<void> {
+  if (!isHapticsSupported) return;
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+}
