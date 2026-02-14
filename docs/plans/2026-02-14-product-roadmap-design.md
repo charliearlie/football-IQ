@@ -124,13 +124,35 @@ Trace a player's career path on a map by tapping cities in order. Distance-based
 - **Why**: Globle proved map games are addictive. Career line across a map is extremely shareable as an image.
 - **Tech**: Needs map rendering (react-native-maps or SVG). Significant new infrastructure.
 
-### 1.8 Match of the Day (Score Predictor)
-**Priority: P3 | Effort: Low | Virality: 2/5**
+### 1.8 Score Predictor (Weekend Fixtures)
+**Priority: P1 | Effort: Medium | Virality: 4/5**
 
-Given a historic match (teams, competition, date), predict the score then name the scorers.
+Predict the scores for upcoming Premier League (and eventually other league) weekend fixtures. Points awarded after matches finish based on prediction accuracy.
 
-- **Data**: Uses existing match data. Just needs curation of iconic matches.
-- **Why**: Nostalgia-driven. "Remember THAT night?" moments.
+- **Mechanic**: Each gameweek, users see the upcoming fixtures and submit score predictions before kickoff. After matches complete, points are awarded:
+  - Exact score (e.g., predicted 2-1, result 2-1): 3 points
+  - Correct result + goal difference (e.g., predicted 3-1, result 2-0): 2 points
+  - Correct result only (e.g., predicted 2-1, result 1-0): 1 point
+  - Wrong result: 0 points
+- **Weekly leaderboard**: Separate predictor leaderboard ranked by weekly points. Resets each gameweek.
+- **Season-long table**: Cumulative points across all gameweeks for a season-long competition.
+- **Share format**:
+  ```
+  Football IQ - Score Predictor
+  GW25 Results
+
+  ✅ Arsenal 2-1 Chelsea (exact!)
+  🟡 Liverpool 3-0 Wolves (result)
+  ❌ Man Utd 1-1 Spurs
+  ...
+
+  18/30 points
+  footballiq.app
+  ```
+- **Why viral**: Score prediction is the most universal football activity - literally every fan does it. Weekly deadline creates FOMO. Season-long table creates long-term investment. Group chat sharing is natural ("I got 5 exact scores this week").
+- **Data**: Requires Football-Data.org API integration for fixture lists and live results. Scheduled Edge Function to fetch fixtures weekly and results after matches.
+- **New tables**: `score_predictions` (user_id, fixture_id, home_score, away_score, gameweek), `fixtures` (home_team, away_team, kickoff, competition, gameweek, result)
+- **Future expansion**: Start with Premier League, expand to Champions League, La Liga, Bundesliga etc. Add "bonus questions" per gameweek (first goalscorer, number of cards, etc.).
 
 ---
 
@@ -143,6 +165,8 @@ Given a historic match (teams, competition, date), predict the score then name t
 | `managers` | Manager career history, trophies | Manual + Wikipedia | P1 |
 | `player_shirt_numbers` | Player-club-number-years mapping | Transfermarkt/Wikipedia | P2 |
 | `club_coordinates` | Lat/long for Geography Ball | Manual/geocoding API | P3 |
+| `fixtures` | Upcoming/past match fixtures with results | Football-Data.org API | P1 |
+| `score_predictions` | User predictions per fixture per gameweek | Internal | P1 |
 | `match_events` | Comprehensive goal/assist/card data | Football-Data.org API | P2 |
 | `transfer_history` | Bulk transfer data with fees/dates | Transfermarkt API | P2 |
 | `content_submissions` | User-submitted puzzle ideas | User input | P2 |
@@ -309,6 +333,7 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 | 10 | **7-day free trial trigger (after 10 games)** | 1 | S | 5 | 2 |
 | 11 | **Premium tier expansion** | 1 | M | 4 | 3 |
 | 12 | **Football-Data.org API integration** | 1 | M | 1 | 3 |
+| 12b | **Score Predictor (weekend fixtures)** | 4 | M | 2 | 5 |
 | 13 | **Programmatic puzzle generation pipeline** | 1 | L | 1 | 4 |
 | 14 | **Weekly collection challenges** | 2 | M | 1 | 4 |
 | 15 | **Discord community launch** | 2 | S | 0 | 3 |
@@ -338,7 +363,6 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 | 29 | **Full web app (feature parity)** | 3 | XL | 3 | 2 |
 | 30 | **Brand sponsorship deals** | 0 | M | 5 | 0 |
 | 31 | **User-generated puzzle marketplace** | 2 | XL | 2 | 4 |
-| 32 | **Match of the Day game mode** | 2 | L | 1 | 3 |
 
 ---
 
