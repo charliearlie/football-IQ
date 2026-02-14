@@ -264,7 +264,7 @@ export function ScoreDistributionContainer({
     const normalizedUserScore = (userScore / maxSteps) * 100;
 
     // Optimistically merge user's attempt into distribution (API uses buckets of 10)
-    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+    const { distribution: mergedDistribution } =
       mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
 
     // Transform merged distribution to points-based display
@@ -274,7 +274,6 @@ export function ScoreDistributionContainer({
     return (
       <ScoreDistributionGraph
         distribution={transformedDistribution}
-        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
         userScore={userScore}
         maxScore={maxSteps}
         minScore={1}
@@ -293,7 +292,7 @@ export function ScoreDistributionContainer({
     const normalizedUserScore = (userScore / maxSteps) * 100;
 
     // Optimistically merge user's attempt into distribution (API uses buckets of 10)
-    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+    const { distribution: mergedDistribution } =
       mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
 
     // Transform merged distribution to scorer-count-based display
@@ -302,7 +301,6 @@ export function ScoreDistributionContainer({
     return (
       <ScoreDistributionGraph
         distribution={transformedDistribution}
-        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
         userScore={userScore}
         maxScore={maxSteps}
         minScore={0}
@@ -320,7 +318,7 @@ export function ScoreDistributionContainer({
     const normalizedUserScore = userScore * 10;
 
     // Optimistically merge at normalized scale (API uses 20-point buckets)
-    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+    const { distribution: mergedDistribution } =
       mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 20);
 
     // Transform to 5 hint-count buckets
@@ -332,7 +330,6 @@ export function ScoreDistributionContainer({
     return (
       <ScoreDistributionGraph
         distribution={transformedDistribution}
-        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
         userScore={userHintBucket}
         maxScore={4}
         minScore={0}
@@ -353,14 +350,13 @@ export function ScoreDistributionContainer({
     const normalizedUserScore = Math.max(0, Math.min(100, (12 - userScore) * 10));
 
     // Optimistically merge user's attempt into distribution (API uses buckets of 10)
-    const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+    const { distribution: mergedDistribution } =
       mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
 
     // Use default 0-100 display with custom step labels
     return (
       <ScoreDistributionGraph
         distribution={mergedDistribution}
-        totalAttempts={isFirstPlayer ? 1 : mergedTotal}
         userScore={normalizedUserScore}
         maxScore={100}
         bucketSize={10}
@@ -376,13 +372,12 @@ export function ScoreDistributionContainer({
   const bucketSize = getBucketSizeForMode(gameMode, maxSteps);
 
   // Optimistically merge user's attempt into distribution
-  const { distribution: mergedDistribution, totalAttempts: mergedTotal } =
+  const { distribution: mergedDistribution } =
     mergeUserAttemptOptimistically(distribution, totalAttempts, userScore, bucketSize);
 
   return (
     <ScoreDistributionGraph
       distribution={mergedDistribution}
-      totalAttempts={isFirstPlayer ? 1 : mergedTotal}
       userScore={userScore}
       maxScore={getMaxScoreForMode(gameMode)}
       bucketSize={bucketSize}

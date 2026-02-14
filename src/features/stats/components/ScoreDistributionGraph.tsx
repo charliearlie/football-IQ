@@ -16,8 +16,6 @@ import { DistributionEntry } from '../services/distributionService';
 export interface ScoreDistributionGraphProps {
   /** Distribution data from API */
   distribution: DistributionEntry[];
-  /** Total attempts for footer text */
-  totalAttempts: number;
   /** User's normalized score (0-100) to highlight */
   userScore: number;
   /** Maximum possible score for bucket calculation */
@@ -78,7 +76,6 @@ function getDefaultLabel(score: number): string {
 
 export function ScoreDistributionGraph({
   distribution,
-  totalAttempts,
   userScore,
   maxScore = 100,
   minScore = 0,
@@ -167,11 +164,9 @@ export function ScoreDistributionGraph({
       </View>
 
       {/* Footer */}
-      <Text style={styles.footer}>
-        {isFirstPlayer
-          ? "You're setting the bar!"
-          : `Based on ${totalAttempts.toLocaleString()} global attempt${totalAttempts !== 1 ? 's' : ''}`}
-      </Text>
+      {isFirstPlayer && (
+        <Text style={styles.footer}>You're setting the bar!</Text>
+      )}
     </Animated.View>
   );
 }

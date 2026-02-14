@@ -298,7 +298,8 @@ export function TopTensScreen({
         foundCount={state.rankSlots.filter(s => s.found && !s.autoRevealed).length}
         shouldShake={state.lastGuessIncorrect}
         showDuplicate={state.lastGuessDuplicate}
-        isGameOver={isGameOver || isClimbing}
+        isGameOver={isGameOver}
+        isClimbing={isClimbing}
         testID="action-zone"
       />
 

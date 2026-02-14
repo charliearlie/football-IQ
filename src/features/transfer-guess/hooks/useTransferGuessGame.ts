@@ -55,6 +55,7 @@ function transferGuessReducer(
       return {
         ...state,
         hintsRevealed: Math.min(state.hintsRevealed + 1, MAX_HINTS),
+        guesses: [...state.guesses, '__hint__'],
         lastGuessIncorrect: false,
       };
 

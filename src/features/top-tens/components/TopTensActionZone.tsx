@@ -44,6 +44,8 @@ export interface TopTensActionZoneProps {
   showDuplicate: boolean;
   /** Whether the game is over */
   isGameOver: boolean;
+  /** Whether the tower is currently climbing */
+  isClimbing?: boolean;
   /** Test ID for testing */
   testID?: string;
 }
@@ -58,6 +60,7 @@ export function TopTensActionZone({
   shouldShake,
   showDuplicate,
   isGameOver,
+  isClimbing,
   testID,
 }: TopTensActionZoneProps) {
   const shakeX = useSharedValue(0);
@@ -102,7 +105,7 @@ export function TopTensActionZone({
           fullWidth
           testID={`${testID}-score-button`}
         />
-      ) : (
+      ) : isClimbing ? null : (
         <>
           {/* Input + Guess inline row */}
           <View style={styles.inputRow}>
