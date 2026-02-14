@@ -2,7 +2,63 @@
 
 ## Context
 
-Football IQ is a React Native (Expo) trivia app with 11 game modes, 190k+ Wikidata players, a 10-tier progression system, streaks, leaderboards, and a premium subscription. The app has solid engagement foundations (celebrations, haptics, share cards) but needs a viral breakout moment and a long-term growth strategy to become the #1 football trivia app. This roadmap covers new game modes, data infrastructure, marketing, and monetization across a 12-month horizon.
+Football IQ is a React Native (Expo) trivia app with 11 game modes, 10k+ Wikidata players, a 10-tier progression system, streaks, leaderboards, and a premium subscription. The app has solid engagement foundations (celebrations, haptics, share cards) but needs a viral breakout moment and a long-term growth strategy to become the #1 football trivia app. This roadmap covers new game modes, data infrastructure, marketing, and monetization across a 12-month horizon.
+
+---
+
+## Part 0: Data Foundation (PREREQUISITE)
+
+Everything in this roadmap depends on reliable player data. Currently we have ~10k players sourced from Wikidata, but club deduplication remains an ongoing issue (e.g., "FC Barcelona" / "Barcelona" / "Futbol Club Barcelona" appearing as separate clubs, scattering player appearances). Migration 032 introduced `canonical_club_id` and the API-Football mapping pipeline exists, but the data still isn't clean enough to trust at scale.
+
+**This must be solved before or alongside new game modes.** Connections, The Chain, The Grid, and Career Path all break when players are linked to the wrong club entity.
+
+### 0.1 Clean Rebuild of Player Data
+**Priority: P0 | Effort: Large**
+
+Consider rebuilding the player database from scratch with a single authoritative source and strict validation:
+
+1. **Define a canonical club registry first** - A curated list of ~500-1000 clubs that matter (top 5 leagues, major clubs worldwide). Each with ONE canonical ID, standardised name, country, and any known aliases. All Wikidata QIDs and API-Football IDs mapped.
+
+2. **Rebuild player-club links against the canonical registry** - Every `player_appearances` record must reference a canonical club. Reject or flag any link to an unrecognised club.
+
+3. **Validation layer on ingest** - Any new player/club data (from Wikidata, API-Football, or manual entry) must pass through normalisation that resolves to canonical clubs before insertion.
+
+### 0.2 Club Admin Merge Tool
+**Priority: P0 | Effort: Medium**
+
+Admin dashboard tool to:
+- View all clubs grouped by normalised name (showing duplicates)
+- One-click merge: reassign all `player_appearances` from duplicate -> canonical, then soft-delete duplicate
+- Bulk merge for obvious duplicates (same normalised name, same country)
+- Manual override for edge cases (e.g., "Red Bull Salzburg" vs "FC Salzburg")
+
+### 0.3 Data Quality Dashboard
+**Priority: P1 | Effort: Medium**
+
+Admin page showing:
+- Players with no appearances (orphans)
+- Clubs with 0 or 1 players (likely duplicates or junk)
+- Players flagged by API-Football mapping (ambiguous/skipped)
+- Year discrepancy report (our data vs API-Football)
+- Missing data coverage: % of players with birth_year, nationality, position
+
+### 0.4 Scale to 50k+ Players
+**Priority: P1 | Effort: Large**
+
+Once the foundation is clean, expand the database:
+- Automated Wikidata bulk import with canonical club resolution
+- API-Football career backfill for top leagues (auto-create appearances)
+- Target: 50k players covering top 10 leagues going back 30+ years
+- Elite Index delta sync to push updates to mobile efficiently
+
+### 0.5 Content Integrity Checks
+**Priority: P1 | Effort: Small**
+
+Automated checks that run before any puzzle goes live:
+- Career Path: verify all career steps reference canonical clubs
+- The Grid: verify all valid_answers reference real players with correct club links
+- The Chain: verify start/end players have valid paths through canonical clubs
+- Connections: verify all 16 players exist and category logic is correct
 
 ---
 
@@ -231,6 +287,8 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 | # | Item | Virality | Effort | Revenue | Retention |
 |---|------|----------|--------|---------|-----------|
+| 0a | **Clean rebuild of player data + canonical club registry** | 0 | L | 0 | 5 |
+| 0b | **Club admin merge tool** | 0 | M | 0 | 3 |
 | 1 | **Football Connections game mode** | 5 | M | 2 | 5 |
 | 2 | **Free daily limit (5 games/day)** | 1 | S | 5 | 2 |
 | 3 | **Referral system + deep links** | 4 | M | 2 | 3 |
@@ -241,6 +299,9 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 | # | Item | Virality | Effort | Revenue | Retention |
 |---|------|----------|--------|---------|-----------|
+| 0c | **Data quality dashboard** | 0 | M | 0 | 3 |
+| 0d | **Scale to 50k+ players** | 0 | L | 0 | 4 |
+| 0e | **Content integrity checks (automated)** | 0 | S | 0 | 3 |
 | 6 | **Friends system + friend leaderboard** | 4 | L | 2 | 5 |
 | 7 | **Async friend challenges** | 5 | L | 1 | 5 |
 | 8 | **Mystery Manager game mode** | 2 | S | 1 | 3 |
