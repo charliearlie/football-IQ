@@ -157,7 +157,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "2.2.0";
+  const appVersion = Constants.expoConfig?.version ?? "2.3.0";
 
   /**
    * Handle version text tap for secret dev menu

@@ -13,6 +13,7 @@ Everything in this roadmap depends on reliable player data. Currently we have ~1
 **This must be solved before or alongside new game modes.** Connections, The Chain, The Grid, and Career Path all break when players are linked to the wrong club entity.
 
 ### 0.1 Clean Rebuild of Player Data
+
 **Priority: P0 | Effort: Large**
 
 Consider rebuilding the player database from scratch with a single authoritative source and strict validation:
@@ -24,37 +25,34 @@ Consider rebuilding the player database from scratch with a single authoritative
 3. **Validation layer on ingest** - Any new player/club data (from Wikidata, API-Football, or manual entry) must pass through normalisation that resolves to canonical clubs before insertion.
 
 ### 0.2 Club Admin Merge Tool
+
 **Priority: P0 | Effort: Medium**
 
 Admin dashboard tool to:
+
 - View all clubs grouped by normalised name (showing duplicates)
 - One-click merge: reassign all `player_appearances` from duplicate -> canonical, then soft-delete duplicate
 - Bulk merge for obvious duplicates (same normalised name, same country)
 - Manual override for edge cases (e.g., "Red Bull Salzburg" vs "FC Salzburg")
 
 ### 0.3 Data Quality Dashboard
+
 **Priority: P1 | Effort: Medium**
 
 Admin page showing:
+
 - Players with no appearances (orphans)
 - Clubs with 0 or 1 players (likely duplicates or junk)
 - Players flagged by API-Football mapping (ambiguous/skipped)
 - Year discrepancy report (our data vs API-Football)
 - Missing data coverage: % of players with birth_year, nationality, position
 
-### 0.4 Scale to 50k+ Players
-**Priority: P1 | Effort: Large**
+### 0.4 Content Integrity Checks
 
-Once the foundation is clean, expand the database:
-- Automated Wikidata bulk import with canonical club resolution
-- API-Football career backfill for top leagues (auto-create appearances)
-- Target: 50k players covering top 10 leagues going back 30+ years
-- Elite Index delta sync to push updates to mobile efficiently
-
-### 0.5 Content Integrity Checks
 **Priority: P1 | Effort: Small**
 
 Automated checks that run before any puzzle goes live:
+
 - Career Path: verify all career steps reference canonical clubs
 - The Grid: verify all valid_answers reference real players with correct club links
 - The Chain: verify start/end players have valid paths through canonical clubs
@@ -65,6 +63,7 @@ Automated checks that run before any puzzle goes live:
 ## Part 1: New Game Modes
 
 ### 1.1 Football Connections (THE VIRAL BET)
+
 **Priority: P0 | Effort: Medium | Virality: 5/5**
 
 NYT Connections applied to football. 16 player names in a 4x4 grid. Find 4 groups of 4 connected players. 4 mistakes max. Color-coded difficulty (yellow/green/blue/purple).
@@ -76,6 +75,7 @@ NYT Connections applied to football. 16 player names in a 4x4 grid. Find 4 group
 - **Content pipeline**: Algorithm generates 3 candidates/day from knowledge graph -> editor picks best -> adds 1 manual "tricky" category
 
 ### 1.2 Mystery Manager
+
 **Priority: P1 | Effort: Low | Virality: 2/5**
 
 Identify a manager from progressive career clues. Reuses Career Path UI and mechanics entirely.
@@ -84,6 +84,7 @@ Identify a manager from progressive career clues. Reuses Career Path UI and mech
 - **Why**: Manager debates are huge in football culture. Very low build cost.
 
 ### 1.3 Transfer Window (Batch Mode)
+
 **Priority: P1 | Effort: Low | Virality: 2/5**
 
 5-10 transfers from a specific window shown with fees/clubs but player names blanked. Fill in as many as you can in 90 seconds.
@@ -92,6 +93,7 @@ Identify a manager from progressive career clues. Reuses Career Path UI and mech
 - **Why**: Transfer windows are the most discussed football periods. Reuses existing validation logic.
 
 ### 1.4 Who Am I? (20 Questions)
+
 **Priority: P2 | Effort: Low | Virality: 3/5**
 
 5 yes/no clues about a mystery player, revealed one at a time. Guess after each clue. Score: 5pts for clue 1, down to 1pt for clue 5.
@@ -100,6 +102,7 @@ Identify a manager from progressive career clues. Reuses Career Path UI and mech
 - **Why**: Lowest barrier to entry. Creates "I knew it from clue 1!" bragging moments.
 
 ### 1.5 Shirt Number
+
 **Priority: P2 | Effort: Medium | Virality: 3/5**
 
 See a famous shirt number + club. Name as many players as possible who wore it (60s timer).
@@ -108,6 +111,7 @@ See a famous shirt number + club. Name as many players as possible who wore it (
 - **Why**: Shirt numbers are iconic football culture. "#7 at Manchester United" is a conversation fans already have.
 
 ### 1.6 The Wall (Club Connections)
+
 **Priority: P2 | Effort: Medium | Virality: 3/5**
 
 4 club badges shown. Find the connection. 3 rounds, each harder.
@@ -116,6 +120,7 @@ See a famous shirt number + club. Name as many players as possible who wore it (
 - **Why**: Club-centric = engages casual fans (everyone knows badges).
 
 ### 1.7 Geography Ball
+
 **Priority: P3 | Effort: High | Virality: 4/5**
 
 Trace a player's career path on a map by tapping cities in order. Distance-based scoring.
@@ -125,6 +130,7 @@ Trace a player's career path on a map by tapping cities in order. Distance-based
 - **Tech**: Needs map rendering (react-native-maps or SVG). Significant new infrastructure.
 
 ### 1.8 Score Predictor (Weekend Fixtures)
+
 **Priority: P1 | Effort: Medium | Virality: 4/5**
 
 Predict the scores for upcoming Premier League (and eventually other league) weekend fixtures. Points awarded after matches finish based on prediction accuracy.
@@ -137,6 +143,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 - **Weekly leaderboard**: Separate predictor leaderboard ranked by weekly points. Resets each gameweek.
 - **Season-long table**: Cumulative points across all gameweeks for a season-long competition.
 - **Share format**:
+
   ```
   Football IQ - Score Predictor
   GW25 Results
@@ -149,6 +156,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
   18/30 points
   footballiq.app
   ```
+
 - **Why viral**: Score prediction is the most universal football activity - literally every fan does it. Weekly deadline creates FOMO. Season-long table creates long-term investment. Group chat sharing is natural ("I got 5 exact scores this week").
 - **Data**: Requires Football-Data.org API integration for fixture lists and live results. Scheduled Edge Function to fetch fixtures weekly and results after matches.
 - **New tables**: `score_predictions` (user_id, fixture_id, home_score, away_score, gameweek), `fixtures` (home_team, away_team, kickoff, competition, gameweek, result)
@@ -160,27 +168,29 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 
 ### 2.1 New Data Tables
 
-| Table | Purpose | Source | Priority |
-|-------|---------|--------|----------|
-| `managers` | Manager career history, trophies | Manual + Wikipedia | P1 |
-| `player_shirt_numbers` | Player-club-number-years mapping | Transfermarkt/Wikipedia | P2 |
-| `club_coordinates` | Lat/long for Geography Ball | Manual/geocoding API | P3 |
-| `fixtures` | Upcoming/past match fixtures with results | Football-Data.org API | P1 |
-| `score_predictions` | User predictions per fixture per gameweek | Internal | P1 |
-| `match_events` | Comprehensive goal/assist/card data | Football-Data.org API | P2 |
-| `transfer_history` | Bulk transfer data with fees/dates | Transfermarkt API | P2 |
-| `content_submissions` | User-submitted puzzle ideas | User input | P2 |
-| `referral_codes` | User referral tracking | Internal | P1 |
-| `friendships` + `friend_requests` | Social graph | Internal | P1 |
+| Table                             | Purpose                                   | Source                  | Priority |
+| --------------------------------- | ----------------------------------------- | ----------------------- | -------- |
+| `managers`                        | Manager career history, trophies          | Manual + Wikipedia      | P1       |
+| `player_shirt_numbers`            | Player-club-number-years mapping          | Transfermarkt/Wikipedia | P2       |
+| `club_coordinates`                | Lat/long for Geography Ball               | Manual/geocoding API    | P3       |
+| `fixtures`                        | Upcoming/past match fixtures with results | Football-Data.org API   | P1       |
+| `score_predictions`               | User predictions per fixture per gameweek | Internal                | P1       |
+| `match_events`                    | Comprehensive goal/assist/card data       | Football-Data.org API   | P2       |
+| `transfer_history`                | Bulk transfer data with fees/dates        | Transfermarkt API       | P2       |
+| `content_submissions`             | User-submitted puzzle ideas               | User input              | P2       |
+| `referral_codes`                  | User referral tracking                    | Internal                | P1       |
+| `friendships` + `friend_requests` | Social graph                              | Internal                | P1       |
 
 ### 2.2 External API Integrations
 
 **Football-Data.org API** (P1):
+
 - Match results, scorers, standings for top 5 leagues
 - Feeds: Topical Quiz auto-generation, Goalscorer Recall (recent matches), Transfer Window mode
 - Scheduled Edge Function syncs nightly
 
 **Transfermarkt** (P2):
+
 - Transfer data, market values, squad data
 - Feeds: Transfer Window mode, Shirt Number data, player valuations
 - One-time bulk import + periodic delta sync
@@ -188,6 +198,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 ### 2.3 AI-Powered Content Pipeline
 
 **Programmatic puzzle generation** using the existing knowledge graph:
+
 - **Connections**: Query shared attributes across 4 players (shared clubs, nationalities, achievements, birth years)
 - **Career Path**: Select by `scout_rank`, order clues from `player_appearances`
 - **The Chain**: Use `find_shortest_player_path` BFS to find interesting pairs
@@ -195,6 +206,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 - **The Grid**: Use `validate_player_club` to generate valid row/column combos
 
 **LLM-assisted curation**: Use Claude/GPT-4 to:
+
 - Generate quiz questions from structured data + fact-check against knowledge graph
 - Create "tricky" Connections categories (wordplay, cultural references)
 - Write engaging clue text from raw data
@@ -214,6 +226,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 ### 3.1 Social Media Strategy
 
 **Twitter/X (Priority 1)**:
+
 - Official @FootballIQ account posts daily puzzle results (no spoilers) at 08:00 UTC
 - "Can you beat this?" format with emoji share grid
 - Quote-tweet users who share results
@@ -221,6 +234,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 - "On This Day" puzzles tied to football history
 
 **TikTok (Priority 1)**:
+
 - Screen recordings of gameplay reactions ("No way, I got it in 1!")
 - "Football fan vs. casual" format: two people play the same puzzle
 - "I bet you can't name all 10" for Top Tens
@@ -248,15 +262,15 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 
 ### 3.4 PR Calendar
 
-| Period | Opportunity | Action |
-|--------|-------------|--------|
-| Aug | Season start | Influencer campaign, "Season Preview" special quiz |
-| Jan/Aug | Transfer windows | Launch Transfer Window mode, PR push |
-| Mar-Apr | CL knockout | CL-themed puzzles, social campaigns |
-| May | CL Final | "Ultimate Football IQ Test" event |
-| Jun-Jul | International tournaments | Tournament mode, massive PR opportunity |
-| Oct | Ballon d'Or | "Predict the Ballon d'Or" event |
-| Dec | Boxing Day | "Boxing Day Marathon" - play all modes challenge |
+| Period  | Opportunity               | Action                                             |
+| ------- | ------------------------- | -------------------------------------------------- |
+| Aug     | Season start              | Influencer campaign, "Season Preview" special quiz |
+| Jan/Aug | Transfer windows          | Launch Transfer Window mode, PR push               |
+| Mar-Apr | CL knockout               | CL-themed puzzles, social campaigns                |
+| May     | CL Final                  | "Ultimate Football IQ Test" event                  |
+| Jun-Jul | International tournaments | Tournament mode, massive PR opportunity            |
+| Oct     | Ballon d'Or               | "Predict the Ballon d'Or" event                    |
+| Dec     | Boxing Day                | "Boxing Day Marathon" - play all modes challenge   |
 
 ### 3.5 Influencer Partnerships
 
@@ -273,6 +287,7 @@ Predict the scores for upcoming Premier League (and eventually other league) wee
 Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 **Enhanced "Football IQ Pro":**
+
 - Unlimited daily games (free: 5/day per Phase 2.1)
 - All premium modes (current + Connections when launched)
 - Unlimited streak freezes
@@ -284,11 +299,11 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 ### 4.2 Pricing
 
-| Tier | Price | Differentiation |
-|------|-------|----------------|
-| Free | $0 | 5 games/day, ads, earned streak freezes, basic stats |
-| Pro Monthly | $4.99/mo | Unlimited everything, no ads, customization |
-| Pro Annual | $29.99/yr | Monthly benefits + "Founder" badge + priority content suggestions |
+| Tier        | Price     | Differentiation                                                   |
+| ----------- | --------- | ----------------------------------------------------------------- |
+| Free        | $0        | 5 games/day, ads, earned streak freezes, basic stats              |
+| Pro Monthly | $4.99/mo  | Unlimited everything, no ads, customization                       |
+| Pro Annual  | $29.99/yr | Monthly benefits + "Founder" badge + priority content suggestions |
 
 ### 4.3 In-App Purchases
 
@@ -309,60 +324,60 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 ### NOW (Weeks 1-4)
 
-| # | Item | Virality | Effort | Revenue | Retention |
-|---|------|----------|--------|---------|-----------|
-| 0a | **Clean rebuild of player data + canonical club registry** | 0 | L | 0 | 5 |
-| 0b | **Club admin merge tool** | 0 | M | 0 | 3 |
-| 1 | **Football Connections game mode** | 5 | M | 2 | 5 |
-| 2 | **Free daily limit (5 games/day)** | 1 | S | 5 | 2 |
-| 3 | **Referral system + deep links** | 4 | M | 2 | 3 |
-| 4 | **Enhanced share cards with "X% of players" percentile** | 3 | S | 0 | 3 |
-| 5 | **Twitter/X daily puzzle bot** | 3 | S | 0 | 1 |
+| #   | Item                                                       | Virality | Effort | Revenue | Retention |
+| --- | ---------------------------------------------------------- | -------- | ------ | ------- | --------- |
+| 0a  | **Clean rebuild of player data + canonical club registry** | 0        | L      | 0       | 5         |
+| 0b  | **Club admin merge tool**                                  | 0        | M      | 0       | 3         |
+| 1   | **Football Connections game mode**                         | 5        | M      | 2       | 5         |
+| 2   | **Free daily limit (5 games/day)**                         | 1        | S      | 5       | 2         |
+| 3   | **Referral system + deep links**                           | 4        | M      | 2       | 3         |
+| 4   | **Enhanced share cards with "X% of players" percentile**   | 3        | S      | 0       | 3         |
+| 5   | **Twitter/X daily puzzle bot**                             | 3        | S      | 0       | 1         |
 
 ### NEXT (Months 1-2)
 
-| # | Item | Virality | Effort | Revenue | Retention |
-|---|------|----------|--------|---------|-----------|
-| 0c | **Data quality dashboard** | 0 | M | 0 | 3 |
-| 0d | **Scale to 50k+ players** | 0 | L | 0 | 4 |
-| 0e | **Content integrity checks (automated)** | 0 | S | 0 | 3 |
-| 6 | **Friends system + friend leaderboard** | 4 | L | 2 | 5 |
-| 7 | **Async friend challenges** | 5 | L | 1 | 5 |
-| 8 | **Mystery Manager game mode** | 2 | S | 1 | 3 |
-| 9 | **Transfer Window batch game mode** | 2 | S | 1 | 3 |
-| 10 | **7-day free trial trigger (after 10 games)** | 1 | S | 5 | 2 |
-| 11 | **Premium tier expansion** | 1 | M | 4 | 3 |
-| 12 | **Football-Data.org API integration** | 1 | M | 1 | 3 |
-| 12b | **Score Predictor (weekend fixtures)** | 4 | M | 2 | 5 |
-| 13 | **Programmatic puzzle generation pipeline** | 1 | L | 1 | 4 |
-| 14 | **Weekly collection challenges** | 2 | M | 1 | 4 |
-| 15 | **Discord community launch** | 2 | S | 0 | 3 |
+| #   | Item                                          | Virality | Effort | Revenue | Retention |
+| --- | --------------------------------------------- | -------- | ------ | ------- | --------- |
+| 0c  | **Data quality dashboard**                    | 0        | M      | 0       | 3         |
+| 0d  | **Scale to 50k+ players**                     | 0        | L      | 0       | 4         |
+| 0e  | **Content integrity checks (automated)**      | 0        | S      | 0       | 3         |
+| 6   | **Friends system + friend leaderboard**       | 4        | L      | 2       | 5         |
+| 7   | **Async friend challenges**                   | 5        | L      | 1       | 5         |
+| 8   | **Mystery Manager game mode**                 | 2        | S      | 1       | 3         |
+| 9   | **Transfer Window batch game mode**           | 2        | S      | 1       | 3         |
+| 10  | **7-day free trial trigger (after 10 games)** | 1        | S      | 5       | 2         |
+| 11  | **Premium tier expansion**                    | 1        | M      | 4       | 3         |
+| 12  | **Football-Data.org API integration**         | 1        | M      | 1       | 3         |
+| 12b | **Score Predictor (weekend fixtures)**        | 4        | M      | 2       | 5         |
+| 13  | **Programmatic puzzle generation pipeline**   | 1        | L      | 1       | 4         |
+| 14  | **Weekly collection challenges**              | 2        | M      | 1       | 4         |
+| 15  | **Discord community launch**                  | 2        | S      | 0       | 3         |
 
 ### LATER (Months 3-6)
 
-| # | Item | Virality | Effort | Revenue | Retention |
-|---|------|----------|--------|---------|-----------|
-| 16 | **Who Am I? game mode** | 3 | M | 1 | 3 |
-| 17 | **Shirt Number game mode** | 3 | M | 1 | 3 |
-| 18 | **The Wall game mode** | 3 | M | 1 | 3 |
-| 19 | **Seasonal leagues (monthly resets)** | 3 | L | 2 | 5 |
-| 20 | **Fan Club Teams (club-based competition)** | 4 | L | 1 | 4 |
-| 21 | **Transfermarkt data integration** | 1 | L | 1 | 3 |
-| 22 | **SEO blog + player pages** | 2 | M | 1 | 1 |
-| 23 | **Influencer partnership program** | 4 | M | 2 | 1 |
-| 24 | **In-app purchases** | 0 | M | 4 | 1 |
-| 25 | **AI content generation (LLM pipeline)** | 1 | L | 1 | 4 |
+| #   | Item                                        | Virality | Effort | Revenue | Retention |
+| --- | ------------------------------------------- | -------- | ------ | ------- | --------- |
+| 16  | **Who Am I? game mode**                     | 3        | M      | 1       | 3         |
+| 17  | **Shirt Number game mode**                  | 3        | M      | 1       | 3         |
+| 18  | **The Wall game mode**                      | 3        | M      | 1       | 3         |
+| 19  | **Seasonal leagues (monthly resets)**       | 3        | L      | 2       | 5         |
+| 20  | **Fan Club Teams (club-based competition)** | 4        | L      | 1       | 4         |
+| 21  | **Transfermarkt data integration**          | 1        | L      | 1       | 3         |
+| 22  | **SEO blog + player pages**                 | 2        | M      | 1       | 1         |
+| 23  | **Influencer partnership program**          | 4        | M      | 2       | 1         |
+| 24  | **In-app purchases**                        | 0        | M      | 4       | 1         |
+| 25  | **AI content generation (LLM pipeline)**    | 1        | L      | 1       | 4         |
 
 ### FUTURE (Months 6-12)
 
-| # | Item | Virality | Effort | Revenue | Retention |
-|---|------|----------|--------|---------|-----------|
-| 26 | **Geography Ball game mode** | 4 | XL | 1 | 3 |
-| 27 | **Live multiplayer (real-time head-to-head)** | 5 | XL | 3 | 5 |
-| 28 | **Localization (ES, DE, FR, PT, BR)** | 3 | XL | 4 | 2 |
-| 29 | **Full web app (feature parity)** | 3 | XL | 3 | 2 |
-| 30 | **Brand sponsorship deals** | 0 | M | 5 | 0 |
-| 31 | **User-generated puzzle marketplace** | 2 | XL | 2 | 4 |
+| #   | Item                                          | Virality | Effort | Revenue | Retention |
+| --- | --------------------------------------------- | -------- | ------ | ------- | --------- |
+| 26  | **Geography Ball game mode**                  | 4        | XL     | 1       | 3         |
+| 27  | **Live multiplayer (real-time head-to-head)** | 5        | XL     | 3       | 5         |
+| 28  | **Localization (ES, DE, FR, PT, BR)**         | 3        | XL     | 4       | 2         |
+| 29  | **Full web app (feature parity)**             | 3        | XL     | 3       | 2         |
+| 30  | **Brand sponsorship deals**                   | 0        | M      | 5       | 0         |
+| 31  | **User-generated puzzle marketplace**         | 2        | XL     | 2       | 4         |
 
 ---
 
@@ -371,6 +386,7 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 ### Why This Is The One
 
 NYT Connections has 3x the growth rate Wordle had at the same stage. The format is proven. **Nobody has done it for football.** The football domain is perfect because:
+
 - Football is full of hidden connections (shared clubs, agents, nationalities, transfer chains)
 - 4-mistake limit creates the perfect tension curve
 - Football fans love "I knew something obscure" bragging
@@ -385,16 +401,18 @@ NYT Connections has 3x the growth rate Wordle had at the same stage. The format 
 5. Colors: Yellow (easy) / Green (medium) / Blue (hard) / Purple (tricky)
 
 ### Scoring
-| Mistakes | IQ Points | Label |
-|----------|-----------|-------|
-| 0 | 10 | Hall of Famer |
-| 1 | 8 | World Class |
-| 2 | 6 | Director of Football |
-| 3 | 4 | Chief Scout |
-| 4 (game over) | 2 | Scout |
-| Perfect order bonus | +2 | - |
+
+| Mistakes            | IQ Points | Label                |
+| ------------------- | --------- | -------------------- |
+| 0                   | 10        | Hall of Famer        |
+| 1                   | 8         | World Class          |
+| 2                   | 6         | Director of Football |
+| 3                   | 4         | Chief Scout          |
+| 4 (game over)       | 2         | Scout                |
+| Perfect order bonus | +2        | -                    |
 
 ### Share Format
+
 ```
 Football IQ - Connections
 14 Feb 2026
@@ -412,6 +430,7 @@ footballiq.app
 ### Example Category Types
 
 **Auto-generated from existing data:**
+
 - "Played for [Club A] and [Club B]" (via `player_appearances` JOIN)
 - "Born in [Year]" (via `birth_year`)
 - "From [Country]" (via `nationality_code`)
@@ -419,6 +438,7 @@ footballiq.app
 - "Won [Achievement]" (via `player_achievements`)
 
 **Manually curated (for Purple difficulty):**
+
 - "Surname is also a color" (Brown, White, Green, Gray)
 - "Appeared in a FIFA cover"
 - "Scored on their debut for their country"
@@ -427,6 +447,7 @@ footballiq.app
 ### Implementation Pattern
 
 New feature at `src/features/connections/` following `src/features/the-grid/` structure:
+
 - `types/connections.types.ts` - ConnectionsGroup, ConnectionsPuzzle, ConnectionsAttempt
 - `hooks/useConnectionsGame.ts` - Selection state, mistake count, solved groups, animation triggers
 - `utils/scoring.ts` - IQ calculation from mistakes

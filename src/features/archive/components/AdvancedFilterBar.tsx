@@ -76,6 +76,7 @@ const GAME_MODE_OPTIONS: { value: GameMode | null; label: string; icon: React.Re
   { value: 'topical_quiz', label: 'Quiz', icon: <HelpCircle size={14} color={colors.cardYellow} /> },
   { value: 'top_tens', label: 'Top Tens', icon: <ListOrdered size={14} color={colors.pitchGreen} /> },
   { value: 'starting_xi', label: 'Starting XI', icon: <Users size={14} color={colors.cardYellow} /> },
+  { value: 'connections', label: 'Connections', icon: <Grid3X3 size={14} color={colors.pitchGreen} /> },
 ];
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };

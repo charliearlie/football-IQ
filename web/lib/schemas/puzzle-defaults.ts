@@ -167,6 +167,14 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
   topical_quiz: getTopicalQuizDefaults,
   top_tens: getTopTensDefaults,
   starting_xi: getStartingXIDefaults,
+  connections: () => ({
+    groups: [
+      { category: "", difficulty: "yellow", players: ["", "", "", ""] },
+      { category: "", difficulty: "green", players: ["", "", "", ""] },
+      { category: "", difficulty: "blue", players: ["", "", "", ""] },
+      { category: "", difficulty: "purple", players: ["", "", "", ""] },
+    ],
+  }),
 };
 
 export function getDefaultContent(gameMode: GameMode): unknown {

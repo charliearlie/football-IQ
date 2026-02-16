@@ -107,6 +107,13 @@ interface FormValues {
 // FORM REGISTRY
 // ============================================================================
 
+const ConnectionsPlaceholder = () => (
+  <div className="text-sm text-muted-foreground p-4">Use the dedicated Connections admin page to edit this puzzle.</div>
+);
+const ConnectionsPreviewPlaceholder = ({ content: _content }: { content: unknown }) => (
+  <div className="text-sm text-muted-foreground p-4">Connections puzzle preview not available here.</div>
+);
+
 const formRegistry: Record<GameMode, React.ComponentType> = {
   career_path: CareerPathForm,
   career_path_pro: CareerPathForm,
@@ -118,6 +125,7 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   topical_quiz: TopicalQuizForm,
   top_tens: TopTensForm,
   starting_xi: StartingXIForm,
+  connections: ConnectionsPlaceholder,
 };
 
 const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }>> = {
@@ -131,6 +139,7 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   topical_quiz: TopicalQuizPreview,
   top_tens: TopTensPreview,
   starting_xi: StartingXIPreview,
+  connections: ConnectionsPreviewPlaceholder,
 };
 
 // ============================================================================

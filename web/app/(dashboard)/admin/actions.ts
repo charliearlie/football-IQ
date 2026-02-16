@@ -947,6 +947,150 @@ async function saveClubMappings(
  * Side effect: discovers and saves club API-Football ID mappings.
  * The career comparison itself is report-only — no player data changes.
  */
+// ============================================================================
+// BACKFILL WIKIDATA CAREERS
+// ============================================================================
+
+export interface BackfillProgress {
+  qid: string;
+  name: string;
+  clubCount: number;
+}
+
+export interface BackfillResult {
+  total: number;
+  succeeded: number;
+  failed: number;
+  skipped: number;
+  errors: Array<{ qid: string; name: string; error: string }>;
+  details: BackfillProgress[];
+}
+
+/**
+ * Backfill Wikidata career data for mapped players who have no appearances.
+ * Finds players with mapping_status IS NULL and zero player_appearances,
+ * fetches their career from Wikidata SPARQL, and saves to DB.
+ */
+export async function backfillWikidataCareers(
+  options: { limit?: number }
+): Promise<ActionResult<BackfillResult>> {
+  try {
+    await ensureAdmin();
+
+    const {
+      fetchPlayerCareer,
+      saveCareerToSupabase,
+    } = await import("@/app/(dashboard)/player-scout/actions");
+
+    const supabase = await createAdminClient();
+
+    // Get players with mapping_status cleared (reviewed) ordered by importance
+    const { data: allPlayers, error: pErr } = await supabase
+      .from("players")
+      .select("id, name, scout_rank")
+      .is("mapping_status" as string, null)
+      .order("scout_rank", { ascending: false, nullsFirst: false })
+      .limit(2000);
+
+    if (pErr) return { success: false, error: pErr.message };
+
+    // Get all player_ids that already have appearances
+    const { data: existingAppearances, error: aErr } = await supabase
+      .from("player_appearances")
+      .select("player_id");
+
+    if (aErr) return { success: false, error: aErr.message };
+
+    const hasAppearances = new Set(
+      (existingAppearances ?? []).map((a) => a.player_id)
+    );
+
+    // Filter to players without appearances
+    const needsBackfill = (allPlayers ?? []).filter(
+      (p) => !hasAppearances.has(p.id)
+    );
+
+    const limit = options.limit ?? 50;
+    const batch = needsBackfill.slice(0, limit);
+
+    const result: BackfillResult = {
+      total: needsBackfill.length,
+      succeeded: 0,
+      failed: 0,
+      skipped: 0,
+      errors: [],
+      details: [],
+    };
+
+    // Process each player with a small delay for Wikidata rate limiting
+    for (const player of batch) {
+      try {
+        const career = await fetchPlayerCareer(player.id);
+
+        if (career.length === 0) {
+          result.skipped++;
+          continue;
+        }
+
+        const saveResult = await saveCareerToSupabase(player.id, career);
+
+        if (!saveResult.success) {
+          result.failed++;
+          result.errors.push({
+            qid: player.id,
+            name: player.name,
+            error: saveResult.error ?? "Save failed",
+          });
+          continue;
+        }
+
+        result.succeeded++;
+        result.details.push({
+          qid: player.id,
+          name: player.name,
+          clubCount: career.length,
+        });
+
+        // Small delay to be nice to Wikidata SPARQL endpoint
+        await new Promise((r) => setTimeout(r, 200));
+      } catch (err) {
+        result.failed++;
+        result.errors.push({
+          qid: player.id,
+          name: player.name,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }
+
+    // Log run
+    try {
+      await supabase.from("agent_runs").insert({
+        run_date: new Date().toISOString().split("T")[0],
+        agent_name: "wikidata_career_backfill",
+        status: "success",
+        puzzles_created: 0,
+        logs: {
+          total_needing_backfill: needsBackfill.length,
+          batch_size: batch.length,
+          succeeded: result.succeeded,
+          failed: result.failed,
+          skipped: result.skipped,
+        },
+      });
+    } catch {
+      // Non-fatal
+    }
+
+    return { success: true, data: result };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Backfill failed",
+    };
+  }
+}
+
 export async function runCareerValidation(
   options: { limit?: number; dryRun?: boolean }
 ): Promise<ActionResult<CareerValidationResult & { clubMappingsSaved: number; clubDuplicates: string[] }>> {

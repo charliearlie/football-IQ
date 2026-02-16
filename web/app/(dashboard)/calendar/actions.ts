@@ -896,6 +896,14 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
     correct_club_name: "",
     kit_lore: { fun_fact: "" },
   },
+  connections: {
+    groups: [
+      { category: "", difficulty: "yellow", players: ["", "", "", ""] },
+      { category: "", difficulty: "green", players: ["", "", "", ""] },
+      { category: "", difficulty: "blue", players: ["", "", "", ""] },
+      { category: "", difficulty: "purple", players: ["", "", "", ""] },
+    ],
+  },
 };
 
 /**

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes:
+Football IQ is a mobile trivia game featuring daily puzzles across 11 game modes:
 
 1. **Career Path** - Guess player from sequential career clues
 2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
@@ -14,6 +14,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 10 game modes
 8. **Topical Quiz** - 5 multiple-choice questions
 9. **Top Tens** (Premium) - Name all 10 answers in a ranked list
 10. **Starting XI** - Identify hidden players on a tactical pitch lineup
+11. **Connections** - Group 16 footballers into 4 categories of 4
 
 ## Tech Stack
 
@@ -394,6 +395,20 @@ Identify hidden players in a historic match lineup displayed on a tactical pitch
 **Display**: Formation-based emoji grid (⬜ hidden, 🟩 found)
 **Files**: `src/features/starting-xi/`
 
+### Connections
+
+NYT Connections-style game for football. Group 16 footballers into 4 categories of 4.
+
+**Content**: `{ groups: [{ category, difficulty, players: [4] }, ...4 groups] }`
+**Difficulties**: `yellow` (easiest), `green`, `blue`, `purple` (hardest)
+**Gameplay**: Select 4 players → Submit → correct group reveals with color animation. 4 mistakes = game over with all remaining groups revealed.
+**Scoring**: Tiered by mistakes — 0 mistakes: 10 IQ (Hall of Famer), 1: 8 (World Class), 2: 6 (Director of Football), 3: 4 (Chief Scout), 4: 2 (Scout). Perfect order bonus: +2.
+**Display**: Colored emoji grid — `🟨🟨🟨🟨` / `🟩🟩🟩🟩` / `🟦🟦🟦🟦` / `🟪🟪🟪🟪`
+**Colors**: yellow=#FACC15, green=#58CC02, blue=#3B82F6, purple=#A855F7
+**Components**: ConnectionsGrid (4x4), ConnectionsCell, GroupReveal, MistakeIndicator (4 dots), ConnectionsActionBar (Deselect All / Shuffle / Submit), ConnectionsResultModal
+**Files**: `src/features/connections/`, `app/connections/`
+**Admin CMS**: `web/app/(dashboard)/admin/connections/` (list + create form)
+
 ## Features
 
 ### Daily Loop
@@ -637,6 +652,7 @@ app/
   topical-quiz/        # Topical Quiz routes
   top-tens/            # Top Tens routes (premium)
   starting-xi/         # Starting XI routes
+  connections/         # Connections routes
   premium-modal.tsx    # Native subscription sheet
   submit-idea.tsx      # Game idea submission screen
   leaderboard/         # Leaderboard screen
@@ -765,6 +781,8 @@ npm run dev
 **Key Files**:
 
 - `web/app/(dashboard)/calendar/page.tsx` - Master Calendar
+- `web/app/(dashboard)/admin/content-integrity/` - Automated puzzle validation checks
+- `web/app/(dashboard)/admin/connections/` - Connections puzzle CMS
 - `web/hooks/use-puzzles.ts` - Data fetching
 - `web/components/calendar/` - Calendar components
 - `web/lib/supabase/server.ts` - Admin client (bypasses RLS)

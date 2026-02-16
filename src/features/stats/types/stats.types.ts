@@ -32,6 +32,7 @@ export const GAME_MODE_DISPLAY: Record<
   topical_quiz: { displayName: 'Topical Quiz', skillName: 'Current Affairs' },
   top_tens: { displayName: 'Top Tens', skillName: 'Deep Knowledge' },
   starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },
+  connections: { displayName: 'Connections', skillName: 'Group Recognition' },
 };
 
 /**
@@ -40,9 +41,9 @@ export const GAME_MODE_DISPLAY: Record<
  * Total: 100%
  */
 export const IQ_WEIGHTS: Record<GameMode, number> = {
-  career_path: 0.13, // 13% - flagship mode
+  career_path: 0.12, // 12% - flagship mode
   career_path_pro: 0.09, // 9% - premium flagship
-  guess_the_transfer: 0.13, // 13% - flagship mode
+  guess_the_transfer: 0.12, // 12% - flagship mode
   guess_the_goalscorers: 0.10, // 10%
   the_grid: 0.10, // 10%
   the_chain: 0.09, // 9%
@@ -50,6 +51,7 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
   topical_quiz: 0.09, // 9%
   top_tens: 0.11, // 11% - premium mode
   starting_xi: 0.08, // 8%
+  connections: 0.02, // 2% - new mode, low weight initially
 };
 
 /**

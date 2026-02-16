@@ -277,6 +277,36 @@ export type PositionKey = z.infer<typeof positionKeySchema>;
 export type FormationName = z.infer<typeof formationSchema>;
 
 // ============================================================================
+// CONNECTIONS (connections)
+// ============================================================================
+
+export const connectionsDifficultySchema = z.enum(["yellow", "green", "blue", "purple"]);
+
+export const connectionsGroupSchema = z.object({
+  category: z.string().min(1, "Category required"),
+  difficulty: connectionsDifficultySchema,
+  players: z.tuple([
+    z.string().min(1, "Player name required"),
+    z.string().min(1, "Player name required"),
+    z.string().min(1, "Player name required"),
+    z.string().min(1, "Player name required"),
+  ]),
+});
+
+export const connectionsContentSchema = z.object({
+  groups: z.tuple([
+    connectionsGroupSchema,
+    connectionsGroupSchema,
+    connectionsGroupSchema,
+    connectionsGroupSchema,
+  ]),
+});
+
+export type ConnectionsContent = z.infer<typeof connectionsContentSchema>;
+export type ConnectionsGroup = z.infer<typeof connectionsGroupSchema>;
+export type ConnectionsDifficulty = z.infer<typeof connectionsDifficultySchema>;
+
+// ============================================================================
 // CONTENT SCHEMA MAP
 // ============================================================================
 
@@ -291,6 +321,7 @@ export const contentSchemaMap = {
   topical_quiz: topicalQuizContentSchema,
   top_tens: topTensContentSchema,
   starting_xi: startingXIContentSchema,
+  connections: connectionsContentSchema,
 } as const;
 
 // Union type for all content types
@@ -303,7 +334,8 @@ export type PuzzleContent =
   | TheThreadContent
   | TopicalQuizContent
   | TopTensContent
-  | StartingXIContent;
+  | StartingXIContent
+  | ConnectionsContent;
 
 // ============================================================================
 // FULL PUZZLE FORM SCHEMA

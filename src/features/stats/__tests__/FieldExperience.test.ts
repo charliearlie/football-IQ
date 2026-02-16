@@ -249,6 +249,7 @@ describe('getDominantMode', () => {
       topical_quiz: 4,
       top_tens: 6,
       starting_xi: 8,
+      connections: 0,
     };
 
     const result = getDominantMode(byMode);
@@ -267,6 +268,7 @@ describe('getDominantMode', () => {
       topical_quiz: 0,
       top_tens: 0,
       starting_xi: 0,
+      connections: 0,
     };
 
     const result = getDominantMode(byMode);
@@ -285,6 +287,7 @@ describe('getDominantMode', () => {
       topical_quiz: 0,
       top_tens: 0,
       starting_xi: 0,
+      connections: 0,
     };
 
     const result = getDominantMode(byMode);
@@ -294,8 +297,8 @@ describe('getDominantMode', () => {
 });
 
 describe('ALL_GAME_MODES constant', () => {
-  it('contains exactly 10 game modes', () => {
-    expect(ALL_GAME_MODES).toHaveLength(10);
+  it('contains exactly 11 game modes', () => {
+    expect(ALL_GAME_MODES).toHaveLength(11);
   });
 
   it('includes all expected modes', () => {
@@ -309,6 +312,7 @@ describe('ALL_GAME_MODES constant', () => {
     expect(ALL_GAME_MODES).toContain('topical_quiz');
     expect(ALL_GAME_MODES).toContain('top_tens');
     expect(ALL_GAME_MODES).toContain('starting_xi');
+    expect(ALL_GAME_MODES).toContain('connections');
   });
 });
 
@@ -326,6 +330,7 @@ describe('FieldExperience interface', () => {
         topical_quiz: 4,
         top_tens: 6,
         starting_xi: 8,
+        connections: 0,
       },
       totalAppearances: 46,
       dominantMode: 'guess_the_transfer',

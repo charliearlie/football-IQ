@@ -331,10 +331,10 @@ describe('IQ Data Pipeline', () => {
 
       const globalIQ = calculateGlobalIQ(proficiencies);
 
-      // Weights: career_path=0.13, topical_quiz=0.09, total=0.22
-      // Normalized: career_path=0.591, topical_quiz=0.409
-      // IQ = 80 * 0.591 + 60 * 0.409 = 47.27 + 24.55 = 71.82 -> Math.round = 72
-      expect(globalIQ).toBe(72);
+      // Weights: career_path=0.12, topical_quiz=0.09, total=0.21
+      // Normalized: career_path=0.5714, topical_quiz=0.4286
+      // IQ = 80 * 0.5714 + 60 * 0.4286 = 45.71 + 25.71 = 71.43 -> Math.round = 71
+      expect(globalIQ).toBe(71);
     });
 
     it('returns 0 when no games played', () => {

@@ -44,6 +44,7 @@ const GAME_MODE_ROUTE_MAP: Record<GameMode, string> = {
   topical_quiz: "topical-quiz",
   top_tens: "top-tens",
   starting_xi: "starting-xi",
+  connections: "connections",
 };
 
 /**

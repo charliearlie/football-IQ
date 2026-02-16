@@ -62,6 +62,7 @@ const GAME_MODE_ORDER: GameMode[] = [
   'topical_quiz',
   'top_tens',
   'starting_xi',
+  'connections',
 ];
 
 /**

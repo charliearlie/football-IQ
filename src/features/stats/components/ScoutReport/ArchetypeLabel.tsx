@@ -95,6 +95,11 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     icon: Users,
     description: 'Knows every historic lineup by heart',
   },
+  connections: {
+    name: 'Group Finder',
+    icon: Grid3X3,
+    description: 'Spots patterns and connections instantly',
+  },
 };
 
 export interface ArchetypeLabelProps {

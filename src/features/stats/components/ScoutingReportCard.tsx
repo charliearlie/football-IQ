@@ -48,6 +48,7 @@ const ARCHETYPE_ICONS: Record<GameMode, LucideIcon> = {
   topical_quiz: Newspaper,
   top_tens: ListOrdered,
   starting_xi: Users,
+  connections: Grid3X3,
 };
 
 /**
@@ -64,6 +65,7 @@ const ARCHETYPE_NAMES: Record<GameMode, string> = {
   topical_quiz: 'News Hound',
   top_tens: 'Statistician',
   starting_xi: 'Tactical Mind',
+  connections: 'Group Finder',
 };
 
 export interface ScoutingReportData {

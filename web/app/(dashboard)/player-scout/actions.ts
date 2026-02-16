@@ -80,11 +80,17 @@ function buildBatchLookupQuery(names: string[]): string {
 
 function buildCareerQuery(qid: string): string {
   assertValidQid(qid);
+  // P54 = "member of sports team". Accept any football-related entity type:
+  // Q476028 (association football club), Q103229495 (men's association football team),
+  // Q20639856 (professional sports team), Q847017 (sports club).
+  // Barcelona, Real Madrid, Bayern etc. are typed as "team" not "club" on Wikidata.
   return `
     SELECT ?club ?clubLabel ?startYear ?endYear ?clubCountryCode WHERE {
       wd:${qid} p:P54 ?stmt .
       ?stmt ps:P54 ?club .
-      ?club wdt:P31/wdt:P279* wd:Q476028 .
+      ?club wdt:P31/wdt:P279* ?type .
+      VALUES ?type { wd:Q476028 wd:Q103229495 wd:Q20639856 wd:Q847017 }
+      FILTER NOT EXISTS { ?club wdt:P31/wdt:P279* wd:Q6979593 }
       OPTIONAL { ?stmt pq:P580 ?start }
       OPTIONAL { ?stmt pq:P582 ?end }
       BIND(YEAR(?start) AS ?startYear)
@@ -332,16 +338,24 @@ export async function fetchPlayerCareer(qid: string): Promise<CareerEntry[]> {
   const query = buildCareerQuery(qid);
   const bindings = await executeSparql(query);
 
+  // Broader type filter can return duplicates (club matches multiple types).
+  // Deduplicate by clubQid + startYear + endYear.
+  const seen = new Set<string>();
   return (bindings as Record<string, { value?: string }>[])
     .map((b) => {
       const clubQid = extractQid(b.club?.value ?? "");
       if (!clubQid) return null;
+      const startYear = b.startYear?.value ? parseInt(b.startYear.value, 10) : null;
+      const endYear = b.endYear?.value ? parseInt(b.endYear.value, 10) : null;
+      const key = `${clubQid}|${startYear}|${endYear}`;
+      if (seen.has(key)) return null;
+      seen.add(key);
       return {
         clubQid,
         clubName: b.clubLabel?.value ?? "Unknown",
         clubCountryCode: b.clubCountryCode?.value ?? null,
-        startYear: b.startYear?.value ? parseInt(b.startYear.value, 10) : null,
-        endYear: b.endYear?.value ? parseInt(b.endYear.value, 10) : null,
+        startYear,
+        endYear,
       };
     })
     .filter((e): e is NonNullable<typeof e> => e !== null);

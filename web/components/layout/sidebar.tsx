@@ -15,7 +15,11 @@ import {
   Users,
   Target,
   Grid3X3,
+  Puzzle,
   Database,
+  GitMerge,
+  UserCheck,
+  ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -48,7 +52,11 @@ const navigation: NavSection[] = [
       { name: "Starting XI", href: "/admin/starting-xi", icon: Users },
       { name: "Goalscorer Recall", href: "/admin/goalscorer-recall", icon: Target },
       { name: "The Grid", href: "/admin/the-grid", icon: Grid3X3 },
+      { name: "Connections", href: "/admin/connections", icon: Puzzle },
       { name: "Data Pipeline", href: "/admin/data-pipeline", icon: Database },
+      { name: "Club Merge", href: "/admin/club-merge", icon: GitMerge },
+      { name: "Player Review", href: "/admin/player-review", icon: UserCheck },
+      { name: "Content Integrity", href: "/admin/content-integrity", icon: ShieldCheck },
     ],
   },
 ];

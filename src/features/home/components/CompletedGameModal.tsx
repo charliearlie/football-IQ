@@ -103,6 +103,8 @@ function getGameModeName(gameMode: GameMode): string {
       return 'Top Tens';
     case 'starting_xi':
       return 'Starting XI';
+    case 'connections':
+      return 'Connections';
     default:
       return 'Game';
   }

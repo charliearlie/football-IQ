@@ -41,7 +41,8 @@ export type GameMode =
   | 'guess_the_goalscorers'
   | 'topical_quiz'
   | 'top_tens'
-  | 'starting_xi';
+  | 'starting_xi'
+  | 'connections';
 
 /**
  * Result of a sync operation

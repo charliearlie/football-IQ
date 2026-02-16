@@ -292,6 +292,32 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     icon: require('../../../../assets/images/puzzles/quiz.png'),
     accentColor: colors.cardYellow,
   },
+
+  connections: {
+    gameMode: 'connections',
+    displayTitle: 'Connections',
+    goal: 'Group 16 footballers into 4 categories of 4',
+    rules: [
+      { text: 'Find groups of 4 players with something in common', highlight: 'groups of 4' },
+      { text: 'Select 4 players and submit your guess' },
+      { text: '4 mistakes and it\'s game over', highlight: 'game over' },
+      { text: 'Difficulty: Yellow (easy) to Purple (hard)', highlight: 'Purple (hard)' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'IQ based on number of mistakes',
+      potentialLabel: 'HALL OF FAMER',
+      tiers: [
+        { range: '0 mistakes', label: 'Hall of Famer' },
+        { range: '1 mistake', label: 'World Class' },
+        { range: '2 mistakes', label: 'Director of Football' },
+        { range: '3 mistakes', label: 'Chief Scout' },
+        { range: '4 mistakes', label: 'Scout' },
+      ],
+    },
+    icon: undefined, // Will add icon asset later
+    accentColor: colors.pitchGreen,
+  },
 };
 
 /**

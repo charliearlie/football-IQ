@@ -10,6 +10,7 @@ export const GAME_MODES = [
   "topical_quiz",
   "top_tens",
   "starting_xi",
+  "connections",
 ] as const;
 
 export type GameMode = (typeof GAME_MODES)[number];
@@ -26,6 +27,7 @@ export const GAME_MODE_DISPLAY_NAMES: Record<GameMode, string> = {
   topical_quiz: "Topical Quiz",
   top_tens: "Top Tens",
   starting_xi: "Starting XI",
+  connections: "Connections",
 };
 
 // Short names for compact display
@@ -40,6 +42,7 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   topical_quiz: "TQ",
   top_tens: "TT",
   starting_xi: "XI",
+  connections: "CON",
 };
 
 // Premium-only modes

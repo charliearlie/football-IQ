@@ -183,7 +183,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "2.2.0",
+      version: "2.3.0",
     },
   },
 }));

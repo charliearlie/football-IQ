@@ -16,6 +16,7 @@ const GAME_METADATA: Record<string, { title: string; subtitle: string }> = {
   the_grid: { title: 'THE GRID', subtitle: 'Fill the matrix' },
   the_chain: { title: 'THE CHAIN', subtitle: 'Link the players' },
   the_thread: { title: 'THREADS', subtitle: 'Follow the thread' },
+  connections: { title: 'CONNECTIONS', subtitle: 'Find the groups' },
 };
 
 interface HomeGameListProps {

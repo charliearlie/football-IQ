@@ -28,6 +28,7 @@ export const ALL_GAME_MODES: GameMode[] = [
   'topical_quiz',
   'top_tens',
   'starting_xi',
+  'connections',
 ];
 
 /**
@@ -91,6 +92,7 @@ export function calculateFieldExperience(
     topical_quiz: 0,
     top_tens: 0,
     starting_xi: 0,
+    connections: 0,
   };
 
   let totalAppearances = 0;

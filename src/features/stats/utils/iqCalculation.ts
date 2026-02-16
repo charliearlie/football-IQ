@@ -104,6 +104,13 @@ export function normalizeScore(gameMode: GameMode, metadata: unknown): number {
       return Math.round((foundCount / totalHidden) * 100);
     }
 
+    case 'connections': {
+      // Games save: mistakes (0-4), solvedCount (0-4)
+      // Score = (4 - mistakes) / 4 * 100
+      const mistakes = getMetadataNumber(data, 'mistakes');
+      return Math.round(((4 - mistakes) / 4) * 100);
+    }
+
     default:
       return 0;
   }
@@ -173,6 +180,12 @@ export function isPerfectScore(gameMode: GameMode, metadata: unknown): boolean {
       const foundCount = getMetadataNumber(data, 'foundCount');
       const totalHidden = getMetadataNumber(data, 'totalHidden');
       return totalHidden > 0 && foundCount === totalHidden;
+    }
+
+    case 'connections': {
+      // Perfect = 0 mistakes
+      const mistakes = getMetadataNumber(data, 'mistakes');
+      return mistakes === 0;
     }
 
     default:

@@ -45,6 +45,7 @@ const GAME_MODE_ICONS: Record<GameMode, LucideIcon> = {
   topical_quiz: Newspaper,
   top_tens: ListOrdered,
   starting_xi: Users,
+  connections: Grid3X3,
 };
 
 export interface FieldExperienceSectionProps {

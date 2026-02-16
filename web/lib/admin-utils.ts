@@ -87,6 +87,10 @@ export function extractAnswer(
       };
     }
 
+    case "connections": {
+      return { text: "Connections Puzzle", qid: undefined };
+    }
+
     default:
       return { text: "Unknown", qid: undefined };
   }

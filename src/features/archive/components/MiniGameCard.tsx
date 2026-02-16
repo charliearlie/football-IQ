@@ -57,6 +57,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   topical_quiz: 'Quiz',
   top_tens: 'Top Tens',
   starting_xi: 'Starting XI',
+  connections: 'Connections',
 };
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };

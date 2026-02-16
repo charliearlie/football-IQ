@@ -9,7 +9,9 @@ import {
   runCareerValidation,
   acceptFlaggedMapping,
   inspectApiPlayer,
+  backfillWikidataCareers,
 } from "@/app/(dashboard)/admin/actions";
+import type { BackfillResult } from "@/app/(dashboard)/admin/actions";
 import type {
   MappingRunResult,
   CareerValidationResult,
@@ -18,7 +20,7 @@ import type {
   AmbiguousCandidate,
   ApiClubSummary,
 } from "@/lib/data-pipeline/map-external-ids";
-import { Loader2, Play, FlaskConical, Search, Link2, CheckCircle2, AlertTriangle, Info, Check, ChevronDown, Eye } from "lucide-react";
+import { Loader2, Play, FlaskConical, Search, Link2, CheckCircle2, AlertTriangle, Info, Check, ChevronDown, Eye, Database } from "lucide-react";
 
 type MappingResult = MappingRunResult & { savedCount: number };
 type ValidationResult = CareerValidationResult & { clubMappingsSaved: number; clubDuplicates: string[] };
@@ -29,9 +31,171 @@ export default function DataPipelinePage() {
       title="Data Pipeline"
       subtitle="External ID mapping and data reconciliation"
     >
+      <BackfillCard />
       <MappingCard />
       <CareerValidationCard />
     </AdminPageShell>
+  );
+}
+
+// ============================================================================
+// Wikidata Career Backfill
+// ============================================================================
+
+function BackfillCard() {
+  const [running, setRunning] = useState(false);
+  const [limit, setLimit] = useState(50);
+  const [result, setResult] = useState<BackfillResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRun() {
+    setRunning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await backfillWikidataCareers({ limit });
+      if (res.success && res.data) {
+        setResult(res.data);
+      } else {
+        setError(res.error ?? "Unknown error");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-floodlight">
+            Wikidata Career Backfill
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Fetch career data from Wikidata SPARQL for mapped players with no
+            appearances
+          </p>
+        </div>
+        <Badge variant="secondary">SPARQL</Badge>
+      </div>
+
+      <div className="flex items-end gap-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Batch size
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+            className="w-24 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight"
+          />
+        </div>
+
+        <Button onClick={handleRun} disabled={running}>
+          {running ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Backfilling...
+            </>
+          ) : (
+            <>
+              <Database />
+              Run Backfill
+            </>
+          )}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-red-card/30 bg-red-card/10 px-4 py-3 text-sm text-red-card">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-4">
+          {/* Summary */}
+          <div className="flex items-start gap-3 rounded-md border border-pitch-green/30 bg-pitch-green/10 px-4 py-3">
+            <CheckCircle2 className="h-5 w-5 text-pitch-green shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-pitch-green">
+                Backfill complete
+              </p>
+              <p className="text-xs text-pitch-green/70 mt-0.5">
+                {result.succeeded} players updated, {result.skipped} skipped
+                (no Wikidata career), {result.failed} failed.{" "}
+                {result.total > limit &&
+                  `${result.total - limit} remaining — run again for more.`}
+              </p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <StatCard label="Total needing backfill" value={result.total} />
+            <StatCard
+              label="Succeeded"
+              value={result.succeeded}
+              variant="success"
+            />
+            <StatCard label="Skipped (no data)" value={result.skipped} />
+            <StatCard
+              label="Failed"
+              value={result.failed}
+              variant={result.failed > 0 ? "error" : undefined}
+            />
+          </div>
+
+          {/* Success details */}
+          {result.details.length > 0 && (
+            <details>
+              <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-floodlight">
+                {result.details.length} players updated
+              </summary>
+              <div className="mt-2 space-y-1 max-h-64 overflow-y-auto">
+                {result.details.map((d) => (
+                  <div
+                    key={d.qid}
+                    className="flex items-center justify-between text-xs px-2 py-1 rounded hover:bg-white/5"
+                  >
+                    <span className="text-floodlight">{d.name}</span>
+                    <span className="text-muted-foreground font-mono">
+                      {d.clubCount} clubs
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+
+          {/* Errors */}
+          {result.errors.length > 0 && (
+            <details>
+              <summary className="text-xs font-medium text-red-card cursor-pointer">
+                {result.errors.length} errors
+              </summary>
+              <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+                {result.errors.map((e) => (
+                  <div
+                    key={e.qid}
+                    className="text-xs px-2 py-1 rounded bg-red-card/5"
+                  >
+                    <span className="text-floodlight">{e.name}</span>
+                    <span className="text-red-card ml-2">{e.error}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -569,7 +733,7 @@ function StatCard({
 }: {
   label: string;
   value: string | number;
-  variant?: "success" | "warning";
+  variant?: "success" | "warning" | "error";
 }) {
   return (
     <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
@@ -580,7 +744,9 @@ function StatCard({
             ? "text-lg font-semibold text-pitch-green"
             : variant === "warning"
               ? "text-lg font-semibold text-card-yellow"
-              : "text-lg font-semibold text-floodlight"
+              : variant === "error"
+                ? "text-lg font-semibold text-red-card"
+                : "text-lg font-semibold text-floodlight"
         }
       >
         {value}
