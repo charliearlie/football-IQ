@@ -2,7 +2,7 @@
  * RankBadge - Displays the user's current tier with progress to next rank
  *
  * Shows:
- * - Current tier name (e.g., "Impact Sub")
+ * - Current tier name (e.g., "Tactical Analyst")
  * - Total IQ points
  * - Progress bar to next tier
  * - Points needed to reach next tier

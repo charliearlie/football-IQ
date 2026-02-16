@@ -25,10 +25,18 @@ import {
   EventBanner,
   HomeGameList,
   SectionHeader,
+  ArchiveDiscoveryBanner,
 } from '@/features/home/components/new';
 import { useDailyProgress } from '@/features/home/hooks/useDailyProgress';
 import { useSpecialEvent } from '@/features/home/hooks/useSpecialEvent';
-import { getTierForPoints } from '@/features/stats/utils/tierProgression';
+import { useArchiveDiscoveryBanner } from '@/features/home/hooks/useArchiveDiscoveryBanner';
+import {
+  getTierForPoints,
+  getProgressToNextTier,
+  getPointsToNextTier,
+  getNextTier,
+  getTierColor,
+} from '@/features/stats/utils/tierProgression';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { PremiumUpsellBanner, UnlockChoiceModal } from '@/features/ads';
 import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
@@ -90,8 +98,21 @@ export default function HomeScreen() {
 
   // New Hooks
   const progress = useDailyProgress(cards);
-  const iqTier = getTierForPoints(totalIQ).name;
+  const tier = getTierForPoints(totalIQ);
+  const iqTier = tier.name;
+  const iqProgress = getProgressToNextTier(totalIQ);
+  const iqPointsToNext = getPointsToNextTier(totalIQ);
+  const iqNextTierName = getNextTier(tier)?.name ?? null;
+  const iqTierColor = getTierColor(tier.tier);
   const specialEvent = useSpecialEvent();
+
+  // Archive discovery banner
+  const { isVisible: showArchiveBanner, dismiss: dismissArchiveBanner, variant: archiveBannerVariant } = useArchiveDiscoveryBanner({
+    isPremium,
+    completedCount,
+    totalCards: cards.length,
+    currentStreak: stats.currentStreak,
+  });
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
   const isFirstTimeOffline = !user && cards.length === 0 && isConnected === false;
@@ -232,15 +253,29 @@ export default function HomeScreen() {
         </View>
 
         {/* 3. Stats Dashboard */}
-        <StatsGrid 
-            gamesCompleted={stats.totalGamesPlayed} 
+        <StatsGrid
+            gamesCompleted={stats.totalGamesPlayed}
             totalGames={stats.totalPuzzlesAvailable}
             iqTitle={iqTier}
+            iqProgress={iqProgress}
+            iqPointsToNext={iqPointsToNext}
+            iqNextTierName={iqNextTierName}
+            iqTierColor={iqTierColor}
             onPressGames={() => router.push('/archive')}
-            onPressIQ={() => router.push('/stats')} 
+            onPressIQ={() => router.push('/stats')}
         />
 
-        {/* 4. Special Event Banner (Conditional) */}
+        {/* 4. Archive Discovery Banner */}
+        {showArchiveBanner && (
+            <ArchiveDiscoveryBanner
+              variant={archiveBannerVariant}
+              onPress={() => router.push('/archive')}
+              onDismiss={dismissArchiveBanner}
+              testID="archive-discovery-banner"
+            />
+        )}
+
+        {/* 5. Special Event Banner (Conditional) */}
         {specialEvent && !isSpecialCompleted && (
             <EventBanner event={specialEvent} onPress={handleEventPress} />
         )}

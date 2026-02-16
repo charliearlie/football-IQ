@@ -13,25 +13,21 @@ import { ConnectionsCell } from './ConnectionsCell';
 import { spacing } from '@/theme';
 
 /**
- * Build a map of full player name → short display name.
- * Surname only when unique, "F. Surname" when duplicates exist.
+ * Build a map of full player name → stacked display name.
+ * "Steven Gerrard" → "Steven\nGerrard" (first name on top, last name below).
+ * Single names (e.g., "Rodri") are shown as-is.
  */
 function buildDisplayNames(allPlayerNames: string[]): Record<string, string> {
-  const surnameCount: Record<string, number> = {};
-  const parsed = allPlayerNames.map((full) => {
-    const parts = full.trim().split(/\s+/);
-    const surname = parts.length > 1 ? parts[parts.length - 1] : full;
-    const firstInitial = parts.length > 1 ? parts[0][0] : '';
-    return { full, surname, firstInitial };
-  });
-  for (const p of parsed) {
-    surnameCount[p.surname] = (surnameCount[p.surname] || 0) + 1;
-  }
   const map: Record<string, string> = {};
-  for (const p of parsed) {
-    map[p.full] = surnameCount[p.surname] > 1 && p.firstInitial
-      ? `${p.firstInitial}. ${p.surname}`
-      : p.surname;
+  for (const full of allPlayerNames) {
+    const parts = full.trim().split(/\s+/);
+    if (parts.length <= 1) {
+      map[full] = full;
+    } else {
+      const lastName = parts[parts.length - 1];
+      const firstName = parts.slice(0, -1).join(' ');
+      map[full] = `${firstName}\n${lastName}`;
+    }
   }
   return map;
 }
@@ -40,6 +36,7 @@ export interface ConnectionsGridProps {
   solvedGroups: ConnectionsGroup[];
   remainingPlayers: string[];
   selectedPlayers: string[];
+  shakingPlayers?: string[];
   onTogglePlayer: (name: string) => void;
   disabled?: boolean;
   testID?: string;
@@ -52,6 +49,7 @@ export function ConnectionsGrid({
   solvedGroups,
   remainingPlayers,
   selectedPlayers,
+  shakingPlayers = [],
   onTogglePlayer,
   disabled = false,
   testID,
@@ -79,6 +77,7 @@ export function ConnectionsGrid({
                 playerName={playerName}
                 displayName={displayNames[playerName] || playerName}
                 isSelected={selectedPlayers.includes(playerName)}
+                isShaking={shakingPlayers.includes(playerName)}
                 disabled={disabled}
                 onPress={onTogglePlayer}
                 testID={`${testID}-cell-${playerName}`}
@@ -99,14 +98,13 @@ const styles = StyleSheet.create({
   playersGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
+    gap: spacing.sm,
     marginTop: spacing.sm,
-    maxWidth: 360,
     alignSelf: 'center',
     width: '100%',
   },
   cellWrapper: {
-    // 4 columns with gap
-    width: `${(100 - (3 * spacing.xs)) / 4}%`,
+    // 4 columns: ~23% each leaves room for 3 x 8px gaps
+    width: '23%',
   },
 });

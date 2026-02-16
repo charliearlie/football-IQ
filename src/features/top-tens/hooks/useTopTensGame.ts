@@ -324,7 +324,7 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
 
       const metadata: TopTensAttemptMetadata = {
         foundIndices: currentState.rankSlots
-          .map((slot, i) => (slot.found ? i : -1))
+          .map((slot, i) => (slot.found && !slot.autoRevealed ? i : -1))
           .filter((i) => i >= 0),
         wrongGuessCount: currentState.wrongGuessCount,
         startedAt: currentState.startedAt || new Date().toISOString(),
@@ -382,7 +382,7 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
 
       const metadata: TopTensAttemptMetadata = {
         foundIndices: currentState.rankSlots
-          .map((slot, i) => (slot.found ? i : -1))
+          .map((slot, i) => (slot.found && !slot.autoRevealed ? i : -1))
           .filter((i) => i >= 0),
         wrongGuessCount: currentState.wrongGuessCount,
         startedAt: currentState.startedAt || new Date().toISOString(),
@@ -430,7 +430,7 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
 
       const metadata: TopTensAttemptMetadata = {
         foundIndices: currentState.rankSlots
-          .map((slot, i) => (slot.found ? i : -1))
+          .map((slot, i) => (slot.found && !slot.autoRevealed ? i : -1))
           .filter((i) => i >= 0),
         wrongGuessCount: currentState.wrongGuessCount,
         startedAt: currentState.startedAt || new Date().toISOString(),
@@ -461,7 +461,7 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
 
       const metadata: TopTensAttemptMetadata = {
         foundIndices: state.rankSlots
-          .map((slot, i) => (slot.found ? i : -1))
+          .map((slot, i) => (slot.found && !slot.autoRevealed ? i : -1))
           .filter((i) => i >= 0),
         wrongGuessCount: state.wrongGuessCount,
         startedAt: state.startedAt || new Date().toISOString(),

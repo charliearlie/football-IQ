@@ -16,7 +16,7 @@ import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDis
 import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
 import { ConnectionsScore, ConnectionsGuess, ConnectionsGroup } from '../types/connections.types';
-import { getConnectionsScoreLabel, normalizeConnectionsScore } from '../utils/scoring';
+import { getConnectionsScoreLabel } from '../utils/scoring';
 import { generateConnectionsEmojiGrid } from '../utils/share';
 
 export interface ConnectionsResultModalProps {
@@ -28,6 +28,7 @@ export interface ConnectionsResultModalProps {
   puzzleDate: string;
   onClose: () => void;
   onShare: () => Promise<ShareResult>;
+  gaveUp?: boolean;
   testID?: string;
 }
 
@@ -43,17 +44,17 @@ export function ConnectionsResultModal({
   puzzleDate,
   onClose,
   onShare,
+  gaveUp = false,
   testID,
 }: ConnectionsResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
   if (!score) return null;
 
-  const isWin = score.solvedCount === 4;
-  const scoreLabel = getConnectionsScoreLabel(score.mistakes);
+  const isWin = score.solvedCount === 4 && !gaveUp;
+  const scoreLabel = getConnectionsScoreLabel(score.solvedCount);
 
-  // Normalize score to 0-100 for distribution chart
-  const normalizedScore = Math.round((normalizeConnectionsScore(score) / 10) * 100);
+
 
   // Generate emoji grid for share card
   const emojiGrid = generateConnectionsEmojiGrid(guesses, allGroups);
@@ -66,14 +67,14 @@ export function ConnectionsResultModal({
     displayName: profile?.display_name ?? 'Football Fan',
     totalIQ,
     won: isWin,
-    isPerfectScore: score.mistakes === 0 && score.perfectOrder,
+    isPerfectScore: isWin && score.mistakes === 0,
   };
 
   // Share card content for image capture
   const shareCardContent = (
     <ResultShareCard
       gameMode="connections"
-      resultType={isWin ? (score.mistakes === 0 ? 'perfect' : 'win') : 'loss'}
+      resultType={gaveUp ? 'loss' : isWin ? (score.mistakes === 0 ? 'perfect' : 'win') : 'loss'}
       scoreDisplay={emojiGrid}
       puzzleDate={puzzleDate}
       displayName={shareData.displayName}
@@ -85,7 +86,7 @@ export function ConnectionsResultModal({
   return (
     <BaseResultModal
       visible={visible}
-      resultType={isWin ? 'win' : 'loss'}
+      resultType={gaveUp ? 'loss' : isWin ? 'win' : 'loss'}
       icon={
         isWin ? (
           <Trophy
@@ -97,19 +98,19 @@ export function ConnectionsResultModal({
           <XCircle size={32} color={colors.floodlightWhite} strokeWidth={2} />
         )
       }
-      title={isWin ? (score.mistakes === 0 ? 'PERFECT!' : 'COMPLETE!') : 'GAME OVER'}
-      message={scoreLabel}
+      title={gaveUp ? 'GAVE UP' : isWin ? (score.mistakes === 0 ? 'PERFECT!' : 'COMPLETE!') : 'GAME OVER'}
+      message={scoreLabel ? `${score.points} IQ · ${scoreLabel}` : `${score.points} IQ`}
       onShare={onShare}
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
       testID={testID}
     >
-      <ScoreDisplay value={`${score.points} IQ`} />
+      <ScoreDisplay label="Groups Found" value={`${score.solvedCount}/4`} />
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="connections"
-        userScore={normalizedScore}
+        userScore={score.points}
         testID={testID ? `${testID}-distribution` : undefined}
       />
     </BaseResultModal>

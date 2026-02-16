@@ -36,7 +36,7 @@ These are larger features requiring significant backend infrastructure. Document
 
 ## 3.5: Micro-Milestones
 **Priority**: P1 | **Effort**: Low
-- Every 500 IQ within a tier: "2,500 IQ! Halfway to Club Legend"
+- Every 500 IQ within a tier: "2,500 IQ! Halfway to Technical Director"
 - Progress bar on Stats screen showing % to next tier
 - Already have `getProgressToNextTier()` utility — just needs UI
 - Key files: `src/features/stats/`, `app/(tabs)/stats.tsx`

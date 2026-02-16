@@ -8,13 +8,13 @@ import { useAuth } from "@/features/auth";
 import { colors, spacing, borderRadius } from "@/theme";
 import { ProBadge } from "@/components/ProBadge/ProBadge";
 
-export function PremiumUpsellBanner({ testID, fullWidth = false }: { testID?: string; fullWidth?: boolean }) {
+export function PremiumUpsellBanner({ testID, fullWidth = false, dismissible = true }: { testID?: string; fullWidth?: boolean; dismissible?: boolean }) {
   const router = useRouter();
   const { profile } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Don't show for premium users or if dismissed
-  if (profile?.is_premium || isDismissed) {
+  if (profile?.is_premium || (dismissible && isDismissed)) {
     return null;
   }
 
@@ -54,14 +54,16 @@ export function PremiumUpsellBanner({ testID, fullWidth = false }: { testID?: st
           <View style={styles.textureOverlay} />
 
           {/* Close Button */}
-          <Pressable 
-            onPress={handleDismiss} 
-            style={styles.closeButton}
-            hitSlop={8}
-            testID={`${testID || 'premium-banner'}-close`}
-          >
-            <X size={18} color="#000000" strokeWidth={2.5} />
-          </Pressable>
+          {dismissible && (
+            <Pressable
+              onPress={handleDismiss}
+              style={styles.closeButton}
+              hitSlop={8}
+              testID={`${testID || 'premium-banner'}-close`}
+            >
+              <X size={18} color="#000000" strokeWidth={2.5} />
+            </Pressable>
+          )}
           
           <View style={styles.contentContainer}>
             {/* Left Content */}

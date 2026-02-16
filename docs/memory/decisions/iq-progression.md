@@ -19,21 +19,21 @@ The IQ Progression System uses a 10-tier cumulative points system (0 to 20,000 t
 
 | Tier | Name | Min Points | To Next |
 |------|------|------------|---------|
-| 1 | Trialist | 0 | 25 |
-| 2 | Youth Squad | 25 | 75 |
-| 3 | Reserve Team | 100 | 150 |
-| 4 | Impact Sub | 250 | 250 |
-| 5 | Rotation Player | 500 | 500 |
-| 6 | First Team Regular | 1,000 | 1,000 |
-| 7 | Key Player | 2,000 | 2,000 |
-| 8 | Club Legend | 4,000 | 4,000 |
-| 9 | National Treasure | 8,000 | 12,000 |
-| 10 | GOAT | 20,000 | - |
+| 1 | Intern | 0 | 25 |
+| 2 | Match Analyst | 25 | 75 |
+| 3 | Scout | 100 | 150 |
+| 4 | Tactical Analyst | 250 | 250 |
+| 5 | Chief Scout | 500 | 500 |
+| 6 | Head of Analysis | 1,000 | 1,000 |
+| 7 | Head of Recruitment | 2,000 | 2,000 |
+| 8 | Technical Director | 4,000 | 4,000 |
+| 9 | Director of Football | 8,000 | 12,000 |
+| 10 | The Gaffer | 20,000 | - |
 
 **Rationale:**
 - Early tiers are quick to achieve (dopamine hits for new users)
 - Later tiers require sustained engagement
-- GOAT tier is aspirational but achievable with ~2000 games
+- The Gaffer tier is aspirational but achievable with ~2000 games
 - Football-themed names resonate with target audience
 
 ### 3. Server-Side Atomic Increment
@@ -104,7 +104,7 @@ formatTotalIQ(totalIQ: number): string
 - Tiers 4-6: Card Yellow (#FACC15)
 - Tiers 7-8: Orange (#F97316)
 - Tier 9: Pink (#EC4899)
-- Tier 10 (GOAT): Cyan (#06B6D4)
+- Tier 10 (The Gaffer): Cyan (#06B6D4)
 
 ## File Structure
 ```

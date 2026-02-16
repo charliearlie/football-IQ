@@ -129,6 +129,48 @@ function threadPointsToHintBucket(points: number): number {
 }
 
 /**
+ * Transform Connections distribution from normalized 0-100 scores to group-count buckets.
+ *
+ * Possible normalized scores: 100 (4 groups), 60 (3 groups), 40 (2 groups), 20 (1 group), 0 (0 groups).
+ * Maps to 5 buckets: 4 (best) → 0 (worst).
+ */
+function transformConnectionsDistribution(
+  distribution: DistributionEntry[]
+): DistributionEntry[] {
+  const bucketMap = new Map<number, number>();
+
+  for (const entry of distribution) {
+    let bucket: number;
+    if (entry.score >= 80) bucket = 4;       // 4 groups (100 normalized)
+    else if (entry.score >= 50) bucket = 3;  // 3 groups (60 normalized)
+    else if (entry.score >= 30) bucket = 2;  // 2 groups (40 normalized)
+    else if (entry.score >= 10) bucket = 1;  // 1 group (20 normalized)
+    else bucket = 0;                          // 0 groups (0 normalized)
+
+    const current = bucketMap.get(bucket) || 0;
+    bucketMap.set(bucket, current + entry.percentage);
+  }
+
+  return Array.from(bucketMap.entries()).map(([score, percentage]) => ({
+    score,
+    count: 0,
+    percentage,
+  }));
+}
+
+/**
+ * Map Connections raw IQ points to group-count bucket value.
+ * 10 pts → 4 (4 groups), 6 → 3, 4 → 2, 2 → 1, 0 → 0.
+ */
+function connectionsPointsToGroupBucket(points: number): number {
+  if (points >= 10) return 4;
+  if (points >= 6) return 3;
+  if (points >= 4) return 2;
+  if (points >= 2) return 1;
+  return 0;
+}
+
+/**
  * Optimistically merge user's score into distribution.
  *
  * The API may not yet include the user's just-completed attempt due to sync delay.
@@ -306,6 +348,35 @@ export function ScoreDistributionContainer({
         minScore={0}
         bucketSize={1}
         scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
+        isFirstPlayer={isFirstPlayer}
+        testID={testID}
+      />
+    );
+  }
+
+  // For Connections, transform distribution to group-count display (5 bars)
+  if (gameMode === 'connections') {
+    // userScore is raw IQ points (0, 2, 4, 6, 10), normalize to 0-100
+    const normalizedUserScore = userScore * 10;
+
+    // Optimistically merge at normalized scale (API uses 20-point buckets)
+    const { distribution: mergedDistribution } =
+      mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 20);
+
+    // Transform to 5 group-count buckets
+    const transformedDistribution = transformConnectionsDistribution(mergedDistribution);
+
+    // Map user points to group bucket: 10→4, 6→3, 4→2, 2→1, 0→0
+    const userGroupBucket = connectionsPointsToGroupBucket(userScore);
+
+    return (
+      <ScoreDistributionGraph
+        distribution={transformedDistribution}
+        userScore={userGroupBucket}
+        maxScore={4}
+        minScore={0}
+        bucketSize={1}
+        scoreLabels={getScoreLabelsForMode(gameMode)}
         isFirstPlayer={isFirstPlayer}
         testID={testID}
       />

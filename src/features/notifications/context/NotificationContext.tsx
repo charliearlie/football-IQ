@@ -83,6 +83,8 @@ interface NotificationProviderProps {
   isOnboardingActive: boolean;
   /** Total IQ points (for tier-up detection) */
   totalIQ: number;
+  /** Whether user stats are still loading (prevents false first-win triggers) */
+  isStatsLoading: boolean;
 }
 
 export function NotificationProvider({
@@ -95,6 +97,7 @@ export function NotificationProvider({
   userId,
   isOnboardingActive,
   totalIQ,
+  isStatsLoading,
 }: NotificationProviderProps) {
   // Permission state
   const [permissionStatus, setPermissionStatus] =
@@ -125,6 +128,7 @@ export function NotificationProvider({
   // Refs for tier-up and first-win detection
   const prevTotalIQRef = useRef(totalIQ);
   const prevTotalGamesPlayedRef = useRef(totalGamesPlayed);
+  const firstWinHydrated = useRef(false);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
@@ -460,9 +464,17 @@ export function NotificationProvider({
 
   useEffect(() => {
     if (!isSupported) return;
+    if (isStatsLoading) return; // Don't run while stats are loading
 
     const prev = prevTotalGamesPlayedRef.current;
     prevTotalGamesPlayedRef.current = totalGamesPlayed;
+
+    // Skip the initial hydration — stats just loaded from 0 → real value,
+    // this is NOT an actual game completion
+    if (!firstWinHydrated.current) {
+      firstWinHydrated.current = true;
+      return;
+    }
 
     // Only trigger on first completion (0 -> 1+)
     if (prev === 0 && totalGamesPlayed > 0) {
@@ -474,7 +486,7 @@ export function NotificationProvider({
         }
       });
     }
-  }, [isSupported, totalGamesPlayed, isPerfectDayCelebrating, isTierUpCelebrating]);
+  }, [isSupported, isStatsLoading, totalGamesPlayed, isPerfectDayCelebrating, isTierUpCelebrating]);
 
   // ============================================================================
   // App State Monitoring (re-evaluate on foreground)

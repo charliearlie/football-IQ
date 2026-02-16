@@ -14,7 +14,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { Lock, Grid3X3, Check, Play, ChevronRight } from 'lucide-react-native';
+import { Lock, Grid3X3, Check, Play, ChevronRight, Cable } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
 import { colors, spacing, borderRadius } from '@/theme';
 import { triggerLight, triggerMedium } from '@/lib/haptics';
@@ -117,6 +117,12 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
     />
   ) : puzzle.gameMode === 'the_grid' ? (
     <Grid3X3
+      size={20}
+      color={isLocked ? colors.textSecondary : colors.pitchGreen}
+      style={isLocked && styles.iconLocked}
+    />
+  ) : puzzle.gameMode === 'connections' ? (
+    <Cable
       size={20}
       color={isLocked ? colors.textSecondary : colors.pitchGreen}
       style={isLocked && styles.iconLocked}

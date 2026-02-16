@@ -15,16 +15,16 @@ The tier system has 10 levels based on cumulative IQ. Crossing any threshold tri
 **Tier Thresholds:**
 | Tier | Name | Min IQ | Test Strategy |
 |------|------|--------|---------------|
-| 1 | Trialist | 0 | Starting tier (no celebration) |
-| 2 | Youth Team | 25 | Play 3-5 easy games from fresh install |
-| 3 | Reserve Team | 100 | Continue playing (~10-15 games total) |
-| 4 | Impact Sub | 250 | ~25-30 games total |
-| 5 | Rotation Player | 500 | ~50-60 games total |
-| 6 | First Team Regular | 1000 | Extended testing or mock data |
-| 7 | Key Player | 2000 | Mock data recommended |
-| 8 | Club Legend | 4000 | Mock data recommended |
-| 9 | National Treasure | 8000 | Mock data recommended |
-| 10 | GOAT | 20000 | Mock data recommended |
+| 1 | Intern | 0 | Starting tier (no celebration) |
+| 2 | Match Analyst | 25 | Play 3-5 easy games from fresh install |
+| 3 | Scout | 100 | Continue playing (~10-15 games total) |
+| 4 | Tactical Analyst | 250 | ~25-30 games total |
+| 5 | Chief Scout | 500 | ~50-60 games total |
+| 6 | Head of Analysis | 1000 | Extended testing or mock data |
+| 7 | Head of Recruitment | 2000 | Mock data recommended |
+| 8 | Technical Director | 4000 | Mock data recommended |
+| 9 | Director of Football | 8000 | Mock data recommended |
+| 10 | The Gaffer | 20000 | Mock data recommended |
 
 **Quick Test:**
 
@@ -39,17 +39,17 @@ The tier system has 10 levels based on cumulative IQ. Crossing any threshold tri
 // In NotificationContext.tsx or test environment
 // Manually set totalIQ to 99 via Supabase or mock
 // Complete one game (earns 8-12 IQ)
-// Should trigger Reserve Team celebration at 100 IQ
+// Should trigger Scout celebration at 100 IQ
 ```
 
 ### Verification Checklist
 
 - [x] **Modal Appearance:** Full-screen modal appears immediately after game result modal
 - [ ] **Confetti Animation:** Confetti bursts from top of screen (green/gold particles)
-- [x] **Tier Colors:** Modal accent color matches tier (Trialist=gray, Youth Team=gray, Reserve Team=blue, Impact Sub=green, etc.)
+- [x] **Tier Colors:** Modal accent color matches tier (Intern=gray, Match Analyst=gray, Scout=blue, Tactical Analyst=green, etc.)
 - [x] **Tier Badge:** TrendingUp icon visible with tier color, animates scale 0 → 1.2 → 1.0 on entrance
 - [x] **Title:** "LEVEL UP!" in tier-specific color
-- [x] **Subtitle:** "You've reached {TierName}!" (e.g., "You've reached Reserve Team!")
+- [x] **Subtitle:** "You've reached {TierName}!" (e.g., "You've reached Scout!")
 - [x] **Stats Display:** Shows total IQ count (e.g., "127 IQ")
 - [x] **Share Button:** Green elevated button labeled "SHARE YOUR ACHIEVEMENT"
 - [x] **Continue Link:** Pressable text link "Continue" below share button
@@ -59,7 +59,7 @@ The tier system has 10 levels based on cumulative IQ. Crossing any threshold tri
   - [ ] Native share sheet appears with image + message: "Just reached {TierName} on Football IQ! {totalIQ} IQ and climbing!"
   - [ ] Share completes successfully (test with Messages, Notes, or Cancel)
 - [x] **Analytics Event:** PostHog event `tier_level_up` fires with properties:
-  - `new_tier`: string (e.g., "Reserve Team")
+  - `new_tier`: string (e.g., "Scout")
   - `new_tier_number`: number (e.g., 3)
   - `total_iq`: number (e.g., 127)
 - [x] **AsyncStorage Guard:** Modal does NOT show twice for same tier (stored as `@tier_up_shown_{tierNumber}`)
@@ -405,7 +405,7 @@ Use this rapid 10-minute test to verify all features are working:
 - [ ] **Fresh Install:** Uninstall and reinstall app
 - [ ] **Onboarding → Tutorial:** Complete BriefingScreen, auto-navigate to Career Path, see 3-step tutorial
 - [ ] **First Win Celebration:** Complete first puzzle, see "YOU'RE A NATURAL!" modal
-- [ ] **Tier Level-Up:** Complete 2-3 more games, cross 25 IQ threshold, see "LEVEL UP!" modal for Youth Team
+- [ ] **Tier Level-Up:** Complete 2-3 more games, cross 25 IQ threshold, see "LEVEL UP!" modal for Match Analyst
 - [ ] **Initial Freeze:** Check StreakHeader, confirm shield icon visible (1 freeze available)
 - [ ] **Haptics Toggle:** Go to Settings → PREFERENCES → toggle Haptic Feedback OFF → complete a game → no haptics
 - [ ] **Streak At-Risk:** Mock device time to 21:00 with 0 plays today → see red warning in HomeHeader
@@ -443,7 +443,7 @@ Fired when user crosses a tier threshold.
 
 ```typescript
 {
-  new_tier: string; // "Reserve Team"
+  new_tier: string; // "Scout"
   new_tier_number: number; // 3
   total_iq: number; // 127
 }

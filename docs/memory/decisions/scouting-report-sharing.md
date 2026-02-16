@@ -42,7 +42,7 @@ Used for sharing overall Scout Report from stats screen.
 │      FOOTBALL IQ SCOUT REPORT       │
 │         [TierCrest Badge]           │
 │                                     │
-│    [Tier Name: "Impact Sub"]        │
+│    [Tier Name: "Tactical Analyst"]        │
 │         1,234 IQ Points             │
 │                                     │
 │  ────────────────────────────────── │
@@ -77,7 +77,7 @@ Used for sharing individual puzzle completion results.
 │          2026-01-15                 │
 │                                     │
 │  ────────────────────────────────── │
-│  Tier: Impact Sub | 1,234 IQ        │
+│  Tier: Tactical Analyst | 1,234 IQ        │
 │        football-iq.app              │
 └─────────────────────────────────────┘
 ```

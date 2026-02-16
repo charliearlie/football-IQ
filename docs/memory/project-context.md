@@ -111,21 +111,21 @@ Full-screen experience shown on first launch to introduce the app and collect di
 
 ### IQ Progression System
 
-Cumulative points system with 10 football-themed tiers from Trialist (0) to GOAT (20,000).
+Cumulative points system with 10 football-themed tiers from Intern (0) to The Gaffer (20,000).
 
 **Tier Thresholds:**
 | Tier | Name | Min Points |
 |------|------|------------|
-| 1 | Trialist | 0 |
-| 2 | Youth Squad | 25 |
-| 3 | Reserve Team | 100 |
-| 4 | Impact Sub | 250 |
-| 5 | Rotation Player | 500 |
-| 6 | First Team Regular | 1,000 |
-| 7 | Key Player | 2,000 |
-| 8 | Club Legend | 4,000 |
-| 9 | National Treasure | 8,000 |
-| 10 | GOAT | 20,000 |
+| 1 | Intern | 0 |
+| 2 | Match Analyst | 25 |
+| 3 | Scout | 100 |
+| 4 | Tactical Analyst | 250 |
+| 5 | Chief Scout | 500 |
+| 6 | Head of Analysis | 1,000 |
+| 7 | Head of Recruitment | 2,000 |
+| 8 | Technical Director | 4,000 |
+| 9 | Director of Football | 8,000 |
+| 10 | The Gaffer | 20,000 |
 
 **Server-Side Increment:** PostgreSQL trigger automatically adds puzzle score to `profiles.total_iq` on completed attempt INSERT.
 
@@ -469,7 +469,7 @@ Daily (0-500 cumulative) and Global IQ (0-100 weighted) rankings.
 Third tab displaying user's football identity with tier progression.
 
 - **Components**: ElitePlayerCard (FUT-style header) + StreakCalendar
-- **Tiers**: 10 football-themed tiers from Trialist (0) to GOAT (20,000)
+- **Tiers**: 10 football-themed tiers from Intern (0) to The Gaffer (20,000)
 - **Files**: `src/features/stats/`, `app/(tabs)/stats.tsx`
 
 ### Streak Calendar
@@ -530,7 +530,7 @@ Push-style local notifications to maximize DAU and protect streaks.
 Full-screen celebration modals triggered at key engagement moments. All follow the same pattern: Modal + dark overlay + Confetti + ViewShot share card + haptic pattern + ElevatedButton CTA.
 
 - **Perfect Day**: All daily puzzles completed → confetti + share card with puzzle count + streak
-- **Tier Level-Up**: IQ crosses tier threshold (e.g., 250 → Impact Sub) → tier badge animation + tier-coloured card + share CTA
+- **Tier Level-Up**: IQ crosses tier threshold (e.g., 250 → Tactical Analyst) → tier badge animation + tier-coloured card + share CTA
 - **First Win**: User's very first completed puzzle → "You're a natural!" + confetti + share CTA
 - **Priority order**: PerfectDay > TierUp > FirstWin (only one shows at a time)
 - **Duplicate prevention**: AsyncStorage keys per celebration type

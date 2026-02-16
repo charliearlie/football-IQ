@@ -74,7 +74,7 @@ export interface ConnectionsState {
   /** History of all guesses */
   guesses: ConnectionsGuess[];
   /** Game status */
-  gameStatus: 'playing' | 'won' | 'lost';
+  gameStatus: 'playing' | 'won' | 'lost' | 'gave_up';
   /** Unique attempt ID for persistence */
   attemptId: string | null;
   /** Whether attempt has been saved */
@@ -115,6 +115,7 @@ export type ConnectionsAction =
   | { type: 'SET_ATTEMPT_ID'; payload: string }
   | { type: 'RESTORE_PROGRESS'; payload: RestoreProgressPayload }
   | { type: 'ATTEMPT_SAVED' }
+  | { type: 'GIVE_UP' }
   | { type: 'RESET_GAME' };
 
 /**

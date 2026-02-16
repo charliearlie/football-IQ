@@ -80,7 +80,7 @@ export function TransferGuessForm() {
           <Textarea
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
-            placeholder={'{\n  "answer": "Eden Hazard",\n  "from_club": "Chelsea",\n  "to_club": "Real Madrid",\n  "fee": "€100M",\n  "hints": ["2019", "ATT", "BE"]\n}'}
+            placeholder={'{\n  "answer": "Eden Hazard",\n  "from_club": "Chelsea",\n  "to_club": "Real Madrid",\n  "fee": "€100M",\n  "from_club_color": "#034694",\n  "to_club_color": "#FEBE10",\n  "from_club_abbreviation": "CHE",\n  "to_club_abbreviation": "RMA",\n  "hints": ["2019", "ATT", "BE"]\n}'}
             rows={10}
             className="bg-white/5 border-white/10 font-mono text-sm"
           />

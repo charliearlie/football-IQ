@@ -47,16 +47,16 @@ import {
 } from "@/theme";
 
 const TIER_PROMOTION_MESSAGES: Record<number, string> = {
-  1: "Welcome to Football IQ!",
-  2: "You've joined the Youth Academy!",
-  3: "You've made the Reserve Team!",
-  4: "You're making an impact off the bench!",
-  5: "The gaffer's got you in the rotation!",
-  6: "You've cemented your First Team place!",
-  7: "You're first name on the teamsheet!",
-  8: "Your name echoes through the stadium!",
-  9: "The whole nation salutes you!",
-  10: "You are the Greatest Of All Time!",
+  1: "Welcome to the backroom staff!",
+  2: "You've been promoted to Match Analyst!",
+  3: "You're out scouting talent now!",
+  4: "You've earned the Tactical Analyst role!",
+  5: "You're leading the scouting department!",
+  6: "You're running the analysis team!",
+  7: "You're headhunting the next superstars!",
+  8: "You're shaping the club's philosophy!",
+  9: "You're running football operations!",
+  10: "You are The Gaffer!",
 };
 
 const TIER_GRADIENT_COLORS: Record<number, { gradient: [string, string]; glow: string }> = {

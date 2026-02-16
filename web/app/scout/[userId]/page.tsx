@@ -16,16 +16,16 @@ import { createAdminClient } from '@/lib/supabase/server';
 
 // Tier thresholds (matching mobile app)
 const IQ_TIERS = [
-  { tier: 1, name: 'Trialist', minPoints: 0 },
-  { tier: 2, name: 'Youth Team', minPoints: 25 },
-  { tier: 3, name: 'Reserve Team', minPoints: 100 },
-  { tier: 4, name: 'Impact Sub', minPoints: 250 },
-  { tier: 5, name: 'Rotation Player', minPoints: 500 },
-  { tier: 6, name: 'First Team Regular', minPoints: 1000 },
-  { tier: 7, name: 'Key Player', minPoints: 2000 },
-  { tier: 8, name: 'Club Legend', minPoints: 4000 },
-  { tier: 9, name: 'National Treasure', minPoints: 8000 },
-  { tier: 10, name: 'GOAT', minPoints: 20000 },
+  { tier: 1, name: 'Intern', minPoints: 0 },
+  { tier: 2, name: 'Match Analyst', minPoints: 25 },
+  { tier: 3, name: 'Scout', minPoints: 100 },
+  { tier: 4, name: 'Tactical Analyst', minPoints: 250 },
+  { tier: 5, name: 'Chief Scout', minPoints: 500 },
+  { tier: 6, name: 'Head of Analysis', minPoints: 1000 },
+  { tier: 7, name: 'Head of Recruitment', minPoints: 2000 },
+  { tier: 8, name: 'Technical Director', minPoints: 4000 },
+  { tier: 9, name: 'Director of Football', minPoints: 8000 },
+  { tier: 10, name: 'The Gaffer', minPoints: 20000 },
 ];
 
 function getTierForPoints(totalIQ: number) {

@@ -12,6 +12,7 @@ import {
   ArchiveListItem,
   ArchiveFilterState,
 } from '../types/archive.types';
+import { isDayLocked } from './dayStatus';
 
 /**
  * Format a date string to short format (e.g., "JAN 19").
@@ -168,4 +169,43 @@ export function getEstimatedItemSize(item: ArchiveListItem): number {
   const puzzleCount = item.data.puzzles.length;
   const contentHeight = puzzleCount * 72 + (puzzleCount - 1) * 8 + 16; // Cards + gaps + padding
   return contentHeight;
+}
+
+/**
+ * Inject a premium upsell banner after the last free day in the archive.
+ * Returns a mixed array of date groups and the upsell banner.
+ */
+export function injectPremiumUpsell(
+  dateGroups: ArchiveDateGroup[],
+  isPremium: boolean
+): Array<ArchiveDateGroup | { type: 'premium-upsell' }> {
+  // If premium or no data, return as-is
+  if (isPremium || dateGroups.length === 0) {
+    return dateGroups;
+  }
+
+  // Find the boundary: last index where the day is free (not locked)
+  // dateGroups are sorted newest-first (descending)
+  let lastFreeIndex = -1;
+  for (let i = 0; i < dateGroups.length; i++) {
+    if (!isDayLocked(dateGroups[i].dateString, false)) {
+      lastFreeIndex = i;
+    }
+  }
+
+  // If all days are free or all are locked, no boundary exists
+  if (lastFreeIndex === -1 || lastFreeIndex === dateGroups.length - 1) {
+    return dateGroups;
+  }
+
+  // Insert the upsell banner after the last free day
+  const result: Array<ArchiveDateGroup | { type: 'premium-upsell' }> = [];
+  for (let i = 0; i < dateGroups.length; i++) {
+    result.push(dateGroups[i]);
+    if (i === lastFreeIndex) {
+      result.push({ type: 'premium-upsell' as const });
+    }
+  }
+
+  return result;
 }

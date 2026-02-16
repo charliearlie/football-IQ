@@ -19,7 +19,7 @@ export function MarketingHero() {
             </h1>
 
             <p className="font-sans text-lg md:text-xl text-slate-400 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150">
-              10 game modes. 10 tiers. From Trialist to GOAT.
+              10 game modes. 10 tiers. From Intern to The Gaffer.
               <span className="text-floodlight font-medium"> Find out where you rank.</span>
             </p>
 

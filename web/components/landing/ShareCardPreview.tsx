@@ -53,7 +53,7 @@ export function ShareCardPreview() {
               <div className="border-t border-white/10 pt-3">
                 <div className="flex items-center justify-center gap-2 text-xs">
                   <div className="w-2 h-2 rounded-full bg-[#FACC15]" />
-                  <span className="text-floodlight">Key Player</span>
+                  <span className="text-floodlight">Head of Recruitment</span>
                   <span className="text-slate-600">|</span>
                   <span className="text-slate-400">2,450 IQ</span>
                 </div>

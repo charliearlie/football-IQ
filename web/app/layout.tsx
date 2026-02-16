@@ -16,7 +16,7 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   title: "Football IQ - What's Your Football IQ?",
   description:
-    "10 game modes. 10 tiers. From Trialist to GOAT. Test your football knowledge with daily puzzles. Free on iOS and Android.",
+    "10 game modes. 10 tiers. From Intern to The Gaffer. Test your football knowledge with daily puzzles. Free on iOS and Android.",
   icons: {
     icon: "/images/favicon.png",
   },

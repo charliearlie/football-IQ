@@ -137,6 +137,7 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
       userId={user?.id ?? null}
       isOnboardingActive={isOnboardingActive}
       totalIQ={totalIQ}
+      isStatsLoading={statsLoading}
     >
       {children}
       <NotificationModals />

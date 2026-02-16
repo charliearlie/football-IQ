@@ -22,7 +22,7 @@ export interface IQTier {
   name: string;
   /** Minimum cumulative points to reach this tier */
   minPoints: number;
-  /** Maximum points in this tier (null for GOAT - no ceiling) */
+  /** Maximum points in this tier (null for The Gaffer - no ceiling) */
   maxPoints: number | null;
 }
 
@@ -35,16 +35,16 @@ export interface IQTier {
  * - Tier 8-10: Long-term goals (4000-20000+ pts)
  */
 export const IQ_TIERS: IQTier[] = [
-  { tier: 1, name: 'Trialist', minPoints: 0, maxPoints: 24 },
-  { tier: 2, name: 'Youth Team', minPoints: 25, maxPoints: 99 },
-  { tier: 3, name: 'Reserve Team', minPoints: 100, maxPoints: 249 },
-  { tier: 4, name: 'Impact Sub', minPoints: 250, maxPoints: 499 },
-  { tier: 5, name: 'Rotation Player', minPoints: 500, maxPoints: 999 },
-  { tier: 6, name: 'First Team Regular', minPoints: 1000, maxPoints: 1999 },
-  { tier: 7, name: 'Key Player', minPoints: 2000, maxPoints: 3999 },
-  { tier: 8, name: 'Club Legend', minPoints: 4000, maxPoints: 7999 },
-  { tier: 9, name: 'National Treasure', minPoints: 8000, maxPoints: 19999 },
-  { tier: 10, name: 'GOAT', minPoints: 20000, maxPoints: null },
+  { tier: 1, name: 'Intern', minPoints: 0, maxPoints: 24 },
+  { tier: 2, name: 'Match Analyst', minPoints: 25, maxPoints: 99 },
+  { tier: 3, name: 'Scout', minPoints: 100, maxPoints: 249 },
+  { tier: 4, name: 'Tactical Analyst', minPoints: 250, maxPoints: 499 },
+  { tier: 5, name: 'Chief Scout', minPoints: 500, maxPoints: 999 },
+  { tier: 6, name: 'Head of Analysis', minPoints: 1000, maxPoints: 1999 },
+  { tier: 7, name: 'Head of Recruitment', minPoints: 2000, maxPoints: 3999 },
+  { tier: 8, name: 'Technical Director', minPoints: 4000, maxPoints: 7999 },
+  { tier: 9, name: 'Director of Football', minPoints: 8000, maxPoints: 19999 },
+  { tier: 10, name: 'The Gaffer', minPoints: 20000, maxPoints: null },
 ];
 
 /**
@@ -52,16 +52,16 @@ export const IQ_TIERS: IQTier[] = [
  * Lower tiers use muted colors, higher tiers use more vibrant/prestigious colors.
  */
 const TIER_COLORS: Record<number, string> = {
-  1: colors.textSecondary, // Trialist - muted gray
-  2: '#6B7280', // Youth Team - gray
-  3: '#3B82F6', // Reserve Team - blue
-  4: '#22C55E', // Impact Sub - green
-  5: colors.pitchGreen, // Rotation Player - pitch green
-  6: colors.pitchGreen, // First Team Regular - pitch green
-  7: colors.cardYellow, // Key Player - yellow
-  8: colors.amber, // Club Legend - amber
-  9: '#F97316', // National Treasure - orange
-  10: '#FFD700', // GOAT - gold
+  1: colors.textSecondary, // Intern - muted gray
+  2: '#6B7280', // Match Analyst - gray
+  3: '#3B82F6', // Scout - blue
+  4: '#22C55E', // Tactical Analyst - green
+  5: colors.pitchGreen, // Chief Scout - pitch green
+  6: colors.pitchGreen, // Head of Analysis - pitch green
+  7: colors.cardYellow, // Head of Recruitment - yellow
+  8: colors.amber, // Technical Director - amber
+  9: '#F97316', // Director of Football - orange
+  10: '#FFD700', // The Gaffer - gold
 };
 
 /**
@@ -71,9 +71,9 @@ const TIER_COLORS: Record<number, string> = {
  * @returns The tier the user belongs to
  *
  * @example
- * getTierForPoints(0)     // { tier: 1, name: 'Trialist', ... }
- * getTierForPoints(250)   // { tier: 4, name: 'Impact Sub', ... }
- * getTierForPoints(20000) // { tier: 10, name: 'GOAT', ... }
+ * getTierForPoints(0)     // { tier: 1, name: 'Intern', ... }
+ * getTierForPoints(250)   // { tier: 4, name: 'Tactical Analyst', ... }
+ * getTierForPoints(20000) // { tier: 10, name: 'The Gaffer', ... }
  */
 export function getTierForPoints(totalIQ: number): IQTier {
   // Handle negative points
@@ -99,9 +99,9 @@ export function getTierForPoints(totalIQ: number): IQTier {
  * @returns Percentage (0-100) of progress to next tier. Returns 100 for GOAT tier.
  *
  * @example
- * getProgressToNextTier(0)     // 0 (start of Trialist)
- * getProgressToNextTier(12)    // 48 (midpoint of Trialist)
- * getProgressToNextTier(20000) // 100 (GOAT tier - max level)
+ * getProgressToNextTier(0)     // 0 (start of Intern)
+ * getProgressToNextTier(12)    // 48 (midpoint of Intern)
+ * getProgressToNextTier(20000) // 100 (The Gaffer tier - max level)
  */
 export function getProgressToNextTier(totalIQ: number): number {
   // Handle negative points
@@ -133,9 +133,9 @@ export function getProgressToNextTier(totalIQ: number): number {
  * @returns Points needed to reach next tier. Returns 0 for GOAT tier.
  *
  * @example
- * getPointsToNextTier(0)     // 25 (need 25 to reach Youth Team)
- * getPointsToNextTier(12)    // 13 (need 13 more to reach Youth Team)
- * getPointsToNextTier(20000) // 0 (GOAT tier - no next tier)
+ * getPointsToNextTier(0)     // 25 (need 25 to reach Match Analyst)
+ * getPointsToNextTier(12)    // 13 (need 13 more to reach Match Analyst)
+ * getPointsToNextTier(20000) // 0 (The Gaffer tier - no next tier)
  */
 export function getPointsToNextTier(totalIQ: number): number {
   // Handle negative points - treat as 0
@@ -161,9 +161,9 @@ export function getPointsToNextTier(totalIQ: number): number {
  * @returns Hex color string for the tier
  *
  * @example
- * getTierColor(1)  // Gray (Trialist)
- * getTierColor(5)  // Pitch Green (Rotation Player)
- * getTierColor(10) // Gold (GOAT)
+ * getTierColor(1)  // Gray (Intern)
+ * getTierColor(5)  // Pitch Green (Chief Scout)
+ * getTierColor(10) // Gold (The Gaffer)
  */
 export function getTierColor(tier: number): string {
   // Handle out-of-range tier numbers
@@ -209,9 +209,9 @@ export function formatTotalIQ(points: number): string {
  * @returns Object with changed flag and newTier (if tier changed)
  *
  * @example
- * didTierChange(24, 25)   // { changed: true, newTier: { tier: 2, name: 'Youth Team', ... } }
+ * didTierChange(24, 25)   // { changed: true, newTier: { tier: 2, name: 'Match Analyst', ... } }
  * didTierChange(50, 75)   // { changed: false, newTier: null }
- * didTierChange(99, 100)  // { changed: true, newTier: { tier: 3, name: 'Reserve Team', ... } }
+ * didTierChange(99, 100)  // { changed: true, newTier: { tier: 3, name: 'Scout', ... } }
  */
 export function didTierChange(
   oldIQ: number,

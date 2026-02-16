@@ -84,7 +84,7 @@ export function generateConnectionsShareText(
     : 'Today';
 
   const emojiGrid = generateConnectionsEmojiGrid(guesses, allGroups);
-  const scoreLabel = getConnectionsScoreLabel(mistakes);
+  const scoreLabel = getConnectionsScoreLabel(solvedGroups.length);
 
   // Format:
   // "Football IQ - Connections"

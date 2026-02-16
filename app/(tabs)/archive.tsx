@@ -1,9 +1,9 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { colors, spacing } from '@/theme';
+import { colors } from '@/theme';
 import {
   useArchivePuzzles,
   useGatedNavigation,
@@ -19,7 +19,7 @@ import { AdvancedFilterBar } from '@/features/archive/components/AdvancedFilterB
 import { useRandomPlay } from '@/features/archive/hooks/useRandomPlay';
 import { applyFilters, groupByDate } from '@/features/archive/utils/calendarTransformers';
 import { TabScreenWrapper } from '@/components/TabScreenWrapper';
-import { useAds, UnlockChoiceModal, PremiumUpsellBanner } from '@/features/ads';
+import { useAds, UnlockChoiceModal } from '@/features/ads';
 import { CompletedGameModal } from '@/features/home';
 import { useAuth } from '@/features/auth';
 
@@ -192,11 +192,6 @@ export default function ArchiveScreen() {
         isLoading={isLoading}
       />
 
-      {/* Premium Upsell Banner (non-premium only) */}
-      <View style={styles.bannerContainer}>
-        <PremiumUpsellBanner testID="archive-premium-upsell" fullWidth />
-      </View>
-
       {/* Match Calendar with Advanced Filter */}
       <ArchiveCalendar
         dateGroups={filteredDateGroups}
@@ -257,9 +252,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.stadiumNavy,
-  },
-  bannerContainer: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
   },
 });

@@ -29,6 +29,9 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
       // Career Path: each club is one bucket
       // Bucket size = 100 / number of clubs
       return maxSteps ? Math.floor(100 / maxSteps) : 10;
+    case 'connections':
+      // Connections: 5 possible scores (0, 2, 4, 6, 10 IQ = 0, 20, 40, 60, 100 normalized)
+      return 20;
     case 'topical_quiz':
       // Quiz has 6 possible scores (0, 2, 4, 6, 8, 10 points = 0, 20, 40, 60, 80, 100 normalized)
       return 20;
@@ -119,6 +122,9 @@ export function getScoreLabelsForMode(
       // Step counts - lower is better (2 = best, 12+ = worst)
       // 11 labels for buckets 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0
       return ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12+'];
+    case 'connections':
+      // Groups found labels: 4/4 (best) to 0/4 (worst)
+      return ['4/4', '3/4', '2/4', '1/4', '0/4'];
     case 'the_thread':
       // Hint-count labels: 0 hints (best) to give up (worst)
       return ['0 hints', '1 hint', '2 hints', '3 hints', 'Give up'];

@@ -2,12 +2,21 @@
  * GroupReveal Component
  *
  * Displays a solved group with colored banner and player names.
- * Animates in when revealed.
+ * Animates in with spring-based merge animation and shimmer effect.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withRepeat,
+  interpolate,
+  Easing,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ConnectionsGroup, ConnectionsDifficulty } from '../types/connections.types';
 import { colors, fonts, borderRadius, spacing } from '@/theme';
 
@@ -18,12 +27,23 @@ export interface GroupRevealProps {
 
 /**
  * Color map for difficulty levels.
+ * Football-themed palette distinct from NYT Connections.
  */
 const DIFFICULTY_COLORS: Record<ConnectionsDifficulty, string> = {
-  yellow: '#FACC15',
-  green: '#58CC02',
-  blue: '#3B82F6',
-  purple: '#A855F7',
+  yellow: '#F59E0B',  // Trophy gold
+  green: '#14B8A6',   // Teal / VAR tech
+  blue: '#F97316',    // Matchday orange
+  purple: '#6366F1',  // Night match indigo
+};
+
+/**
+ * Text color map - orange and indigo need white text for contrast.
+ */
+const TEXT_COLORS: Record<ConnectionsDifficulty, string> = {
+  yellow: colors.stadiumNavy,
+  green: colors.stadiumNavy,
+  blue: colors.floodlightWhite,
+  purple: colors.floodlightWhite,
 };
 
 /**
@@ -31,58 +51,114 @@ const DIFFICULTY_COLORS: Record<ConnectionsDifficulty, string> = {
  */
 export function GroupReveal({ group, testID }: GroupRevealProps) {
   const backgroundColor = DIFFICULTY_COLORS[group.difficulty];
+  const textColor = TEXT_COLORS[group.difficulty];
+
+  // Merge animation
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withSpring(1, { damping: 15, stiffness: 150 });
+  }, []);
+
+  const mergeStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [20, 0]) },
+      { scale: interpolate(progress.value, [0, 1], [0.9, 1]) },
+    ],
+  }));
+
+  // Shimmer animation
+  const shimmerX = useSharedValue(-1);
+
+  useEffect(() => {
+    // Start shimmer after merge animation settles
+    const timer = setTimeout(() => {
+      shimmerX.value = withRepeat(
+        withTiming(1, { duration: 3000, easing: Easing.linear }),
+        -1, // infinite
+        false
+      );
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: interpolate(shimmerX.value, [-1, 1], [-200, 200]) },
+    ],
+  }));
 
   return (
     <Animated.View
-      entering={FadeIn.duration(400)}
-      style={[styles.container, { backgroundColor }]}
+      style={[styles.container, { backgroundColor }, mergeStyle]}
       testID={testID}
     >
-      <Text style={styles.category}>{group.category}</Text>
-      <View style={styles.playersContainer}>
-        {group.players.map((player, index) => (
-          <React.Fragment key={player}>
-            <Text style={styles.playerName}>{player}</Text>
-            {index < group.players.length - 1 && <Text style={styles.separator}>, </Text>}
-          </React.Fragment>
-        ))}
-      </View>
+      {/* Shimmer overlay */}
+      <Animated.View style={[styles.shimmerContainer, shimmerStyle]} pointerEvents="none">
+        <LinearGradient
+          colors={['transparent', 'rgba(255,255,255,0.1)', 'transparent']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.shimmerGradient}
+        />
+      </Animated.View>
+
+      {/* Bottom stripe */}
+      <View style={styles.bottomStripe} />
+
+      {/* Content */}
+      <Text style={[styles.category, { color: textColor }]}>{group.category}</Text>
+      <Text style={[styles.players, { color: textColor }]}>
+        {group.players.join(', ')}
+      </Text>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.md,
+    width: '100%',
+    paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     marginBottom: spacing.sm,
+    overflow: 'hidden',
   },
   category: {
-    fontFamily: fonts.body,
-    fontSize: 14,
+    fontFamily: fonts.headline,
+    fontSize: 22,
     fontWeight: '700',
-    color: colors.stadiumNavy,
     textAlign: 'center',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 2,
     marginBottom: spacing.xs,
   },
-  playersContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  playerName: {
+  players: {
     fontFamily: fonts.body,
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.stadiumNavy,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
   },
-  separator: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.stadiumNavy,
+  shimmerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  shimmerGradient: {
+    width: 200,
+    height: '100%',
+  },
+  bottomStripe: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
 });

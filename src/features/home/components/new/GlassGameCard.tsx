@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Check, Video, Gift } from 'lucide-react-native';
+import { Play, Check, Video, Gift, Cable } from 'lucide-react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { CardStatus } from '../../hooks/useDailyPuzzles';
@@ -106,6 +106,8 @@ export function GlassGameCard({
         <View style={styles.iconBox}>
           {iconSource ? (
             <Image source={iconSource} style={styles.iconImage} resizeMode="contain" />
+          ) : gameMode === 'connections' ? (
+            <Cable size={24} color={HOME_COLORS.pitchGreen} />
           ) : (
             <Play size={24} color={HOME_COLORS.pitchGreen} fill={HOME_COLORS.pitchGreen} />
           )}

@@ -77,7 +77,7 @@ Based on Impact x Effort x Strategic Alignment:
 - **Trigger**: Local notifications at 08:30 (Daily Kickoff) and 20:30 (Streak Saver)
 - **Action**: Home screen with Daily Progress Ring showing X/10 completion
 - **Variable Reward**: Score reveal, IQ tier progression, leaderboard rank changes
-- **Investment**: Streak counter, cumulative IQ points, tier progression (10 tiers: Trialist to GOAT)
+- **Investment**: Streak counter, cumulative IQ points, tier progression (10 tiers: Intern to The Gaffer)
 
 **Streak System** (`src/features/home/hooks/useUserStats.ts`):
 - Tracks consecutive days with 1+ completed puzzle
@@ -114,7 +114,7 @@ Based on Impact x Effort x Strategic Alignment:
 ### What Currently Exists
 
 **Tier Progression** (`src/features/stats/utils/tierProgression.ts`):
-- 10 Tiers: Trialist (0) > Youth Squad (25) > Reserve Team (100) > Impact Sub (250) > Rotation Player (500) > First Team Regular (1,000) > Key Player (2,000) > Club Legend (4,000) > National Treasure (8,000) > GOAT (20,000)
+- 10 Tiers: Intern (0) > Match Analyst (25) > Scout (100) > Tactical Analyst (250) > Chief Scout (500) > Head of Analysis (1,000) > Head of Recruitment (2,000) > Technical Director (4,000) > Director of Football (8,000) > The Gaffer (20,000)
 - Cumulative points via `profiles.total_iq` PostgreSQL trigger
 - Exponential curve: early tiers in days, top tiers require months
 
@@ -135,9 +135,9 @@ Based on Impact x Effort x Strategic Alignment:
 
 | # | Proposal | Impact | Effort | Priority |
 |---|----------|--------|--------|----------|
-| 1 | **Unify Tier Naming** - Align per-game tiers with global tiers. "You played like a Club Legend!" instead of "Hall of Famer". | MEDIUM | LOW | P1 |
+| 1 | **Unify Tier Naming** - Align per-game tiers with global tiers. "You played like a Technical Director!" instead of "Hall of Famer". | MEDIUM | LOW | P1 |
 | 2 | **Seasonal Leagues** - 4-week seasons with separate leaderboard (resets monthly). "Season Champion" badge for top 100. | HIGH | HIGH | P2 |
-| 3 | **Micro-Milestones** - Every 500 IQ within a tier: "2,500 IQ! Halfway to Club Legend." Progress bar on Stats screen showing % to next tier. | MEDIUM | LOW | P1 |
+| 3 | **Micro-Milestones** - Every 500 IQ within a tier: "2,500 IQ! Halfway to Technical Director." Progress bar on Stats screen showing % to next tier. | MEDIUM | LOW | P1 |
 | 4 | **Difficulty Multipliers** - Easy = 1x, Medium = 1.25x, Hard = 1.5x, Very Hard = 2x. "2x IQ Week!" event banners. | MEDIUM | MEDIUM | P2 |
 | 5 | **Perfect Score Bonuses** - First perfect on any mode = special badge. 10 perfects in a month = "Perfectionist" monthly badge. | MEDIUM | LOW | P1 |
 

@@ -112,11 +112,11 @@ export function TopTensResultModal({
       onClose={onClose}
       testID={testID}
     >
-      <ScoreDisplay value={`${score.points}/${score.maxPoints}`} />
+      <ScoreDisplay value={`${score.foundCount}/10`} />
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="top_tens"
-        userScore={Math.round((score.points / 8) * 100)}
+        userScore={score.foundCount * 10}
         testID={testID ? `${testID}-distribution` : undefined}
       />
     </BaseResultModal>

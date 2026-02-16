@@ -1,7 +1,7 @@
 # Task 1: Tier Level-Up Celebration
 
 ## Context
-The app has a 10-tier progression system (Trialist -> GOAT) but no celebration when users level up. The only full-screen celebration is PerfectDayCelebration (completing all daily puzzles). Adding a tier-up celebration creates a high emotional impact moment that reinforces the progression system and creates shareable content.
+The app has a 10-tier progression system (Intern -> The Gaffer) but no celebration when users level up. The only full-screen celebration is PerfectDayCelebration (completing all daily puzzles). Adding a tier-up celebration creates a high emotional impact moment that reinforces the progression system and creates shareable content.
 
 ## Requirements
 

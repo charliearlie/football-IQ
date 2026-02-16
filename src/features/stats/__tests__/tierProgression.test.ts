@@ -5,16 +5,16 @@
  * Uses cumulative points with exponential curve (0 to 20,000).
  *
  * Tier Thresholds:
- * 1. Trialist:           0 - 24
- * 2. Youth Team:       25 - 99
- * 3. Reserve Team:     100 - 249
- * 4. Impact Sub:       250 - 499
- * 5. Rotation Player:  500 - 999
- * 6. First Team Regular: 1,000 - 1,999
- * 7. Key Player:       2,000 - 3,999
- * 8. Club Legend:      4,000 - 7,999
- * 9. National Treasure: 8,000 - 19,999
- * 10. GOAT:            20,000+
+ * 1. Intern:           0 - 24
+ * 2. Match Analyst:       25 - 99
+ * 3. Scout:     100 - 249
+ * 4. Tactical Analyst:       250 - 499
+ * 5. Chief Scout:  500 - 999
+ * 6. Head of Analysis: 1,000 - 1,999
+ * 7. Head of Recruitment:       2,000 - 3,999
+ * 8. Technical Director:      4,000 - 7,999
+ * 9. Director of Football: 8,000 - 19,999
+ * 10. The Gaffer:            20,000+
  */
 
 import {
@@ -38,16 +38,16 @@ describe('IQ_TIERS constant', () => {
   it('has correct tier names', () => {
     const tierNames = IQ_TIERS.map((t) => t.name);
     expect(tierNames).toEqual([
-      'Trialist',
-      'Youth Team',
-      'Reserve Team',
-      'Impact Sub',
-      'Rotation Player',
-      'First Team Regular',
-      'Key Player',
-      'Club Legend',
-      'National Treasure',
-      'GOAT',
+      'Intern',
+      'Match Analyst',
+      'Scout',
+      'Tactical Analyst',
+      'Chief Scout',
+      'Head of Analysis',
+      'Head of Recruitment',
+      'Technical Director',
+      'Director of Football',
+      'The Gaffer',
     ]);
   });
 
@@ -56,177 +56,177 @@ describe('IQ_TIERS constant', () => {
     expect(minPoints).toEqual([0, 25, 100, 250, 500, 1000, 2000, 4000, 8000, 20000]);
   });
 
-  it('has GOAT as the only tier with null maxPoints', () => {
+  it('has The Gaffer as the only tier with null maxPoints', () => {
     const tiersWithNullMax = IQ_TIERS.filter((t) => t.maxPoints === null);
     expect(tiersWithNullMax).toHaveLength(1);
-    expect(tiersWithNullMax[0].name).toBe('GOAT');
+    expect(tiersWithNullMax[0].name).toBe('The Gaffer');
   });
 });
 
 describe('getTierForPoints', () => {
-  describe('tier 1: Trialist (0-24)', () => {
-    it('returns Trialist for 0 points', () => {
+  describe('tier 1: Intern (0-24)', () => {
+    it('returns Intern for 0 points', () => {
       const tier = getTierForPoints(0);
       expect(tier.tier).toBe(1);
-      expect(tier.name).toBe('Trialist');
+      expect(tier.name).toBe('Intern');
     });
 
-    it('returns Trialist for 12 points (midpoint)', () => {
+    it('returns Intern for 12 points (midpoint)', () => {
       const tier = getTierForPoints(12);
       expect(tier.tier).toBe(1);
-      expect(tier.name).toBe('Trialist');
+      expect(tier.name).toBe('Intern');
     });
 
-    it('returns Trialist for 24 points (boundary)', () => {
+    it('returns Intern for 24 points (boundary)', () => {
       const tier = getTierForPoints(24);
       expect(tier.tier).toBe(1);
-      expect(tier.name).toBe('Trialist');
+      expect(tier.name).toBe('Intern');
     });
   });
 
-  describe('tier 2: Youth Team (25-99)', () => {
-    it('returns Youth Team at exactly 25 points (transition)', () => {
+  describe('tier 2: Match Analyst (25-99)', () => {
+    it('returns Match Analyst at exactly 25 points (transition)', () => {
       const tier = getTierForPoints(25);
       expect(tier.tier).toBe(2);
-      expect(tier.name).toBe('Youth Team');
+      expect(tier.name).toBe('Match Analyst');
     });
 
-    it('returns Youth Team for 62 points (midpoint)', () => {
+    it('returns Match Analyst for 62 points (midpoint)', () => {
       const tier = getTierForPoints(62);
       expect(tier.tier).toBe(2);
-      expect(tier.name).toBe('Youth Team');
+      expect(tier.name).toBe('Match Analyst');
     });
 
-    it('returns Youth Team for 99 points (boundary)', () => {
+    it('returns Match Analyst for 99 points (boundary)', () => {
       const tier = getTierForPoints(99);
       expect(tier.tier).toBe(2);
-      expect(tier.name).toBe('Youth Team');
+      expect(tier.name).toBe('Match Analyst');
     });
   });
 
-  describe('tier 3: Reserve Team (100-249)', () => {
-    it('returns Reserve Team at exactly 100 points', () => {
+  describe('tier 3: Scout (100-249)', () => {
+    it('returns Scout at exactly 100 points', () => {
       const tier = getTierForPoints(100);
       expect(tier.tier).toBe(3);
-      expect(tier.name).toBe('Reserve Team');
+      expect(tier.name).toBe('Scout');
     });
 
-    it('returns Reserve Team for 249 points (boundary)', () => {
+    it('returns Scout for 249 points (boundary)', () => {
       const tier = getTierForPoints(249);
       expect(tier.tier).toBe(3);
-      expect(tier.name).toBe('Reserve Team');
+      expect(tier.name).toBe('Scout');
     });
   });
 
-  describe('tier 4: Impact Sub (250-499)', () => {
-    it('returns Impact Sub at exactly 250 points', () => {
+  describe('tier 4: Tactical Analyst (250-499)', () => {
+    it('returns Tactical Analyst at exactly 250 points', () => {
       const tier = getTierForPoints(250);
       expect(tier.tier).toBe(4);
-      expect(tier.name).toBe('Impact Sub');
+      expect(tier.name).toBe('Tactical Analyst');
     });
 
-    it('returns Impact Sub for 499 points (boundary)', () => {
+    it('returns Tactical Analyst for 499 points (boundary)', () => {
       const tier = getTierForPoints(499);
       expect(tier.tier).toBe(4);
-      expect(tier.name).toBe('Impact Sub');
+      expect(tier.name).toBe('Tactical Analyst');
     });
   });
 
-  describe('tier 5: Rotation Player (500-999)', () => {
-    it('returns Rotation Player at exactly 500 points', () => {
+  describe('tier 5: Chief Scout (500-999)', () => {
+    it('returns Chief Scout at exactly 500 points', () => {
       const tier = getTierForPoints(500);
       expect(tier.tier).toBe(5);
-      expect(tier.name).toBe('Rotation Player');
+      expect(tier.name).toBe('Chief Scout');
     });
 
-    it('returns Rotation Player for 999 points (boundary)', () => {
+    it('returns Chief Scout for 999 points (boundary)', () => {
       const tier = getTierForPoints(999);
       expect(tier.tier).toBe(5);
-      expect(tier.name).toBe('Rotation Player');
+      expect(tier.name).toBe('Chief Scout');
     });
   });
 
-  describe('tier 6: First Team Regular (1000-1999)', () => {
-    it('returns First Team Regular at exactly 1000 points', () => {
+  describe('tier 6: Head of Analysis (1000-1999)', () => {
+    it('returns Head of Analysis at exactly 1000 points', () => {
       const tier = getTierForPoints(1000);
       expect(tier.tier).toBe(6);
-      expect(tier.name).toBe('First Team Regular');
+      expect(tier.name).toBe('Head of Analysis');
     });
 
-    it('returns First Team Regular for 1999 points (boundary)', () => {
+    it('returns Head of Analysis for 1999 points (boundary)', () => {
       const tier = getTierForPoints(1999);
       expect(tier.tier).toBe(6);
-      expect(tier.name).toBe('First Team Regular');
+      expect(tier.name).toBe('Head of Analysis');
     });
   });
 
-  describe('tier 7: Key Player (2000-3999)', () => {
-    it('returns Key Player at exactly 2000 points', () => {
+  describe('tier 7: Head of Recruitment (2000-3999)', () => {
+    it('returns Head of Recruitment at exactly 2000 points', () => {
       const tier = getTierForPoints(2000);
       expect(tier.tier).toBe(7);
-      expect(tier.name).toBe('Key Player');
+      expect(tier.name).toBe('Head of Recruitment');
     });
 
-    it('returns Key Player for 3999 points (boundary)', () => {
+    it('returns Head of Recruitment for 3999 points (boundary)', () => {
       const tier = getTierForPoints(3999);
       expect(tier.tier).toBe(7);
-      expect(tier.name).toBe('Key Player');
+      expect(tier.name).toBe('Head of Recruitment');
     });
   });
 
-  describe('tier 8: Club Legend (4000-7999)', () => {
-    it('returns Club Legend at exactly 4000 points', () => {
+  describe('tier 8: Technical Director (4000-7999)', () => {
+    it('returns Technical Director at exactly 4000 points', () => {
       const tier = getTierForPoints(4000);
       expect(tier.tier).toBe(8);
-      expect(tier.name).toBe('Club Legend');
+      expect(tier.name).toBe('Technical Director');
     });
 
-    it('returns Club Legend for 7999 points (boundary)', () => {
+    it('returns Technical Director for 7999 points (boundary)', () => {
       const tier = getTierForPoints(7999);
       expect(tier.tier).toBe(8);
-      expect(tier.name).toBe('Club Legend');
+      expect(tier.name).toBe('Technical Director');
     });
   });
 
-  describe('tier 9: National Treasure (8000-19999)', () => {
-    it('returns National Treasure at exactly 8000 points', () => {
+  describe('tier 9: Director of Football (8000-19999)', () => {
+    it('returns Director of Football at exactly 8000 points', () => {
       const tier = getTierForPoints(8000);
       expect(tier.tier).toBe(9);
-      expect(tier.name).toBe('National Treasure');
+      expect(tier.name).toBe('Director of Football');
     });
 
-    it('returns National Treasure for 19999 points (boundary)', () => {
+    it('returns Director of Football for 19999 points (boundary)', () => {
       const tier = getTierForPoints(19999);
       expect(tier.tier).toBe(9);
-      expect(tier.name).toBe('National Treasure');
+      expect(tier.name).toBe('Director of Football');
     });
   });
 
-  describe('tier 10: GOAT (20000+)', () => {
-    it('returns GOAT at exactly 20000 points', () => {
+  describe('tier 10: The Gaffer (20000+)', () => {
+    it('returns The Gaffer at exactly 20000 points', () => {
       const tier = getTierForPoints(20000);
       expect(tier.tier).toBe(10);
-      expect(tier.name).toBe('GOAT');
+      expect(tier.name).toBe('The Gaffer');
     });
 
-    it('returns GOAT for 50000 points (above max)', () => {
+    it('returns The Gaffer for 50000 points (above max)', () => {
       const tier = getTierForPoints(50000);
       expect(tier.tier).toBe(10);
-      expect(tier.name).toBe('GOAT');
+      expect(tier.name).toBe('The Gaffer');
     });
 
-    it('returns GOAT for 1000000 points (way above max)', () => {
+    it('returns The Gaffer for 1000000 points (way above max)', () => {
       const tier = getTierForPoints(1000000);
       expect(tier.tier).toBe(10);
-      expect(tier.name).toBe('GOAT');
+      expect(tier.name).toBe('The Gaffer');
     });
   });
 
   describe('edge cases', () => {
-    it('handles negative points by returning Trialist', () => {
+    it('handles negative points by returning Intern', () => {
       const tier = getTierForPoints(-100);
       expect(tier.tier).toBe(1);
-      expect(tier.name).toBe('Trialist');
+      expect(tier.name).toBe('Intern');
     });
 
     it('handles all exact tier boundaries correctly', () => {
@@ -242,51 +242,51 @@ describe('getTierForPoints', () => {
 
 describe('getProgressToNextTier', () => {
   describe('progress within tier', () => {
-    it('returns 0% at start of Trialist tier', () => {
+    it('returns 0% at start of Intern tier', () => {
       expect(getProgressToNextTier(0)).toBe(0);
     });
 
-    it('returns ~50% at midpoint of Trialist tier (12 of 25)', () => {
-      // Trialist: 0-24, span = 25, midpoint progress = 12/25 = 48%
+    it('returns ~50% at midpoint of Intern tier (12 of 25)', () => {
+      // Intern: 0-24, span = 25, midpoint progress = 12/25 = 48%
       expect(getProgressToNextTier(12)).toBe(48);
     });
 
-    it('returns 96% at end of Trialist tier (24 of 25)', () => {
+    it('returns 96% at end of Intern tier (24 of 25)', () => {
       // 24/25 = 96%
       expect(getProgressToNextTier(24)).toBe(96);
     });
 
-    it('returns 0% at start of Youth Team tier', () => {
+    it('returns 0% at start of Match Analyst tier', () => {
       expect(getProgressToNextTier(25)).toBe(0);
     });
 
-    it('returns ~50% at midpoint of Youth Team tier', () => {
-      // Youth Team: 25-99, span = 75, midpoint = 25 + 37 = 62
+    it('returns ~50% at midpoint of Match Analyst tier', () => {
+      // Match Analyst: 25-99, span = 75, midpoint = 25 + 37 = 62
       // Progress = 37/75 = 49%
       expect(getProgressToNextTier(62)).toBe(49);
     });
 
-    it('returns 0% at start of Impact Sub tier', () => {
+    it('returns 0% at start of Tactical Analyst tier', () => {
       expect(getProgressToNextTier(250)).toBe(0);
     });
 
-    it('returns ~50% at midpoint of Impact Sub tier', () => {
-      // Impact Sub: 250-499, span = 250, midpoint = 250 + 125 = 375
+    it('returns ~50% at midpoint of Tactical Analyst tier', () => {
+      // Tactical Analyst: 250-499, span = 250, midpoint = 250 + 125 = 375
       // Progress = 125/250 = 50%
       expect(getProgressToNextTier(375)).toBe(50);
     });
   });
 
-  describe('GOAT tier (max level)', () => {
-    it('returns 100% for GOAT tier at exactly 20000', () => {
+  describe('The Gaffer tier (max level)', () => {
+    it('returns 100% for The Gaffer tier at exactly 20000', () => {
       expect(getProgressToNextTier(20000)).toBe(100);
     });
 
-    it('returns 100% for GOAT tier above 20000', () => {
+    it('returns 100% for The Gaffer tier above 20000', () => {
       expect(getProgressToNextTier(30000)).toBe(100);
     });
 
-    it('returns 100% for GOAT tier way above 20000', () => {
+    it('returns 100% for The Gaffer tier way above 20000', () => {
       expect(getProgressToNextTier(100000)).toBe(100);
     });
   });
@@ -300,67 +300,67 @@ describe('getProgressToNextTier', () => {
 
 describe('getPointsToNextTier', () => {
   describe('points needed calculation', () => {
-    it('returns 25 for Trialist at 0 points', () => {
+    it('returns 25 for Intern at 0 points', () => {
       expect(getPointsToNextTier(0)).toBe(25);
     });
 
-    it('returns 13 for Trialist at 12 points', () => {
-      // Need 25 to reach Youth Team, have 12, need 13 more
+    it('returns 13 for Intern at 12 points', () => {
+      // Need 25 to reach Match Analyst, have 12, need 13 more
       expect(getPointsToNextTier(12)).toBe(13);
     });
 
-    it('returns 1 for Trialist at 24 points', () => {
-      // Need 25 to reach Youth Team, have 24, need 1 more
+    it('returns 1 for Intern at 24 points', () => {
+      // Need 25 to reach Match Analyst, have 24, need 1 more
       expect(getPointsToNextTier(24)).toBe(1);
     });
 
-    it('returns 75 for Youth Team at 25 points', () => {
-      // Need 100 to reach Reserve Team, have 25, need 75 more
+    it('returns 75 for Match Analyst at 25 points', () => {
+      // Need 100 to reach Scout, have 25, need 75 more
       expect(getPointsToNextTier(25)).toBe(75);
     });
 
-    it('returns 150 for Reserve Team at 100 points', () => {
-      // Need 250 to reach Impact Sub, have 100, need 150 more
+    it('returns 150 for Scout at 100 points', () => {
+      // Need 250 to reach Tactical Analyst, have 100, need 150 more
       expect(getPointsToNextTier(100)).toBe(150);
     });
 
-    it('returns 250 for Impact Sub at 250 points', () => {
-      // Need 500 to reach Rotation Player, have 250, need 250 more
+    it('returns 250 for Tactical Analyst at 250 points', () => {
+      // Need 500 to reach Chief Scout, have 250, need 250 more
       expect(getPointsToNextTier(250)).toBe(250);
     });
 
-    it('returns 500 for Rotation Player at 500 points', () => {
-      // Need 1000 to reach First Team Regular
+    it('returns 500 for Chief Scout at 500 points', () => {
+      // Need 1000 to reach Head of Analysis
       expect(getPointsToNextTier(500)).toBe(500);
     });
 
-    it('returns 1000 for First Team Regular at 1000 points', () => {
-      // Need 2000 to reach Key Player
+    it('returns 1000 for Head of Analysis at 1000 points', () => {
+      // Need 2000 to reach Head of Recruitment
       expect(getPointsToNextTier(1000)).toBe(1000);
     });
 
-    it('returns 2000 for Key Player at 2000 points', () => {
-      // Need 4000 to reach Club Legend
+    it('returns 2000 for Head of Recruitment at 2000 points', () => {
+      // Need 4000 to reach Technical Director
       expect(getPointsToNextTier(2000)).toBe(2000);
     });
 
-    it('returns 4000 for Club Legend at 4000 points', () => {
-      // Need 8000 to reach National Treasure
+    it('returns 4000 for Technical Director at 4000 points', () => {
+      // Need 8000 to reach Director of Football
       expect(getPointsToNextTier(4000)).toBe(4000);
     });
 
-    it('returns 12000 for National Treasure at 8000 points', () => {
-      // Need 20000 to reach GOAT
+    it('returns 12000 for Director of Football at 8000 points', () => {
+      // Need 20000 to reach The Gaffer
       expect(getPointsToNextTier(8000)).toBe(12000);
     });
   });
 
-  describe('GOAT tier (max level)', () => {
-    it('returns 0 for GOAT tier at exactly 20000', () => {
+  describe('The Gaffer tier (max level)', () => {
+    it('returns 0 for The Gaffer tier at exactly 20000', () => {
       expect(getPointsToNextTier(20000)).toBe(0);
     });
 
-    it('returns 0 for GOAT tier above 20000', () => {
+    it('returns 0 for The Gaffer tier above 20000', () => {
       expect(getPointsToNextTier(50000)).toBe(0);
     });
   });
@@ -374,19 +374,19 @@ describe('getPointsToNextTier', () => {
 });
 
 describe('getTierColor', () => {
-  it('returns correct color for tier 1 (Trialist)', () => {
+  it('returns correct color for tier 1 (Intern)', () => {
     const color = getTierColor(1);
     expect(color).toBeDefined();
     expect(typeof color).toBe('string');
   });
 
-  it('returns correct color for tier 5 (Rotation Player)', () => {
+  it('returns correct color for tier 5 (Chief Scout)', () => {
     const color = getTierColor(5);
     expect(color).toBeDefined();
     expect(typeof color).toBe('string');
   });
 
-  it('returns gold color for tier 10 (GOAT)', () => {
+  it('returns gold color for tier 10 (The Gaffer)', () => {
     const color = getTierColor(10);
     expect(color).toBe('#FFD700'); // Gold
   });
@@ -396,7 +396,7 @@ describe('getTierColor', () => {
     const midTierColor = getTierColor(5);
     const highTierColor = getTierColor(10);
 
-    // At least GOAT should be distinct
+    // At least The Gaffer should be distinct
     expect(highTierColor).not.toBe(lowTierColor);
   });
 

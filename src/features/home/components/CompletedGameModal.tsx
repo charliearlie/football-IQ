@@ -141,14 +141,23 @@ export function CompletedGameModal({
   const score = attempt.score ?? 0;
   const gameName = getGameModeName(gameMode);
 
+  // Top Tens: derive foundCount from metadata.foundIndices
+  const foundIndices = metadata.foundIndices as number[] | undefined;
+  const topTensFoundCount = gameMode === 'top_tens' && Array.isArray(foundIndices)
+    ? foundIndices.length
+    : null;
+
   // For Career Path, use stepsRevealed as the score and pass totalSteps
+  // For Top Tens, use foundCount * 10 (0-100 scale matching X/10 labels)
   // For other modes, normalize score to 0-100
   const isCareerPath = gameMode === 'career_path' || gameMode === 'career_path_pro';
   const totalSteps = metadata.totalSteps;
   const stepsRevealed = metadata.revealedCount;
   const userScore = isCareerPath && stepsRevealed && totalSteps
     ? totalSteps - stepsRevealed + 1
-    : normalizeScoreForMode(gameMode, score);
+    : topTensFoundCount !== null
+      ? topTensFoundCount * 10
+      : normalizeScoreForMode(gameMode, score);
 
   // Determine result type and title
   // Use neutral styling for viewing past results (not a fresh win/loss)
@@ -182,7 +191,10 @@ export function CompletedGameModal({
     >
       {/* Career Path and Goalscorer Recall scores are shown via distribution graph */}
       {gameMode !== 'career_path' && gameMode !== 'career_path_pro' && gameMode !== 'guess_the_goalscorers' && (
-        <ScoreDisplay label={gameName} value={score} />
+        <ScoreDisplay
+          label={gameName}
+          value={topTensFoundCount !== null ? `${topTensFoundCount}/10` : score}
+        />
       )}
 
       {/* Share icon button - centered */}

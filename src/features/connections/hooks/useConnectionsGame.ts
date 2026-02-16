@@ -171,9 +171,15 @@ function connectionsReducer(
         // Check for loss (4 mistakes)
         if (newMistakes >= 4) {
           const score = calculateConnectionsScore(newMistakes, state.solvedGroups);
+          // Reveal all unsolved groups
+          const allUnsolved = content.groups.filter(
+            (g) => !state.solvedGroups.some((s) => s.category === g.category)
+          );
           return {
             ...state,
             selectedPlayers: [],
+            remainingPlayers: [],
+            solvedGroups: [...state.solvedGroups, ...allUnsolved],
             mistakes: newMistakes,
             guesses: newGuesses,
             gameStatus: 'lost',
@@ -210,6 +216,25 @@ function connectionsReducer(
       };
     }
 
+    case 'GIVE_UP': {
+      if (!content || state.gameStatus !== 'playing') return state;
+
+      const score = calculateConnectionsScore(state.mistakes, state.solvedGroups);
+      // Reveal all unsolved groups
+      const allUnsolved = content.groups.filter(
+        (g) => !state.solvedGroups.some((s) => s.category === g.category)
+      );
+
+      return {
+        ...state,
+        selectedPlayers: [],
+        remainingPlayers: [],
+        solvedGroups: [...state.solvedGroups, ...allUnsolved],
+        gameStatus: 'gave_up',
+        score,
+      };
+    }
+
     case 'CLEAR_FEEDBACK': {
       return {
         ...state,
@@ -234,7 +259,7 @@ function connectionsReducer(
 
       const allPlayers = content.groups.flatMap((g) => g.players);
       const solvedPlayers = solvedGroups.flatMap((g) => g.players);
-      const remaining = allPlayers.filter((p) => !solvedPlayers.includes(p));
+      const remaining = shuffleArray(allPlayers.filter((p) => !solvedPlayers.includes(p)));
 
       return {
         ...state,
@@ -397,6 +422,10 @@ export function useConnectionsGame(puzzle: ParsedLocalPuzzle | null) {
     dispatch({ type: 'DESELECT_ALL' });
   }, [dispatch]);
 
+  const giveUp = useCallback(() => {
+    dispatch({ type: 'GIVE_UP' });
+  }, [dispatch]);
+
   const shareResult = useCallback(async (): Promise<ShareResult> => {
     if (!state.score || !content) {
       return { success: false, method: 'clipboard', error: new Error('No score to share') };
@@ -419,6 +448,7 @@ export function useConnectionsGame(puzzle: ParsedLocalPuzzle | null) {
     submitGuess,
     shufflePlayers,
     deselectAll,
+    giveUp,
     shareResult,
     isLoading: !content,
   };

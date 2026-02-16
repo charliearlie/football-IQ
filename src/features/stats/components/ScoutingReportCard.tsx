@@ -5,7 +5,7 @@
  * Designed to be captured with ViewShot for social sharing.
  *
  * Features:
- * - Tier badge with progression tier (Trialist → GOAT)
+ * - Tier badge with progression tier (Intern → The Gaffer)
  * - Total IQ points
  * - Scouting Archetype (dominant game mode)
  * - Field Experience (total completed puzzles)

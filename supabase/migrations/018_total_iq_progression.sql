@@ -9,16 +9,16 @@
 -- 4. Backfill existing users with their historical point totals
 --
 -- Tier System (0-20,000 points):
--- 1. Trialist (0-24)
--- 2. Youth Squad (25-99)
--- 3. Reserve Team (100-249)
--- 4. Impact Sub (250-499)
--- 5. Rotation Player (500-999)
--- 6. First Team Regular (1,000-1,999)
--- 7. Key Player (2,000-3,999)
--- 8. Club Legend (4,000-7,999)
--- 9. National Treasure (8,000-19,999)
--- 10. GOAT (20,000+)
+-- 1. Intern (0-24)
+-- 2. Match Analyst (25-99)
+-- 3. Scout (100-249)
+-- 4. Tactical Analyst (250-499)
+-- 5. Chief Scout (500-999)
+-- 6. Head of Analysis (1,000-1,999)
+-- 7. Head of Recruitment (2,000-3,999)
+-- 8. Technical Director (4,000-7,999)
+-- 9. Director of Football (8,000-19,999)
+-- 10. The Gaffer (20,000+)
 --
 -- Date: 2026-01-26
 -- =============================================================================

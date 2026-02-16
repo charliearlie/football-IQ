@@ -1021,20 +1021,20 @@ import {
 
 // Get tier for current points
 const tier = getTierForPoints(342);
-// tier: { tier: 4, name: 'Impact Sub', minPoints: 250, maxPoints: 499 }
+// tier: { tier: 4, name: 'Tactical Analyst', minPoints: 250, maxPoints: 499 }
 
 // Progress within current tier (0-100)
-getProgressToNextTier(342)  // 36.8 (36.8% through Impact Sub)
+getProgressToNextTier(342)  // 36.8 (36.8% through Tactical Analyst)
 
 // Points needed for next tier
-getPointsToNextTier(342)    // 158 (need 158 more for Rotation Player)
+getPointsToNextTier(342)    // 158 (need 158 more for Chief Scout)
 
 // Tier colors (for UI)
 getTierColor(1)   // '#58CC02' (Pitch Green - tiers 1-3)
 getTierColor(5)   // '#FACC15' (Card Yellow - tiers 4-6)
 getTierColor(7)   // '#F97316' (Orange - tiers 7-8)
 getTierColor(9)   // '#EC4899' (Pink - tier 9)
-getTierColor(10)  // '#06B6D4' (Cyan - GOAT)
+getTierColor(10)  // '#06B6D4' (Cyan - The Gaffer)
 
 // Format for display
 formatTotalIQ(1234)  // "1,234"

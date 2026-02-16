@@ -1,11 +1,17 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { colors, textStyles, spacing } from '@/theme';
 import { ArchiveDateGroup, ArchivePuzzle } from '../types/archive.types';
 import { MatchdayCard } from './MatchdayCard';
 import { ArchiveCalendarSkeleton } from './ArchiveCalendarSkeleton';
+import { injectPremiumUpsell } from '../utils/calendarTransformers';
+import { PremiumUpsellBanner } from '@/features/ads';
+
+type CalendarListItem =
+  | { type: 'matchday'; data: ArchiveDateGroup }
+  | { type: 'premium-upsell' };
 
 interface ArchiveCalendarProps {
   dateGroups: ArchiveDateGroup[];
@@ -43,17 +49,34 @@ export function ArchiveCalendar({
   isPremium,
   testID,
 }: ArchiveCalendarProps) {
+  // Build list data with premium upsell banner injected
+  const listData: CalendarListItem[] = useMemo(() => {
+    const withUpsell = injectPremiumUpsell(dateGroups, isPremium);
+    return withUpsell.map(item =>
+      'type' in item && item.type === 'premium-upsell'
+        ? (item as CalendarListItem)
+        : { type: 'matchday' as const, data: item as ArchiveDateGroup }
+    );
+  }, [dateGroups, isPremium]);
 
-  // Simple render item
-  const renderItem = ({ item }: { item: ArchiveDateGroup }) => (
-    <MatchdayCard
-      dateGroup={item}
-      isPremium={isPremium}
-      onPuzzlePress={onPuzzlePress}
-      // auto-expand logic could go here if needed (e.g. expand Today by default)
-      initiallyExpanded={false}
-    />
-  );
+  // Render item - handles both matchday cards and premium upsell
+  const renderItem = ({ item }: { item: CalendarListItem }) => {
+    if (item.type === 'premium-upsell') {
+      return (
+        <View style={{ marginHorizontal: 20, marginVertical: 12 }}>
+          <PremiumUpsellBanner testID="archive-inline-upsell" fullWidth dismissible={false} />
+        </View>
+      );
+    }
+    return (
+      <MatchdayCard
+        dateGroup={item.data}
+        isPremium={isPremium}
+        onPuzzlePress={onPuzzlePress}
+        initiallyExpanded={false}
+      />
+    );
+  };
 
   if (isLoading && dateGroups.length === 0) {
     return (
@@ -71,10 +94,17 @@ export function ArchiveCalendar({
 
   return (
     <FlashList
-      data={dateGroups}
+      data={listData}
       renderItem={renderItem}
-      keyExtractor={(item) => item.dateString}
-      estimatedItemSize={80} // header height + padding
+      keyExtractor={(item) =>
+        item.type === 'premium-upsell'
+          ? 'premium-upsell-banner'
+          : item.data.dateString
+      }
+      estimatedItemSize={80}
+      overrideItemLayout={(layout, item) => {
+        layout.size = item.type === 'premium-upsell' ? 120 : 80;
+      }}
       ListHeaderComponent={ListHeaderComponent}
       ListEmptyComponent={!isLoading ? EmptyState : null}
       onEndReached={onEndReached}

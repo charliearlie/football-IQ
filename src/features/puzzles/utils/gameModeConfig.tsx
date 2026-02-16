@@ -5,6 +5,7 @@ import {
   Link,
   Shirt,
   HelpCircle,
+  Cable,
 } from 'lucide-react-native';
 import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -122,6 +123,13 @@ export function getGameModeConfig(gameMode: GameMode, isArchive = false): GameMo
         subtitle: 'Name the lineup',
         icon: iconElement!,
         iconColor: colors.cardYellow,
+      };
+    case 'connections':
+      return {
+        title: 'Connections',
+        subtitle: 'Find the groups',
+        icon: <Cable color={colors.pitchGreen} size={28} />,
+        iconColor: colors.pitchGreen,
       };
     default:
       return {

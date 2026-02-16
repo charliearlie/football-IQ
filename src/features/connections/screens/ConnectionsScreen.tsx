@@ -12,11 +12,15 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Pressable,
+  Platform,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, fonts, spacing } from '@/theme';
+import { ElevatedButton } from '@/components';
 import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { GameContainer } from '@/components/GameContainer';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { AdBanner } from '@/features/ads';
 import { useConnectionsGame } from '../hooks/useConnectionsGame';
 import { ConnectionsGrid } from '../components/ConnectionsGrid';
@@ -33,6 +37,8 @@ export interface ConnectionsScreenProps {
  * ConnectionsScreen - Main game screen for Connections.
  */
 export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenProps) {
+  const router = useRouter();
+
   // Onboarding state - show intro for first-time users
   const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('connections');
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -48,18 +54,70 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
     submitGuess,
     shufflePlayers,
     deselectAll,
+    giveUp,
     shareResult,
   } = useConnectionsGame(puzzle);
 
-  // Modal visibility
+  // Modal visibility state
   const [showResultModal, setShowResultModal] = useState(false);
 
-  // Show result modal when game completes
+  // Shake animation state
+  const [shakingPlayers, setShakingPlayers] = useState<string[]>([]);
+
+  // Give up confirmation modal
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
+
+  const handleGiveUpPress = () => {
+    setShowGiveUpModal(true);
+  };
+
+  const handleGiveUpConfirm = () => {
+    setShowGiveUpModal(false);
+    giveUp();
+  };
+
+  const handleGiveUpCancel = () => {
+    setShowGiveUpModal(false);
+  };
+
+  // Consolidate modal visibility logic
   useEffect(() => {
-    if ((state.gameStatus === 'won' || state.gameStatus === 'lost') && state.attemptSaved) {
-      setShowResultModal(true);
+    if (state.gameStatus === 'playing') {
+      // Reset when playing
+      setShowResultModal(false);
+    } else {
+      // For all other states (won, lost, gave_up), ensure closed initially
+      // This prevents auto-opening and lets the user click the button
+      setShowResultModal(false);
     }
-  }, [state.gameStatus, state.attemptSaved]);
+  }, [state.gameStatus]);
+
+  const handleSeeScore = useCallback(() => {
+    setShowResultModal(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  // Trigger shake on incorrect guess
+  useEffect(() => {
+    if (state.lastGuessResult === 'incorrect' || state.lastGuessResult === 'close') {
+      // Shake the previously selected players
+      if (state.guesses.length > 0) {
+        const lastGuess = state.guesses[state.guesses.length - 1];
+        if (!lastGuess.correct) {
+          setShakingPlayers(lastGuess.players);
+          // Clear shake after animation completes (500ms)
+          const timeout = setTimeout(() => {
+            setShakingPlayers([]);
+          }, 500);
+          return () => clearTimeout(timeout);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.lastGuessResult, state.guesses.length]);
 
   // Handle share
   const handleShare = async () => {
@@ -113,6 +171,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
   }
 
   const isPlaying = state.gameStatus === 'playing';
+  const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'lost' || state.gameStatus === 'gave_up';
 
   return (
     <GameContainer
@@ -120,23 +179,26 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
       onHelpPress={() => setShowHelpModal(true)}
       testID="connections-screen"
     >
-      <View style={styles.container}>
+      <LinearGradient
+        colors={[colors.stadiumNavy, '#1E293B', colors.stadiumNavy]}
+        locations={[0, 0.3, 1]}
+        style={styles.container}
+      >
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Instructions */}
-          <View style={styles.instructionsContainer}>
-            <Text style={styles.instructionsText}>
-              Find groups of four footballers with something in common
-            </Text>
-          </View>
-
-          {/* Mistake indicator */}
+          {/* Status Bar */}
           {isPlaying && (
-            <View style={styles.mistakeContainer}>
-              <Text style={styles.mistakeLabel}>Mistakes remaining:</Text>
-              <MistakeIndicator mistakes={state.mistakes} testID="mistake-indicator" />
+            <View style={styles.statusBar}>
+              <View style={styles.statusLeft}>
+                <Text style={styles.statusLabelGreen}>OBJECTIVE</Text>
+                <Text style={styles.statusValue}>Find groups of four</Text>
+              </View>
+              <View style={styles.statusRight}>
+                <Text style={styles.statusLabel}>MISTAKES LEFT</Text>
+                <MistakeIndicator mistakes={state.mistakes} testID="mistake-indicator" />
+              </View>
             </View>
           )}
 
@@ -146,60 +208,68 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
               solvedGroups={state.solvedGroups}
               remainingPlayers={state.remainingPlayers}
               selectedPlayers={state.selectedPlayers}
+              shakingPlayers={shakingPlayers}
               onTogglePlayer={togglePlayer}
               disabled={!isPlaying}
               testID="connections-grid"
             />
           </View>
 
-          {/* Utility buttons */}
-          {isPlaying && (
-            <View style={styles.utilityRow}>
-              <Pressable
-                style={[styles.utilityButton, state.selectedPlayers.length === 0 && styles.utilityButtonDisabled]}
-                onPress={deselectAll}
-                disabled={state.selectedPlayers.length === 0}
-              >
-                <Text style={[styles.utilityButtonText, state.selectedPlayers.length === 0 && styles.utilityButtonTextDisabled]}>
-                  DESELECT ALL
-                </Text>
-              </Pressable>
-              <Pressable style={styles.utilityButton} onPress={shufflePlayers}>
-                <Text style={styles.utilityButtonText}>SHUFFLE</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Feedback messages */}
-          {state.lastGuessResult === 'close' && (
+          {/* Feedback messages (only while playing) */}
+          {isPlaying && state.lastGuessResult === 'close' && (
             <Text style={styles.feedbackClose}>One away! Try again.</Text>
           )}
-          {state.lastGuessResult === 'incorrect' && (
+          {isPlaying && state.lastGuessResult === 'incorrect' && (
             <Text style={styles.feedbackIncorrect}>Not quite. Keep trying!</Text>
           )}
         </ScrollView>
 
-        {/* Action Bar */}
+        {/* Action Bar (while playing) */}
         {isPlaying && (
           <ConnectionsActionBar
             canSubmit={state.selectedPlayers.length === 4}
+            canDeselect={state.selectedPlayers.length > 0}
             onSubmit={submitGuess}
+            onShuffle={shufflePlayers}
+            onDeselect={deselectAll}
+            onGiveUp={handleGiveUpPress}
             testID="connections-actions"
           />
         )}
 
+        {/* Game Over Zone - Show button for all finished states */}
+        {isGameOver && (
+          <View style={styles.gameOverZone}>
+            {state.gameStatus === 'won' && (
+              <Text style={styles.winText}>
+                {state.mistakes === 0 ? 'PERFECT!' : 'GROUPS COMPLETED!'}
+              </Text>
+            )}
+            <ElevatedButton
+              title="See how you compare"
+              onPress={handleSeeScore}
+              fullWidth
+              borderRadius={12}
+              testID="connections-see-score"
+            />
+          </View>
+        )}
+
         {/* Result Modal */}
-        <ConnectionsResultModal
-          visible={showResultModal}
-          score={state.score}
-          guesses={state.guesses}
-          allGroups={content.groups}
-          puzzleId={puzzle.id}
-          puzzleDate={puzzle.puzzle_date}
-          onClose={() => setShowResultModal(false)}
-          onShare={handleShare}
-          testID="result-modal"
-        />
+        {state.score && (
+          <ConnectionsResultModal
+            visible={showResultModal}
+            score={state.score}
+            guesses={state.guesses}
+            allGroups={content.groups}
+            puzzleId={puzzle.id}
+            puzzleDate={puzzle.puzzle_date}
+            onClose={handleClose}
+            onShare={handleShare}
+            gaveUp={state.gameStatus === 'gave_up'}
+            testID="result-modal"
+          />
+        )}
 
         {/* Ad Banner (non-premium users) */}
         <AdBanner testID="connections-ad-banner" />
@@ -211,7 +281,19 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
           onClose={() => setShowHelpModal(false)}
           testID="connections-help-modal"
         />
-      </View>
+
+        {/* Give Up Confirmation Modal */}
+        <ConfirmationModal
+          visible={showGiveUpModal}
+          title="Give Up?"
+          message="Are you sure? All groups will be revealed."
+          confirmLabel="Reveal Groups"
+          cancelLabel="Back to Game"
+          onConfirm={handleGiveUpConfirm}
+          onCancel={handleGiveUpCancel}
+          testID="connections-giveup-modal"
+        />
+      </LinearGradient>
     </GameContainer>
   );
 }
@@ -219,7 +301,6 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.stadiumNavy,
   },
   scrollView: {
     flex: 1,
@@ -252,61 +333,47 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.sm,
   },
-  instructionsContainer: {
-    alignItems: 'center',
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.md,
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
-  instructionsText: {
+  statusLeft: {
+    alignItems: 'flex-start',
+  },
+  statusRight: {
+    alignItems: 'flex-end',
+  },
+  statusLabelGreen: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    color: colors.pitchGreen,
+    marginBottom: 4,
+  },
+  statusLabel: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  statusValue: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  mistakeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  mistakeLabel: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '500',
+    color: 'rgba(248, 250, 252, 0.9)',
   },
   gridContainer: {
     paddingHorizontal: spacing.lg,
-  },
-  utilityRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 12,
-  },
-  utilityButton: {
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-  },
-  utilityButtonDisabled: {
-    opacity: 0.3,
-  },
-  utilityButtonText: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.floodlightWhite,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  utilityButtonTextDisabled: {
-    color: 'rgba(255, 255, 255, 0.3)',
   },
   feedbackClose: {
     fontFamily: fonts.body,
@@ -321,5 +388,20 @@ const styles = StyleSheet.create({
     color: colors.redCard,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  gameOverZone: {
+    padding: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
+    backgroundColor: colors.stadiumNavy,
+    borderTopWidth: 1,
+    borderTopColor: colors.glassBorder,
+  },
+  winText: {
+    fontFamily: fonts.headline,
+    fontSize: 20,
+    color: colors.pitchGreen,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    letterSpacing: 1,
   },
 });

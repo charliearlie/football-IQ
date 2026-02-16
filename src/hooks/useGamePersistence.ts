@@ -30,7 +30,7 @@ import {
  * Includes all possible game status values across all game modes.
  */
 export interface BaseGameState {
-  gameStatus: 'idle' | 'playing' | 'won' | 'lost' | 'draw' | 'complete' | 'revealed';
+  gameStatus: 'idle' | 'playing' | 'won' | 'lost' | 'draw' | 'complete' | 'revealed' | 'gave_up';
   attemptId: string | null;
   attemptSaved: boolean;
   startedAt: string | null;
