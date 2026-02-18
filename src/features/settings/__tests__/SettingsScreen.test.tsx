@@ -328,7 +328,7 @@ describe("SettingsScreen", () => {
     it("renders Profile section with Test Manager", () => {
       const { getByText } = render(<SettingsScreen />);
       expect(getByText("Test Manager")).toBeTruthy();
-      expect(getByText(/Trialist/i)).toBeTruthy();
+      expect(getByText(/Intern/i)).toBeTruthy();
     });
 
     it("renders Subscription section header", () => {
