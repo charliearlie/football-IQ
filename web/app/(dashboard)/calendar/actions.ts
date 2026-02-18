@@ -904,6 +904,14 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
       { category: "", difficulty: "purple", players: ["", "", "", ""] },
     ],
   },
+  timeline: {
+    subject: "",
+    events: Array.from({ length: 6 }, () => ({
+      text: "",
+      year: 2026,
+      type: "transfer" as const,
+    })),
+  },
 };
 
 /**

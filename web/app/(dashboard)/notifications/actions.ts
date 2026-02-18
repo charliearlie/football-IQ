@@ -45,6 +45,7 @@ const GAME_MODE_ROUTE_MAP: Record<GameMode, string> = {
   top_tens: "top-tens",
   starting_xi: "starting-xi",
   connections: "connections",
+  timeline: "timeline",
 };
 
 /**
