@@ -29,6 +29,7 @@ export const ALL_GAME_MODES: GameMode[] = [
   'top_tens',
   'starting_xi',
   'connections',
+  'timeline',
 ];
 
 /**
@@ -93,6 +94,7 @@ export function calculateFieldExperience(
     top_tens: 0,
     starting_xi: 0,
     connections: 0,
+    timeline: 0,
   };
 
   let totalAppearances = 0;

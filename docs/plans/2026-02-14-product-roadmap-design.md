@@ -62,39 +62,42 @@ Automated checks that run before any puzzle goes live:
 
 ## Part 1: New Game Modes
 
-### 1.1 Football Connections (THE VIRAL BET)
+### 1.1 Football Connections ✅ COMPLETE
 
-**Priority: P0 | Effort: Medium | Virality: 5/5**
+**Priority: P0 | Effort: Medium | Virality: 5/5** — **Shipped Feb 2026**
 
 NYT Connections applied to football. 16 player names in a 4x4 grid. Find 4 groups of 4 connected players. 4 mistakes max. Color-coded difficulty (yellow/green/blue/purple).
 
-- **Why viral**: Connections is the fastest-growing puzzle game. Nobody has done it for football. Emoji grid share format is proven. One attempt/day = FOMO.
-- **Share format**: Emoji grid (colored squares for solve order + mistakes) + `footballiq.app` link
-- **Data**: Builds on existing player graph. Categories auto-generated from `player_appearances`, `player_achievements`, `nationality_code`, `birth_year`. Purple categories need manual curation.
-- **Key files**: Follow `src/features/the-grid/` pattern. New `src/features/connections/` directory.
-- **Content pipeline**: Algorithm generates 3 candidates/day from knowledge graph -> editor picks best -> adds 1 manual "tricky" category
+- **Implementation**: `src/features/connections/` — types, hooks, utils, components, screens
+- **CMS**: `web/app/(dashboard)/admin/connections/` — list + create form
+- **Routes**: `app/connections/index.tsx`, `app/connections/[puzzleId].tsx`
 
-### 1.2 Mystery Manager
+### 1.2 Timeline (THE RETENTION PLAY)
 
-**Priority: P1 | Effort: Low | Virality: 2/5**
+**Priority: P0 | Effort: Medium | Virality: 4/5**
+
+Place 6-8 historical events from a player's career in chronological order. Drag-to-reorder with cascading reveal. Multiple attempts allowed but each costs points.
+
+- **Why viral**: Proven mechanic (Sortdle, Chronophoto). "Put these in order" is simpler to explain than Connections. Deductive reasoning makes it accessible to casual fans. Everyone finishes — score varies.
+- **Share format**: `⏱️⏱️⏱️⏱️⏱️⏱️` + `✅✅❌✅✅✅` — shows which events you placed correctly
+- **Data**: Auto-generated from existing `player_appearances` (transfers) + `player_achievements` (trophies). V2 adds `timeline_events` table for richer content (debut goals, records, milestones).
+- **Schedule**: 3x per week (Tue/Thu/Sat), free tier
+- **Key files**: Follow `src/features/connections/` pattern. New `src/features/timeline/` directory.
+- **Content pipeline**: Career Path data repurposed — each player's career steps become timeline events. Manual curation adds achievement events.
+- **Full design**: See `docs/plans/2026-02-17-timeline-design.md`
+
+### 1.3 Mystery Manager
+
+**Priority: P3 | Effort: Low | Virality: 2/5**
 
 Identify a manager from progressive career clues. Reuses Career Path UI and mechanics entirely.
 
 - **Data**: New `managers` table (name, career steps, trophies). Can launch with 50-100 manually curated managers and expand.
 - **Why**: Manager debates are huge in football culture. Very low build cost.
 
-### 1.3 Transfer Window (Batch Mode)
-
-**Priority: P1 | Effort: Low | Virality: 2/5**
-
-5-10 transfers from a specific window shown with fees/clubs but player names blanked. Fill in as many as you can in 90 seconds.
-
-- **Data**: Extends existing Transfer Guess content. Bundle transfers by window period.
-- **Why**: Transfer windows are the most discussed football periods. Reuses existing validation logic.
-
 ### 1.4 Who Am I? (20 Questions)
 
-**Priority: P2 | Effort: Low | Virality: 3/5**
+**Priority: P3 | Effort: Low | Virality: 3/5**
 
 5 yes/no clues about a mystery player, revealed one at a time. Guess after each clue. Score: 5pts for clue 1, down to 1pt for clue 5.
 
@@ -103,7 +106,7 @@ Identify a manager from progressive career clues. Reuses Career Path UI and mech
 
 ### 1.5 Shirt Number
 
-**Priority: P2 | Effort: Medium | Virality: 3/5**
+**Priority: P3 | Effort: Medium | Virality: 3/5**
 
 See a famous shirt number + club. Name as many players as possible who wore it (60s timer).
 
@@ -112,26 +115,16 @@ See a famous shirt number + club. Name as many players as possible who wore it (
 
 ### 1.6 The Wall (Club Connections)
 
-**Priority: P2 | Effort: Medium | Virality: 3/5**
+**Priority: P3 | Effort: Medium | Virality: 3/5**
 
 4 club badges shown. Find the connection. 3 rounds, each harder.
 
 - **Data**: Club data exists. Connections derived from shared managers, kit colors, league, country.
 - **Why**: Club-centric = engages casual fans (everyone knows badges).
 
-### 1.7 Geography Ball
+### 1.7 Score Predictor (Weekend Fixtures)
 
-**Priority: P3 | Effort: High | Virality: 4/5**
-
-Trace a player's career path on a map by tapping cities in order. Distance-based scoring.
-
-- **Data**: NEW club coordinates (lat/long). Career order from `player_appearances`.
-- **Why**: Globle proved map games are addictive. Career line across a map is extremely shareable as an image.
-- **Tech**: Needs map rendering (react-native-maps or SVG). Significant new infrastructure.
-
-### 1.8 Score Predictor (Weekend Fixtures)
-
-**Priority: P1 | Effort: Medium | Virality: 4/5**
+**Priority: P3 | Effort: Medium | Virality: 4/5**
 
 Predict the scores for upcoming Premier League (and eventually other league) weekend fixtures. Points awarded after matches finish based on prediction accuracy.
 
@@ -328,7 +321,8 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 | --- | ---------------------------------------------------------- | -------- | ------ | ------- | --------- |
 | 0a  | **Clean rebuild of player data + canonical club registry** | 0        | L      | 0       | 5         |
 | 0b  | **Club admin merge tool**                                  | 0        | M      | 0       | 3         |
-| 1   | **Football Connections game mode**                         | 5        | M      | 2       | 5         |
+| ~~1~~ | ~~**Football Connections game mode**~~ ✅ COMPLETE        | 5        | M      | 2       | 5         |
+| 1b  | **Timeline game mode** (3x/week, drag-to-order career events) | 4    | M      | 2       | 5         |
 | 2   | **Free daily limit (5 games/day)**                         | 1        | S      | 5       | 2         |
 | 3   | **Referral system + deep links**                           | 4        | M      | 2       | 3         |
 | 4   | **Enhanced share cards with "X% of players" percentile**   | 3        | S      | 0       | 3         |
@@ -343,12 +337,10 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 | 0e  | **Content integrity checks (automated)**      | 0        | S      | 0       | 3         |
 | 6   | **Friends system + friend leaderboard**       | 4        | L      | 2       | 5         |
 | 7   | **Async friend challenges**                   | 5        | L      | 1       | 5         |
-| 8   | **Mystery Manager game mode**                 | 2        | S      | 1       | 3         |
 | 9   | **Transfer Window batch game mode**           | 2        | S      | 1       | 3         |
 | 10  | **7-day free trial trigger (after 10 games)** | 1        | S      | 5       | 2         |
 | 11  | **Premium tier expansion**                    | 1        | M      | 4       | 3         |
 | 12  | **Football-Data.org API integration**         | 1        | M      | 1       | 3         |
-| 12b | **Score Predictor (weekend fixtures)**        | 4        | M      | 2       | 5         |
 | 13  | **Programmatic puzzle generation pipeline**   | 1        | L      | 1       | 4         |
 | 14  | **Weekly collection challenges**              | 2        | M      | 1       | 4         |
 | 15  | **Discord community launch**                  | 2        | S      | 0       | 3         |
@@ -357,6 +349,8 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 | #   | Item                                        | Virality | Effort | Revenue | Retention |
 | --- | ------------------------------------------- | -------- | ------ | ------- | --------- |
+| 8   | **Mystery Manager game mode**               | 2        | S      | 1       | 3         |
+| 12b | **Score Predictor (weekend fixtures)**      | 4        | M      | 2       | 5         |
 | 16  | **Who Am I? game mode**                     | 3        | M      | 1       | 3         |
 | 17  | **Shirt Number game mode**                  | 3        | M      | 1       | 3         |
 | 18  | **The Wall game mode**                      | 3        | M      | 1       | 3         |
@@ -381,78 +375,108 @@ Current: 2 modes gated (Career Path Pro, Top Tens). Weak value prop.
 
 ---
 
-## Part 6: The Viral Game in Detail - Football Connections
+## Part 6: Shipped Game Modes
 
-### Why This Is The One
+### Football Connections ✅ (Shipped Feb 2026)
 
-NYT Connections has 3x the growth rate Wordle had at the same stage. The format is proven. **Nobody has done it for football.** The football domain is perfect because:
+NYT Connections applied to football. 16 player names in a 4x4 grid. Find 4 groups of 4 connected players. 4 mistakes max. Color-coded difficulty (yellow/green/blue/purple).
 
-- Football is full of hidden connections (shared clubs, agents, nationalities, transfer chains)
-- 4-mistake limit creates the perfect tension curve
-- Football fans love "I knew something obscure" bragging
-- The emoji grid share format is already proven viral
+**Implementation:** `src/features/connections/` | **CMS:** `web/app/(dashboard)/admin/connections/` | **Routes:** `app/connections/`
+
+---
+
+## Part 7: The Next Viral Game — Timeline
+
+### Why Timeline
+
+Both the trivia-engagement expert and UI designer agents independently converged on Timeline as the strongest candidate. The format is proven (Sortdle, Chronophoto) and maps perfectly to football's deep history. Key advantages over Connections:
+
+- **Simpler to explain**: "Put these in order" vs "Find 4 groups of 4"
+- **More forgiving**: No knockout mechanic — everyone finishes, score varies
+- **Better skill differentiation**: Granular scoring vs binary win/loss
+- **Deductive accessibility**: Logical reasoning works even without exact dates
+- **Educational post-solve**: Completed timeline becomes a career reference
 
 ### Exact Mechanics
 
-1. 16 shuffled player names in a 4x4 grid
-2. Tap 4 players -> Submit -> if correct, group locks with category label + color
-3. Wrong guess: "2 of 4 belong to this group" feedback (doesn't reveal which)
-4. 4 mistakes = game over (all groups revealed)
-5. Colors: Yellow (easy) / Green (medium) / Blue (hard) / Purple (tricky)
+1. 6 career events from a player shown in random order as draggable cards
+2. Long-press to lift card (haptic bump), drag to reorder, drop to place
+3. Submit to check — cards reveal one by one (200ms cascade) showing ✓/✗ + correct year
+4. Correct cards lock in place. Incorrect cards shake red.
+5. Multiple attempts allowed: 1st = full points, 2nd = 75% max, 3rd = 50% max
+6. Each submission: "X of Y are correct" feedback (not which ones, unless locked)
 
 ### Scoring
 
-| Mistakes            | IQ Points | Label                |
-| ------------------- | --------- | -------------------- |
-| 0                   | 10        | Hall of Famer        |
-| 1                   | 8         | World Class          |
-| 2                   | 6         | Director of Football |
-| 3                   | 4         | Chief Scout          |
-| 4 (game over)       | 2         | Scout                |
-| Perfect order bonus | +2        | -                    |
+| Accuracy (1st try) | IQ Points | Label            |
+| ------------------- | --------- | ---------------- |
+| 6/6 (perfect)       | 10        | Perfect Timeline |
+| 5/6                 | 8         | World Class      |
+| 4/6                 | 6         | Expert           |
+| 3/6                 | 4         | Promising        |
+| 1-2/6               | 2         | Rookie           |
 
 ### Share Format
 
 ```
-Football IQ - Connections
-14 Feb 2026
+Football IQ - Timeline
+Cristiano Ronaldo
+17 Feb 2026
 
-🟨🟨🟨🟨
-🟩🟦🟩🟩
-🟩🟩🟩🟩
-🟦🟦🟦🟦
-🟪🟪🟪🟪
+⏱️⏱️⏱️⏱️⏱️⏱️
+✅✅❌✅✅✅
 
-1 mistake - 8 IQ
+5/6 correct - 8 IQ
 footballiq.app
 ```
 
-### Example Category Types
+### Content Structure
 
-**Auto-generated from existing data:**
+```json
+{
+  "subject": "Cristiano Ronaldo",
+  "subject_id": "Q11571",
+  "events": [
+    { "text": "Signed for Sporting CP", "year": 2002, "type": "transfer" },
+    { "text": "Joined Manchester United", "year": 2003, "type": "transfer" },
+    { "text": "Won first Ballon d'Or", "year": 2008, "type": "achievement" },
+    { "text": "Signed for Real Madrid", "year": 2009, "type": "transfer" },
+    { "text": "Won Euro 2016 with Portugal", "year": 2016, "type": "achievement" },
+    { "text": "Moved to Juventus", "year": 2018, "type": "transfer" }
+  ]
+}
+```
 
-- "Played for [Club A] and [Club B]" (via `player_appearances` JOIN)
-- "Born in [Year]" (via `birth_year`)
-- "From [Country]" (via `nationality_code`)
-- "[Position] in [League]" (via `position_category` + club)
-- "Won [Achievement]" (via `player_achievements`)
+### Data Sources
 
-**Manually curated (for Purple difficulty):**
+- **V1**: Auto-generated from `player_appearances` (transfers) + `player_achievements` (trophies). Career Path content directly repurposable.
+- **V2**: New `timeline_events` table for richer content (debut goals, records, international milestones).
 
-- "Surname is also a color" (Brown, White, Green, Gray)
-- "Appeared in a FIFA cover"
-- "Scored on their debut for their country"
-- Wordplay / lateral thinking categories
+### Schedule
+
+- 3x per week: Tuesday, Thursday, Saturday
+- Free tier (not premium-gated)
+
+### UX Interaction Design
+
+- **Lift**: Long-press card → shadow grows + haptic bump
+- **Drag**: Card follows thumb, other cards spring aside smoothly
+- **Drop**: Spring animation + satisfying thunk haptic
+- **Submit**: Cascading domino reveal (200ms per card)
+- **Correct**: Card glows green, locks in place
+- **Incorrect**: Card shakes red, shows correct year underneath
+- **Perfect**: Confetti burst + "Perfect Timeline!" overlay
+
+### Why This Works for Retention
+
+- **Daily ritual**: New timeline 3x/week, different player each time
+- **Everyone finishes**: Score varies but nobody gets knocked out
+- **Deductive reasoning**: "He must have won Ballon d'Or AFTER joining Real Madrid"
+- **Progressive mastery**: Players learn football history through play
+- **"Almost!" frustration**: 5/6 creates the "next time" impulse
 
 ### Implementation Pattern
 
-New feature at `src/features/connections/` following `src/features/the-grid/` structure:
+Feature directory: `src/features/timeline/` following Connections pattern.
 
-- `types/connections.types.ts` - ConnectionsGroup, ConnectionsPuzzle, ConnectionsAttempt
-- `hooks/useConnectionsGame.ts` - Selection state, mistake count, solved groups, animation triggers
-- `utils/scoring.ts` - IQ calculation from mistakes
-- `utils/share.ts` - Emoji grid generation
-- `components/` - ConnectionsGrid, ConnectionsCell, GroupReveal, MistakeIndicator
-- App route: `app/connections/index.tsx`
-
-Content stored in `daily_puzzles.content` as JSON with 4 groups of 4 players + category labels + difficulty colors.
+Full design doc: `docs/plans/2026-02-17-timeline-design.md`

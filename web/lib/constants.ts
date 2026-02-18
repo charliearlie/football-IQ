@@ -11,6 +11,7 @@ export const GAME_MODES = [
   "top_tens",
   "starting_xi",
   "connections",
+  "timeline",
 ] as const;
 
 export type GameMode = (typeof GAME_MODES)[number];
@@ -28,6 +29,7 @@ export const GAME_MODE_DISPLAY_NAMES: Record<GameMode, string> = {
   top_tens: "Top Tens",
   starting_xi: "Starting XI",
   connections: "Connections",
+  timeline: "Timeline",
 };
 
 // Short names for compact display
@@ -43,6 +45,7 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   top_tens: "TT",
   starting_xi: "XI",
   connections: "CON",
+  timeline: "TL",
 };
 
 // Premium-only modes

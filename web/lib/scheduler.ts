@@ -80,6 +80,9 @@ export const WEEKLY_SCHEDULE: ScheduleSlot[] = [
   // Specific days - Premium
   { gameMode: "topical_quiz", days: [2], isPremium: true }, // Tuesday (Premium)
   { gameMode: "top_tens", days: [1, 4], isPremium: true }, // Mon, Thu
+
+  // Timeline - Free
+  { gameMode: "timeline", days: [2, 4, 6], isPremium: false }, // Tue, Thu, Sat
 ];
 
 /**
@@ -94,6 +97,7 @@ export const SCHEDULED_MODES: GameMode[] = [
   "topical_quiz",
   "top_tens",
   "starting_xi",
+  "timeline",
 ];
 
 /**

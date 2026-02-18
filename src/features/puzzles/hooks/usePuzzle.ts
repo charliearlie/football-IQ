@@ -23,6 +23,8 @@ const GAME_MODES: GameMode[] = [
   'topical_quiz',
   'top_tens',
   'starting_xi',
+  'connections',
+  'timeline',
 ];
 
 /**

@@ -100,6 +100,11 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     icon: Grid3X3,
     description: 'Spots patterns and connections instantly',
   },
+  timeline: {
+    name: 'Timekeeper',
+    icon: Clock,
+    description: 'Knows the chronology of every career',
+  },
 };
 
 export interface ArchetypeLabelProps {

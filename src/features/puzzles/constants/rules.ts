@@ -318,6 +318,31 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     icon: undefined, // Will add icon asset later
     accentColor: colors.pitchGreen,
   },
+
+  timeline: {
+    gameMode: 'timeline',
+    displayTitle: 'Timeline',
+    goal: 'Put 6 career events in chronological order',
+    rules: [
+      { text: 'Drag to reorder events into the correct timeline', highlight: 'Drag to reorder' },
+      { text: 'Correct events lock in place after each guess' },
+      { text: 'Scoring based on first-attempt accuracy', highlight: 'first-attempt' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'IQ based on events correct on first try',
+      potentialLabel: 'PERFECT TIMELINE',
+      tiers: [
+        { range: '6/6 correct', label: 'Perfect Timeline' },
+        { range: '5/6 correct', label: 'World Class' },
+        { range: '4/6 correct', label: 'Expert' },
+        { range: '3/6 correct', label: 'Promising' },
+        { range: '1-2/6 correct', label: 'Rookie' },
+      ],
+    },
+    icon: undefined,
+    accentColor: colors.cardYellow,
+  },
 };
 
 /**

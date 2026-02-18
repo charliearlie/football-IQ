@@ -91,6 +91,12 @@ export function extractAnswer(
       return { text: "Connections Puzzle", qid: undefined };
     }
 
+    case "timeline": {
+      const subject = content.subject as string | undefined;
+      const subjectId = content.subject_id as string | undefined;
+      return { text: subject || "Timeline Puzzle", qid: subjectId || undefined };
+    }
+
     default:
       return { text: "Unknown", qid: undefined };
   }

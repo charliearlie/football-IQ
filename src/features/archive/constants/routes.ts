@@ -22,4 +22,5 @@ export const GAME_MODE_ROUTES: Record<GameMode, string> = {
   top_tens: 'top-tens',
   starting_xi: 'starting-xi',
   connections: 'connections',
+  timeline: 'timeline',
 };

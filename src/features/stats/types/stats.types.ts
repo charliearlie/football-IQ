@@ -33,6 +33,7 @@ export const GAME_MODE_DISPLAY: Record<
   top_tens: { displayName: 'Top Tens', skillName: 'Deep Knowledge' },
   starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },
   connections: { displayName: 'Connections', skillName: 'Group Recognition' },
+  timeline: { displayName: 'Timeline', skillName: 'Chronological Memory' },
 };
 
 /**
@@ -52,6 +53,7 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
   top_tens: 0.11, // 11% - premium mode
   starting_xi: 0.08, // 8%
   connections: 0.02, // 2% - new mode, low weight initially
+  timeline: 0.02, // 2% - new mode, low weight initially
 };
 
 /**

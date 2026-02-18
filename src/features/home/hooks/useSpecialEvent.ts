@@ -19,6 +19,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   top_tens: 'top-tens',
   starting_xi: 'starting-xi',
   connections: 'connections',
+  timeline: 'timeline',
 };
 
 /**
@@ -36,6 +37,7 @@ const DEFAULT_TITLES: Record<GameMode, string> = {
   top_tens: 'SPECIAL TOP TENS',
   starting_xi: 'SPECIAL STARTING XI',
   connections: 'SPECIAL CONNECTIONS',
+  timeline: 'SPECIAL TIMELINE',
 };
 
 /**

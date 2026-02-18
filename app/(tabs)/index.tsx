@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,17 +7,17 @@ import {
   ScrollView,
   AppState,
   AppStateStatus,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { WifiOff } from 'lucide-react-native';
-import { colors, textStyles, spacing } from '@/theme';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { WifiOff } from "lucide-react-native";
+import { colors, textStyles, spacing } from "@/theme";
 import {
   useUserStats,
   useDailyPuzzles,
   DailyPuzzleCard,
   CompletedGameModal,
-} from '@/features/home';
+} from "@/features/home";
 import {
   HomeHeader,
   DailyProgressRing,
@@ -26,47 +26,47 @@ import {
   HomeGameList,
   SectionHeader,
   ArchiveDiscoveryBanner,
-} from '@/features/home/components/new';
-import { useDailyProgress } from '@/features/home/hooks/useDailyProgress';
-import { useSpecialEvent } from '@/features/home/hooks/useSpecialEvent';
-import { useArchiveDiscoveryBanner } from '@/features/home/hooks/useArchiveDiscoveryBanner';
+} from "@/features/home/components/new";
+import { useDailyProgress } from "@/features/home/hooks/useDailyProgress";
+import { useSpecialEvent } from "@/features/home/hooks/useSpecialEvent";
+import { useArchiveDiscoveryBanner } from "@/features/home/hooks/useArchiveDiscoveryBanner";
 import {
   getTierForPoints,
   getProgressToNextTier,
   getPointsToNextTier,
   getNextTier,
   getTierColor,
-} from '@/features/stats/utils/tierProgression';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
-import { PremiumUpsellBanner, UnlockChoiceModal } from '@/features/ads';
-import { DailyStackCardSkeleton } from '@/components/ui/Skeletons';
-import { useAuth } from '@/features/auth';
-import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { HOME_COLORS } from '@/theme/home-design';
-
+} from "@/features/stats/utils/tierProgression";
+import { GameMode } from "@/features/puzzles/types/puzzle.types";
+import { PremiumUpsellBanner, UnlockChoiceModal } from "@/features/ads";
+import { DailyStackCardSkeleton } from "@/components/ui/Skeletons";
+import { useAuth } from "@/features/auth";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { HOME_COLORS } from "@/theme/home-design";
 
 /**
  * Get today's date in YYYY-MM-DD format.
  */
 function getTodayDate(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 /**
  * Route map for each game mode.
  */
 const ROUTE_MAP: Record<GameMode, string> = {
-  career_path: 'career-path',
-  career_path_pro: 'career-path-pro',
-  guess_the_transfer: 'transfer-guess',
-  guess_the_goalscorers: 'goalscorer-recall',
-  the_grid: 'the-grid',
-  the_chain: 'the-chain',
-  the_thread: 'the-thread',
-  topical_quiz: 'topical-quiz',
-  top_tens: 'top-tens',
-  starting_xi: 'starting-xi',
-  connections: 'connections',
+  career_path: "career-path",
+  career_path_pro: "career-path-pro",
+  guess_the_transfer: "transfer-guess",
+  guess_the_goalscorers: "goalscorer-recall",
+  the_grid: "the-grid",
+  the_chain: "the-chain",
+  the_thread: "the-thread",
+  topical_quiz: "topical-quiz",
+  top_tens: "top-tens",
+  starting_xi: "starting-xi",
+  connections: "connections",
+  timeline: "timeline",
 };
 
 /**
@@ -89,8 +89,18 @@ export default function HomeScreen() {
   const router = useRouter();
   const { profile, user, signInAnonymously, totalIQ } = useAuth();
   const { isConnected } = useNetworkStatus();
-  const { stats, isLoading: statsLoading, refresh: refreshStats } = useUserStats();
-  const { cards, completedCount, isSpecialCompleted, isLoading: puzzlesLoading, refresh: refreshPuzzles } = useDailyPuzzles();
+  const {
+    stats,
+    isLoading: statsLoading,
+    refresh: refreshStats,
+  } = useUserStats();
+  const {
+    cards,
+    completedCount,
+    isSpecialCompleted,
+    isLoading: puzzlesLoading,
+    refresh: refreshPuzzles,
+  } = useDailyPuzzles();
 
   // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
@@ -107,7 +117,11 @@ export default function HomeScreen() {
   const specialEvent = useSpecialEvent();
 
   // Archive discovery banner
-  const { isVisible: showArchiveBanner, dismiss: dismissArchiveBanner, variant: archiveBannerVariant } = useArchiveDiscoveryBanner({
+  const {
+    isVisible: showArchiveBanner,
+    dismiss: dismissArchiveBanner,
+    variant: archiveBannerVariant,
+  } = useArchiveDiscoveryBanner({
     isPremium,
     completedCount,
     totalCards: cards.length,
@@ -115,7 +129,8 @@ export default function HomeScreen() {
   });
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
-  const isFirstTimeOffline = !user && cards.length === 0 && isConnected === false;
+  const isFirstTimeOffline =
+    !user && cards.length === 0 && isConnected === false;
 
   // State for completed game modal
   const [completedModal, setCompletedModal] = useState<{
@@ -123,7 +138,9 @@ export default function HomeScreen() {
   } | null>(null);
 
   // State for unlock choice modal (premium-only games)
-  const [lockedPuzzle, setLockedPuzzle] = useState<DailyPuzzleCard | null>(null);
+  const [lockedPuzzle, setLockedPuzzle] = useState<DailyPuzzleCard | null>(
+    null,
+  );
   const [autoTriggerAd, setAutoTriggerAd] = useState(false);
 
   // Handle pull-to-refresh
@@ -135,7 +152,7 @@ export default function HomeScreen() {
   const prevConnectedRef = useRef(isConnected);
   useEffect(() => {
     if (prevConnectedRef.current === false && isConnected === true && !user) {
-      console.log('[HomeScreen] Back online, retrying anonymous sign-in');
+      console.log("[HomeScreen] Back online, retrying anonymous sign-in");
       signInAnonymously();
     }
     prevConnectedRef.current = isConnected;
@@ -148,7 +165,7 @@ export default function HomeScreen() {
   // Refresh on app state change (handles midnight transition)
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active') {
+      if (nextAppState === "active") {
         const now = Date.now();
         const timeSinceLastSync = now - lastSyncRef.current;
 
@@ -160,17 +177,20 @@ export default function HomeScreen() {
       }
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
     return () => subscription.remove();
   }, [handleRefresh]);
 
   // Handle Pro Press (Header)
   const handleProPress = useCallback(() => {
     router.push({
-      pathname: '/premium-modal',
-      params: { 
-        puzzleDate: getTodayDate(), 
-        mode: 'blocked' // Or a specific mode for generic upgrade
+      pathname: "/premium-modal",
+      params: {
+        puzzleDate: getTodayDate(),
+        mode: "blocked", // Or a specific mode for generic upgrade
       },
     });
   }, [router]);
@@ -183,7 +203,7 @@ export default function HomeScreen() {
 
   // Handle Go Pro (Card Action)
   const handleGoPro = useCallback(() => {
-     handleProPress();
+    handleProPress();
   }, [handleProPress]);
 
   // Handle Event Press
@@ -204,7 +224,7 @@ export default function HomeScreen() {
       }
 
       // Show results modal for completed games
-      if (card.status === 'done' && card.attempt) {
+      if (card.status === "done" && card.attempt) {
         setCompletedModal({ card });
         return;
       }
@@ -215,11 +235,11 @@ export default function HomeScreen() {
         router.push(`/${route}/${card.puzzleId}` as any);
       }
     },
-    [router, isPremium]
+    [router, isPremium],
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 1. Header */}
       <HomeHeader
         streak={stats.currentStreak}
@@ -245,44 +265,44 @@ export default function HomeScreen() {
       >
         {/* 2. Daily Progress Hero */}
         <View style={styles.heroContainer}>
-            <DailyProgressRing 
-                percent={progress.percent} 
-                countString={progress.countString}
-                isComplete={progress.isComplete}
-            />
+          <DailyProgressRing
+            percent={progress.percent}
+            countString={progress.countString}
+            isComplete={progress.isComplete}
+          />
         </View>
 
         {/* 3. Stats Dashboard */}
         <StatsGrid
-            gamesCompleted={stats.totalGamesPlayed}
-            totalGames={stats.totalPuzzlesAvailable}
-            iqTitle={iqTier}
-            iqProgress={iqProgress}
-            iqPointsToNext={iqPointsToNext}
-            iqNextTierName={iqNextTierName}
-            iqTierColor={iqTierColor}
-            onPressGames={() => router.push('/archive')}
-            onPressIQ={() => router.push('/stats')}
+          gamesCompleted={stats.totalGamesPlayed}
+          totalGames={stats.totalPuzzlesAvailable}
+          iqTitle={iqTier}
+          iqProgress={iqProgress}
+          iqPointsToNext={iqPointsToNext}
+          iqNextTierName={iqNextTierName}
+          iqTierColor={iqTierColor}
+          onPressGames={() => router.push("/archive")}
+          onPressIQ={() => router.push("/stats")}
         />
 
         {/* 4. Archive Discovery Banner */}
         {showArchiveBanner && (
-            <ArchiveDiscoveryBanner
-              variant={archiveBannerVariant}
-              onPress={() => router.push('/archive')}
-              onDismiss={dismissArchiveBanner}
-              testID="archive-discovery-banner"
-            />
+          <ArchiveDiscoveryBanner
+            variant={archiveBannerVariant}
+            onPress={() => router.push("/archive")}
+            onDismiss={dismissArchiveBanner}
+            testID="archive-discovery-banner"
+          />
         )}
 
         {/* 5. Special Event Banner (Conditional) */}
         {specialEvent && !isSpecialCompleted && (
-            <EventBanner event={specialEvent} onPress={handleEventPress} />
+          <EventBanner event={specialEvent} onPress={handleEventPress} />
         )}
 
         {/* Premium Upsell (if free) - Maybe move this or keep it as banner? */}
         {/* Spec didn't explicitly remove it, but mostly covered by "Go Pro" buttons */}
-        {!isPremium && <View style={{ marginTop: 24 }}><PremiumUpsellBanner testID="home-premium-upsell" /></View>}
+        {/* {!isPremium && <View style={{ marginTop: 24 }}><PremiumUpsellBanner testID="home-premium-upsell" /></View>} */}
 
         {/* Offline banner */}
         {isConnected === false && cards.length > 0 && (
@@ -294,56 +314,62 @@ export default function HomeScreen() {
 
         {/* 5. Game List */}
         {isFirstTimeOffline ? (
-            <View style={styles.offlineContainer} testID="first-time-offline">
-              <WifiOff size={48} color={colors.textSecondary} />
-              <Text style={styles.offlineTitle}>No Internet Connection</Text>
-              <Text style={styles.offlineText}>
-                Football IQ needs an internet connection for your first launch.
-              </Text>
-            </View>
+          <View style={styles.offlineContainer} testID="first-time-offline">
+            <WifiOff size={48} color={colors.textSecondary} />
+            <Text style={styles.offlineTitle}>No Internet Connection</Text>
+            <Text style={styles.offlineText}>
+              Football IQ needs an internet connection for your first launch.
+            </Text>
+          </View>
         ) : isLoading && cards.length === 0 ? (
-           <View style={{ marginTop: 24 }}>
-              {[0, 1, 2].map((i) => (
-                <DailyStackCardSkeleton key={`skeleton-${i}`} testID={`daily-skeleton-${i}`} />
-              ))}
-           </View>
+          <View style={{ marginTop: 24 }}>
+            {[0, 1, 2].map((i) => (
+              <DailyStackCardSkeleton
+                key={`skeleton-${i}`}
+                testID={`daily-skeleton-${i}`}
+              />
+            ))}
+          </View>
         ) : cards.length === 0 ? (
-           <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No puzzles today.</Text>
-           </View>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No puzzles today.</Text>
+          </View>
         ) : (
-           <>
-             {/* 5. List Header */}
-             <SectionHeader />
-             
-             {/* 6. Game List */}
-             <HomeGameList 
-                cards={cards}
-                onCardPress={handleCardPress}
-                onWatchAd={handleWatchAd}
-                onGoPro={handleGoPro}
-                isPremium={isPremium}
-             />
-           </>
+          <>
+            {/* 5. List Header */}
+            <SectionHeader />
+
+            {/* 6. Game List */}
+            <HomeGameList
+              cards={cards}
+              onCardPress={handleCardPress}
+              onWatchAd={handleWatchAd}
+              onGoPro={handleGoPro}
+              isPremium={isPremium}
+            />
+          </>
         )}
       </ScrollView>
 
       {/* Completed Game Modal */}
       {completedModal && (
         <CompletedGameModal
-            visible={true}
-            gameMode={completedModal.card.gameMode}
-            attempt={completedModal.card.attempt!}
-            onClose={() => setCompletedModal(null)}
-            onReview={() => {
+          visible={true}
+          gameMode={completedModal.card.gameMode}
+          attempt={completedModal.card.attempt!}
+          onClose={() => setCompletedModal(null)}
+          onReview={() => {
             const route = ROUTE_MAP[completedModal.card.gameMode];
             setCompletedModal(null);
             router.push({
-                pathname: `/${route}/[puzzleId]`,
-                params: { puzzleId: completedModal.card.puzzleId, review: 'true' },
+              pathname: `/${route}/[puzzleId]`,
+              params: {
+                puzzleId: completedModal.card.puzzleId,
+                review: "true",
+              },
             } as never);
-            }}
-            testID="completed-game-modal"
+          }}
+          testID="completed-game-modal"
         />
       )}
 
@@ -351,12 +377,12 @@ export default function HomeScreen() {
       <UnlockChoiceModal
         visible={!!lockedPuzzle}
         onClose={() => {
-            setLockedPuzzle(null);
-            setAutoTriggerAd(false);
+          setLockedPuzzle(null);
+          setAutoTriggerAd(false);
         }}
-        puzzleId={lockedPuzzle?.puzzleId ?? ''}
+        puzzleId={lockedPuzzle?.puzzleId ?? ""}
         puzzleDate={getTodayDate()}
-        gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
+        gameMode={lockedPuzzle?.gameMode ?? "career_path"}
         onUnlockSuccess={refreshPuzzles}
         autoTriggerAd={autoTriggerAd}
         testID="home-unlock-modal"
@@ -377,17 +403,17 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   offlineBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 8,
     marginTop: spacing.md,
     marginHorizontal: 20,
@@ -397,8 +423,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   offlineContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing['2xl'],
+    alignItems: "center",
+    paddingVertical: spacing["2xl"],
     gap: 12,
   },
   offlineTitle: {
@@ -409,15 +435,15 @@ const styles = StyleSheet.create({
   offlineText: {
     ...textStyles.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: spacing.lg,
   },
   emptyContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 40,
   },
   emptyText: {
     color: colors.textSecondary,
     fontFamily: textStyles.body.fontFamily,
-  }
+  },
 });

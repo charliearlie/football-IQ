@@ -63,6 +63,7 @@ const GAME_MODE_ORDER: GameMode[] = [
   'top_tens',
   'starting_xi',
   'connections',
+  'timeline',
 ];
 
 /**

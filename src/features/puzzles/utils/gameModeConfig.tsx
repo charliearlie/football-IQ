@@ -6,6 +6,7 @@ import {
   Shirt,
   HelpCircle,
   Cable,
+  Clock,
 } from 'lucide-react-native';
 import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -130,6 +131,13 @@ export function getGameModeConfig(gameMode: GameMode, isArchive = false): GameMo
         subtitle: 'Find the groups',
         icon: <Cable color={colors.pitchGreen} size={28} />,
         iconColor: colors.pitchGreen,
+      };
+    case 'timeline':
+      return {
+        title: 'Timeline',
+        subtitle: 'Order the career',
+        icon: <Clock color={colors.cardYellow} size={28} />,
+        iconColor: colors.cardYellow,
       };
     default:
       return {

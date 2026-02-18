@@ -49,6 +49,7 @@ const ARCHETYPE_ICONS: Record<GameMode, LucideIcon> = {
   top_tens: ListOrdered,
   starting_xi: Users,
   connections: Grid3X3,
+  timeline: Clock,
 };
 
 /**
@@ -66,6 +67,7 @@ const ARCHETYPE_NAMES: Record<GameMode, string> = {
   top_tens: 'Statistician',
   starting_xi: 'Tactical Mind',
   connections: 'Group Finder',
+  timeline: 'Timekeeper',
 };
 
 export interface ScoutingReportData {

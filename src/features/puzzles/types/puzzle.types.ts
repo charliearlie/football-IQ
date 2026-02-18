@@ -42,7 +42,8 @@ export type GameMode =
   | 'topical_quiz'
   | 'top_tens'
   | 'starting_xi'
-  | 'connections';
+  | 'connections'
+  | 'timeline';
 
 /**
  * Result of a sync operation

@@ -58,6 +58,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   top_tens: 'Top Tens',
   starting_xi: 'Starting XI',
   connections: 'Connections',
+  timeline: 'Timeline',
 };
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };
