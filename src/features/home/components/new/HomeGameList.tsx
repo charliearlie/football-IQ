@@ -1,7 +1,10 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { CheckCircle } from 'lucide-react-native';
 import { GlassGameCard } from './GlassGameCard';
 import { DailyPuzzleCard } from '@/features/home/hooks/useDailyPuzzles';
+import { colors } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 
 // Map game modes to display titles/subtitles
 // This duplicates some logic from UniversalGameCard but allows for redesign specific text
@@ -20,6 +23,69 @@ const GAME_METADATA: Record<string, { title: string; subtitle: string }> = {
   timeline: { title: 'TIMELINE', subtitle: 'Order the career' },
 };
 
+function getTimeToMidnight(): string {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const diff = midnight.getTime() - now.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+}
+
+function DailyCompleteCard() {
+  const [countdown, setCountdown] = useState(getTimeToMidnight);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown(getTimeToMidnight());
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <View style={completeStyles.container}>
+      <CheckCircle size={48} color={colors.pitchGreen} />
+      <Text style={completeStyles.title}>ALL DONE FOR TODAY</Text>
+      <Text style={completeStyles.subtitle}>Your streak is safe</Text>
+      <Text style={completeStyles.countdown}>Next puzzles in {countdown}</Text>
+    </View>
+  );
+}
+
+const completeStyles = StyleSheet.create({
+  container: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  title: {
+    fontFamily: fonts.headline,
+    fontSize: 24,
+    color: colors.pitchGreen,
+    marginTop: 12,
+    letterSpacing: 1,
+  },
+  subtitle: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  countdown: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 8,
+  },
+});
+
 interface HomeGameListProps {
   cards: DailyPuzzleCard[];
   onCardPress: (card: DailyPuzzleCard) => void;
@@ -29,8 +95,12 @@ interface HomeGameListProps {
 }
 
 export function HomeGameList({ cards, onCardPress, onWatchAd, onGoPro, isPremium }: HomeGameListProps) {
+  const playableCards = cards.filter((card) => isPremium || !card.isPremiumOnly || card.isAdUnlocked);
+  const allDone = playableCards.length > 0 && playableCards.every((card) => card.status === 'done');
+
   return (
     <View style={styles.container}>
+      {allDone && <DailyCompleteCard />}
       {cards.map((card) => {
         const meta = GAME_METADATA[card.gameMode] || { title: 'UNKNOWN', subtitle: '' };
         

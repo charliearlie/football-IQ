@@ -1,20 +1,20 @@
-import { Database, Clock, Gamepad2 } from "lucide-react";
+import { Calendar, Clock, Gamepad2 } from "lucide-react";
 
 const PROOF_POINTS = [
   {
     icon: Gamepad2,
-    value: "10 MODES",
-    label: "Daily challenges",
-  },
-  {
-    icon: Database,
-    value: "10,000+",
-    label: "Players in our database",
+    value: "11 MODES",
+    label: "Something new every day",
   },
   {
     icon: Clock,
+    value: "7-DAY ARCHIVE",
+    label: "Miss one? Play the last week free",
+  },
+  {
+    icon: Calendar,
     value: "DAILY",
-    label: "Fresh puzzles at midnight",
+    label: "Fresh games at midnight",
   },
 ];
 

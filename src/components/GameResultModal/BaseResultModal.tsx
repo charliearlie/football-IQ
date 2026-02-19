@@ -15,9 +15,16 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { SlideInDown } from 'react-native-reanimated';
+import Animated, {
+  SlideInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withDelay,
+} from 'react-native-reanimated';
 import ViewShot from 'react-native-view-shot';
-import { X } from 'lucide-react-native';
+import { X, Flame } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { Confetti } from '@/components/Confetti';
 import { colors } from '@/theme/colors';
@@ -32,6 +39,16 @@ import {
   captureResultCard,
   shareResultCard,
 } from './useResultShare';
+import {
+  getTierForPoints,
+  getProgressToNextTier,
+  getPointsToNextTier,
+  getNextTier,
+  getTierColor,
+  didTierChange,
+} from '@/features/stats/utils/tierProgression';
+import { useAuth } from '@/features/auth';
+import { useCurrentStreak } from '@/hooks/useCurrentStreak';
 
 export type ResultType = 'win' | 'loss' | 'draw' | 'complete';
 
@@ -71,6 +88,21 @@ export interface BaseResultModalProps {
   /** Test ID for testing */
   testID?: string;
 
+  /** IQ points earned in this game (triggers TierProgressBar + StreakBadge) */
+  iqEarned?: number;
+
+  /** Previous cumulative IQ (before this game) — overrides iqEarned-based calculation */
+  oldIQ?: number;
+  /** New cumulative IQ (after this game) — overrides iqEarned-based calculation */
+  newIQ?: number;
+  /** Current daily streak count — overrides auto-detected streak */
+  streakDays?: number;
+
+  /** Whether the user has a premium subscription — overrides auth-based detection */
+  isPremium?: boolean;
+  /** User's percentile ranking for today's puzzle */
+  percentile?: number;
+
   /**
    * Image-based sharing props (takes precedence over onShare when provided)
    */
@@ -97,6 +129,141 @@ function getAccentColor(resultType: ResultType): string {
       return colors.pitchGreen;
   }
 }
+
+/**
+ * Streak badge shown in result modals when the user has an active streak.
+ */
+function StreakBadge({ streakDays }: { streakDays: number }) {
+  const scale = useSharedValue(0.8);
+
+  useEffect(() => {
+    scale.value = withSpring(1, { damping: 12, stiffness: 150 });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={[streakStyles.container, animatedStyle]}>
+      <Flame size={20} color={colors.cardYellow} />
+      <Text style={streakStyles.count}>{streakDays}</Text>
+      <Text style={streakStyles.label}>day streak</Text>
+    </Animated.View>
+  );
+}
+
+const streakStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: spacing.md,
+  },
+  count: {
+    fontFamily: fonts.headline,
+    fontSize: 24,
+    color: colors.floodlightWhite,
+  },
+  label: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+});
+
+/**
+ * Tier progress bar shown in result modals after IQ gain.
+ */
+function TierProgressBar({ oldIQ, newIQ }: { oldIQ: number; newIQ: number }) {
+  const iqGained = newIQ - oldIQ;
+  const tierChange = didTierChange(oldIQ, newIQ);
+  const currentTier = getTierForPoints(newIQ);
+  const tierColor = getTierColor(currentTier.tier);
+  const nextTier = getNextTier(currentTier);
+  const pointsToNext = getPointsToNextTier(newIQ);
+
+  const oldProgress = getProgressToNextTier(oldIQ);
+  const newProgress = tierChange.changed ? 100 : getProgressToNextTier(newIQ);
+
+  const barWidth = useSharedValue(oldProgress);
+
+  useEffect(() => {
+    barWidth.value = withDelay(
+      300,
+      withSpring(newProgress, { damping: 15, stiffness: 80 })
+    );
+  }, [newProgress]);
+
+  const barAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${barWidth.value}%`,
+  }));
+
+  return (
+    <View style={tierBarStyles.container}>
+      <View style={tierBarStyles.header}>
+        <Text style={[tierBarStyles.tierName, { color: tierColor }]}>
+          {currentTier.name}
+        </Text>
+        <Text style={tierBarStyles.iqGained}>+{iqGained} IQ</Text>
+      </View>
+      <View style={tierBarStyles.track}>
+        <Animated.View
+          style={[tierBarStyles.fill, { backgroundColor: tierColor }, barAnimatedStyle]}
+        />
+      </View>
+      {nextTier && (
+        <Text style={tierBarStyles.nextTier}>
+          {pointsToNext} to {nextTier.name}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+const tierBarStyles = StyleSheet.create({
+  container: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  tierName: {
+    fontFamily: fonts.headline,
+    fontSize: 18,
+  },
+  iqGained: {
+    fontFamily: fonts.headline,
+    fontSize: 18,
+    color: colors.pitchGreen,
+  },
+  track: {
+    width: '100%',
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  fill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  nextTier: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+});
 
 /**
  * Base result modal with shared structure and behavior.
@@ -132,11 +299,31 @@ export function BaseResultModal({
   hideDefaultButtons = false,
   hideCloseButton = false,
   testID,
+  iqEarned,
+  oldIQ,
+  newIQ,
+  streakDays,
+  isPremium,
+  percentile,
   shareCardContent,
   shareData,
 }: BaseResultModalProps) {
+  const router = useRouter();
   const posthog = usePostHog();
   const { triggerNotification } = useHaptics();
+
+  // Self-hydrate retention data from auth + streak hooks
+  const { totalIQ: authTotalIQ, profile } = useAuth();
+  const computedStreakDays = useCurrentStreak();
+
+  // iqEarned gates all retention features (undefined = revisit, don't show)
+  const showRetention = iqEarned !== undefined;
+
+  // Allow explicit props to override computed values (backwards compat)
+  const effectiveStreakDays = streakDays ?? (showRetention ? computedStreakDays : undefined);
+  const effectiveIsPremium = isPremium ?? (profile?.is_premium ?? false);
+  const effectiveOldIQ = oldIQ ?? (showRetention ? authTotalIQ - iqEarned : undefined);
+  const effectiveNewIQ = newIQ ?? (showRetention ? authTotalIQ : undefined);
 
   // ViewShot ref for image capture
   const viewShotRef = useRef<ViewShot>(null);
@@ -268,6 +455,31 @@ export function BaseResultModal({
           {/* Message (if provided) */}
           {message && <Text style={styles.message}>{message}</Text>}
 
+          {/* Streak badge — only on first completion */}
+          {effectiveStreakDays !== undefined && effectiveStreakDays > 0 && (
+            <StreakBadge streakDays={effectiveStreakDays} />
+          )}
+
+          {/* Tier progress bar — only when IQ was gained */}
+          {effectiveOldIQ !== undefined && effectiveNewIQ !== undefined && effectiveNewIQ > effectiveOldIQ && (
+            <TierProgressBar oldIQ={effectiveOldIQ} newIQ={effectiveNewIQ} />
+          )}
+
+          {/* Context-sensitive premium upsell */}
+          {!effectiveIsPremium && percentile !== undefined && percentile >= 75 && (
+            <Pressable
+              onPress={() => router.push('/premium-modal')}
+              style={styles.upsellContainer}
+            >
+              <Text style={styles.upsellText}>
+                You're in the top {100 - percentile}% today.{' '}
+                <Text style={styles.upsellLink}>
+                  Unlock your full skills breakdown with Pro.
+                </Text>
+              </Text>
+            </Pressable>
+          )}
+
           {/* Action Buttons (unless custom layout in children) */}
           {!hideDefaultButtons && (
             <View style={styles.buttonContainer}>
@@ -388,14 +600,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.headline,
-    fontSize: 48,
+    fontSize: 40,
     letterSpacing: 2,
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
   scoreContainer: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   scoreLabel: {
     ...textStyles.caption,
@@ -404,7 +616,7 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     fontFamily: fonts.headline,
-    fontSize: 36,
+    fontSize: 28,
     color: colors.floodlightWhite,
     letterSpacing: 2,
   },
@@ -451,5 +663,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: -10000,
     top: 0,
+  },
+  upsellContainer: {
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  upsellText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.cardYellow,
+    textAlign: 'center',
+  },
+  upsellLink: {
+    textDecorationLine: 'underline',
   },
 });

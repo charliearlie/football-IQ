@@ -67,10 +67,13 @@ const GAME_MODE_ORDER: GameMode[] = [
 ];
 
 /**
- * Game modes that require premium subscription.
- * These are shown as locked for free users.
+ * Fallback set of premium game modes for backwards compatibility.
+ * Used as a safety net alongside the DB-driven is_premium field:
+ * after migration v14 + first sync, is_premium from the DB is the source of truth,
+ * but pre-sync rows default to 0, so this prevents briefly showing premium modes as free.
+ * TODO: Remove once all users have synced (safe to drop after ~1 week post-release).
  */
-const PREMIUM_ONLY_MODES: Set<GameMode> = new Set(['career_path_pro', 'top_tens', 'the_grid']);
+const PREMIUM_ONLY_MODES_FALLBACK: Set<GameMode> = new Set(['career_path_pro', 'top_tens', 'the_grid', 'timeline']);
 
 /**
  * Hook to get today's puzzles with their completion status.
@@ -149,7 +152,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           scoreDisplay: attempt?.score_display ?? undefined,
           difficulty: puzzle.difficulty,
           attempt: attempt ?? undefined,
-          isPremiumOnly: PREMIUM_ONLY_MODES.has(gameMode),
+          isPremiumOnly: puzzle.is_premium === 1 || PREMIUM_ONLY_MODES_FALLBACK.has(gameMode),
           isAdUnlocked: currentAdUnlocks.some((u) => u.puzzle_id === puzzle.id),
         };
       });

@@ -3,26 +3,21 @@
  *
  * Read-only result modal for viewing past game results.
  * Displayed when tapping a completed game card on the home screen.
- * Uses BaseResultModal with stored attempt data.
+ * Uses BaseResultModal with stored attempt data and standard button layout.
  */
 
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import {
-  Trophy,
-  XCircle,
-  Share2,
-} from 'lucide-react-native';
+import React from 'react';
+import { Trophy, XCircle } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import {
   BaseResultModal,
   ScoreDisplay,
   ResultType,
 } from '@/components/GameResultModal/BaseResultModal';
-import { ElevatedButton, IconButton } from '@/components';
+import type { ShareResult } from '@/components/GameResultModal';
 import { ScoreDistributionContainer } from '@/features/stats/components/ScoreDistributionContainer';
 import { normalizeScoreForMode } from '@/features/stats/utils/distributionConfig';
-import { colors, spacing } from '@/theme';
+import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { ParsedLocalAttempt } from '@/types/database';
 
@@ -105,6 +100,8 @@ function getGameModeName(gameMode: GameMode): string {
       return 'Starting XI';
     case 'connections':
       return 'Connections';
+    case 'timeline':
+      return 'Timeline';
     default:
       return 'Game';
   }
@@ -113,12 +110,8 @@ function getGameModeName(gameMode: GameMode): string {
 /**
  * CompletedGameModal - Shows past game results.
  *
- * Displays:
- * - Game-appropriate icon (trophy for win, x for loss)
- * - Title based on win/loss state
- * - Score from stored attempt
- * - Score distribution graph
- * - Share and Close buttons only (no replay)
+ * Uses BaseResultModal's standard button layout for consistency
+ * with first-time result modals.
  */
 export function CompletedGameModal({
   visible,
@@ -164,18 +157,13 @@ export function CompletedGameModal({
   const resultType: ResultType = 'complete';
   const title = 'YOUR RESULT';
 
-  // Share label state for feedback
-  const [shareLabel, setShareLabel] = useState<string | undefined>(undefined);
-
   // Handle share - copy the full score_display to clipboard
-  const handleShare = async () => {
+  const handleShare = async (): Promise<ShareResult> => {
     if (attempt.score_display) {
       await Clipboard.setStringAsync(attempt.score_display);
-      setShareLabel('Copied!');
-      setTimeout(() => setShareLabel(undefined), 2000);
-      return { success: true as const, method: 'clipboard' as const };
+      return { success: true, method: 'clipboard' };
     }
-    return { success: false as const };
+    return { success: false };
   };
 
   return (
@@ -184,9 +172,11 @@ export function CompletedGameModal({
       resultType={resultType}
       icon={getResultIcon(gameMode, won)}
       title={title}
+      onShare={handleShare}
+      onReview={onReview}
       onClose={onClose}
-      showConfetti={false} // Don't celebrate again
-      hideDefaultButtons // Use custom button layout
+      closeLabel="Close"
+      showConfetti={false}
       testID={testID}
     >
       {/* Career Path and Goalscorer Recall scores are shown via distribution graph */}
@@ -197,18 +187,6 @@ export function CompletedGameModal({
         />
       )}
 
-      {/* Share icon button - centered */}
-      <View style={styles.shareContainer}>
-        <IconButton
-          icon={<Share2 size={20} color={colors.stadiumNavy} />}
-          onPress={handleShare}
-          label={shareLabel}
-          variant="primary"
-          size="medium"
-          testID="share-icon-button"
-        />
-      </View>
-
       {/* Score distribution */}
       <ScoreDistributionContainer
         puzzleId={attempt.puzzle_id}
@@ -217,46 +195,6 @@ export function CompletedGameModal({
         maxSteps={totalSteps}
         testID={testID ? `${testID}-distribution` : undefined}
       />
-
-      {/* Action buttons row */}
-      <View style={styles.buttonRow}>
-        {onReview && (
-          <ElevatedButton
-            title="Review"
-            onPress={onReview}
-            variant="secondary"
-            size="small"
-            style={styles.buttonHalf}
-            testID="review-button"
-          />
-        )}
-        <ElevatedButton
-          title="Close"
-          onPress={onClose}
-          variant="primary"
-          size="small"
-          style={onReview ? styles.buttonHalf : styles.buttonFull}
-          testID="close-button"
-        />
-      </View>
     </BaseResultModal>
   );
 }
-
-const styles = StyleSheet.create({
-  shareContainer: {
-    marginBottom: spacing.md,
-    alignItems: 'center',
-  },
-  buttonRow: {
-    width: '100%',
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  buttonHalf: {
-    flex: 1,
-  },
-  buttonFull: {
-    flex: 1,
-  },
-});

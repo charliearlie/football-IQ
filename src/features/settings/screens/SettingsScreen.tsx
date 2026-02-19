@@ -27,13 +27,15 @@ import {
   UserX,
   Lightbulb,
   Trash2,
+  Smartphone,
 } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
-import { colors, textStyles, spacing, borderRadius } from "@/theme";
+import { colors, textStyles, spacing } from "@/theme";
 import { deleteAttemptsByGameMode, clearAllLocalData } from "@/lib/database";
 import { useAuth, useSubscriptionSync } from "@/features/auth";
 import { useProfile } from "@/features/auth/hooks/useProfile";
@@ -368,12 +370,15 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
       >
         {/* Profile Card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
+          <LinearGradient
+            colors={['rgba(88, 204, 2, 0.2)', 'rgba(88, 204, 2, 0.05)']}
+            style={styles.avatarContainer}
+          >
             {/* Placeholder Avatar */}
             <Text style={styles.avatarText}>
               {profile?.display_name?.charAt(0).toUpperCase() ?? "G"}
             </Text>
-          </View>
+          </LinearGradient>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>
               {profile?.display_name || "Guest Manager"}
@@ -417,6 +422,9 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
             />
           </View>
           <View style={styles.toggleRow}>
+            <View style={styles.toggleIconContainer}>
+              <Smartphone size={20} color={colors.pitchGreen} strokeWidth={2} />
+            </View>
             <Text style={styles.toggleLabel}>Haptic Feedback</Text>
             <Switch
               value={hapticsEnabled}
@@ -585,7 +593,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glassBackground,
     borderColor: colors.glassBorder,
     borderWidth: 1,
-    borderRadius: borderRadius.lg, // 12
+    borderRadius: 16,
     padding: spacing.lg,
     marginBottom: spacing.xl,
   },
@@ -593,11 +601,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.glassBorder,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(88, 204, 2, 0.5)",
+    borderWidth: 2,
+    borderColor: colors.pitchGreen,
     marginRight: spacing.lg,
   },
   avatarText: {
@@ -616,8 +623,8 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     backgroundColor: "rgba(88, 204, 2, 0.2)",
-    paddingVertical: 2,
-    paddingHorizontal: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: "rgba(88, 204, 2, 0.3)",
@@ -625,7 +632,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.pitchGreen,
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: "Montserrat",
     fontWeight: "700",
     textTransform: "uppercase",

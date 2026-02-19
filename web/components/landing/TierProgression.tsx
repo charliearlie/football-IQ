@@ -10,7 +10,7 @@ export function TierProgression() {
             <span className="text-pitch-green">CAREER</span> TAKE YOU?
           </h2>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Every puzzle earns IQ points. Climb 10 tiers from Intern to The Gaffer.
+            Every game earns IQ points. Climb 10 tiers from Intern to The Gaffer.
           </p>
         </div>
 

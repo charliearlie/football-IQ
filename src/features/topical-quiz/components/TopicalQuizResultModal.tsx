@@ -119,6 +119,7 @@ export function TopicalQuizResultModal({
     <BaseResultModal
       visible={visible}
       resultType="complete"
+      iqEarned={score.points}
       icon={
         isPerfect ? (
           <Star

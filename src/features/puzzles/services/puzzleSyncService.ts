@@ -101,6 +101,7 @@ export function transformSupabasePuzzleToLocal(puzzle: SupabasePuzzle): LocalPuz
     synced_at: new Date().toISOString(),
     updated_at: puzzle.updated_at, // Preserve server timestamp for staleness detection
     is_special: puzzle.is_special ? 1 : 0,
+    is_premium: puzzle.is_premium ? 1 : 0,
     event_title: puzzle.event_title ?? null,
     event_subtitle: puzzle.event_subtitle ?? null,
     event_tag: puzzle.event_tag ?? null,

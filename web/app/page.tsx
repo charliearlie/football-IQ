@@ -47,7 +47,7 @@ export default async function LandingPage() {
       {/* Playable Demo - immediately after hero */}
       <section id="demo" className="py-16 bg-[#080E1A] relative border-t border-white/5">
         <div className="container mx-auto px-4 text-center mb-12">
-          <h2 className="font-bebas text-5xl text-floodlight">TRY TODAY&apos;S PUZZLE</h2>
+          <h2 className="font-bebas text-5xl text-floodlight">TRY TODAY&apos;S CAREER PATH</h2>
           <p className="text-slate-400 mt-4 max-w-xl mx-auto">
             Guess the player from their career history. One wrong guess reveals the next clue.
           </p>
@@ -66,6 +66,7 @@ export default async function LandingPage() {
 
       <TierProgression />
       <ShareCardPreview />
+
       <Footer />
       <StickyMobileCTA />
     </main>

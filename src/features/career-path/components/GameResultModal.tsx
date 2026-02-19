@@ -104,6 +104,7 @@ export function GameResultModal({
     <BaseResultModal
       visible={visible}
       resultType={won ? 'win' : 'loss'}
+      iqEarned={score.points}
       icon={
         won ? (
           <Trophy size={32} color={colors.stadiumNavy} strokeWidth={2} />

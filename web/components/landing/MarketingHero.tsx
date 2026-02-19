@@ -19,8 +19,8 @@ export function MarketingHero() {
             </h1>
 
             <p className="font-sans text-lg md:text-xl text-slate-400 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150">
-              10 game modes. 10 tiers. From Intern to The Gaffer.
-              <span className="text-floodlight font-medium"> Find out where you rank.</span>
+              Daily football games that sort the real fans from the tourists.
+              <span className="text-floodlight font-medium"> 10 modes, 10 tiers, and a leaderboard your mates will argue about.</span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-in slide-in-from-bottom-8 fade-in duration-700 delay-300">
@@ -36,6 +36,14 @@ export function MarketingHero() {
               >
                 SEE ALL MODES
               </a>
+            </div>
+
+            {/* QR code - desktop only */}
+            <div className="hidden md:flex items-center gap-3 mt-6 justify-center lg:justify-start animate-in slide-in-from-bottom-8 fade-in duration-700 delay-500">
+              <div className="w-16 h-16 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                <span className="text-[10px] text-slate-500 text-center leading-tight">QR</span>
+              </div>
+              <p className="text-xs text-slate-500">Scan to download</p>
             </div>
           </div>
 

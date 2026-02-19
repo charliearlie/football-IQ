@@ -10,7 +10,6 @@ interface GameModeItem {
   lucideIcon?: LucideIcon;
   schedule: string;
   isPremium?: boolean;
-  isBeta?: boolean;
   colorClasses: { text: string; borderL: string };
 }
 
@@ -41,24 +40,21 @@ const GAME_MODES: GameModeItem[] = [
     title: "The Grid",
     description: "Fill the 3x3 grid matching clubs and categories",
     icon: "/images/puzzles/starting-xi.png",
-    schedule: "",
-    isBeta: true,
+    schedule: "PLAY ANYTIME",
     colorClasses: { text: "text-teal", borderL: "border-l-teal" },
   },
   {
     title: "The Chain",
     description: "Link players through shared club connections",
     lucideIcon: LinkIcon,
-    schedule: "",
-    isBeta: true,
+    schedule: "PLAY ANYTIME",
     colorClasses: { text: "text-sky-blue", borderL: "border-l-sky-blue" },
   },
   {
     title: "Threads",
     description: "Identify the club from kit sponsor history",
     lucideIcon: Scissors,
-    schedule: "",
-    isBeta: true,
+    schedule: "PLAY ANYTIME",
     colorClasses: { text: "text-purple-pop", borderL: "border-l-purple-pop" },
   },
   {
@@ -94,8 +90,8 @@ const GAME_MODES: GameModeItem[] = [
     title: "Timeline",
     description: "Sort 6 career events into chronological order",
     lucideIcon: History,
-    schedule: "",
-    isBeta: true,
+    schedule: "TUE, THU & SAT",
+    isPremium: true,
     colorClasses: { text: "text-card-yellow", borderL: "border-l-card-yellow" },
   },
 ];
@@ -106,10 +102,10 @@ export function GameModeGrid() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-bebas text-5xl md:text-6xl text-floodlight mb-4">
-            10 GAME MODES. <span className="text-pitch-green">ZERO BOREDOM.</span>
+            11 GAME MODES. <span className="text-pitch-green">ZERO BOREDOM.</span>
           </h2>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            New puzzles every day. Miss one? Play the last 7 days from our archive
+            New games every day. Miss one? Play the last 7 days from our archive
             for free.
           </p>
         </div>
@@ -130,12 +126,6 @@ export function GameModeGrid() {
                     <Crown className="w-3 h-3 text-stadium-navy" />
                   </div>
                 )}
-                {mode.isBeta && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-sky-blue text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full tracking-wide">
-                    BETA
-                  </span>
-                )}
-
                 {Icon ? (
                   <div className="flex items-center justify-center w-10 h-10 mx-auto mb-3">
                     <Icon className={cn("w-6 h-6", mode.colorClasses.text)} />

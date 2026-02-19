@@ -12,9 +12,10 @@ import { ProficiencyBar } from './ProficiencyBar';
 
 interface ProficiencySectionProps {
   proficiencies: GameProficiency[];
+  isLocked?: boolean;
 }
 
-export function ProficiencySection({ proficiencies }: ProficiencySectionProps) {
+export function ProficiencySection({ proficiencies, isLocked }: ProficiencySectionProps) {
   return (
     <GlassCard style={styles.container}>
       <Text style={[textStyles.h3, styles.title]}>Skills Breakdown</Text>
@@ -26,6 +27,7 @@ export function ProficiencySection({ proficiencies }: ProficiencySectionProps) {
             displayName={proficiency.displayName}
             percentage={proficiency.percentage}
             gamesPlayed={proficiency.gamesPlayed}
+            isLocked={isLocked}
           />
         ))}
       </View>

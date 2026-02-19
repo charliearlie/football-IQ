@@ -54,6 +54,7 @@ jest.mock('lucide-react-native', () => ({
   Zap: 'Zap',
   Ban: 'Ban',
   Star: 'Star',
+  ShieldCheck: 'ShieldCheck',
 }));
 
 // Mock ProBadge

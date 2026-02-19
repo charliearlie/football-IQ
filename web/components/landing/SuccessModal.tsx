@@ -8,16 +8,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
+import { APP_STORE_URL } from "@/lib/constants";
 import { CheckCircle } from "lucide-react";
 
 interface SuccessModalProps {
   open: boolean;
   onClose: () => void;
   playerName: string;
+  revealedCount: number;
+  totalSteps: number;
 }
 
-export function SuccessModal({ open, onClose, playerName }: SuccessModalProps) {
+export function SuccessModal({ open, onClose, playerName, revealedCount, totalSteps }: SuccessModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-stadium-navy border-pitch-green max-w-sm text-center overflow-hidden">
@@ -28,50 +30,49 @@ export function SuccessModal({ open, onClose, playerName }: SuccessModalProps) {
 
         <DialogHeader className="text-center">
           <DialogTitle className="font-bebas text-3xl tracking-wide text-pitch-green text-center animate-bounce-in text-shadow-fun" style={{ animationDelay: "0.1s" }}>
-            GENIUS! 🎉
+            GENIUS!
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-floodlight text-xl font-semibold mb-2 animate-bounce-in" style={{ animationDelay: "0.15s" }}>
+        <p className="text-floodlight text-xl font-semibold mb-1 animate-bounce-in" style={{ animationDelay: "0.15s" }}>
           {playerName}
         </p>
 
-        <p className="text-muted-foreground text-sm mb-6 animate-bounce-in" style={{ animationDelay: "0.2s" }}>
-          You nailed it! Play 6 puzzles daily in the app and prove you&apos;re a true football genius!
+        <p className="text-pitch-green font-bebas text-lg tracking-wide mb-4 animate-bounce-in" style={{ animationDelay: "0.18s" }}>
+          {revealedCount} / {totalSteps} CLUBS REVEALED
         </p>
 
-        {/* Store badges */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4 animate-bounce-in" style={{ animationDelay: "0.25s" }}>
+        <p className="text-slate-400 text-sm mb-6 animate-bounce-in" style={{ animationDelay: "0.2s" }}>
+          Play all 11 modes in the app — free to download
+        </p>
+
+        {/* Store badges - primary CTAs */}
+        <div className="flex flex-col items-center gap-3 mb-4 animate-bounce-in" style={{ animationDelay: "0.25s" }}>
           <Link
             href={APP_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Download on the App Store"
-            className="transition-all hover:opacity-80 hover:scale-105"
+            className="transition-all hover:opacity-90 hover:scale-105"
           >
             <Image
               src="/images/app-store.svg"
               alt="Download on the App Store"
-              width={135}
-              height={45}
-              className="h-[45px] w-auto"
+              width={180}
+              height={54}
+              className="h-[54px] w-auto"
             />
           </Link>
-          <Link
-            href={PLAY_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Get it on Google Play"
-            className="transition-all hover:opacity-80 hover:scale-105"
-          >
+          <div className="relative">
             <Image
               src="/images/play-store.svg"
-              alt="Get it on Google Play"
-              width={151}
-              height={45}
-              className="h-[45px] w-auto"
+              alt="Google Play — Coming Soon"
+              width={200}
+              height={54}
+              className="h-[54px] w-auto opacity-50"
             />
-          </Link>
+            <span className="absolute left-0 right-0 text-center text-xs text-slate-500 mt-1">Coming Soon</span>
+          </div>
         </div>
 
         <button

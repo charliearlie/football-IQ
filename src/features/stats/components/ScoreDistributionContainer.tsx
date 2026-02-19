@@ -9,6 +9,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useScoreDistribution } from '../hooks/useScoreDistribution';
@@ -219,6 +221,44 @@ function mergeUserAttemptOptimistically(
   return { distribution: merged, totalAttempts: newTotal };
 }
 
+/**
+ * Compute the percentile rank of the user's score within the distribution.
+ * Sums the percentages of all buckets with scores strictly below the user's score.
+ */
+function computePercentile(
+  distribution: DistributionEntry[],
+  userScore: number,
+): number {
+  if (distribution.length === 0) return 0;
+  let belowPercentage = 0;
+  for (const entry of distribution) {
+    if (entry.score < userScore) {
+      belowPercentage += entry.percentage;
+    }
+  }
+  return Math.round(belowPercentage);
+}
+
+function PercentileLabel({ percentile }: { percentile: number }) {
+  if (percentile <= 0) return null;
+  return (
+    <Text style={percentileStyles.text}>
+      Better than {percentile}% of players
+    </Text>
+  );
+}
+
+const percentileStyles = StyleSheet.create({
+  text: {
+    fontFamily: fonts.headline,
+    fontSize: 16,
+    color: colors.pitchGreen,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+});
+
 export interface ScoreDistributionContainerProps {
   /** Puzzle ID to fetch distribution for */
   puzzleId: string;
@@ -299,6 +339,20 @@ export function ScoreDistributionContainer({
   // Check if this is the first player (no prior attempts)
   const isFirstPlayer = distribution.length === 0 && totalAttempts === 0;
 
+  // Compute percentile from original distribution (before optimistic merge).
+  // Normalize the user score to the 0-100 scale used by the API.
+  let normalizedForPercentile = userScore;
+  if ((gameMode === 'career_path' || gameMode === 'career_path_pro' || gameMode === 'timeline') && maxSteps) {
+    normalizedForPercentile = (userScore / maxSteps) * 100;
+  } else if (gameMode === 'guess_the_goalscorers' && maxSteps) {
+    normalizedForPercentile = (userScore / maxSteps) * 100;
+  } else if (gameMode === 'connections' || gameMode === 'the_thread') {
+    normalizedForPercentile = userScore * 10;
+  } else if (gameMode === 'the_chain') {
+    normalizedForPercentile = Math.max(0, Math.min(100, (12 - userScore) * 10));
+  }
+  const percentile = computePercentile(distribution, normalizedForPercentile);
+
   // For Career Path, Career Path Pro, and Timeline — transform distribution to points
   if ((gameMode === 'career_path' || gameMode === 'career_path_pro' || gameMode === 'timeline') && maxSteps) {
     // userScore is in points (1 to maxSteps), convert to normalized for bucket matching
@@ -314,16 +368,19 @@ export function ScoreDistributionContainer({
 
     // We use club count directly, with maxScore = maxSteps, minScore = 1, and bucketSize = 1
     return (
-      <ScoreDistributionGraph
-        distribution={transformedDistribution}
-        userScore={userScore}
-        maxScore={maxSteps}
-        minScore={1}
-        bucketSize={1}
-        scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
-        isFirstPlayer={isFirstPlayer}
-        testID={testID}
-      />
+      <>
+        <ScoreDistributionGraph
+          distribution={transformedDistribution}
+          userScore={userScore}
+          maxScore={maxSteps}
+          minScore={1}
+          bucketSize={1}
+          scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
+          isFirstPlayer={isFirstPlayer}
+          testID={testID}
+        />
+        <PercentileLabel percentile={percentile} />
+      </>
     );
   }
 
@@ -341,16 +398,19 @@ export function ScoreDistributionContainer({
     const transformedDistribution = transformGoalscorerDistribution(mergedDistribution, maxSteps);
 
     return (
-      <ScoreDistributionGraph
-        distribution={transformedDistribution}
-        userScore={userScore}
-        maxScore={maxSteps}
-        minScore={0}
-        bucketSize={1}
-        scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
-        isFirstPlayer={isFirstPlayer}
-        testID={testID}
-      />
+      <>
+        <ScoreDistributionGraph
+          distribution={transformedDistribution}
+          userScore={userScore}
+          maxScore={maxSteps}
+          minScore={0}
+          bucketSize={1}
+          scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
+          isFirstPlayer={isFirstPlayer}
+          testID={testID}
+        />
+        <PercentileLabel percentile={percentile} />
+      </>
     );
   }
 
@@ -370,16 +430,19 @@ export function ScoreDistributionContainer({
     const userGroupBucket = connectionsPointsToGroupBucket(userScore);
 
     return (
-      <ScoreDistributionGraph
-        distribution={transformedDistribution}
-        userScore={userGroupBucket}
-        maxScore={4}
-        minScore={0}
-        bucketSize={1}
-        scoreLabels={getScoreLabelsForMode(gameMode)}
-        isFirstPlayer={isFirstPlayer}
-        testID={testID}
-      />
+      <>
+        <ScoreDistributionGraph
+          distribution={transformedDistribution}
+          userScore={userGroupBucket}
+          maxScore={4}
+          minScore={0}
+          bucketSize={1}
+          scoreLabels={getScoreLabelsForMode(gameMode)}
+          isFirstPlayer={isFirstPlayer}
+          testID={testID}
+        />
+        <PercentileLabel percentile={percentile} />
+      </>
     );
   }
 
@@ -399,16 +462,19 @@ export function ScoreDistributionContainer({
     const userHintBucket = threadPointsToHintBucket(userScore);
 
     return (
-      <ScoreDistributionGraph
-        distribution={transformedDistribution}
-        userScore={userHintBucket}
-        maxScore={4}
-        minScore={0}
-        bucketSize={1}
-        scoreLabels={getScoreLabelsForMode(gameMode)}
-        isFirstPlayer={isFirstPlayer}
-        testID={testID}
-      />
+      <>
+        <ScoreDistributionGraph
+          distribution={transformedDistribution}
+          userScore={userHintBucket}
+          maxScore={4}
+          minScore={0}
+          bucketSize={1}
+          scoreLabels={getScoreLabelsForMode(gameMode)}
+          isFirstPlayer={isFirstPlayer}
+          testID={testID}
+        />
+        <PercentileLabel percentile={percentile} />
+      </>
     );
   }
 
@@ -426,15 +492,18 @@ export function ScoreDistributionContainer({
 
     // Use default 0-100 display with custom step labels
     return (
-      <ScoreDistributionGraph
-        distribution={mergedDistribution}
-        userScore={normalizedUserScore}
-        maxScore={100}
-        bucketSize={10}
-        scoreLabels={getScoreLabelsForMode(gameMode)}
-        isFirstPlayer={isFirstPlayer}
-        testID={testID}
-      />
+      <>
+        <ScoreDistributionGraph
+          distribution={mergedDistribution}
+          userScore={normalizedUserScore}
+          maxScore={100}
+          bucketSize={10}
+          scoreLabels={getScoreLabelsForMode(gameMode)}
+          isFirstPlayer={isFirstPlayer}
+          testID={testID}
+        />
+        <PercentileLabel percentile={percentile} />
+      </>
     );
   }
 
@@ -447,15 +516,18 @@ export function ScoreDistributionContainer({
     mergeUserAttemptOptimistically(distribution, totalAttempts, userScore, bucketSize);
 
   return (
-    <ScoreDistributionGraph
-      distribution={mergedDistribution}
-      userScore={userScore}
-      maxScore={getMaxScoreForMode(gameMode)}
-      bucketSize={bucketSize}
-      scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
-      isFirstPlayer={isFirstPlayer}
-      testID={testID}
-    />
+    <>
+      <ScoreDistributionGraph
+        distribution={mergedDistribution}
+        userScore={userScore}
+        maxScore={getMaxScoreForMode(gameMode)}
+        bucketSize={bucketSize}
+        scoreLabels={getScoreLabelsForMode(gameMode, maxSteps)}
+        isFirstPlayer={isFirstPlayer}
+        testID={testID}
+      />
+      <PercentileLabel percentile={percentile} />
+    </>
   );
 }
 

@@ -174,7 +174,7 @@ export function ScoreDistributionGraph({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
   },
   header: {
     fontFamily: fonts.headline,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   chartContainer: {
     gap: spacing.xs,
@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
   barRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 22,
+    height: 20,
   },
   scoreLabel: {
     fontFamily: fonts.body,
     fontWeight: '400',
     fontSize: 11,
     color: colors.textSecondary,
-    width: 40,
+    width: 56,
     textAlign: 'right',
     marginRight: spacing.sm,
   },

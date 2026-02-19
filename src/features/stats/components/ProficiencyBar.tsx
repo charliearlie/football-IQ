@@ -18,9 +18,11 @@ import {
   Target,
   Grid3X3,
   HelpCircle,
+  Lock,
   LucideIcon,
 } from 'lucide-react-native';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
+import { ProBadge } from '@/components/ProBadge';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 interface ProficiencyBarProps {
@@ -28,6 +30,7 @@ interface ProficiencyBarProps {
   displayName: string;
   percentage: number;
   gamesPlayed: number;
+  isLocked?: boolean;
 }
 
 /**
@@ -65,6 +68,7 @@ export function ProficiencyBar({
   displayName,
   percentage,
   gamesPlayed,
+  isLocked,
 }: ProficiencyBarProps) {
   const IconComponent = getGameModeIcon(gameMode);
   const tierColor = getTierColor(percentage);
@@ -94,9 +98,16 @@ export function ProficiencyBar({
             {displayName}
           </Text>
         </View>
-        <Text style={[textStyles.bodySmall, { color: tierColor }]}>
-          {percentage}%
-        </Text>
+        {isLocked ? (
+          <View style={styles.lockedBadge}>
+            <Lock color={colors.textSecondary} size={14} />
+            <ProBadge size={14} />
+          </View>
+        ) : (
+          <Text style={[textStyles.bodySmall, { color: tierColor }]}>
+            {percentage}%
+          </Text>
+        )}
       </View>
       <View style={styles.barBackground}>
         <Animated.View
@@ -131,6 +142,11 @@ const styles = StyleSheet.create({
   },
   displayName: {
     color: colors.floodlightWhite,
+  },
+  lockedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   barBackground: {
     height: 8,

@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CareerStep } from "@/types/careerPath";
 import { validateGuess } from "@/lib/validation";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
+import { APP_STORE_URL } from "@/lib/constants";
 import { CareerStepCard } from "./CareerStepCard";
 import { LockedStepCard } from "./LockedStepCard";
 import { SuccessModal } from "./SuccessModal";
@@ -118,19 +118,6 @@ export function PlayableCareerPath({
   return (
     <section id="demo" className="py-16 px-4">
       <div className="max-w-md mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-8">
-          <span className="inline-block px-3 py-1 rounded-full bg-pitch-green/20 text-pitch-green text-xs font-bold tracking-wide mb-3">
-            🎮 TRY IT NOW
-          </span>
-          <h2 className="font-bebas text-4xl tracking-wide text-shadow-fun">
-            TODAY&apos;S CAREER PATH
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            Guess the player from their career history
-          </p>
-        </div>
-
         {/* Career steps list */}
         <div className="space-y-3 mb-6">
           {careerSteps.map((step, index) => {
@@ -192,9 +179,12 @@ export function PlayableCareerPath({
         {gameOver && !hasWon && (
           <div className="text-center">
             <p className="text-red-card font-semibold mb-2">Out of clues!</p>
-            <p className="text-muted-foreground text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-1">
               The answer was:{" "}
               <span className="text-pitch-green font-semibold">{answer}</span>
+            </p>
+            <p className="text-slate-500 text-xs mb-4">
+              {revealedCount} / {careerSteps.length} clubs revealed
             </p>
             <CTAButton
               onClick={() => {
@@ -208,16 +198,20 @@ export function PlayableCareerPath({
               TRY AGAIN
             </CTAButton>
             <div className="mt-6 pt-6 border-t border-white/10">
-              <p className="text-muted-foreground text-sm mb-4">
-                Get hints, track your stats, and climb the ranks in the full app.
+              <p className="text-slate-400 text-sm font-medium mb-2">
+                Play all 11 modes in the app — free to download
               </p>
-              <div className="flex items-center justify-center gap-3">
-                <Link href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-                  <Image src="/images/app-store.svg" alt="App Store" width={120} height={40} className="h-[40px] w-auto" />
+              <p className="text-slate-500 text-xs mb-4">
+                Track your stats, climb 10 tiers, and prove your Football IQ.
+              </p>
+              <div className="flex flex-col items-center gap-3">
+                <Link href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="transition-all hover:opacity-90 hover:scale-105">
+                  <Image src="/images/app-store.svg" alt="App Store" width={160} height={48} className="h-[48px] w-auto" />
                 </Link>
-                <Link href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
-                  <Image src="/images/play-store.svg" alt="Google Play" width={135} height={40} className="h-[40px] w-auto" />
-                </Link>
+                <div className="relative">
+                  <Image src="/images/play-store.svg" alt="Google Play — Coming Soon" width={180} height={48} className="h-[48px] w-auto opacity-50" />
+                  <span className="absolute left-0 right-0 text-center text-xs text-slate-500 mt-1">Coming Soon</span>
+                </div>
               </div>
             </div>
           </div>
@@ -236,6 +230,8 @@ export function PlayableCareerPath({
         open={showSuccess}
         onClose={() => setShowSuccess(false)}
         playerName={answer}
+        revealedCount={revealedCount}
+        totalSteps={careerSteps.length}
       />
     </section>
   );

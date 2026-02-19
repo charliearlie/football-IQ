@@ -12,11 +12,9 @@ export function ShareCardPreview() {
               <span className="text-pitch-green">START ARGUMENTS.</span>
             </h2>
             <p className="text-slate-400 text-lg mb-6 max-w-md mx-auto lg:mx-0">
-              Every result generates a share card. Post it to the group chat, put
-              it on your story, or settle debates with proof.
-            </p>
-            <p className="text-slate-500 text-sm max-w-md mx-auto lg:mx-0">
-              One tap to share on WhatsApp, Instagram, X, or anywhere.
+              Every mode generates a score card. One tap and it&apos;s in the group
+              chat. No spoilers — just your score, your tier, and enough context
+              to make your mates want to play.
             </p>
           </div>
 

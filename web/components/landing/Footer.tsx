@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
+import { APP_STORE_URL } from "@/lib/constants";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -32,19 +32,16 @@ export function Footer() {
                 className="h-[50px] w-auto"
               />
             </Link>
-            <Link
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <div className="relative">
               <Image
                 src="/images/play-store.svg"
-                alt="Get it on Google Play"
+                alt="Google Play — Coming Soon"
                 width={168}
                 height={50}
-                className="h-[50px] w-auto"
+                className="h-[50px] w-auto opacity-50"
               />
-            </Link>
+              <span className="absolute left-0 right-0 text-center text-xs text-slate-500 mt-1">Coming Soon</span>
+            </div>
           </div>
         </div>
 

@@ -15,6 +15,7 @@ import {
   Zap,
   Ban,
   Star,
+  ShieldCheck,
   Check,
   X,
 } from 'lucide-react-native';
@@ -153,15 +154,15 @@ export function PremiumUpsellContent({
               <Defs>
                 <RadialGradient
                   id="greenGlow"
-                  cx="0"
+                  cx="50%"
                   cy="0"
                   rx="50%"
                   ry="30%"
-                  fx="0"
+                  fx="50%"
                   fy="0"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <Stop offset="0" stopColor="#58CC02" stopOpacity="0.15" />
+                  <Stop offset="0" stopColor="#58CC02" stopOpacity="0.22" />
                   <Stop offset="1" stopColor="#58CC02" stopOpacity="0" />
                 </RadialGradient>
                 <RadialGradient
@@ -208,7 +209,11 @@ export function PremiumUpsellContent({
         {/* Hero */}
         <View style={styles.heroSection}>
              <View style={styles.trophyWrapper}>
-                <ProBadge size={56} color={colors.stadiumNavy} />
+                <View style={styles.glowCircleOuter}>
+                  <View style={styles.glowCircleInner}>
+                    <ProBadge size={56} color={colors.stadiumNavy} />
+                  </View>
+                </View>
              </View>
              
              <Text style={styles.heroTitle}>
@@ -231,8 +236,13 @@ export function PremiumUpsellContent({
             />
             <BenefitRow
                 icon={Star}
-                title="PRO STATS & INSIGHTS"
-                subtitle="Coming soon once we have enough data"
+                title="PER-MODE ACCURACY"
+                subtitle="See your accuracy breakdown for every game mode"
+            />
+            <BenefitRow
+                icon={ShieldCheck}
+                title="UNLIMITED STREAK PROTECTION"
+                subtitle="Never lose your streak again"
             />
         </View>
 
@@ -406,7 +416,7 @@ function FooterLink({ title, onPress }: { title: string, onPress: () => void }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A', // Stadium Navy
+    backgroundColor: colors.stadiumNavy,
     overflow: 'hidden',
   },
   scrollView: {
@@ -444,13 +454,29 @@ const styles = StyleSheet.create({
   trophyWrapper: {
       marginBottom: 12,
   },
+  glowCircleOuter: {
+      width: 112,
+      height: 112,
+      borderRadius: 56,
+      backgroundColor: 'rgba(250, 204, 21, 0.07)',
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
+  glowCircleInner: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      backgroundColor: 'rgba(250, 204, 21, 0.15)',
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
   trophyGradient: {
       ...StyleSheet.absoluteFillObject,
   },
   heroTitle: {
       fontFamily: fonts.headline,
       fontSize: 36,
-      color: '#F8FAFC',
+      color: colors.floodlightWhite,
       letterSpacing: 1,
       marginBottom: 4,
       textAlign: 'center',
@@ -486,7 +512,7 @@ const styles = StyleSheet.create({
   benefitTitle: {
       fontFamily: fonts.headline,
       fontSize: 18,
-      color: '#F8FAFC',
+      color: colors.floodlightWhite,
       letterSpacing: 0.5,
   },
   benefitSubtitle: {
@@ -510,7 +536,7 @@ const styles = StyleSheet.create({
   },
   planCardSelected: {
       backgroundColor: 'rgba(248, 204, 21, 0.1)',
-      borderColor: '#FACC15',
+      borderColor: colors.cardYellow,
       borderWidth: 2,
       padding: 13, // Compensate for border width to keep size same? Or just accept slight growth
   },
@@ -523,7 +549,7 @@ const styles = StyleSheet.create({
       position: 'absolute',
       top: -10,
       right: 16,
-      backgroundColor: '#FACC15',
+      backgroundColor: colors.cardYellow,
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 100,
@@ -537,7 +563,7 @@ const styles = StyleSheet.create({
   bestValueText: {
       fontFamily: fonts.headline,
       fontSize: 12,
-      color: '#0F172A',
+      color: colors.stadiumNavy,
       letterSpacing: 0.5,
       includeFontPadding: false,
   },
@@ -551,8 +577,8 @@ const styles = StyleSheet.create({
       alignItems: 'center',
   },
   radioCircleSelected: {
-      backgroundColor: '#FACC15',
-      borderColor: '#FACC15',
+      backgroundColor: colors.cardYellow,
+      borderColor: colors.cardYellow,
   },
   planTitle: {
       fontFamily: fonts.headline,
@@ -562,7 +588,7 @@ const styles = StyleSheet.create({
   planPrice: {
       fontFamily: fonts.headline,
       fontSize: 20,
-      color: '#F8FAFC',
+      color: colors.floodlightWhite,
   },
   planPeriod: {
       fontFamily: fonts.body,
@@ -575,7 +601,7 @@ const styles = StyleSheet.create({
       fontFamily: fonts.body,
       fontWeight: '700', // Bold for impact
       fontSize: 12,
-      color: '#FACC15',
+      color: colors.cardYellow,
   },
   planSubtitle: {
        fontFamily: fonts.body,
@@ -591,7 +617,7 @@ const styles = StyleSheet.create({
       textDecorationLine: 'line-through',
   },
   footer: {
-      backgroundColor: '#0F172A',
+      backgroundColor: colors.stadiumNavy,
       paddingHorizontal: 20,
       paddingBottom: 16,
       paddingTop: 8,
@@ -618,7 +644,7 @@ const styles = StyleSheet.create({
   },
   purchasingShim: {
       height: 52, // Match button height
-      backgroundColor: '#58CC02',
+      backgroundColor: colors.pitchGreen,
       borderRadius: 12,
       flexDirection: 'row',
       alignItems: 'center',
@@ -628,7 +654,7 @@ const styles = StyleSheet.create({
   purchasingText: {
        fontFamily: fonts.headline,
        fontSize: 20,
-       color: '#0F172A',
+       color: colors.stadiumNavy,
   },
   dynamicContent: {
       minHeight: 100,

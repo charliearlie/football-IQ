@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 13;
+const SCHEMA_VERSION = 14;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -388,6 +388,21 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
     await database.execAsync('PRAGMA user_version = 13');
     console.log('[Database] Migration v13 complete');
   }
+
+  // Migration v14: Add is_premium column to puzzles and catalog
+  // Allows DB-driven premium gating instead of hardcoded mode lists
+  if (currentVersion < 14) {
+    console.log('[Database] Running migration v14: is_premium columns');
+    await database.execAsync(`
+      ALTER TABLE puzzles ADD COLUMN is_premium INTEGER DEFAULT 0;
+    `);
+    await database.execAsync(`
+      ALTER TABLE puzzle_catalog ADD COLUMN is_premium INTEGER DEFAULT 0;
+    `);
+
+    await database.execAsync('PRAGMA user_version = 14');
+    console.log('[Database] Migration v14 complete');
+  }
 }
 
 // ============ PUZZLE OPERATIONS ============
@@ -399,8 +414,8 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 export async function savePuzzle(puzzle: LocalPuzzle): Promise<void> {
   const database = getDatabase();
   await database.runAsync(
-    `INSERT OR REPLACE INTO puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at, is_special, event_title, event_subtitle, event_tag, event_theme)
-     VALUES ($id, $game_mode, $puzzle_date, $content, $difficulty, $synced_at, $updated_at, $is_special, $event_title, $event_subtitle, $event_tag, $event_theme)`,
+    `INSERT OR REPLACE INTO puzzles (id, game_mode, puzzle_date, content, difficulty, synced_at, updated_at, is_special, is_premium, event_title, event_subtitle, event_tag, event_theme)
+     VALUES ($id, $game_mode, $puzzle_date, $content, $difficulty, $synced_at, $updated_at, $is_special, $is_premium, $event_title, $event_subtitle, $event_tag, $event_theme)`,
     {
       $id: puzzle.id,
       $game_mode: puzzle.game_mode,
@@ -410,6 +425,7 @@ export async function savePuzzle(puzzle: LocalPuzzle): Promise<void> {
       $synced_at: puzzle.synced_at,
       $updated_at: puzzle.updated_at,
       $is_special: puzzle.is_special ?? 0,
+      $is_premium: puzzle.is_premium ?? 0,
       $event_title: puzzle.event_title ?? null,
       $event_subtitle: puzzle.event_subtitle ?? null,
       $event_tag: puzzle.event_tag ?? null,
@@ -942,24 +958,25 @@ export async function saveCatalogEntries(
 
     // Build parameterized multi-row INSERT
     const placeholders = batch.map((_, idx) => {
-      const base = idx * 6; // 6 params per entry
-      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`;
+      const base = idx * 7; // 7 params per entry
+      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`;
     }).join(', ');
 
     // Flatten parameters into positional array
     const params: Record<string, string | number | null> = {};
     batch.forEach((entry, idx) => {
-      const base = idx * 6;
+      const base = idx * 7;
       params[`$${base + 1}`] = entry.id;
       params[`$${base + 2}`] = entry.game_mode;
       params[`$${base + 3}`] = entry.puzzle_date;
       params[`$${base + 4}`] = entry.difficulty;
       params[`$${base + 5}`] = syncedAt;
       params[`$${base + 6}`] = entry.is_special ?? 0;
+      params[`$${base + 7}`] = entry.is_premium ?? 0;
     });
 
     await database.runAsync(
-      `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at, is_special)
+      `INSERT OR REPLACE INTO puzzle_catalog (id, game_mode, puzzle_date, difficulty, synced_at, is_special, is_premium)
        VALUES ${placeholders}`,
       params
     );
@@ -1149,7 +1166,7 @@ export async function getRandomUnplayedPuzzle(
      WHERE pc.puzzle_date <= date('now', 'localtime')
        AND a.id IS NULL
        AND pc.is_special = 0
-       AND pc.game_mode NOT IN ('career_path_pro', 'top_tens')
+       AND pc.is_premium = 0
        AND (pc.puzzle_date >= $freeWindowStart OR up.puzzle_id IS NOT NULL)
      ORDER BY RANDOM()
      LIMIT 1`,

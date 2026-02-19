@@ -72,7 +72,7 @@ describe('database', () => {
 
     it('skips migration if already at current version', async () => {
       // Arrange - version 13 is current SCHEMA_VERSION
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
 
       // Act
       await initDatabase();
@@ -83,7 +83,7 @@ describe('database', () => {
 
     it('returns same instance on subsequent calls', async () => {
       // Arrange
-      mockDb.getFirstAsync.mockResolvedValue({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValue({ user_version: 14 });
 
       // Act
       const db1 = await initDatabase();
@@ -101,7 +101,7 @@ describe('database', () => {
     });
 
     it('returns database after initialization', async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
       await initDatabase();
       expect(() => getDatabase()).not.toThrow();
     });
@@ -109,7 +109,7 @@ describe('database', () => {
 
   describe('puzzle operations', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
       await initDatabase();
     });
 
@@ -211,7 +211,7 @@ describe('database', () => {
 
   describe('attempt operations', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
       await initDatabase();
     });
 
@@ -372,7 +372,7 @@ describe('database', () => {
 
   describe('sync queue operations', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
       await initDatabase();
     });
 
@@ -454,7 +454,7 @@ describe('database', () => {
   describe('closeDatabase', () => {
     it('closes the database connection', async () => {
       // Arrange
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
       await initDatabase();
 
       // Act
@@ -466,7 +466,7 @@ describe('database', () => {
 
     it('resets the database instance to null', async () => {
       // Arrange
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 13 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
       await initDatabase();
 
       // Act

@@ -1,4 +1,3 @@
-export { Hero } from "./Hero";
 export { MarketingHero } from "./MarketingHero";
 export { PlayableCareerPath } from "./PlayableCareerPath";
 export { CareerStepCard } from "./CareerStepCard";

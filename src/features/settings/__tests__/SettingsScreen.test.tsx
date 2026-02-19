@@ -171,6 +171,10 @@ jest.mock("lucide-react-native", () => ({
     const { View } = require("react-native");
     return <View testID={testID || "trash-2-icon"} />;
   },
+  Smartphone: ({ testID }: { testID?: string }) => {
+    const { View } = require("react-native");
+    return <View testID={testID || "smartphone-icon"} />;
+  },
 }));
 
 // Mock expo-store-review
@@ -233,11 +237,22 @@ jest.mock("react-native/Libraries/Linking/Linking", () => ({
   openSettings: jest.fn(),
 }));
 
+// Mock expo-linear-gradient
+jest.mock("expo-linear-gradient", () => {
+  const { View } = require("react-native");
+  return {
+    LinearGradient: ({ children, style }: any) => (
+      <View style={style}>{children}</View>
+    ),
+  };
+});
+
 // Mock Auth
 jest.mock("@/features/auth", () => ({
   useAuth: () => ({
     session: { user: { id: "test-user-id" } },
     signOut: jest.fn(),
+    totalIQ: 0,
   }),
   useSubscriptionSync: () => ({
     forceSync: jest.fn(),

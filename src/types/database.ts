@@ -19,6 +19,7 @@ export interface LocalPuzzle {
   synced_at: string | null;
   updated_at: string | null; // Server's updated_at timestamp for staleness detection
   is_special: number; // SQLite boolean: 0 = standard, 1 = special event
+  is_premium: number; // SQLite boolean: 0 = free, 1 = premium-only
   event_title: string | null;
   event_subtitle: string | null;
   event_tag: string | null;
@@ -82,6 +83,7 @@ export interface LocalCatalogEntry {
   difficulty: string | null;
   synced_at: string | null;
   is_special: number; // SQLite boolean: 0 = standard, 1 = special event
+  is_premium: number; // SQLite boolean: 0 = free, 1 = premium-only
 }
 
 /**

@@ -96,6 +96,7 @@ export function TimelineResultModal({
     <BaseResultModal
       visible={visible}
       resultType={baseResultType}
+      iqEarned={score.points}
       icon={
         isWin ? (
           <Trophy
@@ -108,7 +109,6 @@ export function TimelineResultModal({
         )
       }
       title={title}
-      message={`${score.points} IQ · ${score.totalAttempts}/5 guesses`}
       onShare={onShare}
       shareCardContent={shareCardContent}
       shareData={shareData}

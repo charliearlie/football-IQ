@@ -88,6 +88,7 @@ export function TheGridResultModal({
     <BaseResultModal
       visible={visible}
       resultType={gaveUp ? 'loss' : isPerfect ? 'win' : 'complete'}
+      iqEarned={score.points}
       icon={
         gaveUp ? (
           <XCircle size={32} color={colors.floodlightWhite} strokeWidth={2} />

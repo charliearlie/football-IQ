@@ -45,6 +45,7 @@ interface SupabaseCatalogEntry {
   puzzle_date: string;
   difficulty: string | null;
   is_special: boolean | null;
+  is_premium: boolean | null;
 }
 
 /**
@@ -132,5 +133,6 @@ function transformSupabaseCatalogToLocal(
     difficulty: entry.difficulty,
     synced_at: null, // Will be set by saveCatalogEntries
     is_special: entry.is_special ? 1 : 0,
+    is_premium: entry.is_premium ? 1 : 0,
   };
 }

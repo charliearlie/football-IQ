@@ -192,6 +192,7 @@ export function TheChainResultModal({
     <BaseResultModal
       visible={visible}
       resultType={resultType}
+      iqEarned={score.points}
       icon={null}
       title={title}
       message={message}

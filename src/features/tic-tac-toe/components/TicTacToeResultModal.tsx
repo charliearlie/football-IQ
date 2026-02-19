@@ -78,6 +78,7 @@ export function TicTacToeResultModal({
     <BaseResultModal
       visible={visible}
       resultType={score.result}
+      iqEarned={score.points}
       icon={getResultIcon(score.result)}
       title={getResultTitle(score.result)}
       onShare={onShare}

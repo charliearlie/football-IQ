@@ -87,6 +87,7 @@ export function ConnectionsResultModal({
     <BaseResultModal
       visible={visible}
       resultType={gaveUp ? 'loss' : isWin ? 'win' : 'loss'}
+      iqEarned={score.points}
       icon={
         isWin ? (
           <Trophy
@@ -99,7 +100,7 @@ export function ConnectionsResultModal({
         )
       }
       title={gaveUp ? 'GAVE UP' : isWin ? (score.mistakes === 0 ? 'PERFECT!' : 'COMPLETE!') : 'GAME OVER'}
-      message={scoreLabel ? `${score.points} IQ · ${scoreLabel}` : `${score.points} IQ`}
+      message={scoreLabel || undefined}
       onShare={onShare}
       shareCardContent={shareCardContent}
       shareData={shareData}

@@ -20,6 +20,10 @@ interface StreakHeaderProps {
    * Number of streak freezes available.
    */
   availableFreezes?: number;
+  /**
+   * Whether the user has a premium subscription.
+   */
+  isPremium?: boolean;
 }
 
 /**
@@ -37,6 +41,7 @@ export function StreakHeader({
   completedCount,
   totalCount,
   availableFreezes = 0,
+  isPremium = false,
 }: StreakHeaderProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
 
@@ -45,7 +50,7 @@ export function StreakHeader({
     setTimeout(() => setShowTooltip(false), 2000);
   };
 
-  const hasFreezes = availableFreezes > 0;
+  const hasFreezes = availableFreezes > 0 || isPremium;
 
   return (
     <View style={styles.container}>
@@ -59,20 +64,22 @@ export function StreakHeader({
         <Text style={styles.streakCount}>{currentStreak}</Text>
         <Text style={styles.streakLabel}>day streak</Text>
 
-        {/* Freeze Shield Icon */}
+        {/* Freeze Indicator — only show when user has freezes or is premium */}
         {hasFreezes && (
           <Pressable onPress={handleShieldPress} style={styles.shieldButton}>
             <ShieldCheck
               color={colors.pitchGreen}
-              size={24}
-              fill={colors.pitchGreen}
+              size={14}
             />
+            <Text style={styles.freezeCount}>
+              {isPremium ? '\u221E' : availableFreezes}
+            </Text>
             {showTooltip && (
               <View style={styles.tooltip}>
                 <Text style={styles.tooltipText}>
-                  {Number.isFinite(availableFreezes)
-                    ? `You have ${availableFreezes} streak ${availableFreezes === 1 ? 'freeze' : 'freezes'}`
-                    : 'You have unlimited streak freezes'}
+                  {isPremium
+                    ? 'You have unlimited streak freezes'
+                    : `You have ${availableFreezes} streak ${availableFreezes === 1 ? 'freeze' : 'freezes'}`}
                 </Text>
               </View>
             )}
@@ -120,6 +127,14 @@ const styles = StyleSheet.create({
   shieldButton: {
     marginLeft: spacing.sm,
     position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  freezeCount: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.pitchGreen,
   },
   tooltip: {
     position: 'absolute',

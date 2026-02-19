@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
+import { APP_STORE_URL } from "@/lib/constants";
 
 export function StickyMobileCTA() {
   const [visible, setVisible] = useState(false);
@@ -17,10 +17,7 @@ export function StickyMobileCTA() {
 
   if (!visible) return null;
 
-  // Detect platform for appropriate store link
-  const isAndroid =
-    typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-  const storeUrl = isAndroid ? PLAY_STORE_URL : APP_STORE_URL;
+  const storeUrl = APP_STORE_URL;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-stadium-navy/95 backdrop-blur-md border-t border-white/10 px-4 py-3 animate-in slide-in-from-bottom fade-in duration-300">

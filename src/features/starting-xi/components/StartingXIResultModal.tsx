@@ -132,6 +132,7 @@ export function StartingXIResultModal({
     <BaseResultModal
       visible={visible}
       resultType={resultType}
+      iqEarned={score.points}
       icon={icon}
       title={resultTitle}
       message={resultMessage}

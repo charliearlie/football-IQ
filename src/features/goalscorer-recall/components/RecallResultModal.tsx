@@ -88,6 +88,7 @@ export function RecallResultModal({
     <BaseResultModal
       visible={visible}
       resultType={score.won ? 'win' : 'loss'}
+      iqEarned={score.points}
       icon={
         score.won ? (
           <Trophy size={32} color={colors.stadiumNavy} strokeWidth={2} />

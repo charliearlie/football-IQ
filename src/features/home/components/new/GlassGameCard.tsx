@@ -2,10 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, Check, Video, Gift, Cable, History } from 'lucide-react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { CardStatus } from '../../hooks/useDailyPuzzles';
 import { ProBadge } from '@/components/ProBadge/ProBadge';
+import { useHaptics } from '@/hooks/useHaptics';
 
 // Duplicate of icons mapping for now - ideally refactor to shared config
 const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
@@ -17,6 +19,8 @@ const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
   starting_xi: require('../../../../../assets/images/puzzles/starting-xi.png'),
   top_tens: require('../../../../../assets/images/puzzles/top-tens.png'),
 };
+
+const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };
 
 interface GlassGameCardProps {
   gameMode: GameMode;
@@ -45,6 +49,50 @@ export function GlassGameCard({
 }: GlassGameCardProps) {
   const isLocked = isPremiumOnly && !isPremium && !isAdUnlocked;
   const iconSource = PUZZLE_ICONS[gameMode];
+  const { triggerLight } = useHaptics();
+
+  const translateY = useSharedValue(0);
+  const adTranslateY = useSharedValue(0);
+  const proTranslateY = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const adAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: adTranslateY.value }],
+  }));
+
+  const proAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: proTranslateY.value }],
+  }));
+
+  const handlePressIn = () => {
+    translateY.value = withSpring(2, SPRING_CONFIG);
+    triggerLight();
+  };
+
+  const handlePressOut = () => {
+    translateY.value = withSpring(0, SPRING_CONFIG);
+  };
+
+  const handleAdPressIn = () => {
+    adTranslateY.value = withSpring(2, SPRING_CONFIG);
+    triggerLight();
+  };
+
+  const handleAdPressOut = () => {
+    adTranslateY.value = withSpring(0, SPRING_CONFIG);
+  };
+
+  const handleProPressIn = () => {
+    proTranslateY.value = withSpring(2, SPRING_CONFIG);
+    triggerLight();
+  };
+
+  const handleProPressOut = () => {
+    proTranslateY.value = withSpring(0, SPRING_CONFIG);
+  };
 
   // Locked Card Layout (Vertical Stack)
   if (isLocked) {
@@ -74,20 +122,28 @@ export function GlassGameCard({
 
                 {/* Actions Row */}
                 <View style={styles.lockedActions}>
-                     <Pressable 
-                        onPress={onWatchAd} 
-                        style={({pressed}) => [styles.actionButton, styles.adButton, pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }]}
+                     <Pressable
+                        onPress={onWatchAd}
+                        onPressIn={handleAdPressIn}
+                        onPressOut={handleAdPressOut}
+                        style={[styles.actionButton, styles.adButton]}
                      >
-                        <Video size={16} color="#F8FAFC" />
-                        <Text style={styles.adButtonText}>WATCH AD</Text>
+                        <Animated.View style={[styles.actionButtonInner, adAnimatedStyle]}>
+                          <Video size={16} color="#F8FAFC" />
+                          <Text style={styles.adButtonText}>WATCH AD</Text>
+                        </Animated.View>
                      </Pressable>
 
-                     <Pressable 
-                        onPress={onGoPro} 
-                        style={({pressed}) => [styles.actionButton, styles.proButton, pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }]}
+                     <Pressable
+                        onPress={onGoPro}
+                        onPressIn={handleProPressIn}
+                        onPressOut={handleProPressOut}
+                        style={[styles.actionButton, styles.proButton]}
                      >
-                        <ProBadge size={16} color={HOME_COLORS.stadiumNavy} />
-                        <Text style={styles.proButtonText}>GO PRO</Text>
+                        <Animated.View style={[styles.actionButtonInner, proAnimatedStyle]}>
+                          <ProBadge size={16} color={HOME_COLORS.stadiumNavy} />
+                          <Text style={styles.proButtonText}>GO PRO</Text>
+                        </Animated.View>
                      </Pressable>
                 </View>
             </LinearGradient>
@@ -97,53 +153,60 @@ export function GlassGameCard({
 
   // Standard Card Layout (Horizontal Row)
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.container, pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] }]}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.05)']} // Flat glass
-        style={styles.card}
-      >
-        {/* Left: Icon Box */}
-        <View style={styles.iconBox}>
-          {iconSource ? (
-            <Image source={iconSource} style={styles.iconImage} resizeMode="contain" />
-          ) : gameMode === 'connections' ? (
-            <Cable size={24} color={HOME_COLORS.pitchGreen} />
-          ) : gameMode === 'timeline' ? (
-            <History size={24} color={HOME_COLORS.pitchGreen} />
-          ) : (
-            <Play size={24} color={HOME_COLORS.pitchGreen} fill={HOME_COLORS.pitchGreen} />
-          )}
-          {status === 'done' && (
-             <View style={styles.checkBadge}>
-                <Check size={10} color={HOME_COLORS.stadiumNavy} strokeWidth={4} />
-             </View>
-          )}
-        </View>
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={styles.container}
+    >
+      <Animated.View style={animatedStyle}>
+        <LinearGradient
+          colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.05)']} // Flat glass
+          style={styles.card}
+        >
+          {/* Left: Icon Box */}
+          <View style={styles.iconBox}>
+            {iconSource ? (
+              <Image source={iconSource} style={styles.iconImage} resizeMode="contain" />
+            ) : gameMode === 'connections' ? (
+              <Cable size={24} color={HOME_COLORS.pitchGreen} />
+            ) : gameMode === 'timeline' ? (
+              <History size={24} color={HOME_COLORS.pitchGreen} />
+            ) : (
+              <Play size={24} color={HOME_COLORS.pitchGreen} fill={HOME_COLORS.pitchGreen} />
+            )}
+            {status === 'done' && (
+               <View style={styles.checkBadge}>
+                  <Check size={10} color={HOME_COLORS.stadiumNavy} strokeWidth={4} />
+               </View>
+            )}
+          </View>
 
-        {/* Center: Title & Desc */}
-        <View style={styles.content}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-        </View>
+          {/* Center: Title & Desc */}
+          <View style={styles.content}>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
+          </View>
 
-        {/* Right: Squircle Play Button */}
-        <View style={[
-            styles.playButton, 
-            status === 'done' && styles.resultButton,
-            status === 'resume' && styles.resumeButton
-        ]}>
-             {status === 'done' ? (
-                 <Text style={styles.resultText}>VIEW</Text>
-             ) : (
-                 <Play 
-                    size={20} 
-                    color={status === 'resume' ? HOME_COLORS.cardYellow : '#0F172A'} // Navy icon on green bg
-                    fill={status === 'resume' ? HOME_COLORS.cardYellow : '#0F172A'} 
-                    style={{ marginLeft: 2 }} 
-                 />
-             )}
-        </View>
-      </LinearGradient>
+          {/* Right: Squircle Play Button */}
+          <View style={[
+              styles.playButton,
+              status === 'done' && styles.resultButton,
+              status === 'resume' && styles.resumeButton
+          ]}>
+               {status === 'done' ? (
+                   <Text style={styles.resultText}>VIEW</Text>
+               ) : (
+                   <Play
+                      size={20}
+                      color={status === 'resume' ? HOME_COLORS.cardYellow : '#0F172A'} // Navy icon on green bg
+                      fill={status === 'resume' ? HOME_COLORS.cardYellow : '#0F172A'}
+                      style={{ marginLeft: 2 }}
+                   />
+               )}
+          </View>
+        </LinearGradient>
+      </Animated.View>
     </Pressable>
   );
 }
@@ -182,17 +245,21 @@ const styles = StyleSheet.create({
   },
   actionButton: {
       flex: 1,
+      borderRadius: 8,
+  },
+  actionButtonInner: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 12,
-      borderRadius: 8,
       gap: 8,
   },
   adButton: { // Transparent / Glassy
       backgroundColor: 'rgba(255,255,255,0.05)',
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.2)',
+      borderRadius: 8,
+      overflow: 'hidden',
   },
   adButtonText: {
       fontFamily: HOME_FONTS.heading,
@@ -204,6 +271,8 @@ const styles = StyleSheet.create({
       backgroundColor: HOME_COLORS.cardYellow,
       borderBottomWidth: 4,
       borderBottomColor: '#cda412', // Shadow
+      borderRadius: 8,
+      overflow: 'hidden',
   },
   proButtonText: {
       fontFamily: HOME_FONTS.heading,
@@ -216,7 +285,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: 12, // Squircle 
+    borderRadius: 12, // Squircle
     backgroundColor: '#F1F5F9', // Off-white for better icon visibility
     justifyContent: 'center',
     alignItems: 'center',
@@ -257,7 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(248, 250, 252, 0.7)',
   },
-  
+
   // Play Button
   playButton: {
     width: 44, // Squircle dimensions
