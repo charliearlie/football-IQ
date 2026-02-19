@@ -5,7 +5,7 @@
  * Players identify 4 groups of 4 related footballers from a 4x4 grid.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -21,22 +21,32 @@ import { ElevatedButton } from '@/components';
 import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
 import { GameContainer } from '@/components/GameContainer';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
+import { ReviewModeBanner } from '@/components/ReviewMode/ReviewModeBanner';
+import { ReviewModeActionZone } from '@/components/ReviewMode/ReviewModeActionZone';
+import { useReviewMode } from '@/hooks/useReviewMode';
 import { AdBanner } from '@/features/ads';
 import { useConnectionsGame } from '../hooks/useConnectionsGame';
 import { ConnectionsGrid } from '../components/ConnectionsGrid';
 import { ConnectionsActionBar } from '../components/ConnectionsActionBar';
 import { MistakeIndicator } from '../components/MistakeIndicator';
 import { ConnectionsResultModal } from '../components/ConnectionsResultModal';
+import {
+  ConnectionsAttemptMetadata,
+  ConnectionsGroup,
+  parseConnectionsContent,
+} from '../types/connections.types';
 
 export interface ConnectionsScreenProps {
   /** Puzzle ID to play (optional - uses today's puzzle if not provided) */
   puzzleId?: string;
+  /** Whether to show in read-only review mode */
+  isReviewMode?: boolean;
 }
 
 /**
  * ConnectionsScreen - Main game screen for Connections.
  */
-export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenProps) {
+export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false }: ConnectionsScreenProps) {
   const router = useRouter();
 
   // Onboarding state - show intro for first-time users
@@ -45,6 +55,31 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
 
   // Get puzzle - either by ID or today's puzzle
   const { puzzle, isLoading } = usePuzzle(propPuzzleId || 'connections');
+
+  // Review mode: fetch completed attempt data
+  const { metadata: reviewMetadata, isLoading: isReviewLoading } =
+    useReviewMode<ConnectionsAttemptMetadata>(propPuzzleId, isReviewMode);
+
+  // Rebuild solved groups from review metadata
+  const reviewSolvedGroups = useMemo<ConnectionsGroup[]>(() => {
+    if (!isReviewMode || !reviewMetadata?.solvedGroups || !puzzle) return [];
+    const content = parseConnectionsContent(puzzle.content);
+    if (!content) return [];
+    const groups: ConnectionsGroup[] = [];
+    for (const category of reviewMetadata.solvedGroups) {
+      const group = content.groups.find((g) => g.category === category);
+      if (group) groups.push(group);
+    }
+    // If metadata didn't capture all groups (e.g. gave up), include remaining
+    if (groups.length < 4) {
+      for (const group of content.groups) {
+        if (!groups.some((g) => g.category === group.category)) {
+          groups.push(group);
+        }
+      }
+    }
+    return groups;
+  }, [isReviewMode, reviewMetadata, puzzle]);
 
   // Game state
   const {
@@ -167,6 +202,53 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId }: ConnectionsScreenP
         <Text style={styles.noPuzzleText}>No puzzle available today</Text>
         <Text style={styles.noPuzzleSubtext}>Check back later!</Text>
       </View>
+    );
+  }
+
+  // Review mode: show all groups revealed (read-only)
+  if (isReviewMode) {
+    if (isReviewLoading) {
+      return (
+        <GameContainer title="Connections - Review" testID="connections-review">
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.pitchGreen} />
+            <Text style={styles.loadingText}>Loading review...</Text>
+          </View>
+        </GameContainer>
+      );
+    }
+
+    return (
+      <GameContainer title="Connections - Review" testID="connections-review">
+        <LinearGradient
+          colors={[colors.stadiumNavy, '#1E293B', colors.stadiumNavy]}
+          locations={[0, 0.3, 1]}
+          style={styles.container}
+        >
+          <ReviewModeBanner testID="review-banner" />
+
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.gridContainer}>
+              <ConnectionsGrid
+                solvedGroups={reviewSolvedGroups}
+                remainingPlayers={[]}
+                selectedPlayers={[]}
+                onTogglePlayer={() => {}}
+                disabled
+                testID="connections-review-grid"
+              />
+            </View>
+          </ScrollView>
+
+          <ReviewModeActionZone
+            onClose={handleClose}
+            testID="review-action-zone"
+          />
+        </LinearGradient>
+      </GameContainer>
     );
   }
 

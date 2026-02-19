@@ -10,30 +10,17 @@ import {
   fetchTimelinePuzzles,
 } from "@/app/(dashboard)/admin/timeline/actions";
 
-type EventType = "transfer" | "achievement" | "milestone" | "international";
-
 interface EventFormData {
   text: string;
   year: string;
   month: string;
-  type: EventType;
 }
-
-const EVENT_TYPES: EventType[] = ["transfer", "achievement", "milestone", "international"];
-
-const EVENT_TYPE_COLORS: Record<EventType, string> = {
-  transfer: "border-l-blue-500",
-  achievement: "border-l-yellow-400",
-  milestone: "border-l-pitch-green",
-  international: "border-l-purple-500",
-};
 
 function createEmptyEvents(): EventFormData[] {
   return Array.from({ length: 6 }, () => ({
     text: "",
     year: "",
     month: "",
-    type: "transfer" as EventType,
   }));
 }
 
@@ -58,6 +45,7 @@ function CreatePuzzleForm() {
     new Date().toISOString().split("T")[0]
   );
   const [status, setStatus] = useState<"draft" | "live">("draft");
+  const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [events, setEvents] = useState<EventFormData[]>(createEmptyEvents);
@@ -74,11 +62,6 @@ function CreatePuzzleForm() {
   }
 
   function validateLocally(): string | null {
-    // Check subject
-    if (!subject.trim()) {
-      return "Subject name is required";
-    }
-
     // Check all events filled
     for (let i = 0; i < 6; i++) {
       const event = events[i];
@@ -138,18 +121,19 @@ function CreatePuzzleForm() {
       const res = await createTimelinePuzzle({
         puzzleDate,
         status,
-        subject: subject.trim(),
+        title: title.trim() || undefined,
+        subject: subject.trim() || undefined,
         subject_id: subjectId.trim() || undefined,
         events: events.map((e) => ({
           text: e.text.trim(),
           year: parseInt(e.year, 10),
           month: e.month.trim() ? parseInt(e.month, 10) : undefined,
-          type: e.type,
         })),
       });
 
       if (res.success) {
         setSuccess(`Puzzle created (ID: ${res.data?.id})`);
+        setTitle("");
         setSubject("");
         setSubjectId("");
         setEvents(createEmptyEvents());
@@ -170,7 +154,7 @@ function CreatePuzzleForm() {
           Create New Puzzle
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Define 6 events from a footballer's career in chronological order
+          Define 6 events in chronological order
         </p>
       </div>
 
@@ -202,23 +186,41 @@ function CreatePuzzleForm() {
         </div>
       </div>
 
-      {/* Subject fields */}
+      {/* Title / Subject fields */}
       <div className="space-y-3">
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">
-            Subject Name *
+            Title / Theme
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder='e.g., "Premier League Moments" (optional — for themed timelines)'
+            className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground/40"
+          />
+          <p className="text-xs text-muted-foreground/60">
+            Shown as the header on the game screen. Leave blank if using Subject below.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Subject Name
           </label>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder='e.g., "Lionel Messi"'
+            placeholder='e.g., "Lionel Messi" (optional — for player career timelines)'
             className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground/40"
           />
+          <p className="text-xs text-muted-foreground/60">
+            Shows as "CAREER OF · NAME" on the game screen. Title takes priority if both are set.
+          </p>
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">
-            Subject ID (optional)
+            Subject ID
           </label>
           <input
             type="text"
@@ -235,7 +237,7 @@ function CreatePuzzleForm() {
         {events.map((event, ei) => (
           <div
             key={ei}
-            className={`rounded-md border border-white/10 bg-white/[0.03] p-4 space-y-3 border-l-4 ${EVENT_TYPE_COLORS[event.type]}`}
+            className="rounded-md border border-white/10 bg-white/[0.03] p-4 space-y-3"
           >
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-floodlight">
@@ -256,7 +258,7 @@ function CreatePuzzleForm() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">
                   Year *
@@ -284,24 +286,6 @@ function CreatePuzzleForm() {
                   max={12}
                   className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground/40"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Type
-                </label>
-                <select
-                  value={event.type}
-                  onChange={(e) =>
-                    updateEvent(ei, { type: e.target.value as EventType })
-                  }
-                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight"
-                >
-                  {EVENT_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
           </div>
@@ -381,8 +365,10 @@ function PuzzleArchive() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  function getSubject(content: Record<string, unknown>): string {
-    return (content.subject as string) ?? "Unknown";
+  function getLabel(content: Record<string, unknown>): string {
+    if (content.title) return content.title as string;
+    if (content.subject) return content.subject as string;
+    return "Untitled";
   }
 
   function getEventCount(content: Record<string, unknown>): number {
@@ -431,7 +417,7 @@ function PuzzleArchive() {
                     Status
                   </th>
                   <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">
-                    Subject
+                    Title / Subject
                   </th>
                   <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">
                     Events
@@ -458,7 +444,7 @@ function PuzzleArchive() {
                       </Badge>
                     </td>
                     <td className="py-2 px-3 text-floodlight">
-                      {getSubject(puzzle.content)}
+                      {getLabel(puzzle.content)}
                     </td>
                     <td className="py-2 px-3 text-muted-foreground">
                       {getEventCount(puzzle.content)}

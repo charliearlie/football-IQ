@@ -1,59 +1,60 @@
 /**
  * Scoring utilities for Timeline game.
+ *
+ * Scoring is based on number of attempts (like Career Path):
+ * 1 guess = 5 IQ, 2 = 4, 3 = 3, 4 = 2, 5 = 1, gave up/lost = 0.
  */
 
 import { TimelineScore } from '../types/timeline.types';
 
 /**
- * Scoring table for Timeline based on first-attempt accuracy.
+ * Labels for attempt-based scoring.
  */
-const SCORE_TABLE: Record<number, { points: number; label: string }> = {
-  0: { points: 0, label: '' },
-  1: { points: 2, label: 'Rookie' },
-  2: { points: 2, label: 'Rookie' },
-  3: { points: 4, label: 'Promising' },
-  4: { points: 6, label: 'Expert' },
-  5: { points: 8, label: 'World Class' },
-  6: { points: 10, label: 'Perfect Timeline' },
+const ATTEMPT_LABELS: Record<number, string> = {
+  5: 'Perfect Timeline',
+  4: 'World Class',
+  3: 'Expert',
+  2: 'Promising',
+  1: 'Rookie',
+  0: '',
 };
+
+/**
+ * Maximum number of submit attempts allowed.
+ */
+export const MAX_TIMELINE_ATTEMPTS = 5;
 
 /**
  * Calculate score for a Timeline game.
  *
- * @param firstAttemptCorrect - Number of events in correct position on first submit
  * @param totalAttempts - Total number of submit attempts
+ * @param won - Whether the player got all 6 correct
  * @returns Score object with points and metadata
  */
 export function calculateTimelineScore(
-  firstAttemptCorrect: number,
-  totalAttempts: number
+  totalAttempts: number,
+  won: boolean
 ): TimelineScore {
-  const entry = SCORE_TABLE[Math.min(firstAttemptCorrect, 6)] ?? { points: 0, label: '' };
+  const points = won ? Math.max(1, 6 - totalAttempts) : 0;
 
   return {
-    points: entry.points,
-    firstAttemptCorrect,
+    points,
     totalAttempts,
-    label: entry.label,
+    label: ATTEMPT_LABELS[points] ?? '',
   };
 }
 
 /**
- * Get the score label for a given number of first-attempt correct events.
- *
- * @param firstAttemptCorrect - Number of events correct on first attempt (0-6)
- * @returns Score label (e.g., "Perfect Timeline")
+ * Get the score label for a given point value.
  */
-export function getTimelineScoreLabel(firstAttemptCorrect: number): string {
-  return SCORE_TABLE[Math.min(firstAttemptCorrect, 6)]?.label ?? '';
+export function getTimelineScoreLabel(points: number): string {
+  return ATTEMPT_LABELS[points] ?? '';
 }
 
 /**
- * Normalize Timeline score to 0-10 range for IQ system.
- *
- * @param score - TimelineScore object
- * @returns Normalized score (0-10)
+ * Normalize Timeline score to 0-100 range for distribution.
+ * 5 pts → 100, 4 → 80, 3 → 60, 2 → 40, 1 → 20, 0 → 0.
  */
 export function normalizeTimelineScore(score: TimelineScore): number {
-  return score.points;
+  return score.points * 20;
 }

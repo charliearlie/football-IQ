@@ -53,7 +53,6 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
     content,
     reorderEvents,
     submitOrder,
-    revealNext,
     revealComplete,
     giveUp,
     shareResult,
@@ -79,17 +78,13 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
     setShowGiveUpModal(false);
   };
 
-  // Cascading reveal effect
+  // Simultaneous reveal — all cards flash for 800ms, then reset
   useEffect(() => {
     if (state.revealPhase === 'revealing') {
-      const timers: NodeJS.Timeout[] = [];
-      for (let i = 0; i < 6; i++) {
-        timers.push(setTimeout(() => revealNext(), (i + 1) * 200));
-      }
-      timers.push(setTimeout(() => revealComplete(), 7 * 200));
-      return () => timers.forEach(clearTimeout);
+      const timer = setTimeout(() => revealComplete(), 800);
+      return () => clearTimeout(timer);
     }
-  }, [state.revealPhase, revealNext, revealComplete]);
+  }, [state.revealPhase, revealComplete]);
 
   // Consolidate modal visibility logic
   useEffect(() => {
@@ -156,7 +151,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
   }
 
   const isPlaying = state.gameStatus === 'playing';
-  const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'gave_up';
+  const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'gave_up' || state.gameStatus === 'lost';
 
   return (
     <GameContainer
@@ -169,18 +164,32 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
         locations={[0, 0.3, 1]}
         style={styles.container}
       >
-        {/* Compact Subject Header */}
-        <View style={styles.subjectBar}>
-          <Text style={styles.subjectLabel}>CAREER OF</Text>
-          <Text style={styles.subjectDot}> · </Text>
-          <Text style={styles.subjectName}>{content.subject.toUpperCase()}</Text>
-        </View>
+        {/* Compact Subject/Title Header */}
+        {(content.title || content.subject) && (
+          <View style={styles.subjectBar}>
+            {content.title ? (
+              <Text style={styles.subjectName}>{content.title.toUpperCase()}</Text>
+            ) : (
+              <>
+                <Text style={styles.subjectLabel}>CAREER OF</Text>
+                <Text style={styles.subjectDot}> · </Text>
+                <Text style={styles.subjectName}>{content.subject!.toUpperCase()}</Text>
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Instruction — only during play */}
+        {isPlaying && (
+          <Text style={styles.instructionText}>
+            Sort the events into chronological order
+          </Text>
+        )}
 
         {/* Timeline List — fills remaining space, handles own scrolling */}
         <TimelineList
           events={state.eventOrder}
           lockedIndices={state.lockedIndices}
-          revealIndex={state.revealIndex}
           lastAttemptResults={state.lastAttemptResults}
           revealPhase={state.revealPhase}
           onReorder={reorderEvents}
@@ -205,7 +214,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
           <View style={styles.gameOverZone}>
             {state.gameStatus === 'won' && (
               <Text style={styles.winText}>
-                {state.attemptCount === 0 ? 'PERFECT!' : 'TIMELINE COMPLETE!'}
+                {state.attemptCount === 1 ? 'PERFECT!' : 'TIMELINE COMPLETE!'}
               </Text>
             )}
             <ElevatedButton
@@ -230,6 +239,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
             onClose={handleClose}
             onShare={handleShare}
             gaveUp={state.gameStatus === 'gave_up'}
+            outOfGuesses={state.gameStatus === 'lost'}
             testID="result-modal"
           />
         )}
@@ -315,6 +325,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.floodlightWhite,
     letterSpacing: 1,
+  },
+  instructionText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: spacing.sm,
   },
   gameOverZone: {
     padding: spacing.lg,

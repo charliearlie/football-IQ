@@ -42,7 +42,7 @@ export function TimelineActionBar({
       {/* Content */}
       <View style={styles.glassOverlay}>
         {/* Attempt counter */}
-        <Text style={styles.attemptText}>Attempt {attemptCount + 1}</Text>
+        <Text style={styles.attemptText}>Attempt {attemptCount + 1} of 5</Text>
 
         {/* Submit + Give Up row */}
         <View style={styles.actionRow}>

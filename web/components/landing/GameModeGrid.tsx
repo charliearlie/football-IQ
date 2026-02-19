@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Crown, Link as LinkIcon, Scissors } from "lucide-react";
+import { Crown, Link as LinkIcon, Scissors, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -89,6 +89,14 @@ const GAME_MODES: GameModeItem[] = [
     icon: "/images/puzzles/quiz.png",
     schedule: "TUESDAYS",
     colorClasses: { text: "text-coral", borderL: "border-l-coral" },
+  },
+  {
+    title: "Timeline",
+    description: "Sort 6 career events into chronological order",
+    lucideIcon: History,
+    schedule: "",
+    isBeta: true,
+    colorClasses: { text: "text-card-yellow", borderL: "border-l-card-yellow" },
   },
 ];
 

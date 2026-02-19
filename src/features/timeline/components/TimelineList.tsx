@@ -19,7 +19,6 @@ import type { TimelineEvent, RevealPhase } from '../types/timeline.types';
 export interface TimelineListProps {
   events: TimelineEvent[];
   lockedIndices: Set<number>;
-  revealIndex: number;
   lastAttemptResults: boolean[];
   revealPhase: RevealPhase;
   onReorder: (from: number, to: number) => void;
@@ -34,7 +33,6 @@ export interface TimelineListProps {
 export function TimelineList({
   events,
   lockedIndices,
-  revealIndex,
   lastAttemptResults,
   revealPhase,
   onReorder,
@@ -47,9 +45,9 @@ export function TimelineList({
     if (index === undefined) return null;
 
     const isLocked = lockedIndices.has(index);
-    const isRevealing = revealPhase === 'revealing' && revealIndex === index;
+    const isRevealing = revealPhase === 'revealing';
     const isCorrect = lastAttemptResults[index] ?? null;
-    const showYear = isLocked || isRevealing || gameOver;
+    const showYear = gameOver;
 
     return (
       <ScaleDecorator>

@@ -299,8 +299,8 @@ export function ScoreDistributionContainer({
   // Check if this is the first player (no prior attempts)
   const isFirstPlayer = distribution.length === 0 && totalAttempts === 0;
 
-  // For Career Path and Career Path Pro, transform distribution and scores to club counts
-  if ((gameMode === 'career_path' || gameMode === 'career_path_pro') && maxSteps) {
+  // For Career Path, Career Path Pro, and Timeline — transform distribution to points
+  if ((gameMode === 'career_path' || gameMode === 'career_path_pro' || gameMode === 'timeline') && maxSteps) {
     // userScore is in points (1 to maxSteps), convert to normalized for bucket matching
     // normalized = (points / maxSteps) * 100
     const normalizedUserScore = (userScore / maxSteps) * 100;

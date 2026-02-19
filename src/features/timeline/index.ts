@@ -41,7 +41,6 @@ export type { ShareResult } from './utils/share';
 
 // Types
 export type {
-  TimelineEventType,
   TimelineEvent,
   TimelineContent,
   TimelineScore,

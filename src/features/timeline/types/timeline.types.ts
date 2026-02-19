@@ -6,12 +6,7 @@
  */
 
 /**
- * Event type categories for timeline events.
- */
-export type TimelineEventType = 'transfer' | 'achievement' | 'milestone' | 'international';
-
-/**
- * A single career event in the timeline.
+ * A single event in the timeline.
  */
 export interface TimelineEvent {
   /** Description of the event (e.g., "Signed for Barcelona") */
@@ -20,21 +15,26 @@ export interface TimelineEvent {
   year: number;
   /** Optional month (1-12) for more precise ordering */
   month?: number;
-  /** Category of the event */
-  type: TimelineEventType;
 }
 
 /**
  * The Timeline puzzle content structure.
  * Stored in daily_puzzles.content JSON field.
  * Events are stored in correct chronological order.
+ *
+ * Supports three modes:
+ * - Player career: subject is set (e.g., "Thierry Henry")
+ * - Themed: title is set (e.g., "Premier League Moments")
+ * - Generic: neither set — just a list of events
  */
 export interface TimelineContent {
-  /** The footballer's name */
-  subject: string;
-  /** Optional Wikidata ID for the subject */
+  /** Optional title/theme for the timeline (e.g., "Premier League Moments") */
+  title?: string;
+  /** The footballer's name (optional — only for player career timelines) */
+  subject?: string;
+  /** Optional reference ID for the subject */
   subject_id?: string;
-  /** Exactly 6 career events in correct chronological order */
+  /** Exactly 6 events in correct chronological order */
   events: TimelineEvent[];
 }
 
@@ -42,10 +42,8 @@ export interface TimelineContent {
  * Score structure for Timeline.
  */
 export interface TimelineScore {
-  /** IQ points earned (0-10) */
+  /** IQ points earned (0-5) */
   points: number;
-  /** Number of events correct on first attempt */
-  firstAttemptCorrect: number;
   /** Total number of submit attempts */
   totalAttempts: number;
   /** Score label (e.g., "Perfect Timeline") */
@@ -53,9 +51,9 @@ export interface TimelineScore {
 }
 
 /**
- * Reveal phase for cascading card animations.
+ * Reveal phase for simultaneous card flash animations.
  */
-export type RevealPhase = 'idle' | 'revealing' | 'complete';
+export type RevealPhase = 'idle' | 'revealing';
 
 /**
  * The Timeline game state.
@@ -73,8 +71,6 @@ export interface TimelineState {
   lastAttemptResults: boolean[];
   /** Current reveal phase */
   revealPhase: RevealPhase;
-  /** Current card being revealed (0-5, or -1 if not revealing) */
-  revealIndex: number;
   /** Game status */
   gameStatus: 'playing' | 'won' | 'lost' | 'gave_up';
   /** Unique attempt ID for persistence */
@@ -104,7 +100,6 @@ export interface TimelineAttemptMetadata {
 export type TimelineAction =
   | { type: 'REORDER_EVENTS'; payload: { from: number; to: number } }
   | { type: 'SUBMIT' }
-  | { type: 'REVEAL_NEXT' }
   | { type: 'REVEAL_COMPLETE' }
   | { type: 'GIVE_UP' }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
@@ -136,7 +131,6 @@ export function createInitialState(shuffledEvents: TimelineEvent[]): TimelineSta
     firstAttemptResults: [],
     lastAttemptResults: [],
     revealPhase: 'idle',
-    revealIndex: -1,
     gameStatus: 'playing',
     attemptId: null,
     attemptSaved: false,
@@ -156,17 +150,10 @@ export function parseTimelineContent(content: unknown): TimelineContent | null {
 
   const obj = content as Record<string, unknown>;
 
-  // Must have subject string
-  if (typeof obj.subject !== 'string' || obj.subject.length === 0) {
-    return null;
-  }
-
   // Must have events array of length 6
   if (!Array.isArray(obj.events) || obj.events.length !== 6) {
     return null;
   }
-
-  const validTypes: TimelineEventType[] = ['transfer', 'achievement', 'milestone', 'international'];
 
   for (const event of obj.events) {
     if (!event || typeof event !== 'object') {
@@ -183,10 +170,6 @@ export function parseTimelineContent(content: unknown): TimelineContent | null {
       return null;
     }
 
-    if (typeof e.type !== 'string' || !validTypes.includes(e.type as TimelineEventType)) {
-      return null;
-    }
-
     if (e.month !== undefined && e.month !== null) {
       if (typeof e.month !== 'number' || !Number.isInteger(e.month) || e.month < 1 || e.month > 12) {
         return null;
@@ -195,7 +178,8 @@ export function parseTimelineContent(content: unknown): TimelineContent | null {
   }
 
   return {
-    subject: obj.subject,
+    title: typeof obj.title === 'string' && obj.title.length > 0 ? obj.title : undefined,
+    subject: typeof obj.subject === 'string' && obj.subject.length > 0 ? obj.subject : undefined,
     subject_id: typeof obj.subject_id === 'string' ? obj.subject_id : undefined,
     events: obj.events as TimelineEvent[],
   };

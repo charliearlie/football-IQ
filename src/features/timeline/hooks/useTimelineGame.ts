@@ -17,7 +17,7 @@ import {
   createInitialState,
   parseTimelineContent,
 } from '../types/timeline.types';
-import { calculateTimelineScore } from '../utils/scoring';
+import { calculateTimelineScore, MAX_TIMELINE_ATTEMPTS } from '../utils/scoring';
 import { shareTimelineResult, ShareResult } from '../utils/share';
 import { useGamePersistence } from '@/hooks/useGamePersistence';
 import { usePuzzleContext } from '@/features/puzzles';
@@ -114,78 +114,57 @@ function timelineReducer(
         ? results
         : state.firstAttemptResults;
 
-      // Lock newly correct positions
-      const newLockedIndices = new Set(state.lockedIndices);
-      results.forEach((correct, i) => {
-        if (correct) newLockedIndices.add(i);
-      });
-
       const allCorrect = results.every(Boolean);
 
       if (allCorrect) {
         // Won! All 6 in correct order
-        const firstCorrectCount = firstAttemptResults.filter(Boolean).length;
-        const score = calculateTimelineScore(firstCorrectCount, newAttemptCount);
+        const score = calculateTimelineScore(newAttemptCount, true);
 
         return {
           ...state,
           attemptCount: newAttemptCount,
           firstAttemptResults,
           lastAttemptResults: results,
-          lockedIndices: newLockedIndices,
+          lockedIndices: new Set([0, 1, 2, 3, 4, 5]),
           revealPhase: 'revealing',
-          revealIndex: 0,
           gameStatus: 'won',
           score,
         };
       }
 
-      // Not all correct — start reveal cascade
+      // Not all correct — flash results then reset to draggable
       return {
         ...state,
         attemptCount: newAttemptCount,
         firstAttemptResults,
         lastAttemptResults: results,
-        lockedIndices: newLockedIndices,
         revealPhase: 'revealing',
-        revealIndex: 0,
-      };
-    }
-
-    case 'REVEAL_NEXT': {
-      if (state.revealPhase !== 'revealing') return state;
-
-      const nextIndex = state.revealIndex + 1;
-      if (nextIndex >= 6) {
-        // Reveal complete
-        return {
-          ...state,
-          revealPhase: 'complete',
-          revealIndex: -1,
-        };
-      }
-
-      return {
-        ...state,
-        revealIndex: nextIndex,
       };
     }
 
     case 'REVEAL_COMPLETE': {
+      // If 5 attempts exhausted, end the game
+      if (content && state.attemptCount >= MAX_TIMELINE_ATTEMPTS && state.gameStatus === 'playing') {
+        const score = calculateTimelineScore(state.attemptCount, false);
+        return {
+          ...state,
+          revealPhase: 'idle',
+          eventOrder: content.events,
+          lockedIndices: new Set([0, 1, 2, 3, 4, 5]),
+          gameStatus: 'lost',
+          score,
+        };
+      }
       return {
         ...state,
         revealPhase: 'idle',
-        revealIndex: -1,
       };
     }
 
     case 'GIVE_UP': {
       if (!content || state.gameStatus !== 'playing') return state;
 
-      const firstCorrectCount = state.firstAttemptResults.length > 0
-        ? state.firstAttemptResults.filter(Boolean).length
-        : 0;
-      const score = calculateTimelineScore(firstCorrectCount, state.attemptCount);
+      const score = calculateTimelineScore(state.attemptCount, false);
 
       return {
         ...state,
@@ -194,7 +173,6 @@ function timelineReducer(
         gameStatus: 'gave_up',
         score,
         revealPhase: 'idle',
-        revealIndex: -1,
       };
     }
 
@@ -220,7 +198,6 @@ function timelineReducer(
         lastAttemptResults: [],
         gameStatus: 'playing',
         revealPhase: 'idle',
-        revealIndex: -1,
       };
     }
 
@@ -374,10 +351,6 @@ export function useTimelineGame(puzzle: ParsedLocalPuzzle | null) {
     }
   }, [state.eventOrder, state.revealPhase, content, dispatch, triggerSuccess, triggerError, triggerCompletion]);
 
-  const revealNext = useCallback(() => {
-    dispatch({ type: 'REVEAL_NEXT' });
-  }, [dispatch]);
-
   const revealComplete = useCallback(() => {
     dispatch({ type: 'REVEAL_COMPLETE' });
   }, [dispatch]);
@@ -392,10 +365,11 @@ export function useTimelineGame(puzzle: ParsedLocalPuzzle | null) {
     }
 
     return shareTimelineResult(
-      content.subject,
       state.firstAttemptResults,
       state.score,
-      puzzle?.puzzle_date
+      puzzle?.puzzle_date,
+      content.title,
+      content.subject,
     );
   }, [state.firstAttemptResults, state.score, content, puzzle?.puzzle_date]);
 
@@ -404,7 +378,6 @@ export function useTimelineGame(puzzle: ParsedLocalPuzzle | null) {
     content,
     reorderEvents,
     submitOrder,
-    revealNext,
     revealComplete,
     giveUp,
     shareResult,

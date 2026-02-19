@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { connectionsContentSchema } from "@/lib/schemas";
 import {
   createConnectionsPuzzle,
   fetchConnectionsPuzzles,
@@ -67,6 +69,9 @@ function CreatePuzzleForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [jsonMode, setJsonMode] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
 
   function updateGroup(index: number, partial: Partial<GroupFormData>) {
     setGroups((prev) => {
@@ -93,6 +98,40 @@ function CreatePuzzleForm() {
       next[groupIndex] = { ...next[groupIndex], players };
       return next;
     });
+  }
+
+  function handleJsonImport() {
+    setJsonError(null);
+    try {
+      const parsed = JSON.parse(jsonInput);
+
+      // Normalise: accept "items" as an alias for "players"
+      if (parsed?.groups && Array.isArray(parsed.groups)) {
+        for (const g of parsed.groups) {
+          if (g.items && !g.players) {
+            g.players = g.items;
+            delete g.items;
+          }
+        }
+      }
+
+      const result = connectionsContentSchema.safeParse(parsed);
+      if (!result.success) {
+        setJsonError(result.error.issues.map((i) => i.message).join(", "));
+        return;
+      }
+      setGroups(
+        result.data.groups.map((g) => ({
+          category: g.category,
+          difficulty: g.difficulty,
+          players: [...g.players] as [string, string, string, string],
+        }))
+      );
+      setJsonInput("");
+      setJsonMode(false);
+    } catch {
+      setJsonError("Invalid JSON");
+    }
   }
 
   function validateLocally(): string | null {
@@ -164,13 +203,26 @@ function CreatePuzzleForm() {
 
   return (
     <div className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold text-floodlight">
-          Create New Puzzle
-        </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Define 4 groups of 4 players each, with a category and difficulty
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-floodlight">
+            Create New Puzzle
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Define 4 groups of 4 items each, with a category and difficulty
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setJsonMode(!jsonMode);
+            setJsonError(null);
+          }}
+        >
+          {jsonMode ? "Manual Input" : "Paste JSON"}
+        </Button>
       </div>
 
       {/* Date + Status row */}
@@ -201,6 +253,29 @@ function CreatePuzzleForm() {
         </div>
       </div>
 
+      {jsonMode ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Paste the connections JSON below and click Import.
+          </p>
+          <Textarea
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            placeholder={'{\n  "groups": [\n    {\n      "items": ["Item 1", "Item 2", "Item 3", "Item 4"],\n      "category": "Category name",\n      "difficulty": "green"\n    },\n    ...\n  ]\n}'}
+            rows={14}
+            className="bg-white/5 border-white/10 font-mono text-sm"
+          />
+          {jsonError && (
+            <div className="rounded-md border border-red-card/30 bg-red-card/10 px-4 py-3 text-sm text-red-card">
+              {jsonError}
+            </div>
+          )}
+          <Button type="button" onClick={handleJsonImport}>
+            Import JSON
+          </Button>
+        </div>
+      ) : (
+      <>
       {/* Group editors */}
       <div className="space-y-4">
         {groups.map((group, gi) => (
@@ -247,6 +322,8 @@ function CreatePuzzleForm() {
           </div>
         ))}
       </div>
+      </>
+      )}
 
       {/* Error / Success */}
       {error && (

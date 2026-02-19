@@ -157,7 +157,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "2.4.0";
+  const appVersion = Constants.expoConfig?.version ?? "2.5.0";
 
   /**
    * Handle version text tap for secret dev menu
@@ -530,6 +530,11 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
               icon={<Trash2 size={20} color={colors.redCard} />}
               label="Clear Connections Data"
               onPress={() => handleClearAttempts("connections", "Connections")}
+            />
+            <SettingsRow
+              icon={<Trash2 size={20} color={colors.redCard} />}
+              label="Clear Timeline Data"
+              onPress={() => handleClearAttempts("timeline", "Timeline")}
             />
           </SettingsSection>
         )}

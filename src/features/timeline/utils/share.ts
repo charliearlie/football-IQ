@@ -4,7 +4,7 @@
 
 import { Share, Platform } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { TimelineEvent, TimelineScore } from '../types/timeline.types';
+import { TimelineScore } from '../types/timeline.types';
 
 export interface ShareResult {
   success: boolean;
@@ -27,10 +27,11 @@ export function generateTimelineEmojiRow(firstAttemptResults: boolean[]): string
  * Generate share text for Timeline result.
  */
 export function generateTimelineShareText(
-  subject: string,
   firstAttemptResults: boolean[],
   score: TimelineScore,
-  puzzleDate?: string
+  puzzleDate?: string,
+  title?: string,
+  subject?: string,
 ): string {
   const dateStr = puzzleDate
     ? new Date(puzzleDate).toLocaleDateString('en-GB', {
@@ -41,15 +42,16 @@ export function generateTimelineShareText(
     : 'Today';
 
   const emojiRow = generateTimelineEmojiRow(firstAttemptResults);
+  const label = title || subject || 'Timeline';
 
   const lines = [
     'Football IQ - Timeline',
     dateStr,
     '',
-    `⏱️ ${subject}`,
+    `⏱️ ${label}`,
     emojiRow,
     '',
-    `${score.firstAttemptCorrect}/6 correct - ${score.points} IQ`,
+    `${score.totalAttempts}/5 guesses - ${score.points} IQ`,
     'footballiq.app',
   ];
 
@@ -61,16 +63,18 @@ export function generateTimelineShareText(
  * Uses native share on mobile, clipboard fallback on web.
  */
 export async function shareTimelineResult(
-  subject: string,
   firstAttemptResults: boolean[],
   score: TimelineScore,
-  puzzleDate?: string
+  puzzleDate?: string,
+  title?: string,
+  subject?: string,
 ): Promise<ShareResult> {
   const shareText = generateTimelineShareText(
-    subject,
     firstAttemptResults,
     score,
-    puzzleDate
+    puzzleDate,
+    title,
+    subject,
   );
 
   // Try native share first (not available on web)

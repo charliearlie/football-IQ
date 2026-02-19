@@ -14,10 +14,12 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { GripVertical, Lock } from 'lucide-react-native';
+import { GripVertical } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
-import type { TimelineEvent, TimelineEventType } from '../types/timeline.types';
+import type { TimelineEvent } from '../types/timeline.types';
+
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 export interface TimelineCardProps {
   event: TimelineEvent;
@@ -30,26 +32,6 @@ export interface TimelineCardProps {
   drag?: () => void;
   testID?: string;
 }
-
-/**
- * Event type colors for badge chips.
- */
-const EVENT_TYPE_COLORS: Record<TimelineEventType, string> = {
-  transfer: colors.pitchGreen,
-  achievement: colors.cardYellow,
-  milestone: '#3B82F6',
-  international: '#A855F7',
-};
-
-/**
- * Event type display labels.
- */
-const EVENT_TYPE_LABELS: Record<TimelineEventType, string> = {
-  transfer: 'Transfer',
-  achievement: 'Achievement',
-  milestone: 'Milestone',
-  international: 'International',
-};
 
 /**
  * TimelineCard - Draggable career event card with reveal animations.
@@ -122,7 +104,6 @@ export function TimelineCard({
     cardBorder = colors.redCard;
   }
 
-  const badgeColor = EVENT_TYPE_COLORS[event.type];
   const yearColor = isCorrect === false ? colors.redCard : colors.pitchGreen;
 
   return (
@@ -138,11 +119,9 @@ export function TimelineCard({
       ]}
       testID={testID}
     >
-      {/* Left handle or lock icon */}
+      {/* Left handle — only shown when draggable */}
       <View style={styles.leftSection}>
-        {isLocked ? (
-          <Lock size={18} color={colors.pitchGreen} strokeWidth={2} />
-        ) : drag ? (
+        {!isLocked && drag ? (
           <View onStartShouldSetResponder={() => true} onResponderGrant={handleDragStart}>
             <GripVertical size={18} color={colors.textSecondary} strokeWidth={2} />
           </View>
@@ -154,18 +133,16 @@ export function TimelineCard({
         <Text style={styles.eventText} numberOfLines={2}>
           {event.text}
         </Text>
-        <View style={styles.metaRow}>
-          <View style={[styles.badge, { backgroundColor: `${badgeColor}20`, borderColor: badgeColor }]}>
-            <Text style={[styles.badgeText, { color: badgeColor }]}>
-              {EVENT_TYPE_LABELS[event.type]}
-            </Text>
-          </View>
-        </View>
       </View>
 
-      {/* Year — only shown after reveal/lock */}
+      {/* Year + month — only shown after reveal/lock */}
       {showYear && (
         <View style={styles.yearSection}>
+          {event.month && (
+            <Text style={[styles.monthText, { color: yearColor }]}>
+              {MONTH_ABBR[event.month - 1]}
+            </Text>
+          )}
           <Text style={[styles.yearText, { color: yearColor }]}>{event.year}</Text>
         </View>
       )}
@@ -205,23 +182,6 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     lineHeight: 19,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  badge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-  },
-  badgeText: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
   yearSection: {
     marginLeft: spacing.sm,
     alignItems: 'flex-end',
@@ -231,5 +191,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 18,
     fontWeight: '700',
+  },
+  monthText: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
 });

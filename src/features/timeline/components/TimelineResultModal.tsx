@@ -22,12 +22,13 @@ export interface TimelineResultModalProps {
   visible: boolean;
   score: TimelineScore | null;
   firstAttemptResults: boolean[];
-  subject: string;
+  subject?: string;
   puzzleId: string;
   puzzleDate: string;
   onClose: () => void;
   onShare: () => Promise<ShareResult>;
   gaveUp?: boolean;
+  outOfGuesses?: boolean;
   testID?: string;
 }
 
@@ -44,23 +45,25 @@ export function TimelineResultModal({
   onClose,
   onShare,
   gaveUp = false,
+  outOfGuesses = false,
   testID,
 }: TimelineResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
   if (!score) return null;
 
-  const isPerfect = score.firstAttemptCorrect === 6 && !gaveUp;
-  const isWin = !gaveUp && score.label !== '';
+  const didNotWin = gaveUp || outOfGuesses;
+  const isPerfect = score.totalAttempts === 1 && !didNotWin;
+  const isWin = !didNotWin;
 
   // Determine title
-  const title = gaveUp ? 'GAVE UP' : isPerfect ? 'PERFECT!' : isWin ? 'COMPLETE!' : 'GAME OVER';
+  const title = outOfGuesses ? 'OUT OF GUESSES' : gaveUp ? 'GAVE UP' : isPerfect ? 'PERFECT!' : isWin ? 'COMPLETE!' : 'GAME OVER';
 
   // BaseResultModal uses ResultType ('win'|'loss'|'draw'|'complete')
-  const baseResultType = gaveUp ? 'loss' as const : isWin ? 'win' as const : 'loss' as const;
+  const baseResultType = didNotWin ? 'loss' as const : isWin ? 'win' as const : 'loss' as const;
 
   // ResultShareCard uses ResultShareType ('perfect'|'win'|'complete'|'loss')
-  const shareResultType = gaveUp ? 'loss' as const : isPerfect ? 'perfect' as const : isWin ? 'win' as const : 'loss' as const;
+  const shareResultType = didNotWin ? 'loss' as const : isPerfect ? 'perfect' as const : isWin ? 'win' as const : 'loss' as const;
 
   // Generate emoji row for share card
   const emojiRow = generateTimelineEmojiRow(firstAttemptResults);
@@ -105,18 +108,19 @@ export function TimelineResultModal({
         )
       }
       title={title}
-      message={`${score.points} IQ · ${score.label}`}
+      message={`${score.points} IQ · ${score.totalAttempts}/5 guesses`}
       onShare={onShare}
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
       testID={testID}
     >
-      <ScoreDisplay label="First Attempt" value={`${score.firstAttemptCorrect}/6`} />
+      <ScoreDisplay label="Attempts" value={`${score.totalAttempts}/5`} />
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="timeline"
-        userScore={score.points}
+        userScore={isWin ? score.points : 0}
+        maxSteps={5}
         testID={testID ? `${testID}-distribution` : undefined}
       />
     </BaseResultModal>

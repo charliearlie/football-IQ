@@ -68,6 +68,7 @@ import { TheThreadForm } from "./forms/the-thread-form";
 import { TopicalQuizForm } from "./forms/topical-quiz-form";
 import { TopTensForm } from "./forms/top-tens-form";
 import { StartingXIForm } from "./forms/starting-xi-form";
+import { TimelineForm } from "./forms/timeline-form";
 
 // Import preview components
 import { CareerPathPreview } from "./previews/career-path-preview";
@@ -79,6 +80,7 @@ import { TheThreadPreview } from "./previews/the-thread-preview";
 import { TopicalQuizPreview } from "./previews/topical-quiz-preview";
 import { TopTensPreview } from "./previews/top-tens-preview";
 import { StartingXIPreview } from "./previews/starting-xi-preview";
+import { TimelinePreview } from "./previews/timeline-preview";
 
 // ============================================================================
 // TYPES
@@ -113,13 +115,6 @@ const ConnectionsPlaceholder = () => (
 const ConnectionsPreviewPlaceholder = ({ content: _content }: { content: unknown }) => (
   <div className="text-sm text-muted-foreground p-4">Connections puzzle preview not available here.</div>
 );
-const TimelinePlaceholder = () => (
-  <div className="text-sm text-muted-foreground p-4">Timeline puzzle editor coming soon.</div>
-);
-const TimelinePreviewPlaceholder = ({ content: _content }: { content: unknown }) => (
-  <div className="text-sm text-muted-foreground p-4">Timeline puzzle preview not available here.</div>
-);
-
 const formRegistry: Record<GameMode, React.ComponentType> = {
   career_path: CareerPathForm,
   career_path_pro: CareerPathForm,
@@ -132,7 +127,7 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   top_tens: TopTensForm,
   starting_xi: StartingXIForm,
   connections: ConnectionsPlaceholder,
-  timeline: TimelinePlaceholder,
+  timeline: TimelineForm,
 };
 
 const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }>> = {
@@ -147,7 +142,7 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   top_tens: TopTensPreview,
   starting_xi: StartingXIPreview,
   connections: ConnectionsPreviewPlaceholder,
-  timeline: TimelinePreviewPlaceholder,
+  timeline: TimelinePreview,
 };
 
 // ============================================================================

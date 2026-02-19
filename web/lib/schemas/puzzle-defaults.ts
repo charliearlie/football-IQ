@@ -176,13 +176,13 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
     ],
   }),
   timeline: () => ({
+    title: "",
     subject: "",
     subject_id: "",
     events: Array.from({ length: 6 }, () => ({
       text: "",
       year: 2020,
       month: undefined,
-      type: "transfer",
     })),
   }),
 };

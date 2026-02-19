@@ -9,13 +9,13 @@ interface TimelineEventInput {
   text: string;
   year: number;
   month?: number;
-  type: "transfer" | "achievement" | "milestone" | "international";
 }
 
 interface CreateTimelinePuzzleInput {
   puzzleDate: string;
   status: "draft" | "live";
-  subject: string;
+  title?: string;
+  subject?: string;
   subject_id?: string;
   events: TimelineEventInput[];
 }
@@ -27,20 +27,14 @@ export async function createTimelinePuzzle(
     await ensureAdmin();
     const supabase = await createAdminClient();
 
-    const { puzzleDate, status, subject, subject_id, events } = input;
+    const { puzzleDate, status, title, subject, subject_id, events } = input;
 
     // Validate: exactly 6 events
     if (events.length !== 6) {
       return { success: false, error: "Exactly 6 events are required" };
     }
 
-    // Validate: subject is non-empty
-    if (!subject.trim()) {
-      return { success: false, error: "Subject name is required" };
-    }
-
     // Validate each event
-    const validTypes = ["transfer", "achievement", "milestone", "international"];
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
       if (!event.text.trim()) {
@@ -51,9 +45,6 @@ export async function createTimelinePuzzle(
       }
       if (event.month !== undefined && (event.month < 1 || event.month > 12)) {
         return { success: false, error: `Event ${i + 1} has an invalid month (1-12)` };
-      }
-      if (!validTypes.includes(event.type)) {
-        return { success: false, error: `Event ${i + 1} has an invalid type` };
       }
     }
 
@@ -89,8 +80,9 @@ export async function createTimelinePuzzle(
         game_mode: "timeline",
         status,
         content: {
-          subject: subject.trim(),
-          subject_id: subject_id?.trim() || undefined,
+          ...(title?.trim() ? { title: title.trim() } : {}),
+          ...(subject?.trim() ? { subject: subject.trim() } : {}),
+          ...(subject_id?.trim() ? { subject_id: subject_id.trim() } : {}),
           events
         } as unknown as Json,
       })

@@ -29,6 +29,9 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
       // Career Path: each club is one bucket
       // Bucket size = 100 / number of clubs
       return maxSteps ? Math.floor(100 / maxSteps) : 10;
+    case 'timeline':
+      // Timeline: 5 possible scores (1-5 IQ = 20, 40, 60, 80, 100 normalized)
+      return maxSteps ? Math.floor(100 / maxSteps) : 20;
     case 'connections':
       // Connections: 5 possible scores (0, 2, 4, 6, 10 IQ = 0, 20, 40, 60, 100 normalized)
       return 20;
@@ -54,8 +57,8 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
  * Get number of bars for skeleton loader.
  */
 export function getBarCountForMode(gameMode: GameMode, maxSteps?: number): number {
-  if ((gameMode === 'career_path' || gameMode === 'career_path_pro') && maxSteps) {
-    return maxSteps; // One bar per club
+  if ((gameMode === 'career_path' || gameMode === 'career_path_pro' || gameMode === 'timeline') && maxSteps) {
+    return maxSteps; // One bar per step/guess
   }
   if (gameMode === 'guess_the_goalscorers' && maxSteps) {
     return maxSteps + 1; // One bar per possible score (0 to N)
@@ -88,6 +91,9 @@ export function getScoreLabelsForMode(
       }
       return labels;
     }
+    case 'timeline':
+      // Timeline: one label per guess count (1-5)
+      return ['1 guess', '2 guesses', '3 guesses', '4 guesses', '5 guesses'];
     case 'top_tens':
       // Top Tens: show as X/10 format
       return [
@@ -157,6 +163,9 @@ export function normalizeScoreForMode(
       // 0-10 points (2 per question) -> 0-100
       return rawScore * 10;
     case 'guess_the_transfer':
+      // 0-5 points -> 0-100
+      return rawScore * 20;
+    case 'timeline':
       // 0-5 points -> 0-100
       return rawScore * 20;
     case 'career_path':

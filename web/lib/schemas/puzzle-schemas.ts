@@ -310,17 +310,15 @@ export type ConnectionsDifficulty = z.infer<typeof connectionsDifficultySchema>;
 // TIMELINE (timeline)
 // ============================================================================
 
-export const timelineEventTypeSchema = z.enum(["transfer", "achievement", "milestone", "international"]);
-
 export const timelineEventSchema = z.object({
   text: z.string().min(1, "Event text required"),
   year: z.number().int().min(1900).max(2100),
   month: z.number().int().min(1).max(12).optional(),
-  type: timelineEventTypeSchema,
 });
 
 export const timelineContentSchema = z.object({
-  subject: z.string().min(1, "Subject name required"),
+  title: z.string().optional(),
+  subject: z.string().optional(),
   subject_id: z.string().optional(),
   events: z
     .array(timelineEventSchema)
@@ -329,7 +327,6 @@ export const timelineContentSchema = z.object({
 
 export type TimelineContent = z.infer<typeof timelineContentSchema>;
 export type TimelineEvent = z.infer<typeof timelineEventSchema>;
-export type TimelineEventType = z.infer<typeof timelineEventTypeSchema>;
 
 // ============================================================================
 // CONTENT SCHEMA MAP
