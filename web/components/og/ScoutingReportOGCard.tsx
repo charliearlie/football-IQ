@@ -11,15 +11,9 @@
  * - Uses tw prop OR style prop (not both)
  */
 
-// Design tokens matching the mobile app
-const COLORS = {
-  stadiumNavy: '#0F172A',
-  pitchGreen: '#58CC02',
-  floodlightWhite: '#F8FAFC',
-  textSecondary: '#94A3B8',
-  glassBorder: 'rgba(255, 255, 255, 0.1)',
-  cardBackground: '#1a2744',
-};
+import { OG_COLORS } from './og-tokens';
+
+const COLORS = OG_COLORS;
 
 // Tier color mapping
 const TIER_COLORS: Record<number, string> = {

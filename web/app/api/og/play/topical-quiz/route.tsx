@@ -1,30 +1,56 @@
 /**
  * Topical Quiz OG Image API Route
  *
- * Generates the Open Graph image for the Topical Quiz game.
- * URL: /api/og/play/topical-quiz
+ * Generates a dynamic Open Graph image showing the first question
+ * from today's topical quiz with A/B/C/D options.
  *
- * Returns a 1200x630 PNG image that social platforms use for link previews.
+ * URL: /api/og/play/topical-quiz?date=YYYY-MM-DD
  */
 
 import { ImageResponse } from '@vercel/og';
+import { NextRequest } from 'next/server';
+import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { GameOGCard } from '@/components/og/GameOGCard';
+import { TopicalQuizOGCard } from '@/components/og/TopicalQuizOGCard';
+import { topicalQuizContentSchema } from '@/lib/schemas/puzzle-schemas';
 
 export const runtime = 'edge';
+export const revalidate = 3600;
 
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get('date') ?? undefined;
+
+    const puzzle = await fetchDailyPuzzle('topical_quiz', date);
+
+    if (puzzle?.content) {
+      const parsed = topicalQuizContentSchema.safeParse(puzzle.content);
+      if (parsed.success && parsed.data.questions.length > 0) {
+        const { question, options } = parsed.data.questions[0];
+        return new ImageResponse(
+          <TopicalQuizOGCard
+            firstQuestion={question}
+            options={options}
+          />,
+          { width: WIDTH, height: HEIGHT },
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error generating Topical Quiz OG image:', error);
+  }
+
+  // Fallback to generic card
   return new ImageResponse(
     <GameOGCard
       gameTitle="Topical Quiz"
       tagline="5 questions on this week's headlines"
       accentColor="#FF6B6B"
     />,
-    {
-      width: WIDTH,
-      height: HEIGHT,
-    }
+    { width: WIDTH, height: HEIGHT },
   );
 }

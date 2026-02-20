@@ -14,24 +14,43 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Football IQ - What's Your Football IQ?",
+  metadataBase: new URL("https://football-iq.app"),
+  title: {
+    default: "Football IQ - Daily Football Quizzes & Trivia Games",
+    template: "%s | Football IQ",
+  },
   description:
-    "10 game modes. 10 tiers. From Intern to The Gaffer. Test your football knowledge with daily puzzles. Free on iOS and Android.",
+    "Free daily football quizzes you can play in your browser. Guess players from careers, transfers, and more. 11 game modes, 10 tiers. From Intern to The Gaffer.",
+  keywords: [
+    "football quiz",
+    "football trivia",
+    "daily football game",
+    "guess the footballer",
+    "football knowledge test",
+    "premier league quiz",
+    "soccer trivia",
+    "football connections",
+    "transfer quiz",
+  ],
   icons: {
     icon: "/images/favicon.png",
   },
   openGraph: {
-    title: "What's Your Football IQ?",
+    title: "Football IQ - Daily Football Quizzes & Trivia Games",
     description:
-      "10 game modes. Daily puzzles. Free to download. Find out where you rank.",
+      "Free daily football quizzes you can play in your browser. Guess players, test your knowledge, climb the tiers.",
     siteName: "Football IQ",
     type: "website",
+    locale: "en_GB",
   },
   twitter: {
     card: "summary_large_image",
-    title: "What's Your Football IQ?",
+    title: "Football IQ - Daily Football Quizzes & Trivia Games",
     description:
-      "10 game modes. Daily puzzles. Free to download. Find out where you rank.",
+      "Free daily football quizzes you can play in your browser. Guess players, test your knowledge, climb the tiers.",
+  },
+  alternates: {
+    canonical: "https://football-iq.app",
   },
 };
 

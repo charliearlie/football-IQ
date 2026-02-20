@@ -5,35 +5,50 @@ import type { TransferGuessContent } from "@/lib/schemas/puzzle-schemas";
 import { GamePageShell } from "@/components/play/GamePageShell";
 import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { TransferGuessGame } from "@/components/play/TransferGuessGame";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Transfer Guess | Football IQ",
-  description:
-    "Guess the player from a single transfer. Play free daily on the web.",
-  openGraph: {
-    title: "Transfer Guess — Football IQ",
+const today = () => new Date().toISOString().split("T")[0];
+
+export async function generateMetadata(): Promise<Metadata> {
+  const ogDate = today();
+  return {
+    title: "Guess the Football Transfer - Daily Transfer Quiz",
     description:
-      "Guess the player from a single transfer. Play free daily.",
-    type: "website",
-    images: [
-      {
-        url: "https://football-iq.app/api/og/play/transfer-guess",
-        width: 1200,
-        height: 630,
-        alt: "Football IQ Transfer Guess",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Transfer Guess — Football IQ",
-    description:
-      "Guess the player from a single transfer. Play free daily.",
-    images: ["https://football-iq.app/api/og/play/transfer-guess"],
-  },
-};
+      "Name the player from a single transfer. New transfer puzzle every day. Test your football transfer knowledge. Free to play, no download required.",
+    alternates: {
+      canonical: "https://football-iq.app/play/transfer-guess",
+    },
+    robots: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large" as const,
+    },
+    openGraph: {
+      title: "Guess the Football Transfer | Football IQ",
+      description:
+        "Name the player from a single transfer. New transfer puzzle every day. Test your transfer knowledge.",
+      url: "https://football-iq.app/play/transfer-guess",
+      type: "website",
+      images: [
+        {
+          url: `/api/og/play/transfer-guess?date=${ogDate}`,
+          width: 1200,
+          height: 630,
+          alt: "Transfer Guess - Name the player from the transfer",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Guess the Football Transfer | Football IQ",
+      description:
+        "Name the player from a single transfer. New transfer puzzle every day. Test your transfer knowledge.",
+      images: [`/api/og/play/transfer-guess?date=${ogDate}`],
+    },
+  };
+}
 
 interface PageProps {
   searchParams: Promise<{ date?: string }>;
@@ -49,16 +64,51 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
     FALLBACK_TRANSFER_PUZZLE;
 
   return (
-    <GamePageShell
-      title="Transfer Guess"
-      gameSlug="transfer-guess"
-    >
-      <PlayedTodayGate gameSlug="transfer-guess">
-        <TransferGuessGame
-          content={content}
-          puzzleDate={puzzleDate}
-        />
-      </PlayedTodayGate>
-    </GamePageShell>
+    <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Quiz",
+              name: "Transfer Guess - Name the Football Transfer",
+              description:
+                "Name the player from a single transfer. A new puzzle every day.",
+              url: "https://football-iq.app/play/transfer-guess",
+              isAccessibleForFree: true,
+              provider: {
+                "@type": "Organization",
+                name: "Football IQ",
+                url: "https://football-iq.app",
+              },
+              typicalAgeRange: "13-",
+              inLanguage: "en",
+            },
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Football IQ",
+                  item: "https://football-iq.app",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Transfer Guess",
+                  item: "https://football-iq.app/play/transfer-guess",
+                },
+              ],
+            },
+          ],
+        }}
+      />
+      <GamePageShell title="Transfer Guess" gameSlug="transfer-guess">
+        <PlayedTodayGate gameSlug="transfer-guess">
+          <TransferGuessGame content={content} puzzleDate={puzzleDate} />
+        </PlayedTodayGate>
+      </GamePageShell>
+    </>
   );
 }

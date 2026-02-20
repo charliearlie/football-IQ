@@ -12,15 +12,9 @@
  * - No CSS grid, no Tailwind classes
  */
 
-// Design tokens matching the mobile app and ScoutingReportOGCard
-const COLORS = {
-  stadiumNavy: '#0F172A',
-  pitchGreen: '#58CC02',
-  floodlightWhite: '#F8FAFC',
-  textSecondary: '#94A3B8',
-  glassBorder: 'rgba(255, 255, 255, 0.1)',
-  cardBackground: '#1a2744',
-};
+import { OG_COLORS } from './og-tokens';
+
+const COLORS = OG_COLORS;
 
 export interface GameOGCardProps {
   gameTitle: string;   // e.g. "Career Path"
@@ -121,7 +115,7 @@ export function GameOGCard({ gameTitle, tagline, accentColor }: GameOGCardProps)
             letterSpacing: 1,
           }}
         >
-          Play free at footballiq.app
+          Play free at football-iq.app
         </div>
       </div>
     </div>

@@ -1,30 +1,61 @@
 /**
  * Transfer Guess OG Image API Route
  *
- * Generates the Open Graph image for the Transfer Guess game.
- * URL: /api/og/play/transfer-guess
+ * Generates a dynamic Open Graph image showing today's transfer puzzle
+ * with from-club → to-club, fee, and locked hint pills.
  *
- * Returns a 1200x630 PNG image that social platforms use for link previews.
+ * URL: /api/og/play/transfer-guess?date=YYYY-MM-DD
  */
 
 import { ImageResponse } from '@vercel/og';
+import { NextRequest } from 'next/server';
+import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { GameOGCard } from '@/components/og/GameOGCard';
+import { TransferGuessOGCard } from '@/components/og/TransferGuessOGCard';
+import { transferGuessContentSchema } from '@/lib/schemas/puzzle-schemas';
 
 export const runtime = 'edge';
+export const revalidate = 3600;
 
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get('date') ?? undefined;
+
+    const puzzle = await fetchDailyPuzzle('guess_the_transfer', date);
+
+    if (puzzle?.content) {
+      const parsed = transferGuessContentSchema.safeParse(puzzle.content);
+      if (parsed.success) {
+        const { from_club, to_club, fee, from_club_color, to_club_color, from_club_abbreviation, to_club_abbreviation } = parsed.data;
+        return new ImageResponse(
+          <TransferGuessOGCard
+            fromClub={from_club}
+            toClub={to_club}
+            fee={fee}
+            fromClubColor={from_club_color || undefined}
+            toClubColor={to_club_color || undefined}
+            fromClubAbbreviation={from_club_abbreviation || undefined}
+            toClubAbbreviation={to_club_abbreviation || undefined}
+          />,
+          { width: WIDTH, height: HEIGHT },
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error generating Transfer Guess OG image:', error);
+  }
+
+  // Fallback to generic card
   return new ImageResponse(
     <GameOGCard
       gameTitle="Transfer Guess"
       tagline="Name the player from a single transfer"
       accentColor="#FACC15"
     />,
-    {
-      width: WIDTH,
-      height: HEIGHT,
-    }
+    { width: WIDTH, height: HEIGHT },
   );
 }

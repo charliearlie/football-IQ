@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
@@ -9,8 +10,45 @@ import { HeroStrip } from "@/components/landing/HeroStrip";
 import { DailyProgress } from "@/components/play/DailyProgress";
 import { Footer } from "@/components/landing/Footer";
 import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Football IQ - Daily Football Quizzes & Trivia Games",
+  description:
+    "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more. New puzzles every day. Test your football knowledge now.",
+  alternates: {
+    canonical: "https://football-iq.app",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    "max-image-preview": "large" as const,
+  },
+  openGraph: {
+    title: "Football IQ - Daily Football Quizzes & Trivia Games",
+    description:
+      "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more. New puzzles every day.",
+    url: "https://football-iq.app",
+    type: "website",
+    images: [
+      {
+        url: "/api/og/play",
+        width: 1200,
+        height: 630,
+        alt: "Football IQ - Daily Football Quizzes",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Football IQ - Daily Football Quizzes & Trivia Games",
+    description:
+      "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more.",
+    images: ["/api/og/play"],
+  },
+};
 
 export default async function HomePage() {
   const supabase = await createAdminClient();
@@ -35,6 +73,73 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-stadium-navy text-floodlight selection:bg-pitch-green selection:text-white">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://football-iq.app/#website",
+              url: "https://football-iq.app",
+              name: "Football IQ",
+              description:
+                "Daily football quizzes and trivia games. Guess players from careers, transfers, and more.",
+              publisher: {
+                "@type": "Organization",
+                name: "Football IQ",
+                url: "https://football-iq.app",
+              },
+            },
+            {
+              "@type": "SoftwareApplication",
+              "@id": "https://football-iq.app/#app",
+              name: "Football IQ - Football Trivia",
+              operatingSystem: "iOS",
+              applicationCategory: "GameApplication",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              installUrl:
+                "https://apps.apple.com/us/app/football-iq-football-trivia/id6757344691",
+              description:
+                "Test your football knowledge with 11 daily game modes. Guess players, transfers, connections, and more. Climb from Intern to The Gaffer.",
+            },
+            {
+              "@type": "ItemList",
+              name: "Daily Football Games",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Career Path",
+                  url: "https://football-iq.app/play/career-path",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Transfer Guess",
+                  url: "https://football-iq.app/play/transfer-guess",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: "Connections",
+                  url: "https://football-iq.app/play/connections",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 4,
+                  name: "Topical Quiz",
+                  url: "https://football-iq.app/play/topical-quiz",
+                },
+              ],
+            },
+          ],
+        }}
+      />
+
       {/* AdSense — deduplicates automatically with play layout script */}
       <Script
         async
