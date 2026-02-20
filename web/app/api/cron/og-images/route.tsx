@@ -41,6 +41,8 @@ const HEIGHT = 630;
 interface GameConfig {
   slug: string;
   gameMode: string;
+  /** If true, puzzle is guaranteed daily — generate fallback if missing. */
+  daily: boolean;
   fallbackTitle: string;
   fallbackTagline: string;
   fallbackAccent: string;
@@ -67,6 +69,7 @@ function buildGameConfigs(date: string): GameConfig[] {
     {
       slug: 'career-path',
       gameMode: 'career_path',
+      daily: true,
       fallbackTitle: 'Career Path',
       fallbackTagline: 'Guess the player from their career',
       fallbackAccent: '#58CC02',
@@ -83,6 +86,7 @@ function buildGameConfigs(date: string): GameConfig[] {
     {
       slug: 'connections',
       gameMode: 'connections',
+      daily: false,
       fallbackTitle: 'Connections',
       fallbackTagline: 'Group 16 players into 4 categories',
       fallbackAccent: '#3B82F6',
@@ -101,6 +105,7 @@ function buildGameConfigs(date: string): GameConfig[] {
     {
       slug: 'transfer-guess',
       gameMode: 'guess_the_transfer',
+      daily: true,
       fallbackTitle: 'Transfer Guess',
       fallbackTagline: 'Name the player from a single transfer',
       fallbackAccent: '#FACC15',
@@ -125,6 +130,7 @@ function buildGameConfigs(date: string): GameConfig[] {
     {
       slug: 'topical-quiz',
       gameMode: 'topical_quiz',
+      daily: false,
       fallbackTitle: 'Topical Quiz',
       fallbackTagline: "5 questions on this week's headlines",
       fallbackAccent: '#FF6B6B',
@@ -180,8 +186,8 @@ export async function GET(request: NextRequest) {
 
       if (dynamicCard) {
         imageResponse = dynamicCard;
-      } else {
-        // Fallback to generic card
+      } else if (game.daily) {
+        // Daily games always get an image — use generic fallback
         imageResponse = new ImageResponse(
           <GameOGCard
             gameTitle={game.fallbackTitle}
@@ -190,6 +196,10 @@ export async function GET(request: NextRequest) {
           />,
           { width: WIDTH, height: HEIGHT, fonts },
         );
+      } else {
+        // Non-daily games: no puzzle today → skip (dynamic route handles fallback)
+        results.push({ slug: game.slug, status: 'skipped' });
+        continue;
       }
 
       // Extract PNG buffer from ImageResponse

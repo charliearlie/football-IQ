@@ -13,10 +13,8 @@ const today = () => new Date().toISOString().split("T")[0];
 
 export async function generateMetadata(): Promise<Metadata> {
   const ogDate = today();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const ogImage = supabaseUrl
-    ? `${supabaseUrl}/storage/v1/object/public/og-images/connections/${ogDate}.png`
-    : `/api/og/play/connections?date=${ogDate}`;
+  // Connections isn't guaranteed daily — use dynamic route as primary
+  const ogImage = `/api/og/play/connections?date=${ogDate}`;
   return {
     title: "Football Connections - Group Players into Categories",
     description:
