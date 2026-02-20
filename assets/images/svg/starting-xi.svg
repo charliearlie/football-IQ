@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Shadow Layer (1px bottom offset, fill only) -->
+  <rect x="5" y="5" width="14" height="16" rx="2" fill="#46A302" />
+  <!-- Pitch Base -->
+  <rect x="5" y="4" width="14" height="16" rx="2" fill="#58CC02" stroke="#0F172A" stroke-width="2" />
+  <!-- Field Markings -->
+  <g stroke="#F8FAFC" stroke-width="1" fill="none">
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <circle cx="12" cy="12" r="2.5" />
+  </g>
+  <!-- Players (4-3-3 attacking three) -->
+  <circle cx="12" cy="7" r="1" fill="#F8FAFC" />
+  <circle cx="8" cy="9" r="1" fill="#F8FAFC" />
+  <circle cx="16" cy="9" r="1" fill="#F8FAFC" />
+</svg>

@@ -72,6 +72,58 @@ export const ANDROID_PACKAGE = "com.footballiq.app";
 export const APP_STORE_URL = "https://apps.apple.com/us/app/football-iq-football-trivia/id6757344691";
 export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
+// Web-playable game modes (available on /play)
+export interface WebPlayableGame {
+  dbMode: GameMode;
+  slug: string;
+  title: string;
+  description: string;
+  accentColor: string;
+}
+
+export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
+  {
+    dbMode: "career_path",
+    slug: "career-path",
+    title: "Career Path",
+    description: "Guess the player from their career history",
+    accentColor: COLORS.pitchGreen,
+  },
+  {
+    dbMode: "guess_the_transfer",
+    slug: "transfer-guess",
+    title: "Transfer Guess",
+    description: "Name the player from a single transfer",
+    accentColor: COLORS.cardYellow,
+  },
+  {
+    dbMode: "connections",
+    slug: "connections",
+    title: "Connections",
+    description: "Group 16 players into 4 categories",
+    accentColor: "#3B82F6",
+  },
+  {
+    dbMode: "topical_quiz",
+    slug: "topical-quiz",
+    title: "Topical Quiz",
+    description: "5 questions on this week's headlines",
+    accentColor: "#FF6B6B",
+  },
+];
+
+// App-only modes shown as teasers in the /play hub
+export const APP_ONLY_GAMES: { title: string; description: string }[] = [
+  { title: "Timeline", description: "Sort 6 events into chronological order" },
+  { title: "Top Tens", description: "Guess the top 10 in each category" },
+  { title: "Career Path Pro", description: "Expert mode — fewer clues, harder players" },
+  { title: "The Grid", description: "Fill the 3x3 grid matching criteria" },
+  { title: "The Chain", description: "Link players through shared clubs" },
+  { title: "Threads", description: "Identify the club from kit history" },
+  { title: "Goalscorer Recall", description: "Name every scorer from a classic match" },
+  { title: "Starting XI", description: "Find the missing players in iconic lineups" },
+];
+
 // Fallback puzzle data for when no puzzle exists for today
 export const FALLBACK_CAREER_PUZZLE = {
   answer: "Bukayo Saka",
@@ -84,5 +136,82 @@ export const FALLBACK_CAREER_PUZZLE = {
       goals: 45,
     },
     { type: "club" as const, text: "Arsenal Academy", year: "2008-2018" },
+  ],
+};
+
+export const FALLBACK_TRANSFER_PUZZLE = {
+  answer: "Philippe Coutinho",
+  from_club: "Liverpool",
+  to_club: "Barcelona",
+  fee: "\u00A3105m",
+  from_club_color: "#C8102E",
+  to_club_color: "#A50044",
+  from_club_abbreviation: "LIV",
+  to_club_abbreviation: "BAR",
+  hints: ["2018", "Midfielder", "BR"] as [string, string, string],
+};
+
+export const FALLBACK_CONNECTIONS_PUZZLE = {
+  groups: [
+    {
+      category: "Won Premier League Golden Boot",
+      difficulty: "yellow" as const,
+      players: ["Thierry Henry", "Mohamed Salah", "Harry Kane", "Robin van Persie"] as [string, string, string, string],
+    },
+    {
+      category: "Played for AC Milan and Juventus",
+      difficulty: "green" as const,
+      players: ["Andrea Pirlo", "Zlatan Ibrahimovic", "Gonzalo Higuain", "Leonardo Bonucci"] as [string, string, string, string],
+    },
+    {
+      category: "Won the World Cup as captain",
+      difficulty: "blue" as const,
+      players: ["Franz Beckenbauer", "Didier Deschamps", "Diego Maradona", "Iker Casillas"] as [string, string, string, string],
+    },
+    {
+      category: "First name is the same as a city",
+      difficulty: "purple" as const,
+      players: ["Milan Baros", "Santiago Munez", "Orlando Engelaar", "Sydney Leroux"] as [string, string, string, string],
+    },
+  ] as [
+    { category: string; difficulty: "yellow"; players: [string, string, string, string] },
+    { category: string; difficulty: "green"; players: [string, string, string, string] },
+    { category: string; difficulty: "blue"; players: [string, string, string, string] },
+    { category: string; difficulty: "purple"; players: [string, string, string, string] },
+  ],
+};
+
+export const FALLBACK_QUIZ_PUZZLE = {
+  questions: [
+    {
+      id: "fb-q1",
+      question: "Who won the 2024 Ballon d'Or?",
+      options: ["Vinicius Jr", "Rodri", "Jude Bellingham", "Erling Haaland"] as [string, string, string, string],
+      correctIndex: 1,
+    },
+    {
+      id: "fb-q2",
+      question: "Which club won the 2023-24 Champions League?",
+      options: ["Manchester City", "Real Madrid", "Bayern Munich", "Inter Milan"] as [string, string, string, string],
+      correctIndex: 1,
+    },
+    {
+      id: "fb-q3",
+      question: "Who is the Premier League's all-time top scorer?",
+      options: ["Wayne Rooney", "Andrew Cole", "Alan Shearer", "Thierry Henry"] as [string, string, string, string],
+      correctIndex: 2,
+    },
+    {
+      id: "fb-q4",
+      question: "Which country hosted the 2022 World Cup?",
+      options: ["Saudi Arabia", "UAE", "Qatar", "Bahrain"] as [string, string, string, string],
+      correctIndex: 2,
+    },
+    {
+      id: "fb-q5",
+      question: "Who scored the fastest hat-trick in Premier League history?",
+      options: ["Sadio Mane", "Robbie Fowler", "Alan Shearer", "Michael Owen"] as [string, string, string, string],
+      correctIndex: 0,
+    },
   ],
 };

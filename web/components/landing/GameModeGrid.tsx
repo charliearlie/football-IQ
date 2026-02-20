@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Crown, Link as LinkIcon, Scissors, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -10,6 +11,7 @@ interface GameModeItem {
   lucideIcon?: LucideIcon;
   schedule: string;
   isPremium?: boolean;
+  slug?: string;
   colorClasses: { text: string; borderL: string };
 }
 
@@ -19,6 +21,7 @@ const GAME_MODES: GameModeItem[] = [
     description: "Guess the player from their career timeline",
     icon: "/images/puzzles/career-path.png",
     schedule: "DAILY",
+    slug: "career-path",
     colorClasses: { text: "text-pitch-green", borderL: "border-l-pitch-green" },
   },
   {
@@ -34,6 +37,7 @@ const GAME_MODES: GameModeItem[] = [
     description: "Name the player from a single transfer",
     icon: "/images/puzzles/guess-the-transfer.png",
     schedule: "DAILY",
+    slug: "transfer-guess",
     colorClasses: { text: "text-card-yellow", borderL: "border-l-card-yellow" },
   },
   {
@@ -84,6 +88,7 @@ const GAME_MODES: GameModeItem[] = [
     description: "5 questions on this week's football headlines",
     icon: "/images/puzzles/quiz.png",
     schedule: "TUESDAYS",
+    slug: "topical-quiz",
     colorClasses: { text: "text-coral", borderL: "border-l-coral" },
   },
   {
@@ -113,17 +118,21 @@ export function GameModeGrid() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {GAME_MODES.map((mode) => {
             const Icon = mode.lucideIcon;
-            return (
-              <div
-                key={mode.title}
-                className={cn(
-                  "relative glass-card p-4 border-l-4 group hover:bg-white/[0.08] transition-all",
-                  mode.colorClasses.borderL,
-                )}
-              >
+            const cardContent = (
+              <>
                 {mode.isPremium && (
                   <div className="absolute -top-1.5 -right-1.5 bg-card-yellow rounded-full p-1">
                     <Crown className="w-3 h-3 text-stadium-navy" />
+                  </div>
+                )}
+                {mode.slug && (
+                  <div className="absolute -top-1.5 -right-1.5 bg-[#58CC02] rounded-full px-1.5 py-0.5">
+                    <span className="text-[8px] font-bold text-white tracking-wide leading-none">FREE</span>
+                  </div>
+                )}
+                {!mode.isPremium && !mode.slug && (
+                  <div className="absolute top-1.5 right-1.5">
+                    <span className="text-[9px] text-slate-500 font-medium tracking-wide uppercase">App Only</span>
                   </div>
                 )}
                 {Icon ? (
@@ -158,6 +167,33 @@ export function GameModeGrid() {
                     {mode.schedule}
                   </p>
                 )}
+              </>
+            );
+
+            if (mode.slug) {
+              return (
+                <Link
+                  key={mode.title}
+                  href={`/play/${mode.slug}`}
+                  className={cn(
+                    "relative glass-card p-4 border-l-4 group hover:bg-white/[0.08] transition-all block",
+                    mode.colorClasses.borderL,
+                  )}
+                >
+                  {cardContent}
+                </Link>
+              );
+            }
+
+            return (
+              <div
+                key={mode.title}
+                className={cn(
+                  "relative glass-card p-4 border-l-4 group hover:bg-white/[0.08] transition-all",
+                  mode.colorClasses.borderL,
+                )}
+              >
+                {cardContent}
               </div>
             );
           })}

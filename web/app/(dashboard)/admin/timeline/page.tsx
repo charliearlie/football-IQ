@@ -215,7 +215,7 @@ function CreatePuzzleForm() {
             className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground/40"
           />
           <p className="text-xs text-muted-foreground/60">
-            Shows as "CAREER OF · NAME" on the game screen. Title takes priority if both are set.
+            Shows as &ldquo;CAREER OF &middot; NAME&rdquo; on the game screen. Title takes priority if both are set.
           </p>
         </div>
         <div className="space-y-1.5">

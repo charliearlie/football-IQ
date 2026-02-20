@@ -668,11 +668,15 @@ src/
 tools/
   content-creator.html # Admin puzzle creation tool
 
-web/                   # CMS (Command Centre)
+web/                   # CMS (Command Centre) + Web Playable Games
   app/                 # Next.js 15 App Router
+  app/play/            # Web playable games hub + game routes
+  app/api/og/play/     # OG image routes for game social previews
+  components/play/     # Shared play components (GamePageShell, PostGameCTA, etc.)
+  components/og/       # OG image card components (Satori-compatible)
   components/          # shadcn/ui components
   hooks/               # Data fetching hooks
-  lib/                 # Supabase clients
+  lib/                 # Supabase clients + play utilities
 ```
 
 ## Command Centre (CMS)
@@ -786,6 +790,69 @@ npm run dev
 - `web/hooks/use-puzzles.ts` - Data fetching
 - `web/components/calendar/` - Calendar components
 - `web/lib/supabase/server.ts` - Admin client (bypasses RLS)
+
+## Web Playable Games
+
+4 game modes are playable on the web at `/play/[game-mode]` to drive app downloads. The web experience is intentionally "incomplete" (no streaks, no IQ score, no tier progression) to funnel users to the app.
+
+**Hub**: `/play` — server component showing today's 4 web-playable modes (LIVE badge if puzzle exists) + 7 remaining modes as "APP ONLY" teasers.
+
+**Game Routes**:
+
+| Route | DB Mode | Status |
+|-------|---------|--------|
+| `/play/career-path` | `career_path` | Live |
+| `/play/transfer-guess` | `guess_the_transfer` | Planned (PR 2) |
+| `/play/connections` | `connections` | Planned (PR 3) |
+| `/play/topical-quiz` | `topical_quiz` | Planned (PR 4) |
+
+**Architecture**:
+- Server pages fetch puzzles via `fetchDailyPuzzle()` and render `GamePageShell` → `PlayedTodayGate` → Game component
+- `GamePageShell` provides `GameCompleteContext` — game components call `useGameComplete()` to report results
+- `PlayedTodayGate` checks localStorage (`footballiq_played_{slug}_{date}`) for one-play-per-day gate
+- `PostGameCTA` (inline panel, NOT modal) shows result → share button → app download pitch → other games
+- Escalating CTA copy based on `getDaysPlayed()` (1st visit vs 7+ vs 30+)
+
+**Share Flow**:
+1. User finishes game → `PostGameCTA` shows "Share" button
+2. Click copies emoji share text + `footballiq.app/play/{game}` URL to clipboard (Wordle-style)
+3. Recipients click the link → OG image previews attractively → they land on game page
+
+**Key Files**:
+- `web/lib/fetchDailyPuzzle.ts` — Server-side puzzle fetcher (Supabase admin client)
+- `web/lib/playSession.ts` — localStorage play session tracking
+- `web/lib/shareText.ts` — Pure-logic share text generators (ported from mobile)
+- `web/lib/constants.ts` — `WEB_PLAYABLE_GAMES` and `APP_ONLY_GAMES` arrays
+- `web/components/play/GamePageShell.tsx` — Composition: GameNav + AdSlot + game + PostGameCTA
+- `web/components/play/PostGameCTA.tsx` — Post-game CTA panel with share + app download
+- `web/components/play/PlayedTodayGate.tsx` — One-play-per-day gate
+- `web/components/play/GameHubCard.tsx` — Hub card with available/completed/app_only states
+- `web/components/play/CareerPathGame.tsx` — Career Path game (useReducer pattern)
+
+### Social Sharing OG Images
+
+Dynamic Open Graph images for social media link previews, generated server-side via `@vercel/og` (Satori).
+
+**Shared Component**: `web/components/og/GameOGCard.tsx` — Satori-compatible JSX (inline styles only, `display: 'flex'` required). Props: `gameTitle`, `tagline`, `accentColor`. Layout: stadium navy bg, centered card with accent border, "FOOTBALL IQ" header, game title, tagline, footer.
+
+**OG Image Routes** (all `export const runtime = 'edge'`):
+
+| Route | Title | Accent |
+|-------|-------|--------|
+| `/api/og/play` | "Play Free" | `#58CC02` |
+| `/api/og/play/career-path` | "Career Path" | `#58CC02` |
+| `/api/og/play/transfer-guess` | "Transfer Guess" | `#FACC15` |
+| `/api/og/play/connections` | "Connections" | `#3B82F6` |
+| `/api/og/play/topical-quiz` | "Topical Quiz" | `#FF6B6B` |
+| `/api/og/scout` | Scout Report (dynamic) | Per tier |
+
+**Design Decision**: Static game-branded OG images only (not result-specific). User results are communicated via emoji share text copied to clipboard. Result-specific OG images can be added later.
+
+**Key Files**:
+- `web/components/og/GameOGCard.tsx` — Game OG card (static branding)
+- `web/components/og/ScoutingReportOGCard.tsx` — Scout Report OG card (dynamic per user)
+- `web/app/api/og/play/*/route.tsx` — Per-game OG image routes
+- `web/app/api/og/scout/route.tsx` — Scout Report OG image route
 
 ## Design System ("Digital Pitch")
 

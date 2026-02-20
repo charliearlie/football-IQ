@@ -42,6 +42,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-9426782115883407" />
+      </head>
       <body className={`${inter.variable} ${bebasNeue.variable} font-sans`}>{children}</body>
     </html>
   );

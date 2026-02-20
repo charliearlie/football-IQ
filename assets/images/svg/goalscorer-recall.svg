@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
+  <!-- 1px Offset Shadows (Grass Shadow, fill only) -->
+  <g transform="translate(1, 1)">
+    <rect x="10" y="2" width="4" height="3" rx="0.5" fill="#46A302" />
+    <circle cx="12" cy="13" r="8" fill="#46A302" />
+  </g>
+  <!-- Main Stopwatch Button -->
+  <rect x="10" y="2" width="4" height="3" rx="0.5" fill="#58CC02" stroke="#0F172A" stroke-width="2" stroke-linejoin="round" />
+  <!-- Side Button -->
+  <path d="M16.5 7.5 L19 5" stroke="#0F172A" stroke-width="2" stroke-linecap="round" />
+  <!-- Main Stopwatch Frame -->
+  <circle cx="12" cy="13" r="8" fill="#58CC02" stroke="#0F172A" stroke-width="2" />
+  <!-- Football Center -->
+  <circle cx="12" cy="13" r="4" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" />
+  <path d="M12 10.5 L12 15.5 M9.5 13 L14.5 13" stroke="#0F172A" stroke-width="2" stroke-linecap="round" />
+</svg>

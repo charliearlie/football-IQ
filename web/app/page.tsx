@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { MarketingHero } from "@/components/landing/MarketingHero";
 import { PlayableCareerPath } from "@/components/landing/PlayableCareerPath";
@@ -38,6 +39,7 @@ export default async function LandingPage() {
           <div className="hidden md:flex items-center gap-8 font-sans text-sm font-medium tracking-wide uppercase text-slate-300">
             <a href="#demo" className="hover:text-pitch-green transition-colors">Play Demo</a>
             <a href="#modes" className="hover:text-pitch-green transition-colors">Game Modes</a>
+            <Link href="/play" className="text-pitch-green font-semibold hover:opacity-90 transition-opacity">Play Free</Link>
           </div>
         </div>
       </nav>
@@ -56,6 +58,11 @@ export default async function LandingPage() {
           careerSteps={careerPathData.career_steps}
           answer={careerPathData.answer}
         />
+        <div className="text-center mt-4">
+          <Link href="/play/career-path" className="text-sm text-pitch-green hover:underline transition-colors">
+            Play the full version &rarr;
+          </Link>
+        </div>
       </section>
 
       <SocialProofStrip />
