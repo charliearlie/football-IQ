@@ -10,9 +10,11 @@
 
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { createAdminClient } from '@/lib/supabase/server';
-import { loadOGFonts } from '@/components/og/og-fonts';
+import type { OGFont } from '@/components/og/og-fonts';
 
 // Game-specific OG card components
 import { CareerPathOGCard } from '@/components/og/CareerPathOGCard';
@@ -42,7 +44,7 @@ interface GameConfig {
   fallbackTitle: string;
   fallbackTagline: string;
   fallbackAccent: string;
-  renderCard: (content: unknown, fonts: Awaited<ReturnType<typeof loadOGFonts>>) => ImageResponse | null;
+  renderCard: (content: unknown, fonts: OGFont[]) => ImageResponse | null;
 }
 
 /** Deterministic shuffle (same as connections route). */
@@ -149,7 +151,20 @@ export async function GET(request: NextRequest) {
   }
 
   const today = new Date().toISOString().split('T')[0];
-  const fonts = await loadOGFonts();
+
+  // Load fonts via fs (Node.js runtime — import.meta.url doesn't work here)
+  const fontsDir = join(process.cwd(), 'public', 'fonts');
+  const [montserratRegular, montserratSemiBold, bebasNeue] = await Promise.all([
+    readFile(join(fontsDir, 'Montserrat-Regular.ttf')),
+    readFile(join(fontsDir, 'Montserrat-SemiBold.ttf')),
+    readFile(join(fontsDir, 'BebasNeue-Regular.ttf')),
+  ]);
+  const fonts: OGFont[] = [
+    { name: 'Montserrat', data: montserratRegular.buffer as ArrayBuffer, weight: 400, style: 'normal' },
+    { name: 'Montserrat', data: montserratSemiBold.buffer as ArrayBuffer, weight: 600, style: 'normal' },
+    { name: 'Bebas Neue', data: bebasNeue.buffer as ArrayBuffer, weight: 400, style: 'normal' },
+  ];
+
   const supabase = await createAdminClient();
   const results: { slug: string; status: string; path?: string }[] = [];
 
