@@ -113,6 +113,46 @@ export function getDaysPlayed(): number {
 }
 
 /**
+ * Count the number of consecutive days played up to and including today.
+ * A streak is broken if any calendar day has no play session recorded.
+ */
+export function getConsecutiveStreak(): number {
+  if (typeof window === "undefined") return 0;
+
+  const allDates = new Set<string>();
+
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(KEY_PREFIX)) continue;
+
+      // Extract date from key: footballiq_played_{slug}_{YYYY-MM-DD}
+      const parts = key.split("_");
+      const dateStr = parts[parts.length - 1];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        allDates.add(dateStr);
+      }
+    }
+  } catch {
+    return 0;
+  }
+
+  // Walk backwards from today, counting consecutive days
+  let streak = 0;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+
+  while (true) {
+    const dateStr = cursor.toISOString().split("T")[0];
+    if (!allDates.has(dateStr)) break;
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+}
+
+/**
  * Copy text to clipboard with fallback.
  */
 export async function copyToClipboard(text: string): Promise<boolean> {

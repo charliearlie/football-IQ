@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { APP_STORE_URL } from "@/lib/constants";
 
 export function StickyMobileCTA() {
   const [visible, setVisible] = useState(false);
@@ -17,8 +16,6 @@ export function StickyMobileCTA() {
 
   if (!visible) return null;
 
-  const storeUrl = APP_STORE_URL;
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-stadium-navy/95 backdrop-blur-md border-t border-white/10 px-4 py-3 animate-in slide-in-from-bottom fade-in duration-300">
       <div className="flex items-center justify-between gap-3">
@@ -26,15 +23,13 @@ export function StickyMobileCTA() {
           <p className="font-bebas text-lg text-floodlight tracking-wide">
             FOOTBALL IQ
           </p>
-          <p className="text-xs text-slate-400">Free download</p>
+          <p className="text-xs text-slate-400">Daily football puzzles</p>
         </div>
         <Link
-          href={storeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#games"
           className="px-6 py-2 bg-pitch-green text-stadium-navy font-bebas text-lg tracking-wider rounded-lg shadow-[0_2px_0_0_#46A302]"
         >
-          GET THE APP
+          PLAY TODAY&apos;S GAMES
         </Link>
       </div>
     </div>

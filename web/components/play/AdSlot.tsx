@@ -70,8 +70,8 @@ export function AdSlot({
         style={{ display: "block", width: "100%", height: "100%" }}
         data-ad-client={AD_CLIENT}
         data-ad-slot={adSlot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
+        data-ad-format={variant === "banner" ? "horizontal" : "auto"}
+        data-full-width-responsive={variant === "banner" ? "false" : "true"}
       />
     </div>
   );

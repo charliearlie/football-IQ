@@ -4,8 +4,12 @@ import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
-import { hasPlayedToday, getPlayResult } from "@/lib/playSession";
-import { copyToClipboard } from "@/lib/playSession";
+import {
+  hasPlayedToday,
+  getPlayResult,
+  copyToClipboard,
+  getConsecutiveStreak,
+} from "@/lib/playSession";
 import { APP_STORE_URL, WEB_PLAYABLE_GAMES } from "@/lib/constants";
 
 interface PlayedTodayGateProps {
@@ -17,10 +21,19 @@ export function PlayedTodayGate({ gameSlug, children }: PlayedTodayGateProps) {
   const [hasPlayed, setHasPlayed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [unplayedGames, setUnplayedGames] = useState(
+    WEB_PLAYABLE_GAMES.filter((g) => g.slug !== gameSlug)
+  );
 
   useEffect(() => {
     setHasPlayed(hasPlayedToday(gameSlug));
+    setStreak(getConsecutiveStreak());
     setIsLoading(false);
+
+    const otherGames = WEB_PLAYABLE_GAMES.filter((g) => g.slug !== gameSlug);
+    const unplayed = otherGames.filter((g) => !hasPlayedToday(g.slug));
+    setUnplayedGames(unplayed.length > 0 ? unplayed : otherGames);
   }, [gameSlug]);
 
   // Show nothing while checking localStorage (prevents flash)
@@ -35,7 +48,6 @@ export function PlayedTodayGate({ gameSlug, children }: PlayedTodayGateProps) {
 
   // User has already played today
   const result = getPlayResult(gameSlug);
-  const otherGames = WEB_PLAYABLE_GAMES.filter((g) => g.slug !== gameSlug);
 
   const handleShare = async () => {
     if (!result?.shareText) return;
@@ -57,8 +69,10 @@ export function PlayedTodayGate({ gameSlug, children }: PlayedTodayGateProps) {
           ALREADY PLAYED TODAY
         </h2>
         <p className="text-slate-400 text-sm">
-          {result?.won ? "Great job!" : "Better luck tomorrow!"} Come back for a
-          fresh puzzle.
+          {result?.won ? "Great job!" : "Better luck tomorrow!"}{" "}
+          {streak > 1
+            ? `Come back tomorrow for a new puzzle. Your web streak is now ${streak} days.`
+            : "Come back tomorrow for a new puzzle."}
         </p>
       </div>
 
@@ -76,14 +90,28 @@ export function PlayedTodayGate({ gameSlug, children }: PlayedTodayGateProps) {
         <p className="text-slate-500 text-xs uppercase tracking-wider mb-3">
           Try another game
         </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {otherGames.map((game) => (
+        <div className="flex flex-col gap-2 text-left">
+          {unplayedGames.map((game) => (
             <Link
               key={game.slug}
               href={`/play/${game.slug}`}
-              className="text-sm font-medium px-4 py-2 rounded-lg border border-white/10 text-slate-300 hover:border-pitch-green hover:text-pitch-green transition-colors"
+              className="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-pitch-green/50 hover:bg-white/[0.03] transition-colors"
             >
-              {game.title}
+              <div
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: game.accentColor }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-floodlight">
+                  {game.title}
+                </p>
+                <p className="text-xs text-slate-500 truncate">
+                  {game.description}
+                </p>
+              </div>
+              <span className="text-xs text-pitch-green font-bold shrink-0">
+                PLAY
+              </span>
             </Link>
           ))}
         </div>

@@ -12,7 +12,7 @@ export function GameNav({ title }: GameNavProps) {
   return (
     <nav className="sticky top-0 z-50 h-14 bg-stadium-navy/95 backdrop-blur-sm border-b border-white/5 px-4 flex items-center justify-between">
       <Link
-        href="/play"
+        href="/"
         className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-floodlight transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
