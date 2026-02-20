@@ -11,6 +11,7 @@ import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ScoutingReportOGCard } from '@/components/og/ScoutingReportOGCard';
+import { loadOGFonts } from '@/components/og/og-fonts';
 
 export const runtime = 'edge';
 
@@ -22,6 +23,8 @@ const HEIGHT = 630;
 export const revalidate = 3600;
 
 export async function GET(request: NextRequest) {
+  const fonts = await loadOGFonts();
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
           displayName="Football Fan"
           totalIQ={0}
         />,
-        { width: WIDTH, height: HEIGHT }
+        { width: WIDTH, height: HEIGHT, fonts }
       );
     }
 
@@ -55,10 +58,7 @@ export async function GET(request: NextRequest) {
         displayName={profile.display_name || 'Football Fan'}
         totalIQ={profile.total_iq || 0}
       />,
-      {
-        width: WIDTH,
-        height: HEIGHT,
-      }
+      { width: WIDTH, height: HEIGHT, fonts }
     );
   } catch (error) {
     console.error('Error generating OG image:', error);

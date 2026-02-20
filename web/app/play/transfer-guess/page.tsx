@@ -13,6 +13,10 @@ const today = () => new Date().toISOString().split("T")[0];
 
 export async function generateMetadata(): Promise<Metadata> {
   const ogDate = today();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const ogImage = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/og-images/transfer-guess/${ogDate}.png`
+    : `/api/og/play/transfer-guess?date=${ogDate}`;
   return {
     title: "Guess the Football Transfer - Daily Transfer Quiz",
     description:
@@ -33,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: `/api/og/play/transfer-guess?date=${ogDate}`,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: "Transfer Guess - Name the player from the transfer",
@@ -45,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Guess the Football Transfer | Football IQ",
       description:
         "Name the player from a single transfer. New transfer puzzle every day. Test your transfer knowledge.",
-      images: [`/api/og/play/transfer-guess?date=${ogDate}`],
+      images: [ogImage],
     },
   };
 }

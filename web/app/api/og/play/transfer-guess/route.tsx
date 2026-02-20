@@ -13,6 +13,7 @@ import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { GameOGCard } from '@/components/og/GameOGCard';
 import { TransferGuessOGCard } from '@/components/og/TransferGuessOGCard';
 import { transferGuessContentSchema } from '@/lib/schemas/puzzle-schemas';
+import { loadOGFonts } from '@/components/og/og-fonts';
 
 export const runtime = 'edge';
 export const revalidate = 3600;
@@ -21,6 +22,8 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 
 export async function GET(request: NextRequest) {
+  const fonts = await loadOGFonts();
+
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') ?? undefined;
@@ -41,7 +44,7 @@ export async function GET(request: NextRequest) {
             fromClubAbbreviation={from_club_abbreviation || undefined}
             toClubAbbreviation={to_club_abbreviation || undefined}
           />,
-          { width: WIDTH, height: HEIGHT },
+          { width: WIDTH, height: HEIGHT, fonts },
         );
       }
     }
@@ -56,6 +59,6 @@ export async function GET(request: NextRequest) {
       tagline="Name the player from a single transfer"
       accentColor="#FACC15"
     />,
-    { width: WIDTH, height: HEIGHT },
+    { width: WIDTH, height: HEIGHT, fonts },
   );
 }

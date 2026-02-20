@@ -8,14 +8,15 @@
  */
 
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { Lock, Grid3X3, Check, Play, ChevronRight, Cable } from 'lucide-react-native';
+import { Lock, Check, Play, ChevronRight } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
+import { GameModeIcon } from '@/components';
 import { colors, spacing, borderRadius } from '@/theme';
 import { triggerLight, triggerMedium } from '@/lib/haptics';
 import { ArchivePuzzle } from '../types/archive.types';
@@ -29,19 +30,6 @@ interface MiniGameCardProps {
   /** Test ID for testing */
   testID?: string;
 }
-
-/**
- * Puzzle icon mapping.
- */
-const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
-  career_path: require('../../../../assets/images/puzzles/career-path.png'),
-  career_path_pro: require('../../../../assets/images/puzzles/career-path.png'),
-  guess_the_transfer: require('../../../../assets/images/puzzles/guess-the-transfer.png'),
-  guess_the_goalscorers: require('../../../../assets/images/puzzles/goalscorer-recall.png'),
-  topical_quiz: require('../../../../assets/images/puzzles/quiz.png'),
-  starting_xi: require('../../../../assets/images/puzzles/starting-xi.png'),
-  top_tens: require('../../../../assets/images/puzzles/top-tens.png'),
-};
 
 /**
  * Game mode display titles (full names for vertical layout).
@@ -109,26 +97,11 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
   }));
 
   // Get icon element
-  const customIcon = PUZZLE_ICONS[puzzle.gameMode];
-  const iconElement = customIcon ? (
-    <Image
-      source={customIcon}
-      style={[styles.iconImage, isLocked && styles.iconLocked]}
-      resizeMode="contain"
-    />
-  ) : puzzle.gameMode === 'the_grid' ? (
-    <Grid3X3
-      size={20}
-      color={isLocked ? colors.textSecondary : colors.pitchGreen}
-      style={isLocked && styles.iconLocked}
-    />
-  ) : puzzle.gameMode === 'connections' ? (
-    <Cable
-      size={20}
-      color={isLocked ? colors.textSecondary : colors.pitchGreen}
-      style={isLocked && styles.iconLocked}
-    />
-  ) : null;
+  const iconElement = (
+    <View style={isLocked ? { opacity: 0.4 } : undefined}>
+      <GameModeIcon gameMode={puzzle.gameMode} size={20} />
+    </View>
+  );
 
   // Render status indicator (simple icons, not buttons)
   const renderStatus = () => {
@@ -268,13 +241,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10, // Slightly more gap for visual balance
     position: 'relative',
-  },
-  iconImage: {
-    width: 20,
-    height: 20,
-  },
-  iconLocked: {
-    opacity: 0.4,
   },
   completeBadge: {
     position: 'absolute',

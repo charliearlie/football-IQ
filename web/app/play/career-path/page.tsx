@@ -13,6 +13,10 @@ const today = () => new Date().toISOString().split("T")[0];
 
 export async function generateMetadata(): Promise<Metadata> {
   const ogDate = today();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const ogImage = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/og-images/career-path/${ogDate}.png`
+    : `/api/og/play/career-path?date=${ogDate}`;
   return {
     title: "Guess the Footballer from Career History",
     description:
@@ -33,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: `/api/og/play/career-path?date=${ogDate}`,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: "Career Path - Guess the footballer from their career history",
@@ -45,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Guess the Footballer from Career History | Football IQ",
       description:
         "Can you name the player from their career moves? A new career path puzzle daily. Play free in your browser.",
-      images: [`/api/og/play/career-path?date=${ogDate}`],
+      images: [ogImage],
     },
   };
 }

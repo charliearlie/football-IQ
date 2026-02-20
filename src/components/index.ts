@@ -62,3 +62,6 @@ export { ConfirmationModal, type ConfirmationModalProps } from './ConfirmationMo
 
 // Toast notifications
 export { PuzzleUpdateToast } from './PuzzleUpdateToast';
+
+// Game mode icons
+export { GameModeIcon, type GameModeIconProps } from './GameModeIcon';

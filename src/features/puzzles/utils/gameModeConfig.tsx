@@ -1,31 +1,7 @@
 import React from 'react';
-import { Image, ImageSourcePropType } from 'react-native';
-import {
-  Grid3X3,
-  Link,
-  Shirt,
-  HelpCircle,
-  Cable,
-  Clock,
-} from 'lucide-react-native';
 import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
-
-/**
- * Custom puzzle icons mapping.
- * Maps game modes to their custom PNG icons.
- */
-// Using require with relative paths assuming this file is in src/features/puzzles/utils
-// Adjust paths as needed: ../../../assets/images/puzzles/...
-const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
-  career_path: require('../../../../assets/images/puzzles/career-path.png'),
-  career_path_pro: require('../../../../assets/images/puzzles/career-path.png'),
-  guess_the_transfer: require('../../../../assets/images/puzzles/guess-the-transfer.png'),
-  guess_the_goalscorers: require('../../../../assets/images/puzzles/goalscorer-recall.png'),
-  topical_quiz: require('../../../../assets/images/puzzles/quiz.png'),
-  starting_xi: require('../../../../assets/images/puzzles/starting-xi.png'),
-  top_tens: require('../../../../assets/images/puzzles/top-tens.png'),
-};
+import { GameModeIcon } from '@/components';
 
 /**
  * Game mode configuration for display.
@@ -38,112 +14,102 @@ export interface GameModeConfig {
 }
 
 /**
- * Style for custom puzzle icon images.
- */
-export const iconImageStyle = { width: 32, height: 32 };
-export const archiveIconImageStyle = { width: 24, height: 24 };
-
-/**
  * Get configuration for each game mode.
  */
 export function getGameModeConfig(gameMode: GameMode, isArchive = false): GameModeConfig {
-  // Check if we have a custom icon for this game mode
-  const customIcon = PUZZLE_ICONS[gameMode];
-  const imgStyle = isArchive ? archiveIconImageStyle : iconImageStyle;
-  const iconElement = customIcon ? (
-    <Image source={customIcon} style={imgStyle} resizeMode="contain" />
-  ) : null;
+  const iconSize = isArchive ? 24 : 28;
+  const icon = <GameModeIcon gameMode={gameMode} size={iconSize} />;
 
   switch (gameMode) {
     case 'career_path':
       return {
         title: 'Career Path',
         subtitle: 'Follow the journey',
-        icon: iconElement!,
+        icon,
         iconColor: colors.cardYellow,
       };
     case 'career_path_pro':
       return {
         title: 'Career Path Pro',
         subtitle: 'For true experts',
-        icon: iconElement!,
+        icon,
         iconColor: colors.cardYellow,
       };
     case 'guess_the_transfer':
       return {
         title: 'Transfer Guess',
         subtitle: 'Who made the move?',
-        icon: iconElement!,
+        icon,
         iconColor: colors.pitchGreen,
       };
     case 'guess_the_goalscorers':
       return {
         title: 'Goalscorer Recall',
         subtitle: 'Remember the match',
-        icon: iconElement!,
+        icon,
         iconColor: colors.redCard,
       };
     case 'the_grid':
       return {
         title: 'The Grid (beta)',
         subtitle: 'Fill the matrix',
-        icon: <Grid3X3 color={colors.pitchGreen} size={28} />,
+        icon,
         iconColor: colors.pitchGreen,
       };
     case 'the_chain':
       return {
         title: 'The Chain',
         subtitle: 'Link the players',
-        icon: <Link color={colors.pitchGreen} size={28} />,
+        icon,
         iconColor: colors.pitchGreen,
       };
     case 'the_thread':
       return {
         title: 'Threads',
         subtitle: 'Follow the thread',
-        icon: <Shirt color={colors.cardYellow} size={28} />,
+        icon,
         iconColor: colors.cardYellow,
       };
     case 'topical_quiz':
       return {
         title: 'Quiz',
         subtitle: '5 questions',
-        icon: iconElement!,
+        icon,
         iconColor: colors.cardYellow,
       };
     case 'top_tens':
       return {
         title: 'Top Tens',
         subtitle: 'Name all 10',
-        icon: iconElement!,
+        icon,
         iconColor: colors.pitchGreen,
       };
     case 'starting_xi':
       return {
         title: 'Starting XI',
         subtitle: 'Name the lineup',
-        icon: iconElement!,
+        icon,
         iconColor: colors.cardYellow,
       };
     case 'connections':
       return {
         title: 'Connections',
         subtitle: 'Find the groups',
-        icon: <Cable color={colors.pitchGreen} size={28} />,
+        icon,
         iconColor: colors.pitchGreen,
       };
     case 'timeline':
       return {
         title: 'Timeline',
         subtitle: 'Order the career',
-        icon: <Clock color={colors.cardYellow} size={28} />,
+        icon,
         iconColor: colors.cardYellow,
       };
     default:
       return {
         title: 'Unknown',
         subtitle: '',
-        icon: <HelpCircle color={colors.textSecondary} size={28} />,
+        icon,
         iconColor: colors.textSecondary,
       };
   }

@@ -57,10 +57,11 @@ export function GameOGCard({ gameTitle, tagline, accentColor }: GameOGCardProps)
         <div
           style={{
             display: 'flex',
-            fontSize: 36,
-            fontWeight: 700,
+            fontFamily: 'Bebas Neue',
+            fontSize: 40,
+            fontWeight: 400,
             color: COLORS.pitchGreen,
-            letterSpacing: 4,
+            letterSpacing: 6,
             marginBottom: 32,
           }}
         >
@@ -71,8 +72,9 @@ export function GameOGCard({ gameTitle, tagline, accentColor }: GameOGCardProps)
         <div
           style={{
             display: 'flex',
-            fontSize: 48,
-            fontWeight: 700,
+            fontFamily: 'Bebas Neue',
+            fontSize: 52,
+            fontWeight: 400,
             color: accentColor,
             marginBottom: 20,
             textAlign: 'center',
@@ -109,6 +111,7 @@ export function GameOGCard({ gameTitle, tagline, accentColor }: GameOGCardProps)
         <div
           style={{
             display: 'flex',
+            fontFamily: 'Montserrat',
             fontSize: 20,
             fontWeight: 600,
             color: COLORS.pitchGreen,

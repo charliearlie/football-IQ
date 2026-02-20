@@ -13,6 +13,7 @@ import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { GameOGCard } from '@/components/og/GameOGCard';
 import { TopicalQuizOGCard } from '@/components/og/TopicalQuizOGCard';
 import { topicalQuizContentSchema } from '@/lib/schemas/puzzle-schemas';
+import { loadOGFonts } from '@/components/og/og-fonts';
 
 export const runtime = 'edge';
 export const revalidate = 3600;
@@ -21,6 +22,8 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 
 export async function GET(request: NextRequest) {
+  const fonts = await loadOGFonts();
+
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') ?? undefined;
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest) {
             firstQuestion={question}
             options={options}
           />,
-          { width: WIDTH, height: HEIGHT },
+          { width: WIDTH, height: HEIGHT, fonts },
         );
       }
     }
@@ -51,6 +54,6 @@ export async function GET(request: NextRequest) {
       tagline="5 questions on this week's headlines"
       accentColor="#FF6B6B"
     />,
-    { width: WIDTH, height: HEIGHT },
+    { width: WIDTH, height: HEIGHT, fonts },
   );
 }

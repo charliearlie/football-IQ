@@ -6,11 +6,10 @@
  */
 
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
-import { Grid3X3 } from 'lucide-react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { ProBadge } from '@/components/ProBadge';
+import { GameModeIcon } from '@/components';
 import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
-import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { BriefingFixture } from '../constants/briefingSchedule';
 
 interface FixtureCardProps {
@@ -21,19 +20,6 @@ interface FixtureCardProps {
 }
 
 /**
- * Game mode icon mapping.
- */
-const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
-  career_path: require('../../../../assets/images/puzzles/career-path.png'),
-  career_path_pro: require('../../../../assets/images/puzzles/career-path.png'),
-  guess_the_transfer: require('../../../../assets/images/puzzles/guess-the-transfer.png'),
-  guess_the_goalscorers: require('../../../../assets/images/puzzles/goalscorer-recall.png'),
-  topical_quiz: require('../../../../assets/images/puzzles/quiz.png'),
-  starting_xi: require('../../../../assets/images/puzzles/starting-xi.png'),
-  top_tens: require('../../../../assets/images/puzzles/top-tens.png'),
-};
-
-/**
  * FixtureCard - Compact fixture display card
  *
  * Shows game mode icon, label, and schedule days.
@@ -42,23 +28,11 @@ const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
 function FixtureCardComponent({ fixture, testID }: FixtureCardProps) {
   const { gameMode, label, days, isPremium } = fixture;
 
-  // Get icon element
-  const customIcon = PUZZLE_ICONS[gameMode];
-  const iconElement = customIcon ? (
-    <Image
-      source={customIcon}
-      style={styles.iconImage}
-      resizeMode="contain"
-    />
-  ) : gameMode === 'the_grid' ? (
-    <Grid3X3 size={18} color={colors.pitchGreen} />
-  ) : null;
-
   return (
     <View style={styles.card} testID={testID}>
       {/* Icon container */}
       <View style={styles.iconContainer}>
-        {iconElement}
+        <GameModeIcon gameMode={gameMode} size={22} />
 
         {/* Premium badge */}
         {isPremium && (
@@ -109,10 +83,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: spacing.sm,
     position: 'relative',
-  },
-  iconImage: {
-    width: 22,
-    height: 22,
   },
   premiumBadge: {
     position: 'absolute',

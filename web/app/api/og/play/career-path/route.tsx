@@ -13,6 +13,7 @@ import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { GameOGCard } from '@/components/og/GameOGCard';
 import { CareerPathOGCard } from '@/components/og/CareerPathOGCard';
 import { careerPathContentSchema } from '@/lib/schemas/puzzle-schemas';
+import { loadOGFonts } from '@/components/og/og-fonts';
 
 export const runtime = 'edge';
 export const revalidate = 3600;
@@ -21,6 +22,8 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 
 export async function GET(request: NextRequest) {
+  const fonts = await loadOGFonts();
+
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') ?? undefined;
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest) {
             firstStep={career_steps[0]}
             totalSteps={career_steps.length}
           />,
-          { width: WIDTH, height: HEIGHT },
+          { width: WIDTH, height: HEIGHT, fonts },
         );
       }
     }
@@ -51,6 +54,6 @@ export async function GET(request: NextRequest) {
       tagline="Guess the player from their career"
       accentColor="#58CC02"
     />,
-    { width: WIDTH, height: HEIGHT },
+    { width: WIDTH, height: HEIGHT, fonts },
   );
 }

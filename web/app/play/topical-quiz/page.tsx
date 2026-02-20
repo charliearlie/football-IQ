@@ -13,6 +13,10 @@ const today = () => new Date().toISOString().split("T")[0];
 
 export async function generateMetadata(): Promise<Metadata> {
   const ogDate = today();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const ogImage = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/og-images/topical-quiz/${ogDate}.png`
+    : `/api/og/play/topical-quiz?date=${ogDate}`;
   return {
     title: "Football Topical Quiz - Test Your Football Knowledge",
     description:
@@ -33,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: `/api/og/play/topical-quiz?date=${ogDate}`,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: "Topical Quiz - Football quiz on recent news and events",
@@ -45,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Football Topical Quiz | Football IQ",
       description:
         "5 questions on recent football news, results, and events. How closely do you follow the beautiful game?",
-      images: [`/api/og/play/topical-quiz?date=${ogDate}`],
+      images: [ogImage],
     },
   };
 }

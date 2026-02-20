@@ -13,6 +13,10 @@ const today = () => new Date().toISOString().split("T")[0];
 
 export async function generateMetadata(): Promise<Metadata> {
   const ogDate = today();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const ogImage = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/og-images/connections/${ogDate}.png`
+    : `/api/og/play/connections?date=${ogDate}`;
   return {
     title: "Football Connections - Group Players into Categories",
     description:
@@ -33,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: `/api/og/play/connections?date=${ogDate}`,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: "Football Connections - Group 16 players into 4 categories",
@@ -45,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Football Connections Puzzle | Football IQ",
       description:
         "Group 16 footballers into 4 hidden categories. A daily football connections puzzle. Free to play.",
-      images: [`/api/og/play/connections?date=${ogDate}`],
+      images: [ogImage],
     },
   };
 }

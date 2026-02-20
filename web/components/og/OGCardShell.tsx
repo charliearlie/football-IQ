@@ -63,10 +63,11 @@ export function OGCardShell({
           <div
             style={{
               display: 'flex',
-              fontSize: 28,
-              fontWeight: 700,
+              fontFamily: 'Bebas Neue',
+              fontSize: 32,
+              fontWeight: 400,
               color: OG_COLORS.pitchGreen,
-              letterSpacing: 4,
+              letterSpacing: 6,
             }}
           >
             FOOTBALL IQ
@@ -106,6 +107,7 @@ export function OGCardShell({
         <div
           style={{
             display: 'flex',
+            fontFamily: 'Montserrat',
             fontSize: 16,
             fontWeight: 600,
             color: OG_COLORS.pitchGreen,

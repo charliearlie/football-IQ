@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
       width: 32,
       height: 32,
       borderRadius: 8,
-      backgroundColor: 'rgba(255,255,255,0.1)', // Lightened from 0.05
+      backgroundColor: '#F1F5F9',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 12,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)', // Lightened from 0.1
+      borderColor: 'rgba(255,255,255,0.15)',
   },
   puzzleInfo: {
       flex: 1,

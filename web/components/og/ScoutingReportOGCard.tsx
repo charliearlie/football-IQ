@@ -110,10 +110,11 @@ export function ScoutingReportOGCard({
         >
           <div
             style={{
-              fontSize: 36,
-              fontWeight: 700,
+              fontFamily: 'Bebas Neue',
+              fontSize: 40,
+              fontWeight: 400,
               color: COLORS.pitchGreen,
-              letterSpacing: 4,
+              letterSpacing: 6,
             }}
           >
             FOOTBALL IQ

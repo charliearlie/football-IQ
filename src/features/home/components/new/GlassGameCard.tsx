@@ -1,24 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Check, Video, Gift, Cable, History } from 'lucide-react-native';
+import { Play, Check, Video, Gift } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { CardStatus } from '../../hooks/useDailyPuzzles';
 import { ProBadge } from '@/components/ProBadge/ProBadge';
+import { GameModeIcon } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-
-// Duplicate of icons mapping for now - ideally refactor to shared config
-const PUZZLE_ICONS: Partial<Record<GameMode, ImageSourcePropType>> = {
-  career_path: require('../../../../../assets/images/puzzles/career-path.png'),
-  career_path_pro: require('../../../../../assets/images/puzzles/career-path.png'),
-  guess_the_transfer: require('../../../../../assets/images/puzzles/guess-the-transfer.png'),
-  guess_the_goalscorers: require('../../../../../assets/images/puzzles/goalscorer-recall.png'),
-  topical_quiz: require('../../../../../assets/images/puzzles/quiz.png'),
-  starting_xi: require('../../../../../assets/images/puzzles/starting-xi.png'),
-  top_tens: require('../../../../../assets/images/puzzles/top-tens.png'),
-};
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };
 
@@ -48,7 +38,6 @@ export function GlassGameCard({
   isAdUnlocked,
 }: GlassGameCardProps) {
   const isLocked = isPremiumOnly && !isPremium && !isAdUnlocked;
-  const iconSource = PUZZLE_ICONS[gameMode];
   const { triggerLight } = useHaptics();
 
   const translateY = useSharedValue(0);
@@ -166,15 +155,7 @@ export function GlassGameCard({
         >
           {/* Left: Icon Box */}
           <View style={styles.iconBox}>
-            {iconSource ? (
-              <Image source={iconSource} style={styles.iconImage} resizeMode="contain" />
-            ) : gameMode === 'connections' ? (
-              <Cable size={24} color={HOME_COLORS.pitchGreen} />
-            ) : gameMode === 'timeline' ? (
-              <History size={24} color={HOME_COLORS.pitchGreen} />
-            ) : (
-              <Play size={24} color={HOME_COLORS.pitchGreen} fill={HOME_COLORS.pitchGreen} />
-            )}
+            <GameModeIcon gameMode={gameMode} size={28} />
             {status === 'done' && (
                <View style={styles.checkBadge}>
                   <Check size={10} color={HOME_COLORS.stadiumNavy} strokeWidth={4} />
@@ -292,10 +273,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
     marginRight: 16,
-  },
-  iconImage: {
-    width: 28,
-    height: 28,
   },
   checkBadge: {
     position: 'absolute',

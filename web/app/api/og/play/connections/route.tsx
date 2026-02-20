@@ -13,6 +13,7 @@ import { fetchDailyPuzzle } from '@/lib/fetchDailyPuzzle';
 import { GameOGCard } from '@/components/og/GameOGCard';
 import { ConnectionsOGCard } from '@/components/og/ConnectionsOGCard';
 import { connectionsContentSchema } from '@/lib/schemas/puzzle-schemas';
+import { loadOGFonts } from '@/components/og/og-fonts';
 
 export const runtime = 'edge';
 export const revalidate = 3600;
@@ -37,6 +38,8 @@ function seededShuffle(arr: string[], seed: number): string[] {
 }
 
 export async function GET(request: NextRequest) {
+  const fonts = await loadOGFonts();
+
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') ?? undefined;
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
 
         return new ImageResponse(
           <ConnectionsOGCard players={shuffled} />,
-          { width: WIDTH, height: HEIGHT },
+          { width: WIDTH, height: HEIGHT, fonts },
         );
       }
     }
@@ -68,6 +71,6 @@ export async function GET(request: NextRequest) {
       tagline="Group 16 players into 4 categories"
       accentColor="#3B82F6"
     />,
-    { width: WIDTH, height: HEIGHT },
+    { width: WIDTH, height: HEIGHT, fonts },
   );
 }
