@@ -377,7 +377,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
             >
               <Lightbulb className="w-3.5 h-3.5" />
               <span>
-                Need a bigger hint? ({3 - state.hintsRevealed} remaining)
+                Reveal Hint {state.hintsRevealed + 1}
               </span>
             </button>
           )}

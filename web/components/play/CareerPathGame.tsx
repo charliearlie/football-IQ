@@ -371,7 +371,7 @@ export function CareerPathGame({
                 onClick={handleRevealNext}
                 className="text-[10px] text-card-yellow cursor-pointer hover:text-white transition-colors flex items-center gap-1 bg-card-yellow/10 px-2 py-0.5 rounded-full border border-card-yellow/20"
               >
-                <Lightbulb className="w-3 h-3" /> Hint ({cluesRemaining})
+                <Lightbulb className="w-3 h-3" /> Reveal Next Step
               </button>
             )}
           </div>
