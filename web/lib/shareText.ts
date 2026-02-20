@@ -236,3 +236,52 @@ export function generateTopicalQuizShareText(
     "footballiq.app/play/topical-quiz",
   ].join("\n");
 }
+
+// ============================================================================
+// TIMELINE
+// ============================================================================
+
+/**
+ * Generate emoji row for Timeline result.
+ * Shows correct/incorrect for each position on first attempt.
+ *
+ * Example: "✅❌✅✅❌✅"
+ */
+export function generateTimelineEmojiRow(
+  firstAttemptResults: boolean[]
+): string {
+  return firstAttemptResults.map((correct) => (correct ? "✅" : "❌")).join("");
+}
+
+/**
+ * Generate share text for Timeline result.
+ *
+ * Example:
+ * Football IQ - Timeline
+ * 19 Feb
+ * ⏱️ Thierry Henry
+ * ✅❌✅✅❌✅
+ * 3/5 guesses - 3 IQ
+ * footballiq.app/play/timeline
+ */
+export function generateTimelineShareText(
+  firstAttemptResults: boolean[],
+  totalAttempts: number,
+  points: number,
+  puzzleDate: string,
+  title?: string,
+  subject?: string
+): string {
+  const dateStr = formatShareDate(puzzleDate);
+  const emojiRow = generateTimelineEmojiRow(firstAttemptResults);
+  const label = title || subject || "Timeline";
+
+  return [
+    "Football IQ - Timeline",
+    dateStr,
+    `⏱️ ${label}`,
+    emojiRow,
+    `${totalAttempts}/5 guesses - ${points} IQ`,
+    "footballiq.app/play/timeline",
+  ].join("\n");
+}

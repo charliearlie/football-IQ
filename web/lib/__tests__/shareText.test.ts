@@ -6,6 +6,8 @@ import {
   generateConnectionsShareText,
   generateQuizEmojiGrid,
   generateTopicalQuizShareText,
+  generateTimelineEmojiRow,
+  generateTimelineShareText,
   type CareerPathResult,
   type TransferGuessResult,
   type ConnectionsGuessResult,
@@ -415,6 +417,121 @@ describe("generateTopicalQuizShareText", () => {
 });
 
 // ============================================================================
+// generateTimelineEmojiRow
+// ============================================================================
+
+describe("generateTimelineEmojiRow", () => {
+  it("returns all ✅ when every position is correct", () => {
+    expect(generateTimelineEmojiRow([true, true, true, true, true, true])).toBe(
+      "✅✅✅✅✅✅"
+    );
+  });
+
+  it("returns all ❌ when every position is incorrect", () => {
+    expect(
+      generateTimelineEmojiRow([false, false, false, false, false, false])
+    ).toBe("❌❌❌❌❌❌");
+  });
+
+  it("returns mixed emojis for partial correctness", () => {
+    expect(
+      generateTimelineEmojiRow([true, false, true, true, false, true])
+    ).toBe("✅❌✅✅❌✅");
+  });
+
+  it("returns an empty string for an empty array", () => {
+    expect(generateTimelineEmojiRow([])).toBe("");
+  });
+});
+
+// ============================================================================
+// generateTimelineShareText
+// ============================================================================
+
+describe("generateTimelineShareText", () => {
+  const puzzleDate = "2026-02-19";
+  const firstAttemptResults = [true, false, true, true, false, true];
+
+  it("includes the correct header line", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    expect(text).toContain("Football IQ - Timeline");
+  });
+
+  it("formats the date as '19 Feb'", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    expect(text).toContain("19 Feb");
+  });
+
+  it("shows timer emoji + title when title is provided", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate, "Premier League Moments"
+    );
+    expect(text).toContain("⏱️ Premier League Moments");
+  });
+
+  it("shows timer emoji + subject when only subject is provided", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate, undefined, "Thierry Henry"
+    );
+    expect(text).toContain("⏱️ Thierry Henry");
+  });
+
+  it("falls back to 'Timeline' when neither title nor subject provided", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    expect(text).toContain("⏱️ Timeline");
+  });
+
+  it("shows correct attempts and IQ line", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    expect(text).toContain("3/5 guesses - 3 IQ");
+  });
+
+  it("shows 1 attempt and 5 IQ for a perfect game", () => {
+    const text = generateTimelineShareText(
+      [true, true, true, true, true, true], 1, 5, puzzleDate
+    );
+    expect(text).toContain("1/5 guesses - 5 IQ");
+  });
+
+  it("shows 0 IQ for a lost game", () => {
+    const text = generateTimelineShareText(
+      [false, false, false, false, false, false], 5, 0, puzzleDate
+    );
+    expect(text).toContain("5/5 guesses - 0 IQ");
+  });
+
+  it("contains the emoji row from firstAttemptResults", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    expect(text).toContain("✅❌✅✅❌✅");
+  });
+
+  it("includes the correct share URL", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    expect(text).toContain("footballiq.app/play/timeline");
+  });
+
+  it("lines are joined with newlines (6 lines total)", () => {
+    const text = generateTimelineShareText(
+      firstAttemptResults, 3, 3, puzzleDate
+    );
+    const lines = text.split("\n");
+    expect(lines.length).toBe(6);
+  });
+});
+
+// ============================================================================
 // Date formatting — shared helper via public surface
 // ============================================================================
 
@@ -435,5 +552,12 @@ describe("date formatting across all share text generators", () => {
     const answers: QuizAnswerResult[] = [{ isCorrect: true }];
     const text = generateTopicalQuizShareText(answers, "2026-07-04");
     expect(text).toContain("4 Jul");
+  });
+
+  it("timeline: 2026-03-15 formats as '15 Mar'", () => {
+    const text = generateTimelineShareText(
+      [true, true, true, true, true, true], 1, 5, "2026-03-15"
+    );
+    expect(text).toContain("15 Mar");
   });
 });

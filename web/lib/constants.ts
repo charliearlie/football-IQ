@@ -110,11 +110,17 @@ export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
     description: "5 questions on this week's headlines",
     accentColor: "#FF6B6B",
   },
+  {
+    dbMode: "timeline",
+    slug: "timeline",
+    title: "Timeline",
+    description: "Sort 6 events into chronological order",
+    accentColor: COLORS.amber,
+  },
 ];
 
 // App-only modes shown as teasers in the /play hub
 export const APP_ONLY_GAMES: { title: string; description: string }[] = [
-  { title: "Timeline", description: "Sort 6 events into chronological order" },
   { title: "Top Tens", description: "Guess the top 10 in each category" },
   { title: "Career Path Pro", description: "Expert mode — fewer clues, harder players" },
   { title: "The Grid", description: "Fill the 3x3 grid matching criteria" },
@@ -178,6 +184,19 @@ export const FALLBACK_CONNECTIONS_PUZZLE = {
     { category: string; difficulty: "green"; players: [string, string, string, string] },
     { category: string; difficulty: "blue"; players: [string, string, string, string] },
     { category: string; difficulty: "purple"; players: [string, string, string, string] },
+  ],
+};
+
+export const FALLBACK_TIMELINE_PUZZLE = {
+  title: "Cristiano Ronaldo",
+  subject: "Cristiano Ronaldo",
+  events: [
+    { text: "Joined Sporting CP academy", year: 2001 },
+    { text: "Signed for Manchester United", year: 2003 },
+    { text: "Won Champions League with Man United", year: 2008 },
+    { text: "Transferred to Real Madrid", year: 2009 },
+    { text: "Won first Ballon d'Or at Real Madrid", year: 2014 },
+    { text: "Moved to Juventus", year: 2018 },
   ],
 };
 

@@ -20,4 +20,5 @@ export const GAME_ACCENT_COLORS = {
   transferGuess: '#FACC15',
   connections: '#3B82F6',
   topicalQuiz: '#FF6B6B',
+  timeline: '#F59E0B',
 };

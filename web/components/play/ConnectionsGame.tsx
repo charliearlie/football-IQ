@@ -2,6 +2,7 @@
 
 import { useReducer, useCallback, useMemo, useEffect } from "react";
 import confetti from "canvas-confetti";
+import { Shuffle, X, ChevronRight } from "lucide-react";
 import type { ConnectionsContent } from "@/lib/schemas/puzzle-schemas";
 import {
   generateConnectionsShareText,
@@ -267,11 +268,18 @@ export function connectionsReducer(
 // CONSTANTS
 // ============================================================================
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  yellow: "#FACC15",
-  green: "#58CC02",
-  blue: "#3B82F6",
-  purple: "#A855F7",
+const DIFFICULTY_BG_CLASSES: Record<string, string> = {
+  yellow: "bg-card-yellow",
+  green: "bg-pitch-green",
+  blue: "bg-sky-blue",
+  purple: "bg-white/10 border border-white/20",
+};
+
+const DIFFICULTY_TEXT_CLASSES: Record<string, string> = {
+  yellow: "text-stadium-navy",
+  green: "text-stadium-navy",
+  blue: "text-white",
+  purple: "text-white",
 };
 
 // ============================================================================
@@ -324,7 +332,6 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
   // Clear feedback after 1.5s
   useEffect(() => {
     if (state.lastGuessResult === null) return;
-    // Don't clear "close" immediately — it should stay visible briefly
     const timer = setTimeout(() => {
       dispatch({ type: "CLEAR_FEEDBACK" });
     }, 1500);
@@ -357,7 +364,6 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
     } else {
       onGameComplete({ won: false, answer: "Connections", shareText });
     }
-    // We only want this to fire once when gameStatus transitions
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.gameStatus]);
 
@@ -367,53 +373,111 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
 
   return (
     <div>
-      {/* Solved groups — colored banners at top */}
-      {state.solvedGroups.map((group) => (
-        <div
-          key={group.category}
-          style={{ backgroundColor: DIFFICULTY_COLORS[group.difficulty] }}
-          className="rounded-lg p-4 mb-2.5 text-center"
-        >
-          <p className="font-bebas text-base text-stadium-navy uppercase tracking-wider">
-            {group.category}
+      {/* Game status bar */}
+      <div className="flex justify-between items-end border-b border-white/5 pb-4 mb-4">
+        <div>
+          <p className="text-pitch-green text-[10px] font-bold uppercase tracking-widest mb-1">
+            Objective
           </p>
-          <p className="text-xs font-medium text-stadium-navy/70">
-            {group.players.join(" \u2022 ")}
+          <p className="text-white text-sm font-medium opacity-90">
+            Find groups of four
           </p>
         </div>
-      ))}
-
-      {/* 4x4 player grid */}
-      <div className="grid grid-cols-4 gap-2.5 mb-4">
-        {state.remainingPlayers.map((name) => (
-          <button
-            key={name}
-            onClick={() => dispatch({ type: "TOGGLE_PLAYER", payload: name })}
-            disabled={state.gameStatus !== "playing"}
-            className={cn(
-              "rounded-lg p-3 font-bebas text-base tracking-wide text-center transition-all min-h-[72px] sm:min-h-[80px] select-none flex items-center justify-center",
-              state.selectedPlayers.includes(name)
-                ? "bg-pitch-green text-stadium-navy scale-95 border-2 border-pitch-green"
-                : "bg-white/10 text-floodlight hover:bg-white/15 border-2 border-transparent"
-            )}
-          >
-            {name}
-          </button>
-        ))}
+        <div className="text-right">
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            Mistakes Left
+          </p>
+          <div className="flex gap-2 justify-end">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "w-3 h-3 rounded-full transition-all duration-300",
+                  i < 4 - state.mistakes
+                    ? "bg-pitch-green shadow-[0_0_6px_#58CC02]"
+                    : "border border-white/20 bg-transparent scale-75"
+                )}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Mistake dots */}
-      <div className="flex items-center justify-center gap-1.5 mb-4">
-        <span className="text-xs text-slate-400 mr-2">Mistakes remaining:</span>
-        {Array.from({ length: 4 }, (_, i) => (
-          <div
-            key={i}
-            className={cn(
-              "w-2.5 h-2.5 rounded-full transition-colors",
-              i < 4 - state.mistakes ? "bg-red-card" : "bg-white/10"
-            )}
-          />
-        ))}
+      {/* Solved groups */}
+      <div className="space-y-3 mb-3">
+        {state.solvedGroups.map((group) => {
+          const bgClass =
+            DIFFICULTY_BG_CLASSES[group.difficulty] || "bg-white/10";
+          const textClass =
+            DIFFICULTY_TEXT_CLASSES[group.difficulty] || "text-white";
+
+          return (
+            <div
+              key={group.category}
+              className={cn(
+                "w-full rounded-xl p-4 shadow-glow animate-merge flex flex-col items-center justify-center text-center relative overflow-hidden transition-all hover:scale-[1.02]",
+                bgClass
+              )}
+            >
+              <div className="shimmer-overlay" />
+              <div className="relative z-10 flex flex-col items-center">
+                <h3
+                  className={cn(
+                    "font-bebas text-2xl tracking-widest mb-1",
+                    textClass
+                  )}
+                >
+                  {group.category}
+                </h3>
+                <p
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-[0.15em] opacity-80",
+                    textClass
+                  )}
+                >
+                  {group.players.join(" \u2022 ")}
+                </p>
+              </div>
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-black/20" />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 4x4 player grid with 3D tiles */}
+      <div className="grid grid-cols-4 gap-2.5 mb-4">
+        {state.remainingPlayers.map((name) => {
+          const isSelected = state.selectedPlayers.includes(name);
+          const isError =
+            state.lastGuessResult === "incorrect" && isSelected;
+
+          return (
+            <button
+              key={name}
+              onClick={() =>
+                dispatch({ type: "TOGGLE_PLAYER", payload: name })
+              }
+              disabled={state.gameStatus !== "playing"}
+              className={cn(
+                "game-tile rounded-xl p-1 font-bebas tracking-wide text-center min-h-[72px] sm:min-h-[80px] select-none flex items-center justify-center outline-none",
+                isError
+                  ? "game-tile-error animate-shake"
+                  : isSelected
+                    ? "game-tile-selected"
+                    : "game-tile-default"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none drop-shadow-md relative z-10",
+                  name.length > 8 ? "text-[13px] leading-4" : "text-lg"
+                )}
+              >
+                {name}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* "One away!" feedback */}
@@ -423,34 +487,54 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
         </p>
       )}
 
-      {/* Action buttons */}
+      {/* Footer controls */}
       {state.gameStatus === "playing" && (
-        <div className="flex gap-2">
-          <button
-            onClick={() => dispatch({ type: "SHUFFLE_REMAINING" })}
-            className="flex-1 py-2.5 px-3 rounded-xl border border-white/10 text-sm text-slate-300 hover:bg-white/5 transition-colors"
-          >
-            Shuffle
-          </button>
-          <button
-            onClick={() => dispatch({ type: "DESELECT_ALL" })}
-            disabled={state.selectedPlayers.length === 0}
-            className="flex-1 py-2.5 px-3 rounded-xl border border-white/10 text-sm text-slate-300 hover:bg-white/5 transition-colors disabled:opacity-30"
-          >
-            Deselect All
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={state.selectedPlayers.length !== 4}
-            className={cn(
-              "flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-colors",
-              state.selectedPlayers.length === 4
-                ? "bg-pitch-green text-stadium-navy hover:bg-pitch-green/90"
-                : "bg-white/5 text-slate-500 cursor-not-allowed"
-            )}
-          >
-            Submit
-          </button>
+        <div className="glass-card rounded-t-2xl border-t border-white/10 p-4 -mx-4 -mb-6">
+          {/* Shuffle & Deselect */}
+          <div className="flex justify-center gap-3 mb-4">
+            <button
+              onClick={() => dispatch({ type: "SHUFFLE_REMAINING" })}
+              className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2 group"
+            >
+              <Shuffle className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+              SHUFFLE
+            </button>
+            <button
+              onClick={() => dispatch({ type: "DESELECT_ALL" })}
+              disabled={state.selectedPlayers.length === 0}
+              className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
+            >
+              <X className="w-3.5 h-3.5 group-hover:text-red-card transition-colors" />
+              DESELECT
+            </button>
+          </div>
+
+          {/* Submit button with glow */}
+          <div className="relative group">
+            <div
+              className={cn(
+                "absolute -inset-1 bg-pitch-green rounded-2xl blur transition duration-500",
+                state.selectedPlayers.length === 4
+                  ? "opacity-60"
+                  : "opacity-0"
+              )}
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={state.selectedPlayers.length !== 4}
+              className={cn(
+                "relative w-full h-14 rounded-xl font-bebas text-2xl tracking-[0.15em] transition-all transform overflow-hidden flex items-center justify-center gap-2",
+                state.selectedPlayers.length === 4
+                  ? "bg-pitch-green text-stadium-navy shadow-[0_6px_0_#3a8501] active:translate-y-[6px] active:shadow-[0_0_0_#3a8501]"
+                  : "bg-white/10 text-white/30 opacity-40 cursor-not-allowed"
+              )}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                SUBMIT
+                <ChevronRight className="w-5 h-5 stroke-[3]" />
+              </span>
+            </button>
+          </div>
         </div>
       )}
 

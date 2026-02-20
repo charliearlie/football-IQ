@@ -2,7 +2,7 @@
 
 ## Overview
 
-Football IQ is a mobile trivia game featuring daily puzzles across 11 game modes:
+Football IQ is a mobile trivia game featuring daily puzzles across 12 game modes:
 
 1. **Career Path** - Guess player from sequential career clues
 2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
@@ -15,6 +15,7 @@ Football IQ is a mobile trivia game featuring daily puzzles across 11 game modes
 9. **Top Tens** (Premium) - Name all 10 answers in a ranked list
 10. **Starting XI** - Identify hidden players on a tactical pitch lineup
 11. **Connections** - Group 16 footballers into 4 categories of 4
+12. **Timeline** - Sort 6 events into chronological order
 
 ## Tech Stack
 
@@ -793,18 +794,19 @@ npm run dev
 
 ## Web Playable Games
 
-4 game modes are playable on the web at `/play/[game-mode]` to drive app downloads. The web experience is intentionally "incomplete" (no streaks, no IQ score, no tier progression) to funnel users to the app.
+5 game modes are playable on the web at `/play/[game-mode]` to drive app downloads. The web experience is intentionally "incomplete" (no streaks, no IQ score, no tier progression) to funnel users to the app.
 
-**Hub**: `/play` — server component showing today's 4 web-playable modes (LIVE badge if puzzle exists) + 7 remaining modes as "APP ONLY" teasers.
+**Hub**: `/play` — server component showing today's 5 web-playable modes (LIVE badge if puzzle exists) + remaining modes as "APP ONLY" teasers.
 
 **Game Routes**:
 
 | Route | DB Mode | Status |
 |-------|---------|--------|
 | `/play/career-path` | `career_path` | Live |
-| `/play/transfer-guess` | `guess_the_transfer` | Planned (PR 2) |
-| `/play/connections` | `connections` | Planned (PR 3) |
-| `/play/topical-quiz` | `topical_quiz` | Planned (PR 4) |
+| `/play/transfer-guess` | `guess_the_transfer` | Live |
+| `/play/connections` | `connections` | Live |
+| `/play/topical-quiz` | `topical_quiz` | Live |
+| `/play/timeline` | `timeline` | Live |
 
 **Architecture**:
 - Server pages fetch puzzles via `fetchDailyPuzzle()` and render `GamePageShell` → `PlayedTodayGate` → Game component
@@ -828,6 +830,7 @@ npm run dev
 - `web/components/play/PlayedTodayGate.tsx` — One-play-per-day gate
 - `web/components/play/GameHubCard.tsx` — Hub card with available/completed/app_only states
 - `web/components/play/CareerPathGame.tsx` — Career Path game (useReducer pattern)
+- `web/components/play/TimelineGame.tsx` — Timeline game (useReducer + @dnd-kit sortable)
 
 ### Social Sharing OG Images
 
@@ -844,6 +847,7 @@ Dynamic Open Graph images for social media link previews, generated server-side 
 | `/api/og/play/transfer-guess` | "Transfer Guess" | `#FACC15` |
 | `/api/og/play/connections` | "Connections" | `#3B82F6` |
 | `/api/og/play/topical-quiz` | "Topical Quiz" | `#FF6B6B` |
+| `/api/og/play/timeline` | "Timeline" | `#F59E0B` |
 | `/api/og/scout` | Scout Report (dynamic) | Per tier |
 
 **Design Decision**: Static game-branded OG images only (not result-specific). User results are communicated via emoji share text copied to clipboard. Result-specific OG images can be added later.

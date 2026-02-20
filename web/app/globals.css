@@ -91,6 +91,70 @@
   .status-dot-draft {
     @apply bg-card-yellow;
   }
+
+  /* Career Path timeline line */
+  .timeline-line {
+    position: absolute;
+    left: 19px;
+    top: 24px;
+    bottom: 60px;
+    width: 2px;
+    background: linear-gradient(to bottom, #58CC02 0%, #58CC02 85%, rgba(88, 204, 2, 0.1) 100%);
+    z-index: 0;
+    box-shadow: 0 0 8px rgba(88, 204, 2, 0.4);
+  }
+
+  /* Shimmer overlay for solved Connections cards */
+  .shimmer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    );
+    transform: skewX(-20deg) translateX(-150%);
+    animation: shimmer 3s infinite;
+    pointer-events: none;
+  }
+
+  /* Connections 3D tile states */
+  .game-tile {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    touch-action: manipulation;
+  }
+
+  .game-tile-default {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 0 #0f172a, inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color: #F8FAFC;
+  }
+
+  .game-tile-default:hover {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  }
+
+  .game-tile-selected {
+    background: #58CC02;
+    border: 1px solid #46A302;
+    color: #0F172A;
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #0f172a, inset 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 15px rgba(88, 204, 2, 0.3);
+  }
+
+  .game-tile-error {
+    background: #EF4444 !important;
+    border-color: #991b1b !important;
+    color: white !important;
+    box-shadow: 0 0 0 #0f172a !important;
+    transform: translateY(6px);
+  }
 }
 
 @layer utilities {
@@ -140,5 +204,38 @@
 
   .card-glow-teal {
     box-shadow: 0 0 40px rgba(78, 205, 196, 0.15), inset 0 1px 0 rgba(78, 205, 196, 0.1);
+  }
+
+  /* Transfer stage radial shine */
+  .transfer-stage-shine {
+    position: relative;
+  }
+  .transfer-stage-shine::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(88, 204, 2, 0.1) 0%, rgba(0, 0, 0, 0) 60%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Transfer connector line */
+  .transfer-connector {
+    flex-grow: 1;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+  }
+
+  /* Hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

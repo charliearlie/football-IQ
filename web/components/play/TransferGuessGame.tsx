@@ -2,7 +2,7 @@
 
 import { useReducer, useCallback } from "react";
 import confetti from "canvas-confetti";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Search, Lightbulb, Calendar, Shirt, Flag } from "lucide-react";
 import type { TransferGuessContent } from "@/lib/schemas/puzzle-schemas";
 import { validateGuess } from "@/lib/validation";
 import { generateTransferGuessShareText } from "@/lib/shareText";
@@ -122,6 +122,7 @@ function triggerConfetti() {
 }
 
 const HINT_LABELS = ["Year", "Position", "Nationality"] as const;
+const HINT_ICONS = [Calendar, Shirt, Flag] as const;
 
 export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProps) {
   const onGameComplete = useGameComplete();
@@ -184,149 +185,210 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
     dispatch({ type: "REVEAL_HINT" });
   }, []);
 
+  const guessesLeft = 3 - state.incorrectGuesses.length;
+
   return (
     <div>
-      {/* Transfer card */}
-      <div className="bg-white/5 rounded-xl p-6 border border-white/10 mb-6">
-        <p className="text-center text-xs text-slate-500 uppercase tracking-wider mb-4">
-          Who made this transfer?
-        </p>
-        <div className="flex items-center justify-between gap-3">
-          {/* From club circle */}
-          <div className="flex flex-col items-center gap-1">
+      {/* Transfer Stage Hero Card */}
+      <div className="glass-card rounded-[20px] p-6 mb-6 relative overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.3)] transfer-stage-shine">
+        {/* Price tag */}
+        <div className="text-center mb-4 relative z-10">
+          <p className="text-[10px] uppercase tracking-[1.5px] text-card-yellow font-bold mb-1">
+            Transfer Fee
+          </p>
+          <p
+            className="font-bebas text-5xl text-floodlight leading-none"
+            style={{ textShadow: "0 0 20px rgba(250, 204, 21, 0.2)" }}
+          >
+            {content.fee}
+          </p>
+        </div>
+
+        {/* Clubs row with connector */}
+        <div className="flex items-center justify-between relative z-10">
+          {/* From club */}
+          <div className="flex flex-col items-center w-[35%]">
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-sm"
-              style={{ backgroundColor: content.from_club_color || "#374151" }}
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-2 border-2 font-bebas text-2xl"
+              style={{
+                backgroundColor: content.from_club_color
+                  ? `${content.from_club_color}15`
+                  : "#1E293B",
+                borderColor:
+                  content.from_club_color || "rgba(255,255,255,0.1)",
+                color:
+                  content.from_club_color || "rgba(248,250,252,0.7)",
+              }}
             >
               {content.from_club_abbreviation ||
                 content.from_club.slice(0, 3).toUpperCase()}
             </div>
-            <span className="text-xs text-slate-400 max-w-[80px] text-center truncate">
-              {content.from_club}
+            <span className="font-bebas text-lg text-center leading-tight">
+              {content.from_club.toUpperCase()}
             </span>
           </div>
 
-          {/* Arrow + fee */}
-          <div className="flex flex-col items-center gap-1">
-            <ArrowRight className="w-5 h-5 text-slate-500" />
-            <span className="font-bebas text-card-yellow text-lg">
-              {content.fee}
-            </span>
+          {/* Connector arrow */}
+          <div className="transfer-connector mx-2 mb-6">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-stadium-navy p-1 rounded-full border border-pitch-green">
+              <ArrowRight className="w-4 h-4 text-pitch-green" />
+            </div>
           </div>
 
-          {/* To club circle */}
-          <div className="flex flex-col items-center gap-1">
+          {/* To club */}
+          <div className="flex flex-col items-center w-[35%]">
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-sm"
-              style={{ backgroundColor: content.to_club_color || "#374151" }}
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-2 border-2 font-bebas text-2xl"
+              style={{
+                backgroundColor: content.to_club_color
+                  ? `${content.to_club_color}15`
+                  : "#1E293B",
+                borderColor:
+                  content.to_club_color || "rgba(255,255,255,0.1)",
+                color:
+                  content.to_club_color || "rgba(248,250,252,0.7)",
+              }}
             >
               {content.to_club_abbreviation ||
                 content.to_club.slice(0, 3).toUpperCase()}
             </div>
-            <span className="text-xs text-slate-400 max-w-[80px] text-center truncate">
-              {content.to_club}
+            <span className="font-bebas text-lg text-center leading-tight">
+              {content.to_club.toUpperCase()}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Hint slots - 3 slots */}
-      <div className="grid grid-cols-3 gap-2 mb-6">
+      {/* Game status / Lives */}
+      <div className="flex justify-between items-center mb-3 px-1">
+        <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+          {guessesLeft} Guesses Left
+        </span>
+        <div className="flex gap-1.5">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "w-3 h-3 rounded-full transition-all duration-300",
+                i < guessesLeft
+                  ? "bg-pitch-green shadow-[0_0_5px_#58CC02]"
+                  : "bg-transparent border border-white/20 scale-75"
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Clue grid */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {HINT_LABELS.map((label, index) => {
           const isRevealed = index < state.hintsRevealed;
           const hintValue = content.hints[index];
+          const HintIcon = HINT_ICONS[index];
 
           return (
-            <div
+            <button
               key={label}
+              onClick={() =>
+                !isRevealed &&
+                state.gameStatus === "playing" &&
+                handleRevealHint()
+              }
+              disabled={isRevealed || state.gameStatus !== "playing"}
               className={cn(
-                "rounded-lg border p-3 flex flex-col items-center gap-2 min-h-[72px] justify-center",
+                "rounded-xl border p-3 flex flex-col items-center justify-center min-h-[100px] relative overflow-hidden transition-all duration-300",
                 isRevealed
-                  ? "border-white/20 bg-white/5"
-                  : "border-white/10 bg-white/[0.02]"
+                  ? "bg-pitch-green/10 border-pitch-green cursor-default"
+                  : "bg-white/[0.03] border-white/10 cursor-pointer hover:bg-white/[0.06] active:scale-95"
               )}
             >
               {isRevealed ? (
                 <>
-                  <span className="text-xs text-slate-500 uppercase tracking-wider">
+                  <div className="animate-pop-in">
+                    {index === 2 ? (
+                      <FlagIcon code={hintValue} size={28} />
+                    ) : (
+                      <span className="font-bebas text-xl text-pitch-green">
+                        {hintValue}
+                      </span>
+                    )}
+                  </div>
+                  <span className="absolute bottom-2 text-[10px] uppercase text-white/50 font-semibold tracking-wide">
                     {label}
                   </span>
-                  {index === 2 ? (
-                    <div className="flex flex-col items-center gap-1">
-                      <FlagIcon code={hintValue} size={20} />
-                      <span className="text-xs text-slate-400">{hintValue}</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-floodlight font-semibold">
-                      {hintValue}
-                    </span>
-                  )}
                 </>
               ) : (
                 <>
-                  <Lock className="w-4 h-4 text-slate-600" />
-                  <span className="text-xs text-slate-600">{label}</span>
+                  <HintIcon className="w-5 h-5 text-slate-500 mb-1" />
+                  <span className="font-bebas text-sm text-slate-500 tracking-wide">
+                    {label.toUpperCase()}
+                  </span>
+                  <Lock className="w-3 h-3 text-slate-600 absolute top-1.5 right-1.5 opacity-50" />
                 </>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
-
-      {/* Reveal hint button */}
-      {state.hintsRevealed < 3 && state.gameStatus === "playing" && (
-        <button
-          onClick={handleRevealHint}
-          className="w-full text-center text-sm text-amber mt-2 mb-4 hover:text-card-yellow transition-colors"
-        >
-          Reveal hint ({3 - state.hintsRevealed} remaining)
-        </button>
-      )}
 
       {/* Incorrect guesses */}
       {state.incorrectGuesses.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {state.incorrectGuesses.map((guess, i) => (
-            <span key={i} className="text-sm text-red-card/70 line-through">
+            <span
+              key={i}
+              className="text-sm text-red-card/70 line-through bg-red-card/10 px-2 py-0.5 rounded"
+            >
               {guess}
             </span>
           ))}
         </div>
       )}
 
-      {/* Guess input (only when playing) */}
+      {/* Search input + submit */}
       {state.gameStatus === "playing" && (
-        <div className={cn("flex gap-2", state.isShaking && "animate-shake")}>
-          <Input
-            value={state.currentGuess}
-            onChange={(e) =>
-              dispatch({ type: "SET_GUESS", payload: e.target.value })
-            }
-            placeholder="Enter player name..."
-            onKeyDown={(e) => e.key === "Enter" && handleGuess()}
-            className="flex-1 bg-white/5 border-white/10 text-floodlight placeholder:text-muted-foreground"
-          />
-          <CTAButton
-            onClick={handleGuess}
-            disabled={!state.currentGuess.trim()}
-          >
-            GUESS
-          </CTAButton>
-        </div>
-      )}
+        <>
+          <div className={cn("flex gap-3", state.isShaking && "animate-shake")}>
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500" />
+              <Input
+                value={state.currentGuess}
+                onChange={(e) =>
+                  dispatch({ type: "SET_GUESS", payload: e.target.value })
+                }
+                placeholder="Search player..."
+                onKeyDown={(e) => e.key === "Enter" && handleGuess()}
+                className="pl-11 h-12 bg-secondary border-white/10 text-white text-base placeholder:text-white/30 rounded-xl focus:border-pitch-green transition-all"
+              />
+            </div>
+            <CTAButton
+              onClick={handleGuess}
+              disabled={!state.currentGuess.trim()}
+            >
+              SUBMIT
+            </CTAButton>
+          </div>
 
-      {/* Guesses remaining indicator */}
-      {state.gameStatus === "playing" && (
-        <p className="text-center text-muted-foreground text-xs mt-4">
-          {3 - state.incorrectGuesses.length} guesses remaining
-        </p>
+          {/* Hint link */}
+          {state.hintsRevealed < 3 && (
+            <button
+              onClick={handleRevealHint}
+              className="w-full flex items-center justify-center gap-1.5 text-sm text-card-yellow hover:text-white transition-colors mt-3"
+            >
+              <Lightbulb className="w-3.5 h-3.5" />
+              <span>
+                Need a bigger hint? ({3 - state.hintsRevealed} remaining)
+              </span>
+            </button>
+          )}
+        </>
       )}
 
       {/* Win display */}
       {state.gameStatus === "won" && (
         <div className="text-center py-4">
-          <p className="text-pitch-green font-bebas text-2xl tracking-wide">
-            GENIUS!
+          <p className="text-pitch-green font-bebas text-3xl tracking-wide">
+            GOAL!
           </p>
           <p className="text-floodlight text-lg font-semibold">
             {content.answer}

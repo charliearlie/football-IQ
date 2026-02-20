@@ -72,6 +72,15 @@ const config: Config = {
       backdropBlur: {
         glass: "10px",
       },
+      boxShadow: {
+        glow: "0 0 15px rgba(88, 204, 2, 0.3)",
+        "glow-strong": "0 0 20px rgba(88, 204, 2, 0.15)",
+        "card-depth": "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
+        "3d-tile": "0 6px 0 #0f172a",
+        "3d-tile-pressed": "0 0 0 #0f172a",
+        "3d-green": "0 6px 0 #3a8501",
+        "3d-green-pressed": "0 0 0 #3a8501",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -107,6 +116,27 @@ const config: Config = {
           "0%": { transform: "translateY(-100%) rotate(0deg)", opacity: "1" },
           "100%": { transform: "translateY(100vh) rotate(720deg)", opacity: "0" },
         },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(15px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        merge: {
+          "0%": { opacity: "0", transform: "translateY(20px) scale(0.9)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "pop-in": {
+          "0%": { transform: "scale(0.5)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "pulse-ring": {
+          "0%": { boxShadow: "0 0 0 0 rgba(88, 204, 2, 0.7)" },
+          "70%": { boxShadow: "0 0 0 10px rgba(88, 204, 2, 0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(88, 204, 2, 0)" },
+        },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -117,6 +147,11 @@ const config: Config = {
         "float": "float 3s ease-in-out infinite",
         "bounce-in": "bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         "confetti-fall": "confetti-fall 3s linear forwards",
+        "fade-in-up": "fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        merge: "merge 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "pop-in": "pop-in 0.3s ease-out forwards",
+        "pulse-ring": "pulse-ring 2s infinite",
+        shimmer: "shimmer 3s linear infinite",
       },
     },
   },

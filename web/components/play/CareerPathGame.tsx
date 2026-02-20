@@ -2,11 +2,10 @@
 
 import { useReducer, useCallback } from "react";
 import confetti from "canvas-confetti";
+import { Shield, PlaneTakeoff, Lock, Search, Lightbulb, Footprints, Circle } from "lucide-react";
 import type { CareerStep } from "@/types/careerPath";
 import { validateGuess } from "@/lib/validation";
 import { generateCareerPathShareText } from "@/lib/shareText";
-import { CareerStepCard } from "@/components/landing/CareerStepCard";
-import { LockedStepCard } from "@/components/landing/LockedStepCard";
 import { Input } from "@/components/ui/input";
 import { CTAButton } from "@/components/landing/CTAButton";
 import { cn } from "@/lib/utils";
@@ -171,55 +170,235 @@ export function CareerPathGame({
 
   return (
     <div>
-      {/* Career steps list */}
-      <div className="space-y-3 mb-6">
+      {/* Step counter */}
+      {state.gameStatus === "playing" && (
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <span className="text-[10px] bg-pitch-green text-stadium-navy font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+            Lvl {state.revealedCount}
+          </span>
+          <span className="font-bebas text-lg text-slate-400 tracking-widest">
+            Step {state.revealedCount} of {careerSteps.length}
+          </span>
+        </div>
+      )}
+
+      {/* Timeline container */}
+      <div className="relative pl-10 mb-6">
+        {/* The continuous vertical line */}
+        <div className="absolute left-0 top-0 bottom-0 w-10">
+          <div className="timeline-line" />
+        </div>
+
+        {/* Career nodes */}
         {careerSteps.map((step, index) => {
           const stepNumber = index + 1;
           const isRevealed = stepNumber <= state.revealedCount;
+          const isLatest =
+            stepNumber === state.revealedCount && state.gameStatus === "playing";
+          const isLoan = step.type === "loan";
 
-          return isRevealed ? (
-            <CareerStepCard
+          if (!isRevealed) {
+            return (
+              <div
+                key={index}
+                className="relative mb-3 opacity-0 animate-fade-in-up"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                {/* Timeline dot (dimmed) */}
+                <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadium-navy border-2 border-white/20 rounded-full z-10" />
+                {/* Locked card */}
+                <div className="glass-card p-3 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-stadium-navy/70 backdrop-blur-sm z-10" />
+                  <div className="flex items-center gap-3 opacity-40">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex-shrink-0 flex items-center justify-center border border-white/10">
+                      <Lock className="w-4 h-4 text-white/30" />
+                    </div>
+                    <span className="text-sm text-white/30 font-medium">???</span>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
               key={index}
-              step={step}
-              stepNumber={stepNumber}
-              isLatest={stepNumber === state.revealedCount}
-            />
-          ) : (
-            <LockedStepCard key={index} stepNumber={stepNumber} />
+              className={cn(
+                "relative mb-3 opacity-0 animate-fade-in-up",
+                isLatest && "mb-8"
+              )}
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              {/* Timeline dot */}
+              {isLatest ? (
+                <>
+                  <div className="absolute -left-[26px] top-[16px] w-4 h-4 rounded-full bg-pitch-green/30 animate-ping z-0" />
+                  <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-pitch-green border-2 border-white rounded-full z-20 shadow-[0_0_12px_#58CC02]" />
+                </>
+              ) : (
+                <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadium-navy border-2 border-pitch-green rounded-full z-10 shadow-[0_0_8px_#58CC02]" />
+              )}
+
+              {/* Card */}
+              <div
+                className={cn(
+                  "glass-card p-3 rounded-xl flex items-center gap-3 relative shadow-card-depth transition-colors",
+                  isLoan && "border-l-[3px] border-l-card-yellow",
+                  isLatest &&
+                    "shadow-glow border-pitch-green/40 bg-gradient-to-r from-pitch-green/10 to-transparent"
+                )}
+              >
+                {/* Logo placeholder */}
+                <div
+                  className={cn(
+                    "w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border shadow-inner",
+                    isLoan
+                      ? "bg-gradient-to-br from-card-yellow/10 to-transparent border-card-yellow/20"
+                      : isLatest
+                        ? "bg-pitch-green/20 border-pitch-green/30"
+                        : "bg-gradient-to-br from-white/10 to-white/5 border-white/10"
+                  )}
+                >
+                  {isLoan ? (
+                    <PlaneTakeoff className="w-4 h-4 text-card-yellow/80" />
+                  ) : (
+                    <Shield
+                      className={cn(
+                        "w-4 h-4",
+                        isLatest ? "text-pitch-green" : "text-white/40"
+                      )}
+                    />
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  {/* Top row: Name + Year or LOAN badge */}
+                  <div className="flex justify-between items-center mb-0.5">
+                    <h3 className="font-semibold text-sm text-white truncate pr-2">
+                      {step.text}
+                    </h3>
+                    {isLoan ? (
+                      <span className="bg-card-yellow text-stadium-navy text-[9px] font-bebas px-1.5 py-0.5 rounded leading-none tracking-wider">
+                        LOAN
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        {isLatest && (
+                          <span className="w-1.5 h-1.5 bg-pitch-green rounded-full animate-pulse" />
+                        )}
+                        <span
+                          className={cn(
+                            "font-bebas text-sm tracking-wide whitespace-nowrap",
+                            isLatest
+                              ? "text-pitch-green"
+                              : "text-pitch-green opacity-90"
+                          )}
+                        >
+                          {step.year}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom row: Stats (and year for loans) */}
+                  <div
+                    className={cn(
+                      "flex items-center text-[10px] text-slate-400",
+                      isLoan ? "justify-between" : "gap-3"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      {step.apps != null && (
+                        <div
+                          className={cn(
+                            "flex items-center gap-1.5 px-1.5 py-0.5 rounded",
+                            isLatest
+                              ? "bg-pitch-green/10 border border-pitch-green/20 text-white"
+                              : "bg-white/5"
+                          )}
+                        >
+                          <Footprints
+                            className={cn(
+                              "w-2.5 h-2.5",
+                              isLatest ? "text-pitch-green" : "text-white/40"
+                            )}
+                          />
+                          <span>{step.apps}</span>
+                        </div>
+                      )}
+                      {step.goals != null && (
+                        <div
+                          className={cn(
+                            "flex items-center gap-1.5 px-1.5 py-0.5 rounded",
+                            isLatest
+                              ? "bg-pitch-green/10 border border-pitch-green/20 text-white"
+                              : "bg-white/5"
+                          )}
+                        >
+                          <Circle
+                            className={cn(
+                              "w-2.5 h-2.5",
+                              isLatest ? "text-pitch-green" : "text-white/40"
+                            )}
+                          />
+                          <span>{step.goals}</span>
+                        </div>
+                      )}
+                    </div>
+                    {isLoan && (
+                      <span className="font-bebas text-white/50 tracking-wide">
+                        {step.year}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Guess input */}
       {state.gameStatus === "playing" && (
-        <>
+        <div className="glass-card p-3 border-t border-white/10">
+          <div className="flex justify-between items-center mb-2 px-1">
+            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold opacity-70">
+              Guess the player
+            </span>
+            {cluesRemaining > 0 && (
+              <button
+                onClick={handleRevealNext}
+                className="text-[10px] text-card-yellow cursor-pointer hover:text-white transition-colors flex items-center gap-1 bg-card-yellow/10 px-2 py-0.5 rounded-full border border-card-yellow/20"
+              >
+                <Lightbulb className="w-3 h-3" /> Hint ({cluesRemaining})
+              </button>
+            )}
+          </div>
+
           <div className={cn("flex gap-2", state.isShaking && "animate-shake")}>
-            <Input
-              value={state.currentGuess}
-              onChange={(e) =>
-                dispatch({ type: "SET_GUESS", payload: e.target.value })
-              }
-              placeholder="Enter player name..."
-              onKeyDown={(e) => e.key === "Enter" && handleGuess()}
-              className="flex-1 bg-white/5 border-white/10 text-floodlight placeholder:text-muted-foreground"
-            />
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-white/30" />
+              </div>
+              <Input
+                value={state.currentGuess}
+                onChange={(e) =>
+                  dispatch({ type: "SET_GUESS", payload: e.target.value })
+                }
+                placeholder="Type player name..."
+                onKeyDown={(e) => e.key === "Enter" && handleGuess()}
+                className="flex-1 pl-9 h-11 bg-stadium-navy/50 border-white/10 text-white text-sm placeholder:text-white/20 focus:border-pitch-green focus:bg-white/5 transition-all"
+              />
+            </div>
             <CTAButton
               onClick={handleGuess}
               disabled={!state.currentGuess.trim()}
             >
-              GUESS
+              SUBMIT
             </CTAButton>
           </div>
-
-          {cluesRemaining > 0 && (
-            <button
-              onClick={handleRevealNext}
-              className="w-full text-center text-sm text-amber mt-4 hover:text-card-yellow transition-colors"
-            >
-              Reveal next club ({cluesRemaining} remaining)
-            </button>
-          )}
-        </>
+        </div>
       )}
 
       {/* Game over display */}
@@ -243,12 +422,6 @@ export function CareerPathGame({
             <span className="text-pitch-green font-semibold">{answer}</span>
           </p>
         </div>
-      )}
-
-      {state.gameStatus === "playing" && (
-        <p className="text-center text-muted-foreground text-xs mt-6">
-          Think you know the answer? Type your guess above.
-        </p>
       )}
     </div>
   );
