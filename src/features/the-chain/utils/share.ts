@@ -36,7 +36,7 @@ export function generateShareText(
   // ""
   // "🐦 4 steps (-1)"
   // ""
-  // "footballiq.app"
+  // "https://football-iq.app"
 
   const lines = [
     `The Chain - ${dateStr}`,
@@ -45,7 +45,7 @@ export function generateShareText(
     "",
     emojiGrid,
     "",
-    "footballiq.app",
+    "https://football-iq.app",
   ];
 
   return lines.join("\n");

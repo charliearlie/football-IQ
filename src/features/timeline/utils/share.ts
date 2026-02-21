@@ -52,7 +52,7 @@ export function generateTimelineShareText(
     emojiRow,
     '',
     `${score.totalAttempts}/5 guesses - ${score.points} IQ`,
-    'footballiq.app',
+    'https://football-iq.app',
   ];
 
   return lines.join('\n');

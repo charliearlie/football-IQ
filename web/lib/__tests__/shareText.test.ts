@@ -71,7 +71,7 @@ describe("generateCareerPathShareText", () => {
   it("includes the correct share URL", () => {
     const result: CareerPathResult = { won: true, cluesUsed: 3, totalClues: 6 };
     const text = generateCareerPathShareText(result, puzzleDate);
-    expect(text).toContain("footballiq.app/play/career-path");
+    expect(text).toContain("https://football-iq.app/play/career-path");
   });
 
   it("lines are joined with newlines", () => {
@@ -141,7 +141,7 @@ describe("generateTransferGuessShareText", () => {
   it("includes the correct share URL", () => {
     const result: TransferGuessResult = { won: true, hintsRevealed: 1, guessCount: 1 };
     const text = generateTransferGuessShareText(result, puzzleDate);
-    expect(text).toContain("footballiq.app/play/transfer-guess");
+    expect(text).toContain("https://football-iq.app/play/transfer-guess");
   });
 
   it("lines are joined with newlines", () => {
@@ -277,7 +277,7 @@ describe("generateConnectionsShareText", () => {
 
   it("includes the correct share URL", () => {
     const text = generateConnectionsShareText([], allGroups, 0, puzzleDate);
-    expect(text).toContain("footballiq.app/play/connections");
+    expect(text).toContain("https://football-iq.app/play/connections");
   });
 });
 
@@ -405,7 +405,7 @@ describe("generateTopicalQuizShareText", () => {
   it("includes the correct share URL", () => {
     const answers: QuizAnswerResult[] = [{ isCorrect: true }];
     const text = generateTopicalQuizShareText(answers, puzzleDate);
-    expect(text).toContain("footballiq.app/play/topical-quiz");
+    expect(text).toContain("https://football-iq.app/play/topical-quiz");
   });
 
   it("lines are joined with newlines", () => {
@@ -519,7 +519,7 @@ describe("generateTimelineShareText", () => {
     const text = generateTimelineShareText(
       firstAttemptResults, 3, 3, puzzleDate
     );
-    expect(text).toContain("footballiq.app/play/timeline");
+    expect(text).toContain("https://football-iq.app/play/timeline");
   });
 
   it("lines are joined with newlines (6 lines total)", () => {

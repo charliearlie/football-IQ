@@ -45,7 +45,7 @@ export function generateResultShareText(data: ResultShareData): string {
     '',
     `${tier.name} | ${data.totalIQ.toLocaleString()} IQ`,
     '',
-    'Test your football knowledge at football-iq.app',
+    'Test your football knowledge at https://football-iq.app',
   ];
 
   return lines.join('\n');

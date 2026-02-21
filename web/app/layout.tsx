@@ -52,6 +52,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://football-iq.app",
   },
+  other: {
+    "apple-itunes-app": "app-id=6757344691",
+  },
 };
 
 export default function RootLayout({

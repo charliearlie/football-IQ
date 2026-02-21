@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
+import { StatCard } from "@/components/admin/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -257,34 +258,6 @@ export default function ContentIntegrityPage() {
 // Local Components
 // ============================================================================
 
-function StatCard({
-  label,
-  value,
-  variant,
-}: {
-  label: string;
-  value: string | number;
-  variant?: "success" | "warning" | "error";
-}) {
-  return (
-    <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p
-        className={
-          variant === "success"
-            ? "text-lg font-semibold text-pitch-green"
-            : variant === "warning"
-              ? "text-lg font-semibold text-card-yellow"
-              : variant === "error"
-                ? "text-lg font-semibold text-red-card"
-                : "text-lg font-semibold text-floodlight"
-        }
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function GameModeSection({
   mode,

@@ -35,6 +35,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/play/timeline`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/privacy`,
       lastModified: new Date("2025-01-01"),
       changeFrequency: "yearly",

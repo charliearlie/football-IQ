@@ -465,16 +465,18 @@ export function BaseResultModal({
             <TierProgressBar oldIQ={effectiveOldIQ} newIQ={effectiveNewIQ} />
           )}
 
-          {/* Context-sensitive premium upsell */}
-          {!effectiveIsPremium && percentile !== undefined && percentile >= 75 && (
+          {/* Context-sensitive premium upsell — shown to ALL free users */}
+          {!effectiveIsPremium && showRetention && (
             <Pressable
               onPress={() => router.push('/premium-modal')}
               style={styles.upsellContainer}
             >
               <Text style={styles.upsellText}>
-                You're in the top {100 - percentile}% today.{' '}
+                {percentile !== undefined && percentile >= 75
+                  ? `You're in the top ${100 - percentile}% today. `
+                  : 'Track your accuracy across all modes. '}
                 <Text style={styles.upsellLink}>
-                  Unlock your full skills breakdown with Pro.
+                  Unlock your full stats with Pro.
                 </Text>
               </Text>
             </Pressable>

@@ -60,7 +60,7 @@ export function generateShareText(
     "",
     emojiGrid,
     "",
-    "football-iq.app",
+    "https://football-iq.app",
   ];
 
   return lines.join("\n");

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
+  BarChart3,
   Bell,
   Calendar,
   Trophy,
@@ -20,6 +21,7 @@ import {
   GitMerge,
   UserCheck,
   ShieldCheck,
+  HeartPulse,
   History,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -48,6 +50,8 @@ const navigation: NavSection[] = [
   {
     label: "Admin",
     items: [
+      { name: "Users", href: "/admin/users", icon: BarChart3 },
+      { name: "Content Health", href: "/admin/content", icon: HeartPulse },
       { name: "Career Path", href: "/admin/career-path", icon: Route },
       { name: "Transfer Guess", href: "/admin/guess-the-transfer", icon: ArrowLeftRight },
       { name: "Starting XI", href: "/admin/starting-xi", icon: Users },

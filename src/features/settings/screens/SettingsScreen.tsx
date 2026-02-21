@@ -159,7 +159,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "2.5.0";
+  const appVersion = Constants.expoConfig?.version ?? "2.5.1";
 
   /**
    * Handle version text tap for secret dev menu
@@ -371,7 +371,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <LinearGradient
-            colors={['rgba(88, 204, 2, 0.2)', 'rgba(88, 204, 2, 0.05)']}
+            colors={["rgba(88, 204, 2, 0.2)", "rgba(88, 204, 2, 0.05)"]}
             style={styles.avatarContainer}
           >
             {/* Placeholder Avatar */}

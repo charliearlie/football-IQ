@@ -56,7 +56,7 @@ describe('generateTimelineShareText', () => {
   it('includes header and app URL', () => {
     const text = generateTimelineShareText([true], makeScore());
     expect(text).toContain('Football IQ - Timeline');
-    expect(text).toContain('footballiq.app');
+    expect(text).toContain('https://football-iq.app');
   });
 
   it('formats date with en-GB locale', () => {

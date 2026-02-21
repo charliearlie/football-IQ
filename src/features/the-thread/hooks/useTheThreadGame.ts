@@ -333,7 +333,7 @@ ${dateStr}
 ${emojiGrid}
 ${state.score.points}/${state.score.maxPoints} points
 
-Play at footballiq.app`;
+Play at https://football-iq.app`;
 
     try {
       if (Platform.OS === "web") {

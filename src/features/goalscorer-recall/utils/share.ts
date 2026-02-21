@@ -37,7 +37,7 @@ interface MatchInfo {
  * // ✅✅✅✅✅
  * // 5/5 scorers found
  * //
- * // https://footballiq.app
+ * // https://football-iq.app
  */
 export function generateGoalscorerShareText(
   score: GoalscorerRecallScore,

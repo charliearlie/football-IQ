@@ -80,6 +80,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: false,
+    },
     openGraph: {
       title: `${displayName}'s Scout Report`,
       description,

@@ -40,7 +40,7 @@ export interface CareerPathResult {
  * 19 Feb
  * Solved in 3/6 clues
  * 🔓🔓🔓🔒🔒🔒
- * footballiq.app/play/career-path
+ * https://football-iq.app/play/career-path
  */
 export function generateCareerPathShareText(
   result: CareerPathResult,
@@ -61,7 +61,7 @@ export function generateCareerPathShareText(
     dateStr,
     resultLine,
     emojiRow,
-    "footballiq.app/play/career-path",
+    "https://football-iq.app/play/career-path",
   ].join("\n");
 }
 
@@ -83,7 +83,7 @@ export interface TransferGuessResult {
  * 19 Feb
  * Guessed with 1 hint
  * 💰🔍⬜
- * footballiq.app/play/transfer-guess
+ * https://football-iq.app/play/transfer-guess
  */
 export function generateTransferGuessShareText(
   result: TransferGuessResult,
@@ -110,7 +110,7 @@ export function generateTransferGuessShareText(
     dateStr,
     resultLine,
     `${statusEmoji} ${hintEmoji}`,
-    "footballiq.app/play/transfer-guess",
+    "https://football-iq.app/play/transfer-guess",
   ].join("\n");
 }
 
@@ -171,7 +171,7 @@ export function generateConnectionsEmojiGrid(
  * 🟦🟦🟦🟦
  * 🟪🟪🟪🟪
  * 1 mistake
- * footballiq.app/play/connections
+ * https://football-iq.app/play/connections
  */
 export function generateConnectionsShareText(
   guesses: ConnectionsGuessResult[],
@@ -188,7 +188,7 @@ export function generateConnectionsShareText(
     dateStr,
     emojiGrid,
     mistakeText,
-    "footballiq.app/play/connections",
+    "https://football-iq.app/play/connections",
   ].join("\n");
 }
 
@@ -217,7 +217,7 @@ export function generateQuizEmojiGrid(answers: QuizAnswerResult[]): string {
  * 19 Feb
  * 4/5 correct
  * ✅✅❌✅✅
- * footballiq.app/play/topical-quiz
+ * https://football-iq.app/play/topical-quiz
  */
 export function generateTopicalQuizShareText(
   answers: QuizAnswerResult[],
@@ -233,7 +233,7 @@ export function generateTopicalQuizShareText(
     dateStr,
     `${correct}/${total} correct`,
     emojiGrid,
-    "footballiq.app/play/topical-quiz",
+    "https://football-iq.app/play/topical-quiz",
   ].join("\n");
 }
 
@@ -262,7 +262,7 @@ export function generateTimelineEmojiRow(
  * ⏱️ Thierry Henry
  * ✅❌✅✅❌✅
  * 3/5 guesses - 3 IQ
- * footballiq.app/play/timeline
+ * https://football-iq.app/play/timeline
  */
 export function generateTimelineShareText(
   firstAttemptResults: boolean[],
@@ -282,6 +282,6 @@ export function generateTimelineShareText(
     `⏱️ ${label}`,
     emojiRow,
     `${totalAttempts}/5 guesses - ${points} IQ`,
-    "footballiq.app/play/timeline",
+    "https://football-iq.app/play/timeline",
   ].join("\n");
 }

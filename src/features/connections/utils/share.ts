@@ -97,7 +97,7 @@ export function generateConnectionsShareText(
   // "🟪🟪🟪🟪"
   // ""
   // "1 mistake - 8 IQ"
-  // "footballiq.app"
+  // "https://football-iq.app"
 
   const mistakeText = mistakes === 1 ? '1 mistake' : `${mistakes} mistakes`;
 
@@ -108,7 +108,7 @@ export function generateConnectionsShareText(
     emojiGrid,
     '',
     `${mistakeText} - ${score.points} IQ`,
-    'footballiq.app',
+    'https://football-iq.app',
   ];
 
   return lines.join('\n');
