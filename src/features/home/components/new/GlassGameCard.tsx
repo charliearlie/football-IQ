@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Check, Video, Gift } from 'lucide-react-native';
+import { Play, Check, Video } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -96,12 +96,7 @@ export function GlassGameCard({
                 {/* Header Row */}
                 <View style={styles.lockedHeader}>
                     <View style={styles.iconBox}>
-                        {/* Use Gift icon for locked generic, or standard icon if available */}
-                        {gameMode === 'career_path_pro' ? (
-                            <ProBadge size={28} color={HOME_COLORS.cardYellow} />
-                        ) : (
-                             <Gift size={24} color={HOME_COLORS.cardYellow} />
-                        )}
+                        <GameModeIcon gameMode={gameMode} size={28} />
                     </View>
                     <View style={styles.content}>
                         <Text style={[styles.title, { color: HOME_COLORS.cardYellow }]}>{title}</Text>

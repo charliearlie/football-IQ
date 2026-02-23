@@ -100,8 +100,8 @@ export function PremiumUpsellContent({
 
   if (annualOffer) {
     // 1. Calculate Monthly Equivalent
-    // Use intro price if active, otherwise standard price
-    const currentPrice = annualOffer.offer.isOfferActive && annualOffer.package.product.introPrice
+    // Use intro price if active (and not a free trial), otherwise standard price
+    const currentPrice = annualOffer.offer.isOfferActive && !annualOffer.offer.isFreeTrial && annualOffer.package.product.introPrice
       ? annualOffer.package.product.introPrice.price
       : annualOffer.package.product.price;
     
@@ -113,7 +113,9 @@ export function PremiumUpsellContent({
     annualMonthlyText = `Just ${formattedMonthly} / month`;
 
     // 2. Badge Text
-    if (annualOffer.offer.isOfferActive) {
+    if (annualOffer.offer.isFreeTrial) {
+      annualBadgeText = 'FREE TRIAL';
+    } else if (annualOffer.offer.isOfferActive) {
       // Intro Offer Active -> "LIMITED OFFER • SAVE X%"
       // savingsText from detectOffer is e.g. "Save 44%"
       annualBadgeText = `LIMITED OFFER • ${annualOffer.offer.savingsText.toUpperCase()}`;
@@ -267,7 +269,7 @@ export function PremiumUpsellContent({
                  {annualOffer && (
                      <PlanCard
                         title="ANNUAL"
-                        price={annualOffer.offer.discountedPriceString} // e.g. $9.99
+                        price={annualOffer.offer.discountedPriceString}
                         period="/yr"
                         savingsText={annualMonthlyText}
                         originalPrice={annualOffer.offer.originalPriceString}
@@ -275,6 +277,7 @@ export function PremiumUpsellContent({
                         onSelect={() => setSelectedIdentifier(annualOffer.package.identifier)}
                         isBestValue
                         badgeText={annualBadgeText}
+                        trialText={annualOffer.offer.trialPeriodText}
                      />
                  )}
                  {monthlyOffer && (
@@ -285,6 +288,7 @@ export function PremiumUpsellContent({
                         subtitle="Flexible plan, cancel anytime"
                         isSelected={selectedIdentifier === monthlyOffer.package.identifier}
                         onSelect={() => setSelectedIdentifier(monthlyOffer.package.identifier)}
+                        trialText={monthlyOffer.offer.trialPeriodText}
                      />
                  )}
             </View>
@@ -352,6 +356,7 @@ function PlanCard({
     onSelect,
     isBestValue,
     badgeText,
+    trialText,
 }: {
     title: string,
     price: string,
@@ -363,6 +368,7 @@ function PlanCard({
     onSelect: () => void,
     isBestValue?: boolean,
     badgeText?: string,
+    trialText?: string | null,
 }) {
     return (
         <Pressable onPress={onSelect} style={[styles.planCard, isSelected && styles.planCardSelected]}>
@@ -371,13 +377,13 @@ function PlanCard({
                      <Text style={styles.bestValueText}>{badgeText}</Text>
                  </View>
              ) : null}
-             
+
              <View style={styles.planCardContent}>
                  {/* Radio Circle */}
                  <View style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}>
                      {isSelected && <Check size={10} color={colors.stadiumNavy} strokeWidth={4} />}
                  </View>
-                 
+
                  <View style={{ flex: 1 }}>
                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
                          <Text style={[styles.planTitle, isSelected ? { color: 'white' } : { color: colors.floodlightWhite }]}>{title}</Text>
@@ -386,18 +392,22 @@ function PlanCard({
                              <Text style={styles.planPeriod}>{period}</Text>
                          </View>
                      </View>
-                     
+
                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
                          {savingsText ? (
                              <Text style={styles.savingsText}>{savingsText}</Text>
                          ) : (
                              <Text style={styles.planSubtitle}>{subtitle}</Text>
                          )}
-                         
+
                          {originalPrice && originalPrice !== price && (
                              <Text style={styles.originalPrice}>{originalPrice}</Text>
                          )}
                      </View>
+
+                     {trialText && (
+                         <Text style={styles.trialText}>{trialText}</Text>
+                     )}
                  </View>
              </View>
         </Pressable>
@@ -615,6 +625,13 @@ const styles = StyleSheet.create({
       fontSize: 10,
       color: 'rgba(248, 250, 252, 0.5)',
       textDecorationLine: 'line-through',
+  },
+  trialText: {
+      fontFamily: fonts.body,
+      fontWeight: '600',
+      fontSize: 11,
+      color: colors.pitchGreen,
+      marginTop: 4,
   },
   footer: {
       backgroundColor: colors.stadiumNavy,

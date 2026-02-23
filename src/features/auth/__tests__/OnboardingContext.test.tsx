@@ -56,7 +56,7 @@ describe('OnboardingContext (State Machine)', () => {
       expect(result.current.isOnboardingActive).toBe(false);
     });
 
-    it('waits for Auth initialization', async () => {
+    it('waits for Auth initialization then completes (name not required)', async () => {
       // Mock auth still loading
       (useAuth as jest.Mock).mockReturnValue({
         isInitialized: false,
@@ -66,26 +66,26 @@ describe('OnboardingContext (State Machine)', () => {
       const { result, rerender } = renderHook(() => useOnboarding(), { wrapper });
       expect(result.current.isLoading).toBe(true);
 
-      // Now Auth initializes
+      // Now Auth initializes — profile exists but no name
       (useAuth as jest.Mock).mockReturnValue({
         isInitialized: true,
         isLoading: false,
         user: { id: 'user123' },
-        profile: { display_name: null }, // No name yet
+        profile: { display_name: null },
         updateDisplayName: jest.fn(),
       });
       rerender({});
 
-      // Should check profile and eventually show modal
+      // Should complete immediately (name no longer required)
       await waitFor(() => {
-        expect(result.current.isOnboardingActive).toBe(true);
+        expect(result.current.isOnboardingActive).toBe(false);
+        expect(result.current.isLoading).toBe(false);
       });
-      expect(result.current.isLoading).toBe(false);
     });
   });
 
   describe('State Transitions & Latching', () => {
-    it('latches to SHOW_MODAL if no display name and no storage', async () => {
+    it('completes immediately when profile exists without display name', async () => {
       (useAuth as jest.Mock).mockReturnValue({
         isInitialized: true,
         isLoading: false,
@@ -93,10 +93,12 @@ describe('OnboardingContext (State Machine)', () => {
         profile: { display_name: null },
       });
 
-      renderHook(() => useOnboarding(), { wrapper });
+      const { result } = renderHook(() => useOnboarding(), { wrapper });
 
+      // Name is no longer required — should complete without showing modal
       await waitFor(() => {
-        expect(mockFirstRunModalProps.visible).toBe(true);
+        expect(result.current.isOnboardingActive).toBe(false);
+        expect(result.current.isLoading).toBe(false);
       });
     });
 
@@ -119,8 +121,8 @@ describe('OnboardingContext (State Machine)', () => {
     });
   });
 
-  describe('Submission Flow', () => {
-    it('completes onboarding on successful submission', async () => {
+  describe('Submission Flow (Legacy — modal no longer shown)', () => {
+    it('skips modal entirely when profile exists without name', async () => {
       const mockUpdateDisplayName = jest.fn().mockResolvedValue({ error: null });
       (useAuth as jest.Mock).mockReturnValue({
         isInitialized: true,
@@ -132,59 +134,31 @@ describe('OnboardingContext (State Machine)', () => {
 
       const { result } = renderHook(() => useOnboarding(), { wrapper });
 
-      // Wait for modal to show
-      await waitFor(() => {
-        expect(mockFirstRunModalProps.visible).toBe(true);
-      });
-
-      // Simulate submitting the form via the captured prop
-      expect(mockFirstRunModalProps.onSubmit).toBeDefined();
-      
-      await act(async () => {
-        await mockFirstRunModalProps.onSubmit('New User Name');
-      });
-
-      // Verification
-      expect(mockUpdateDisplayName).toHaveBeenCalledWith('New User Name');
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@app_onboarding_completed', 'true');
-      
+      // Should complete immediately — modal never shows
       await waitFor(() => {
         expect(result.current.isOnboardingActive).toBe(false);
+        expect(result.current.isLoading).toBe(false);
       });
+
+      // Storage flags should be set
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@app_onboarding_completed', 'true');
     });
 
-    it('handles submission error gracefully', async () => {
-      const mockUpdateDisplayName = jest.fn().mockResolvedValue({ 
-        error: new Error('Network fail') 
-      });
-      
+    it('completes when profile has a display name', async () => {
       (useAuth as jest.Mock).mockReturnValue({
         isInitialized: true,
         isLoading: false,
         user: { id: 'user123' },
-        profile: { display_name: null },
-        updateDisplayName: mockUpdateDisplayName,
+        profile: { display_name: 'Existing User' },
+        updateDisplayName: jest.fn(),
       });
 
       const { result } = renderHook(() => useOnboarding(), { wrapper });
 
-      // Wait for modal
       await waitFor(() => {
-        expect(mockFirstRunModalProps.visible).toBe(true);
+        expect(result.current.isOnboardingActive).toBe(false);
+        expect(result.current.isLoading).toBe(false);
       });
-
-      // Submit with error
-      await act(async () => {
-        try {
-          await mockFirstRunModalProps.onSubmit('Fail Name');
-        } catch (e) {
-          // Expected error
-        }
-      });
-
-      // Should still be active
-      expect(result.current.isOnboardingActive).toBe(true);
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
   });
 });

@@ -47,6 +47,8 @@ export function detectOffer(
 function createNoOfferInfo(product: PurchasesStoreProduct): OfferInfo {
   return {
     isOfferActive: false,
+    isFreeTrial: false,
+    trialPeriodText: null,
     discountedPriceString: product.priceString,
     originalPriceString: product.priceString,
     savingsText: '',
@@ -71,10 +73,33 @@ function createIntroOfferInfo(
   product: PurchasesStoreProduct,
   introPrice: IntroPrice
 ): OfferInfo {
+  const isFreeTrial = introPrice.price === 0;
+
+  if (isFreeTrial) {
+    const trialPeriod = formatOfferPeriod(
+      introPrice.periodUnit,
+      introPrice.periodNumberOfUnits,
+      introPrice.cycles
+    );
+    return {
+      isOfferActive: true,
+      isFreeTrial: true,
+      trialPeriodText: trialPeriod ? `${trialPeriod} free trial` : 'Free trial',
+      discountedPriceString: product.priceString,
+      originalPriceString: product.priceString,
+      savingsText: '',
+      savingsPercent: 0,
+      offerPeriod: trialPeriod,
+      badgeText: 'FREE TRIAL',
+    };
+  }
+
   const savingsPercent = calculateSavingsPercent(product.price, introPrice.price);
 
   return {
     isOfferActive: true,
+    isFreeTrial: false,
+    trialPeriodText: null,
     discountedPriceString: introPrice.priceString,
     originalPriceString: product.priceString,
     savingsText: formatSavingsText(savingsPercent),
@@ -107,6 +132,8 @@ function createDiscountOfferInfo(
 
   return {
     isOfferActive: true,
+    isFreeTrial: false,
+    trialPeriodText: null,
     discountedPriceString: discount.priceString,
     originalPriceString: product.priceString,
     savingsText: formatSavingsText(savingsPercent),

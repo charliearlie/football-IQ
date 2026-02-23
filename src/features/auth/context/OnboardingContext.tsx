@@ -112,19 +112,18 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
          return;
       }
 
-      // 5. Final Decision
-      // If we are here, we have Auth + (User -> Profile).
-      const hasDisplayName = !!profile?.display_name;
-
-      if (hasDisplayName) {
-        // Has name but maybe missed storage update -> Latch COMPLETED & Repair Storage
-        console.log('[Onboarding] Profile has name -> COMPLETED');
+      // 5. Final Decision — name is no longer required before first play
+      // Profile exists (even with null display_name) → skip onboarding
+      if (profile) {
+        console.log('[Onboarding] Profile exists -> COMPLETED (name optional)');
         AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true').catch(() => {});
+        setOnboardingCompleted().catch(() => {});
         setCurrentState('COMPLETED');
       } else {
-        // No name, no storage record -> Latch SHOW_MODAL
-        console.log('[Onboarding] No name, no storage -> SHOW_MODAL');
-        setCurrentState('SHOW_MODAL');
+        // No profile yet (shouldn't normally reach here due to guard at line 106)
+        // but just in case — mark completed to avoid blocking the user
+        console.log('[Onboarding] No profile -> COMPLETED (skip modal)');
+        setCurrentState('COMPLETED');
       }
     };
 

@@ -156,18 +156,27 @@ describe('detectOffer', () => {
   });
 
   describe('free trial offers', () => {
-    it('shows FREE for 100% discount', () => {
+    it('detects free trial and shows real price instead of $0', () => {
       const product = createMockProduct({
         price: 5.99,
+        priceString: '$5.99',
         introPrice: createMockIntroPrice({
           price: 0,
           priceString: '$0.00',
+          periodUnit: 'DAY',
+          periodNumberOfUnits: 3,
+          cycles: 1,
         }),
       });
       const result = detectOffer(product);
 
-      expect(result.savingsPercent).toBe(100);
-      expect(result.savingsText).toBe('FREE');
+      expect(result.isFreeTrial).toBe(true);
+      expect(result.isOfferActive).toBe(true);
+      expect(result.discountedPriceString).toBe('$5.99');
+      expect(result.trialPeriodText).toBe('3 days free trial');
+      expect(result.savingsPercent).toBe(0);
+      expect(result.savingsText).toBe('');
+      expect(result.badgeText).toBe('FREE TRIAL');
     });
   });
 
