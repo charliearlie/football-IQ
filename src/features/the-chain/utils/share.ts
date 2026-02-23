@@ -39,7 +39,8 @@ export function generateShareText(
   // "https://football-iq.app"
 
   const lines = [
-    `The Chain - ${dateStr}`,
+    `Link these players? I did it in ${score.stepsTaken} steps (par ${par})`,
+    dateStr,
     "",
     `${emoji} ${score.label}! ${score.stepsTaken} steps (Par ${par})`,
     "",

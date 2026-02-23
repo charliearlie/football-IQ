@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from "react";
+import { useAds } from "@/features/ads/context/AdContext";
 import {
   View,
   Text,
@@ -20,8 +21,7 @@ import {
 } from "@/features/home";
 import {
   HomeHeader,
-  DailyProgressRing,
-  StatsGrid,
+  DailyGoalCard,
   EventBanner,
   HomeGameList,
   SectionHeader,
@@ -80,8 +80,7 @@ const DEV_BYPASS_PREMIUM = __DEV__ && false; // Set to false to test real premiu
  *
  * Main landing screen showing:
  * - Brand Header with Pro Badge and Streak
- * - Daily Progress Ring (Hero)
- * - Stats Grid (Games Completed + IQ Level)
+ * - Daily Goal Card (Ring + Games Completed + IQ Level)
  * - Special Event Banner (Dynamic)
  * - Vertical Game List
  */
@@ -102,9 +101,11 @@ export default function HomeScreen() {
     refresh: refreshPuzzles,
   } = useDailyPuzzles();
 
-  // In dev mode with bypass enabled, treat user as premium
   const isPremium = DEV_BYPASS_PREMIUM || (profile?.is_premium ?? false);
   const isLoading = statsLoading || puzzlesLoading;
+
+  // Ad infrastructure
+  useAds();
 
   // New Hooks
   const progress = useDailyProgress(cards);
@@ -263,17 +264,11 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* 2. Daily Progress Hero */}
-        <View style={styles.heroContainer}>
-          <DailyProgressRing
-            percent={progress.percent}
-            countString={progress.countString}
-            isComplete={progress.isComplete}
-          />
-        </View>
-
-        {/* 3. Stats Dashboard */}
-        <StatsGrid
+        {/* 2. Daily Goal Card (Ring + Stats) */}
+        <DailyGoalCard
+          percent={progress.percent}
+          countString={progress.countString}
+          isComplete={progress.isComplete}
           gamesCompleted={stats.totalGamesPlayed}
           totalGames={stats.totalPuzzlesAvailable}
           iqTitle={iqTier}
@@ -401,10 +396,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
-  },
-  heroContainer: {
-    alignItems: "center",
-    marginTop: 20,
   },
   offlineBanner: {
     flexDirection: "row",

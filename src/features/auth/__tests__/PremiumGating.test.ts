@@ -3,7 +3,7 @@
  *
  * Tests for premium access enforcement at the database/RLS level.
  * Verifies that:
- * - Free users can only access puzzles within 7-day window
+ * - Free users can only access puzzles within 3-day window
  * - Premium users can access all puzzles regardless of date
  * - RLS correctly blocks old puzzles for free users
  */
@@ -23,15 +23,15 @@ describe('Premium Gating - RLS Simulation', () => {
   describe('Free user puzzle access', () => {
     const isPremium = false;
 
-    it('allows access to puzzles within 7-day window', () => {
-      const recentDate = getDateDaysAgo(3);
+    it('allows access to puzzles within 3-day window', () => {
+      const recentDate = getDateDaysAgo(1);
 
       // Free user should NOT be locked for recent puzzle
       expect(isPuzzleLocked(recentDate, isPremium)).toBe(false);
       expect(isWithinFreeWindow(recentDate)).toBe(true);
     });
 
-    it('blocks access to puzzles older than 7 days', () => {
+    it('blocks access to puzzles older than 3 days', () => {
       const oldDate = getDateDaysAgo(10);
 
       // Free user should be locked for old puzzle (simulates RLS rejection)
@@ -52,15 +52,15 @@ describe('Premium Gating - RLS Simulation', () => {
       expect(simulatedRLSResult).toBeNull();
     });
 
-    it('allows access to puzzle exactly 6 days old (boundary)', () => {
-      const sixDaysAgo = getDateDaysAgo(6);
+    it('allows access to puzzle exactly 2 days old (boundary)', () => {
+      const sixDaysAgo = getDateDaysAgo(2);
 
       expect(isPuzzleLocked(sixDaysAgo, isPremium)).toBe(false);
       expect(isWithinFreeWindow(sixDaysAgo)).toBe(true);
     });
 
-    it('blocks access to puzzle 7 days old (outside window)', () => {
-      const sevenDaysAgo = getDateDaysAgo(7);
+    it('blocks access to puzzle 3 days old (outside window)', () => {
+      const sevenDaysAgo = getDateDaysAgo(3);
 
       expect(isPuzzleLocked(sevenDaysAgo, isPremium)).toBe(true);
       expect(isWithinFreeWindow(sevenDaysAgo)).toBe(false);

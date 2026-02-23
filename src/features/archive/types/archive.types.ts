@@ -3,7 +3,7 @@
  * Type definitions for the Archive feature.
  *
  * The Archive screen displays historical puzzles with premium gating.
- * Free users see 7 days of playable puzzles + locked placeholders for older content.
+ * Free users see 3 days of playable puzzles + locked placeholders for older content.
  */
 
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -22,7 +22,7 @@ export interface ArchivePuzzle {
   puzzleDate: string;
   /** Difficulty level if available */
   difficulty: string | null;
-  /** Whether the puzzle is locked (premium only, >7 days old for free users) */
+  /** Whether the puzzle is locked (premium only, >3 days old for free users) */
   isLocked: boolean;
   /** Whether this puzzle has been permanently unlocked via ad */
   isAdUnlocked?: boolean;

@@ -48,7 +48,7 @@ export function generateGoalscorerShareText(
   const lines: string[] = [];
 
   // Header
-  lines.push("Football IQ ⚽ Goalscorer Recall");
+  lines.push(`Remember who scored? I got ${score.scorersFound}/${score.totalScorers}`);
 
   // Match line with optional date
   const matchLine = `${matchInfo.homeTeam} ${matchInfo.homeScore}-${matchInfo.awayScore} ${matchInfo.awayTeam}`;

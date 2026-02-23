@@ -42,15 +42,19 @@ export function generateScoreDisplay(
   options: ScoreDisplayOptions = {}
 ): string {
   const {
-    title = 'Football IQ - Career Path',
+    title,
     includeDate = true,
     puzzleDate,
   } = options;
 
+  const defaultTitle = score.won
+    ? `Guess this career? I got it in ${score.stepsRevealed} clues`
+    : `This career stumped me after ${score.stepsRevealed} clues`;
+
   const lines: string[] = [];
 
   // Header
-  lines.push(title);
+  lines.push(title ?? defaultTitle);
 
   // Date (if provided and enabled)
   if (includeDate && puzzleDate) {
@@ -66,6 +70,8 @@ export function generateScoreDisplay(
   // Text description
   const description = generateScoreDescription(score, totalSteps);
   lines.push(description);
+
+  lines.push('https://football-iq.app');
 
   return lines.join('\n');
 }

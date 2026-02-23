@@ -6,7 +6,7 @@ import { isPuzzleLocked } from '@/features/archive/utils/dateGrouping';
 import { UnlockedPuzzle } from '@/types/database';
 
 describe('Completed Puzzle Permanent Unlock', () => {
-  it('unlocks completed puzzles for non-premium users outside 7-day window', () => {
+  it('unlocks completed puzzles for non-premium users outside 3-day window', () => {
     const oldDate = '2024-12-01'; // 40+ days ago
     const hasCompletedAttempt = true;
 
@@ -15,7 +15,7 @@ describe('Completed Puzzle Permanent Unlock', () => {
     );
   });
 
-  it('keeps incomplete puzzles locked for non-premium outside 7-day window', () => {
+  it('keeps incomplete puzzles locked for non-premium outside 3-day window', () => {
     const oldDate = '2024-12-01';
     const hasCompletedAttempt = false;
 

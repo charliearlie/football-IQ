@@ -1,4 +1,5 @@
 export * from './DailyProgressRing'
+export * from './DailyGoalCard'
 export * from './HomeHeader'
 export * from './StatsGrid'
 export * from './EventBanner'

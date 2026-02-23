@@ -5,7 +5,7 @@
  * Selects a random puzzle the user hasn't completed and navigates to it.
  *
  * Gating rules:
- * - Non-premium users: 7-day window + ad-unlocked puzzles, excludes career_path_pro/top_tens
+ * - Non-premium users: 3-day window + ad-unlocked puzzles, excludes career_path_pro/top_tens
  * - Premium users: full backlog, all game modes
  */
 
@@ -30,15 +30,15 @@ interface UseRandomPlayResult {
 }
 
 /**
- * Calculate the start date of the 7-day free window.
- * Free window = today + 6 previous days (7 total)
+ * Calculate the start date of the 3-day free window.
+ * Free window = today + 2 previous days (3 total)
  *
  * Pattern from: src/features/archive/utils/dateGrouping.ts
  */
 function getFreeWindowStartDate(): string {
   const todayStr = getAuthorizedDateUnsafe();
   const today = new Date(todayStr + 'T12:00:00');
-  today.setDate(today.getDate() - 6);
+  today.setDate(today.getDate() - 2);
   return today.toISOString().split('T')[0];
 }
 

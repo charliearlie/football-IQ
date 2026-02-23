@@ -35,7 +35,7 @@ export interface LightSyncResult {
 
 /**
  * Calculate the date range for light sync based on access tier.
- * Free/Anonymous users check last 7 days (matches RLS window).
+ * Free/Anonymous users check last 3 days (matches RLS window).
  * Premium users check last 30 days of potentially cached puzzles.
  */
 function getDateRange(isPremium: boolean): { startDate: string; endDate: string } {
@@ -48,8 +48,8 @@ function getDateRange(isPremium: boolean): { startDate: string; endDate: string 
     // Premium: check last 30 days of cached puzzles
     start.setDate(start.getDate() - 30);
   } else {
-    // Free/Anonymous: check last 7 days (matches RLS window)
-    start.setDate(start.getDate() - 7);
+    // Free/Anonymous: check last 3 days (matches RLS window)
+    start.setDate(start.getDate() - 3);
   }
 
   // Format as YYYY-MM-DD

@@ -4,7 +4,7 @@
  * Handles syncing puzzles from Supabase (cloud) to SQLite (local).
  * RLS on the Supabase side automatically filters puzzles based on user tier:
  * - Anonymous: Today's puzzle only
- * - Free: Last 7 days
+ * - Free: Last 3 days
  * - Premium: Full archive
  */
 

@@ -66,7 +66,7 @@ _metadata (key, value, updated_at)  -- Version tracking (Elite Index version)
 ### Migrations
 
 **Supabase:** 001-009 + 012 + 019-022 + 033 (base tables, RLS, triggers, catalog RPC, leaderboard RPCs, score distribution, safe upsert, player graph, player sync, achievements + stats_cache, special events)
-**SQLite:** v1-v13 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding, stats_cache column, special event columns)
+**SQLite:** v1-v14 (base schema, catalog, unlocks, player database, puzzle updated_at, player_search_cache, elite index seeding, stats_cache column, special event columns, is_premium columns)
 
 ## Authentication
 
@@ -241,7 +241,7 @@ External ID linkage between Wikidata QIDs and [API-Football v3](https://v3.footb
 | Tier | User Type            | Puzzle Access |
 | ---- | -------------------- | ------------- |
 | 1    | Anonymous            | Today only    |
-| 2    | Free (authenticated) | Last 7 days   |
+| 2    | Free (authenticated) | Last 3 days   |
 | 3    | Premium              | Full archive  |
 
 ```typescript
@@ -255,7 +255,7 @@ function isPuzzleLocked(
 ): boolean {
   if (hasCompletedAttempt) return false; // Completed = permanent unlock
   if (isPremium) return false;
-  if (isWithinFreeWindow(puzzleDate)) return false; // 7-day window
+  if (isWithinFreeWindow(puzzleDate)) return false; // 3-day window
   if (hasValidAdUnlock(puzzleId, adUnlocks)) return false; // Ad unlock
   return true;
 }
@@ -443,7 +443,7 @@ Historical puzzle browser with premium gating and "Velvet Rope" locked card desi
 - **Catalog sync**: `get_puzzle_catalog()` RPC bypasses RLS to show locked puzzle metadata
 - **Completed puzzles**: Always unlocked for viewing results
 - **Random Play**: "Random Unplayed Game" button in filter bar selects random incomplete puzzle
-  - Non-premium: 7-day window + ad-unlocked puzzles, excludes `career_path_pro`/`top_tens`
+  - Non-premium: 3-day window + ad-unlocked puzzles, excludes `career_path_pro`/`top_tens`
   - Premium: full backlog, all game modes
   - Shows "All Caught Up!" alert when no unplayed puzzles remain
 - **Files**: `src/features/archive/`, `app/(tabs)/archive.tsx`

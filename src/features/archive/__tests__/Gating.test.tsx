@@ -3,9 +3,9 @@
  *
  * Tests for premium gating UI in the Archive screen.
  * Verifies that:
- * - Puzzles outside 7-day window show Lock icon for non-premium users
- * - Puzzles outside 7-day window show Play button for premium users
- * - Puzzles within 7-day window (today + 6 previous days) always show Play/Resume/Done (no lock)
+ * - Puzzles outside 3-day window show Lock icon for non-premium users
+ * - Puzzles outside 3-day window show Play button for premium users
+ * - Puzzles within 3-day window (today + 2 previous days) always show Play/Resume/Done (no lock)
  * - Tapping locked card triggers onLockedPress callback
  */
 
@@ -96,24 +96,24 @@ describe('Archive Gating', () => {
       expect(isPuzzleLocked(oldDate, true)).toBe(false);
     });
 
-    it('returns false for puzzles within 7 days for non-premium users', () => {
-      const recentDate = getDateDaysAgo(3);
+    it('returns false for puzzles within 3 days for non-premium users', () => {
+      const recentDate = getDateDaysAgo(1);
       expect(isPuzzleLocked(recentDate, false)).toBe(false);
     });
 
-    it('returns true for puzzles older than 7 days for non-premium users', () => {
+    it('returns true for puzzles older than 3 days for non-premium users', () => {
       const oldDate = getDateDaysAgo(10);
       expect(isPuzzleLocked(oldDate, false)).toBe(true);
     });
 
-    it('returns false for puzzles exactly 6 days old for non-premium users (boundary)', () => {
-      const sixDaysAgo = getDateDaysAgo(6);
-      expect(isPuzzleLocked(sixDaysAgo, false)).toBe(false);
+    it('returns false for puzzles exactly 2 days old for non-premium users (boundary)', () => {
+      const twoDaysAgo = getDateDaysAgo(2);
+      expect(isPuzzleLocked(twoDaysAgo, false)).toBe(false);
     });
 
-    it('returns true for puzzles exactly 7 days old for non-premium users (outside window)', () => {
-      const sevenDaysAgo = getDateDaysAgo(7);
-      expect(isPuzzleLocked(sevenDaysAgo, false)).toBe(true);
+    it('returns true for puzzles exactly 3 days old for non-premium users (outside window)', () => {
+      const threeDaysAgo = getDateDaysAgo(3);
+      expect(isPuzzleLocked(threeDaysAgo, false)).toBe(true);
     });
   });
 
@@ -123,14 +123,14 @@ describe('Archive Gating', () => {
       expect(isWithinFreeWindow(today)).toBe(true);
     });
 
-    it('returns true for 6 days ago (boundary)', () => {
-      const sixDaysAgo = getDateDaysAgo(6);
-      expect(isWithinFreeWindow(sixDaysAgo)).toBe(true);
+    it('returns true for 2 days ago (boundary)', () => {
+      const twoDaysAgo = getDateDaysAgo(2);
+      expect(isWithinFreeWindow(twoDaysAgo)).toBe(true);
     });
 
-    it('returns false for 7 days ago (outside window)', () => {
-      const sevenDaysAgo = getDateDaysAgo(7);
-      expect(isWithinFreeWindow(sevenDaysAgo)).toBe(false);
+    it('returns false for 3 days ago (outside window)', () => {
+      const threeDaysAgo = getDateDaysAgo(3);
+      expect(isWithinFreeWindow(threeDaysAgo)).toBe(false);
     });
   });
 
@@ -312,7 +312,7 @@ describe('Archive Gating', () => {
   });
 
   describe('Gating scenarios', () => {
-    it('non-premium user: puzzle >7 days old should be locked', () => {
+    it('non-premium user: puzzle >3 days old should be locked', () => {
       const oldDate = getDateDaysAgo(10);
       const isPremium = false;
 
@@ -338,7 +338,7 @@ describe('Archive Gating', () => {
       expect(getByText('Unlock')).toBeTruthy();
     });
 
-    it('premium user: puzzle >7 days old should NOT be locked', () => {
+    it('premium user: puzzle >3 days old should NOT be locked', () => {
       const oldDate = getDateDaysAgo(10);
       const isPremium = true;
 
@@ -363,8 +363,8 @@ describe('Archive Gating', () => {
       expect(getByText('Play')).toBeTruthy();
     });
 
-    it('non-premium user: puzzle ≤7 days old should NOT be locked', () => {
-      const recentDate = getDateDaysAgo(5);
+    it('non-premium user: puzzle ≤3 days old should NOT be locked', () => {
+      const recentDate = getDateDaysAgo(1);
       const isPremium = false;
 
       const isLocked = isPuzzleLocked(recentDate, isPremium);

@@ -36,14 +36,16 @@ export function generateQuizScoreDisplay(
   options: QuizScoreDisplayOptions = {}
 ): string {
   const {
-    title = 'Football IQ - Quiz',
+    title,
     includeDate = true,
     puzzleDate,
   } = options;
 
+  const defaultTitle = `${score.correctCount}/${score.totalQuestions} on today's football quiz. Beat that.`;
+
   const lines: string[] = [];
 
-  lines.push(title);
+  lines.push(title ?? defaultTitle);
 
   if (includeDate && puzzleDate) {
     lines.push(formatDisplayDate(puzzleDate));
@@ -52,6 +54,8 @@ export function generateQuizScoreDisplay(
   lines.push('');
   lines.push(`Score: ${score.correctCount}/${score.totalQuestions} Correct`);
   lines.push(generateQuizEmojiGrid(answers));
+
+  lines.push('https://football-iq.app');
 
   return lines.join('\n');
 }

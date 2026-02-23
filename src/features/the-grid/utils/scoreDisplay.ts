@@ -82,7 +82,7 @@ export function generateTheGridScoreDisplay(
 
   // Title
   if (includeTitle) {
-    lines.push('Football IQ - The Grid (beta)');
+    lines.push(`Fill the grid? I got ${score.cellsFilled}/9`);
     if (date) {
       lines.push(date);
     }
@@ -99,6 +99,8 @@ export function generateTheGridScoreDisplay(
 
   // Score
   lines.push(`Score: ${score.cellsFilled}/9`);
+
+  lines.push('https://football-iq.app');
 
   return lines.join('\n');
 }

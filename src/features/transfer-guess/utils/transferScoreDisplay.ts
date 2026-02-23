@@ -40,15 +40,20 @@ export function generateTransferScoreDisplay(
   options: ScoreDisplayOptions = {}
 ): string {
   const {
-    title = 'Football IQ - Guess the Transfer',
+    title,
     includeDate = true,
     puzzleDate,
   } = options;
 
+  const h = score.hintsRevealed;
+  const defaultTitle = score.won
+    ? `I named this transfer with just ${h} hint${h === 1 ? '' : 's'}`
+    : 'This transfer stumped me';
+
   const lines: string[] = [];
 
   // Header
-  lines.push(title);
+  lines.push(title ?? defaultTitle);
 
   // Date (if provided and enabled)
   if (includeDate && puzzleDate) {
@@ -64,6 +69,8 @@ export function generateTransferScoreDisplay(
   // Text description
   const description = generateTransferScoreDescription(score);
   lines.push(description);
+
+  lines.push('https://football-iq.app');
 
   return lines.join('\n');
 }

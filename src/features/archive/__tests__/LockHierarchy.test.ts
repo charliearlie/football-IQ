@@ -8,7 +8,7 @@
  * Lock Priority Hierarchy (MUST be checked in this order):
  * 1. Completed puzzles → Always unlocked (HIGHEST PRIORITY)
  * 2. Premium users → Always unlocked
- * 3. Within 7-day window → Unlocked
+ * 3. Within 3-day window → Unlocked
  * 4. Has ad unlock → Unlocked
  * 5. Otherwise → Locked (LOWEST PRIORITY)
  *
@@ -22,7 +22,7 @@ import { isPuzzleLocked, isWithinFreeWindow, hasValidAdUnlock } from '@/features
 import { UnlockedPuzzle } from '@/types/database';
 
 describe('Lock Hierarchy Priority Order', () => {
-  const OLD_DATE = '2024-12-01'; // 40+ days ago (outside 7-day window)
+  const OLD_DATE = '2024-12-01'; // 40+ days ago (outside 3-day window)
   const RECENT_DATE = (() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -138,7 +138,7 @@ describe('Lock Hierarchy Priority Order', () => {
     });
   });
 
-  describe('Priority 3: 7-Day Free Window', () => {
+  describe('Priority 3: 3-Day Free Window', () => {
     it('✅ recent puzzle unlocks without premium or completion', () => {
       const result = isPuzzleLocked(
         RECENT_DATE,
@@ -165,9 +165,9 @@ describe('Lock Hierarchy Priority Order', () => {
       expect(result).toBe(false); // Today is always free
     });
 
-    it('puzzle from 6 days ago is unlocked (within 7-day window)', () => {
+    it('puzzle from 2 days ago is unlocked (within 3-day window)', () => {
       const sixDaysAgo = new Date();
-      sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
+      sixDaysAgo.setDate(sixDaysAgo.getDate() - 2);
       const dateStr = sixDaysAgo.toISOString().split('T')[0];
 
       const result = isPuzzleLocked(
@@ -181,9 +181,9 @@ describe('Lock Hierarchy Priority Order', () => {
       expect(result).toBe(false); // Within window
     });
 
-    it('puzzle from 8 days ago is locked (outside 7-day window)', () => {
+    it('puzzle from 4 days ago is locked (outside 3-day window)', () => {
       const eightDaysAgo = new Date();
-      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+      eightDaysAgo.setDate(eightDaysAgo.getDate() - 4);
       const dateStr = eightDaysAgo.toISOString().split('T')[0];
 
       const result = isPuzzleLocked(
@@ -306,16 +306,16 @@ describe('Lock Hierarchy Priority Order', () => {
       // If premium was checked first, completed flag would be dead code
     });
 
-    it('REGRESSION TEST: premium must be checked BEFORE 7-day window', () => {
+    it('REGRESSION TEST: premium must be checked BEFORE 3-day window', () => {
       // Premium users should unlock old puzzles
-      // If 7-day window is checked first, premium users might be blocked
+      // If 3-day window is checked first, premium users might be blocked
 
       const premiumOldPuzzle = isPuzzleLocked(OLD_DATE, true, 'p1', [], false);
 
       expect(premiumOldPuzzle).toBe(false); // Premium unlocks even old puzzles
     });
 
-    it('REGRESSION TEST: 7-day window must be checked BEFORE ad unlock', () => {
+    it('REGRESSION TEST: 3-day window must be checked BEFORE ad unlock', () => {
       // Free window should not require ad unlock
       // If ad unlock is checked first, recent puzzles might be incorrectly locked
 
@@ -339,16 +339,16 @@ describe('Lock Hierarchy Priority Order', () => {
   });
 
   describe('Edge Cases: Boundary Conditions', () => {
-    it('handles exactly 7 days ago (boundary)', () => {
+    it('handles exactly 3 days ago (boundary)', () => {
       const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 3);
       const dateStr = sevenDaysAgo.toISOString().split('T')[0];
 
       const result = isPuzzleLocked(dateStr, false, 'p1', [], false);
 
       // Depends on isWithinFreeWindow implementation
-      // Should be inclusive (7 days including today = 8 day window)
-      // Or exclusive (7 days = day 0-6)
+      // Should be inclusive (3 days including today = 3 day window)
+      // Or exclusive (3 days = day 0-2)
       // Need to verify actual implementation
     });
 

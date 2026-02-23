@@ -63,7 +63,7 @@ export function generateTopTensScoreDisplay(
   const lines: string[] = [];
 
   if (options.includeHeader !== false) {
-    lines.push('Football IQ - Top Tens');
+    lines.push(`Name all 10? I got ${score.foundCount}`);
   }
 
   if (options.date) {
@@ -72,6 +72,8 @@ export function generateTopTensScoreDisplay(
 
   lines.push(formatTopTensScore(score));
   lines.push(generateTopTensScoreDescription(rankSlots, score));
+
+  lines.push('https://football-iq.app');
 
   return lines.join('\n');
 }

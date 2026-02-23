@@ -17,22 +17,22 @@ export const getDayStatus = (puzzles: ArchivePuzzle[]): 'perfect' | 'active' | '
 
 /**
  * Checks if a day is locked based on potential date rules.
- * Currently: > 7 days old is locked for non-premium.
+ * Currently: > 3 days old is locked for non-premium.
  * (This logic might conflict with per-puzzle locking, checking exact requirement)
- * Requirement: "Locked: Opacity 0.6 + Lock Icon... dates > 7 days old (non-pro)"
+ * Requirement: "Locked: Opacity 0.6 + Lock Icon... dates > 3 days old (non-pro)"
  */
 export const isDayLocked = (dateString: string, isPremium: boolean): boolean => {
   if (isPremium) return false;
 
   const today = new Date(); // Use current date
   const puzzleDate = new Date(dateString);
-  
+
   // Calculate difference in days
   const diffTime = Math.abs(today.getTime() - puzzleDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-  
-  // If > 7 days, locked for free users (unless unlocked via ad - handled per puzzle?)
-  // The 'day card' might show lock if *all* puzzles are locked? 
-  // The requirement says "dates > 7 days old". So check specifically the date diff.
-  return diffDays > 7;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // If > 3 days, locked for free users (unless unlocked via ad - handled per puzzle?)
+  // The 'day card' might show lock if *all* puzzles are locked?
+  // The requirement says "dates > 3 days old". So check specifically the date diff.
+  return diffDays > 3;
 };

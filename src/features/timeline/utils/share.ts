@@ -44,8 +44,12 @@ export function generateTimelineShareText(
   const emojiRow = generateTimelineEmojiRow(firstAttemptResults);
   const label = title || subject || 'Timeline';
 
+  const correctCount = firstAttemptResults.filter(Boolean).length;
+  const total = firstAttemptResults.length;
+  const firstLine = `Put this career in order? I got ${correctCount}/${total}`;
+
   const lines = [
-    'Football IQ - Timeline',
+    firstLine,
     dateStr,
     '',
     `⏱️ ${label}`,

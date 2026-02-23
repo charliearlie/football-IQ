@@ -56,8 +56,12 @@ export function generateCareerPathShareText(
     ? `Solved in ${result.cluesUsed}/${result.totalClues} clues`
     : `${result.cluesUsed}/${result.totalClues} clues revealed`;
 
+  const firstLine = result.won
+    ? `Guess this career? I got it in ${result.cluesUsed} clues`
+    : `This career stumped me after ${result.cluesUsed} clues`;
+
   return [
-    "Football IQ - Career Path",
+    firstLine,
     dateStr,
     resultLine,
     emojiRow,
@@ -105,8 +109,13 @@ export function generateTransferGuessShareText(
 
   const resultLine = result.won ? hintText : "Did not guess correctly";
 
+  const h = result.hintsRevealed;
+  const firstLine = result.won
+    ? `I named this transfer with just ${h} hint${h === 1 ? '' : 's'}`
+    : 'This transfer stumped me';
+
   return [
-    "Football IQ - Transfer Guess",
+    firstLine,
     dateStr,
     resultLine,
     `${statusEmoji} ${hintEmoji}`,
@@ -183,8 +192,13 @@ export function generateConnectionsShareText(
   const emojiGrid = generateConnectionsEmojiGrid(guesses, allGroups);
   const mistakeText = mistakes === 1 ? "1 mistake" : `${mistakes} mistakes`;
 
+  const firstLine =
+    mistakes === 0
+      ? 'Can you find all 4 groups? I had zero mistakes!'
+      : `Can you find all 4 groups? I had ${mistakes} mistake${mistakes === 1 ? '' : 's'}`;
+
   return [
-    "Football IQ - Connections",
+    firstLine,
     dateStr,
     emojiGrid,
     mistakeText,
@@ -228,8 +242,10 @@ export function generateTopicalQuizShareText(
   const total = answers.length;
   const emojiGrid = generateQuizEmojiGrid(answers);
 
+  const firstLine = `${correct}/${total} on today's football quiz. Beat that.`;
+
   return [
-    "Football IQ - Quiz",
+    firstLine,
     dateStr,
     `${correct}/${total} correct`,
     emojiGrid,
@@ -276,8 +292,12 @@ export function generateTimelineShareText(
   const emojiRow = generateTimelineEmojiRow(firstAttemptResults);
   const label = title || subject || "Timeline";
 
+  const correctCount = firstAttemptResults.filter(Boolean).length;
+  const total = firstAttemptResults.length;
+  const firstLine = `Put this career in order? I got ${correctCount}/${total}`;
+
   return [
-    "Football IQ - Timeline",
+    firstLine,
     dateStr,
     `⏱️ ${label}`,
     emojiRow,

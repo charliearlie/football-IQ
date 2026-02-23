@@ -106,15 +106,22 @@ export function generateTicTacToeScoreDisplay(
   options: ScoreDisplayOptions = {}
 ): string {
   const {
-    title = 'Football IQ - Tic Tac Toe',
+    title,
     includeDate = true,
     puzzleDate,
   } = options;
 
+  const defaultTitle =
+    score.result === 'win'
+      ? 'I beat the AI at football tic tac toe!'
+      : score.result === 'draw'
+        ? "Can you beat the AI? I drew"
+        : "Can you beat the AI? I couldn't";
+
   const lines: string[] = [];
 
   // Title
-  lines.push(title);
+  lines.push(title ?? defaultTitle);
 
   // Date
   if (includeDate && puzzleDate) {
@@ -140,6 +147,8 @@ export function generateTicTacToeScoreDisplay(
 
   // Score
   lines.push(`Score: ${score.points}/${score.maxPoints}`);
+
+  lines.push('https://football-iq.app');
 
   return lines.join('\n');
 }

@@ -100,7 +100,7 @@ describe('PremiumGate Fail-Open Security Tests', () => {
     });
 
     it('blocks access when puzzle is explicitly locked (expected behavior)', async () => {
-      // Scenario: Puzzle date confirms it's locked (outside 7-day window)
+      // Scenario: Puzzle date confirms it's locked (outside 3-day window)
       const oldDate = '2024-12-01'; // 40+ days ago
 
       (database.getPuzzle as jest.Mock).mockResolvedValue({
@@ -205,8 +205,8 @@ describe('PremiumGate Fail-Open Security Tests', () => {
     });
   });
 
-  describe('Recent Puzzle Access (7-day window)', () => {
-    it('allows access to puzzles within 7-day window', async () => {
+  describe('Recent Puzzle Access (3-day window)', () => {
+    it('allows access to puzzles within 3-day window', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const recentDate = yesterday.toISOString().split('T')[0];

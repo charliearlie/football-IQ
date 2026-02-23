@@ -94,7 +94,13 @@ interface HomeGameListProps {
   isPremium: boolean;
 }
 
-export function HomeGameList({ cards, onCardPress, onWatchAd, onGoPro, isPremium }: HomeGameListProps) {
+export function HomeGameList({
+  cards,
+  onCardPress,
+  onWatchAd,
+  onGoPro,
+  isPremium,
+}: HomeGameListProps) {
   const playableCards = cards.filter((card) => isPremium || !card.isPremiumOnly || card.isAdUnlocked);
   const allDone = playableCards.length > 0 && playableCards.every((card) => card.status === 'done');
 
@@ -103,7 +109,7 @@ export function HomeGameList({ cards, onCardPress, onWatchAd, onGoPro, isPremium
       {allDone && <DailyCompleteCard />}
       {cards.map((card) => {
         const meta = GAME_METADATA[card.gameMode] || { title: 'UNKNOWN', subtitle: '' };
-        
+
         return (
           <GlassGameCard
             key={card.puzzleId}

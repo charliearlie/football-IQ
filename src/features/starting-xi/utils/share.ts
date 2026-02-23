@@ -52,7 +52,7 @@ export function generateShareText(
   const yearDisplay = year ? ` (${year})` : "";
 
   const lines = [
-    "Football IQ - Starting XI",
+    `Name this lineup? I found ${score.foundCount}/${score.totalHidden}`,
     content.match_name,
     `${content.competition}${yearDisplay}`,
     "",

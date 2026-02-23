@@ -31,64 +31,132 @@ describe('AnimatedSplash', () => {
     expect(getByText('FOOTBALL IQ')).toBeTruthy();
   });
 
-  it('initialises shared values for animations', () => {
+  it('renders "TEST YOUR KNOWLEDGE" tagline', () => {
+    const { getByText } = render(
+      <AnimatedSplash onComplete={jest.fn()} ready={false} />
+    );
+    expect(getByText('TEST YOUR KNOWLEDGE')).toBeTruthy();
+  });
+
+  it('initialises shared values for all animated elements', () => {
     render(<AnimatedSplash onComplete={jest.fn()} ready={false} />);
 
-    // 3 shared values: textOpacity, textTranslateY, containerOpacity
-    expect(reanimated.useSharedValue).toHaveBeenCalledWith(0);  // textOpacity
-    expect(reanimated.useSharedValue).toHaveBeenCalledWith(20); // textTranslateY
-    expect(reanimated.useSharedValue).toHaveBeenCalledWith(1);  // containerOpacity
+    // 10 shared values:
+    // Glow: glowOpacity(0), glowScale(0.8)
+    // Icon: iconScale(1)
+    // Title: titleOpacity(0), titleTranslateY(30)
+    // Tagline: taglineOpacity(0), taglineTranslateY(20)
+    // Accent: accentScaleX(0), accentOpacity(0)
+    // Container: containerOpacity(1), containerScale(1)
+    expect(reanimated.useSharedValue).toHaveBeenCalledWith(0);    // multiple: glowOpacity, titleOpacity, taglineOpacity, accentScaleX, accentOpacity
+    expect(reanimated.useSharedValue).toHaveBeenCalledWith(0.8);  // glowScale
+    expect(reanimated.useSharedValue).toHaveBeenCalledWith(1);    // iconScale, containerOpacity, containerScale
+    expect(reanimated.useSharedValue).toHaveBeenCalledWith(30);   // titleTranslateY
+    expect(reanimated.useSharedValue).toHaveBeenCalledWith(20);   // taglineTranslateY
   });
 
-  it('does not animate text when fontsReady is false', () => {
-    render(<AnimatedSplash onComplete={jest.fn()} ready={false} fontsReady={false} />);
-
-    // withTiming should NOT be called — text waits for fonts
-    expect(reanimated.withTiming).not.toHaveBeenCalled();
-  });
-
-  it('starts text animation when fontsReady is true', () => {
-    render(<AnimatedSplash onComplete={jest.fn()} ready={false} fontsReady={true} />);
-
-    // withTiming called for text opacity + text translateY
-    expect(reanimated.withTiming).toHaveBeenCalled();
-  });
-
-  it('does not fade out when ready is false', () => {
-    render(<AnimatedSplash onComplete={jest.fn()} ready={false} />);
-
-    // No withDelay should be called — fade-out only triggers when ready=true
-    expect(reanimated.withDelay).not.toHaveBeenCalled();
-  });
-
-  it('starts fade-out when ready becomes true', () => {
-    const onComplete = jest.fn();
-    const { rerender } = render(
-      <AnimatedSplash onComplete={onComplete} ready={false} />
+  it('does not animate when nativeSplashHidden is false', () => {
+    render(
+      <AnimatedSplash onComplete={jest.fn()} ready={false} nativeSplashHidden={false} />
     );
 
-    reanimated.withTiming.mockClear();
+    // No entrance animations should trigger
+    expect(reanimated.withTiming).not.toHaveBeenCalled();
+    expect(reanimated.withSpring).not.toHaveBeenCalled();
+  });
 
-    // Set ready=true — triggers the fade-out useEffect
-    rerender(<AnimatedSplash onComplete={onComplete} ready={true} />);
+  it('fontsReady alone does NOT trigger entrance animations (regression)', () => {
+    render(
+      <AnimatedSplash
+        onComplete={jest.fn()}
+        ready={false}
+        fontsReady={true}
+        nativeSplashHidden={false}
+      />
+    );
 
-    // Flush the minimum display time delay
+    // fontsReady is for font families only — animations require nativeSplashHidden
+    expect(reanimated.withTiming).not.toHaveBeenCalled();
+    expect(reanimated.withSpring).not.toHaveBeenCalled();
+  });
+
+  it('starts entrance animations when nativeSplashHidden is true', () => {
+    render(
+      <AnimatedSplash
+        onComplete={jest.fn()}
+        ready={false}
+        fontsReady={true}
+        nativeSplashHidden={true}
+      />
+    );
+
+    // withTiming called for glow, title, tagline, accent animations
+    expect(reanimated.withTiming).toHaveBeenCalled();
+    // withSpring called for icon pulse
+    expect(reanimated.withSpring).toHaveBeenCalled();
+    // withDelay called for staggered title, tagline, accent
+    expect(reanimated.withDelay).toHaveBeenCalled();
+  });
+
+  it('does not start exit when ready is false', () => {
+    render(
+      <AnimatedSplash onComplete={jest.fn()} ready={false} nativeSplashHidden={true} />
+    );
+
+    // Clear entrance animation calls to isolate exit check
+    const timingCallsBeforeReady = reanimated.withTiming.mock.calls.length;
+
+    // No exit-related fade-out should be pending beyond entrance calls
     act(() => {
       jest.runAllTimers();
     });
 
-    // withTiming should be called for the container fade-out
+    // No additional withTiming calls for exit (opacity 0, scale 0.95)
+    // The calls should stay the same as entrance only
+    expect(reanimated.withTiming.mock.calls.length).toBe(timingCallsBeforeReady);
+  });
+
+  it('starts exit animation when ready becomes true', () => {
+    const onComplete = jest.fn();
+    const { rerender } = render(
+      <AnimatedSplash
+        onComplete={onComplete}
+        ready={false}
+        nativeSplashHidden={true}
+      />
+    );
+
+    reanimated.withTiming.mockClear();
+
+    rerender(
+      <AnimatedSplash
+        onComplete={onComplete}
+        ready={true}
+        nativeSplashHidden={true}
+      />
+    );
+
+    // Flush the MIN_DISPLAY_MS delay
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // withTiming called for container opacity (0) and container scale (0.95)
     expect(reanimated.withTiming).toHaveBeenCalledWith(
       0,
-      expect.objectContaining({ duration: 300 }),
+      expect.objectContaining({ duration: 400 }),
       expect.any(Function)
+    );
+    expect(reanimated.withTiming).toHaveBeenCalledWith(
+      0.95,
+      expect.objectContaining({ duration: 400 }),
     );
   });
 
-  it('creates animated styles for text and container', () => {
+  it('creates animated styles for all elements', () => {
     render(<AnimatedSplash onComplete={jest.fn()} ready={false} />);
 
-    // useAnimatedStyle called 2 times: text, container
-    expect(reanimated.useAnimatedStyle).toHaveBeenCalledTimes(2);
+    // 6 animated styles: container, glow, icon, title, tagline, accent
+    expect(reanimated.useAnimatedStyle).toHaveBeenCalledTimes(6);
   });
 });

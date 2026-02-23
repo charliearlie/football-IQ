@@ -107,7 +107,7 @@ export function AdProvider({ children }: AdProviderProps) {
 
         // Fetch and save full puzzle content from Supabase
         // This ensures the puzzle data is available locally for free users
-        // who haven't synced archive puzzles (only last 7 days are synced)
+        // who haven't synced archive puzzles (only last 3 days are synced)
         await fetchAndSavePuzzle(puzzleId);
 
         // That's it - no state updates, no callbacks

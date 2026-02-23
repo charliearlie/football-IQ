@@ -21,7 +21,7 @@ const VARIANT_CONTENT: Record<
 > = {
   default: {
     heading: 'PAST GAMES',
-    body: 'Play any game from the last 7 days free',
+    body: 'Play any game from the last 3 days free',
     cta: 'EXPLORE',
   },
   'daily-complete': {

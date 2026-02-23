@@ -10,11 +10,11 @@ interface DailyProgressRingProps {
   percent: number; // 0 to 100
   countString: string; // e.g., "2/4"
   isComplete: boolean;
+  size?: number; // default 140
 }
 
-export function DailyProgressRing({ percent, countString, isComplete }: DailyProgressRingProps) {
-  const size = 140; // From HTML spec
-  const strokeWidth = 14; 
+export function DailyProgressRing({ percent, countString, isComplete, size = 140 }: DailyProgressRingProps) {
+  const strokeWidth = Math.round(size * 14 / 140);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   
@@ -66,8 +66,8 @@ export function DailyProgressRing({ percent, countString, isComplete }: DailyPro
       </Svg>
       
       <View style={styles.centerContent}>
-        <Text style={styles.label}>DAILY GOAL</Text>
-        <Text style={styles.count}>{countString}</Text>
+        <Text style={[styles.label, size < 140 && { fontSize: Math.round(11 * size / 140) }]}>DAILY GOAL</Text>
+        <Text style={[styles.count, size < 140 && { fontSize: Math.round(42 * size / 140), lineHeight: Math.round(46 * size / 140) }]}>{countString}</Text>
       </View>
     </View>
   );
@@ -77,8 +77,6 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 20,
   },
   centerContent: {
     position: 'absolute',

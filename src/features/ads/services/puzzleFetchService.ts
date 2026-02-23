@@ -15,7 +15,7 @@ import { SupabasePuzzle } from '@/features/puzzles/types/puzzle.types';
  * Fetch a puzzle from Supabase and save it to local SQLite.
  *
  * This is used when a free user unlocks an archive puzzle via ad.
- * The puzzle may not exist locally (free users only sync 7 days),
+ * The puzzle may not exist locally (free users only sync 3 days),
  * so we fetch it directly from Supabase.
  *
  * @param puzzleId - The UUID of the puzzle to fetch

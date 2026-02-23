@@ -101,8 +101,13 @@ export function generateConnectionsShareText(
 
   const mistakeText = mistakes === 1 ? '1 mistake' : `${mistakes} mistakes`;
 
+  const firstLine =
+    mistakes === 0
+      ? 'Can you find all 4 groups? I had zero mistakes!'
+      : `Can you find all 4 groups? I had ${mistakes} mistake${mistakes === 1 ? '' : 's'}`;
+
   const lines = [
-    'Football IQ - Connections',
+    firstLine,
     dateStr,
     '',
     emojiGrid,

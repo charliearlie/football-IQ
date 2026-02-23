@@ -219,7 +219,7 @@ export function PremiumUpsellContent({
              <Text style={styles.heroTitle}>
                   Football IQ <Text style={{ color: colors.cardYellow }}>PRO</Text>
              </Text>
-             <Text style={styles.heroSubtitle}>Join the elite. Unlock the full archive.</Text>
+             <Text style={styles.heroSubtitle}>Unlimited games. Zero ads. Full stats.</Text>
         </View>
 
         {/* Benefits */}
@@ -227,22 +227,22 @@ export function PremiumUpsellContent({
             <BenefitRow
                 icon={Zap}
                 title="UNLIMITED ARCHIVE ACCESS"
-                subtitle="Play every puzzle from previous seasons"
+                subtitle="Play every puzzle ever made, not just today's"
             />
             <BenefitRow
                 icon={Ban}
                 title="AD-FREE EXPERIENCE"
-                subtitle="Zero interruptions, pure gameplay"
+                subtitle="Zero ads, ever. Pure football knowledge."
             />
             <BenefitRow
                 icon={Star}
                 title="PER-MODE ACCURACY"
-                subtitle="See your accuracy breakdown for every game mode"
+                subtitle="Detailed stats coming soon"
             />
             <BenefitRow
                 icon={ShieldCheck}
                 title="UNLIMITED STREAK PROTECTION"
-                subtitle="Never lose your streak again"
+                subtitle="Never lose your streak again, no matter what"
             />
         </View>
 
@@ -295,7 +295,7 @@ export function PremiumUpsellContent({
       <View style={styles.footer}>
          {state !== 'success' && state !== 'purchasing' && (
               <ElevatedButton
-                title={state === 'loading' ? "LOADING..." : "UNLOCK FULL ACCESS"}
+                title={state === 'loading' ? "LOADING..." : annualOffer?.offer.isOfferActive ? "START FREE TRIAL" : "UNLOCK FULL ACCESS"}
                 onPress={handleMainAction}
                 variant="primary"
                 size="large" // Ensure this maps to ~52px

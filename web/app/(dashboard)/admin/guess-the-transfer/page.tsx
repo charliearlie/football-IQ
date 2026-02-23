@@ -4,6 +4,7 @@ import { AdminPageShell } from "@/components/admin/admin-page-shell";
 import { PuzzleArchiveTable } from "@/components/admin/puzzle-archive-table";
 import { UniversalAnswerSearch } from "@/components/admin/universal-answer-search";
 import { CleanupPanel } from "@/components/admin/cleanup-panel";
+import { BulkTransferImport } from "@/components/admin/bulk-transfer-import";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TransferGuessAdminPage() {
@@ -17,6 +18,7 @@ export default function TransferGuessAdminPage() {
           <TabsTrigger value="archive">Archive</TabsTrigger>
           <TabsTrigger value="search">Player Search</TabsTrigger>
           <TabsTrigger value="cleanup">Cleanup</TabsTrigger>
+          <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
         </TabsList>
 
         <TabsContent value="archive">
@@ -29,6 +31,10 @@ export default function TransferGuessAdminPage() {
 
         <TabsContent value="cleanup">
           <CleanupPanel gameMode="guess_the_transfer" />
+        </TabsContent>
+
+        <TabsContent value="bulk">
+          <BulkTransferImport />
         </TabsContent>
       </Tabs>
     </AdminPageShell>

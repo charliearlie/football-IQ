@@ -250,7 +250,7 @@ describe('Paywall Flow', () => {
         profile: { is_premium: false },
       });
 
-      const recentDate = getDateDaysAgo(3);
+      const recentDate = getDateDaysAgo(1);
       const isPremium = false;
 
       // Recent puzzle should NOT be locked even for free user
@@ -371,7 +371,7 @@ describe('Paywall Flow', () => {
     });
 
     it('free user + recent puzzle = allowed', () => {
-      const recentDate = getDateDaysAgo(5);
+      const recentDate = getDateDaysAgo(1);
       const isPremium = false;
 
       expect(isPuzzleLocked(recentDate, isPremium)).toBe(false);
@@ -385,7 +385,7 @@ describe('Paywall Flow', () => {
     });
 
     it('premium user + recent puzzle = allowed', () => {
-      const recentDate = getDateDaysAgo(5);
+      const recentDate = getDateDaysAgo(1);
       const isPremium = true;
 
       expect(isPuzzleLocked(recentDate, isPremium)).toBe(false);

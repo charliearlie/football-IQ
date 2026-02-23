@@ -63,13 +63,13 @@ describe('Archive Redesign Logic', () => {
     });
 
     describe('isDayLocked', () => {
-         // Logic: Locked if user is NOT pro AND date is > 7 days old
+         // Logic: Locked if user is NOT pro AND date is > 3 days old
          // Note: The prompt implies checking date logic.
          // We'll assume the function takes (dateString, isPro)
-         
+
          const TODAY = new Date('2023-11-01'); // Fixed date for test
-         const SEVEN_DAYS_AGO = '2023-10-24'; // > 7 days
-         const RECENT_DATE = '2023-10-30'; // < 7 days
+         const SEVEN_DAYS_AGO = '2023-10-24'; // > 3 days
+         const RECENT_DATE = '2023-10-30'; // < 3 days
          
          beforeAll(() => {
              jest.useFakeTimers().setSystemTime(TODAY);
@@ -79,11 +79,11 @@ describe('Archive Redesign Logic', () => {
              jest.useRealTimers();
          });
 
-         it('returns true for dates > 7 days old for non-pro users', () => {
+         it('returns true for dates > 3 days old for non-pro users', () => {
              expect(isDayLocked(SEVEN_DAYS_AGO, false)).toBe(true);
          });
 
-         it('returns false for dates > 7 days old for PRO users', () => {
+         it('returns false for dates > 3 days old for PRO users', () => {
              expect(isDayLocked(SEVEN_DAYS_AGO, true)).toBe(false);
          });
 

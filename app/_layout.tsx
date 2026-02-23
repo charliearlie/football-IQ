@@ -238,6 +238,7 @@ export default function RootLayout() {
   const [initTimedOut, setInitTimedOut] = useState(false);
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false);
   const [contentReady, setContentReady] = useState(false);
+  const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
 
   // Global initialization timeout - prevents black screen if fonts/DB hang
   // Only gates on fonts + DB (RC and Ads init in background, not blocking splash)
@@ -315,10 +316,15 @@ export default function RootLayout() {
   }, []);
 
   // Hide native splash when fonts + DB are ready (RC and Ads init in background)
-  // Our AnimatedSplash component takes over from here with a branded animation
+  // Our AnimatedSplash component takes over from here with a branded animation.
+  // We await hideAsync and add a small buffer so the native fade-out completes
+  // before AnimatedSplash starts its entrance animations.
   useEffect(() => {
     if ((fontsLoaded || fontError) && dbReady) {
-      SplashScreen.hideAsync();
+      (async () => {
+        await SplashScreen.hideAsync();
+        setTimeout(() => setNativeSplashHidden(true), 100);
+      })();
     }
   }, [fontsLoaded, fontError, dbReady]);
 
@@ -419,7 +425,7 @@ export default function RootLayout() {
         </AuthProvider>
       )}
       {!splashAnimationComplete && (
-        <AnimatedSplash onComplete={handleSplashAnimationComplete} ready={contentReady} fontsReady={!!fontsReady} />
+        <AnimatedSplash onComplete={handleSplashAnimationComplete} ready={contentReady} fontsReady={!!fontsReady} nativeSplashHidden={nativeSplashHidden} />
       )}
     </View>
   );

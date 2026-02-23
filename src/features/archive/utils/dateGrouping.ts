@@ -135,11 +135,11 @@ export function formatPuzzleDate(dateString: string): string {
 }
 
 /**
- * Check if a puzzle date is within the free access window (last 7 days).
+ * Check if a puzzle date is within the free access window (last 3 days).
  * Uses the time integrity system for the authorized "today" date.
  *
  * @param puzzleDate - Puzzle date in YYYY-MM-DD format
- * @returns true if the puzzle is within the 7-day window
+ * @returns true if the puzzle is within the 3-day window
  */
 export function isWithinFreeWindow(puzzleDate: string): boolean {
   // Add time component to avoid timezone parsing issues
@@ -152,9 +152,9 @@ export function isWithinFreeWindow(puzzleDate: string): boolean {
   const today = new Date(todayStr + 'T12:00:00');
   today.setHours(0, 0, 0, 0);
 
-  // 7-day window = today + 6 previous days (7 total)
+  // 3-day window = today + 2 previous days (3 total)
   const windowStart = new Date(today);
-  windowStart.setDate(windowStart.getDate() - 6);
+  windowStart.setDate(windowStart.getDate() - 2);
 
   return date >= windowStart;
 }
@@ -183,7 +183,7 @@ export function hasValidAdUnlock(
  * Access hierarchy (checked in order):
  * 1. Completed puzzles: always unlocked (can view results indefinitely)
  * 2. Premium users: always unlocked
- * 3. Within free window (7 days): unlocked
+ * 3. Within free window (3 days): unlocked
  * 4. Has valid ad unlock: unlocked
  * 5. Otherwise: locked
  *
