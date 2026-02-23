@@ -35,9 +35,17 @@ export function GamePageShell({
   children,
 }: GamePageShellProps) {
   const [gameResult, setGameResult] = useState<GameCompleteResult | null>(null);
+  const [contentReady, setContentReady] = useState(false);
 
   const handleGameComplete = useCallback((result: GameCompleteResult) => {
     setGameResult(result);
+  }, []);
+
+  // Track when game content mounts (avoids showing ads on empty loading state)
+  const contentRef = useCallback((node: HTMLDivElement | null) => {
+    if (node && node.childElementCount > 0) {
+      setContentReady(true);
+    }
   }, []);
 
   return (
@@ -45,13 +53,15 @@ export function GamePageShell({
       <div className="min-h-screen flex flex-col">
         <GameNav title={title} />
 
-        {/* Top ad slot — visible before game starts, hidden during/after play */}
-        <div className="py-3">
-          <AdSlot variant="banner" visible={!gameResult} />
-        </div>
+        {/* Top banner ad — only visible while game content is active (not during loading/already-played) */}
+        {contentReady && !gameResult && (
+          <div className="py-3">
+            <AdSlot variant="banner" />
+          </div>
+        )}
 
         {/* Game content area */}
-        <div className="flex-1 max-w-md mx-auto w-full px-4 py-6">
+        <div ref={contentRef} className="flex-1 max-w-md mx-auto w-full px-4 py-6">
           {children}
 
           {/* Post-game zone */}
@@ -64,7 +74,7 @@ export function GamePageShell({
                 gameSlug={gameSlug}
               />
 
-              {/* Bottom ad slot — appears after game ends */}
+              {/* Rectangle ad — appears after game ends */}
               <div className="py-6">
                 <AdSlot variant="rectangle" />
               </div>

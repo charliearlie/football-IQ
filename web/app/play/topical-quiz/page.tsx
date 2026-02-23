@@ -103,6 +103,35 @@ export default async function TopicalQuizPage({ searchParams }: PageProps) {
                 },
               ],
             },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "Is there a weekly football news quiz?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Yes. Football IQ's Topical Quiz features 5 multiple-choice questions on recent football news, results, and events. Test how closely you follow the game. Free to play at football-iq.app.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "How does the Football Topical Quiz work?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "You answer 5 multiple-choice questions about recent football events. Each question has 4 options. You score 2 points per correct answer for a maximum of 10. The quiz auto-advances after each answer.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Where can I play a current football quiz?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Football IQ publishes topical quizzes regularly at football-iq.app/play/topical-quiz. Questions cover recent matches, transfers, and football news. Free to play in your browser.",
+                  },
+                },
+              ],
+            },
           ],
         }}
       />

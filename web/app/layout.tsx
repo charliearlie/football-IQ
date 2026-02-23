@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
+import { PostHogProvider } from "@/components/PostHogProvider";
+import { JsonLd } from "@/components/JsonLd";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -67,7 +69,24 @@ export default function RootLayout({
       <head>
         <meta name="google-adsense-account" content="ca-pub-9426782115883407" />
       </head>
-      <body className={`${inter.variable} ${bebasNeue.variable} font-sans`}>{children}</body>
+      <body className={`${inter.variable} ${bebasNeue.variable} font-sans`}>
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": "https://football-iq.app/#organization",
+            name: "Football IQ",
+            url: "https://football-iq.app",
+            logo: "https://football-iq.app/images/favicon.png",
+            sameAs: [
+              "https://apps.apple.com/us/app/football-iq-football-trivia/id6757344691",
+            ],
+          }}
+        />
+      </body>
     </html>
   );
 }

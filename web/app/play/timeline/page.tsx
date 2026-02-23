@@ -108,6 +108,35 @@ export default async function TimelinePage({ searchParams }: PageProps) {
                 },
               ],
             },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "How does the Football Timeline quiz work?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "You are given 6 football events from a player's career in random order. Drag and drop them into the correct chronological order. You get multiple attempts, but each attempt reduces your maximum score.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Is there a football sorting quiz?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Yes. Football IQ's Timeline mode challenges you to sort 6 career events into chronological order. New puzzles published regularly. Free to play at football-iq.app.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "What is Football IQ Timeline?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Timeline is a football quiz where you sort career events into the right order. Events include transfers, trophy wins, and milestones. Perfect order on the first try earns maximum points.",
+                  },
+                },
+              ],
+            },
           ],
         }}
       />

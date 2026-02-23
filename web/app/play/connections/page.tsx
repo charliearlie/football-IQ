@@ -103,6 +103,35 @@ export default async function ConnectionsPage({ searchParams }: PageProps) {
                 },
               ],
             },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "How is Football Connections different from NYT Connections?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Football Connections uses 16 footballers instead of words. Group them into 4 hidden categories based on what they share — same club, same country, same award, or other connections. It is entirely football-themed with a new puzzle daily.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Is there a free daily football connections puzzle?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Yes. Football IQ publishes a new Connections puzzle regularly at football-iq.app/play/connections. Free to play in your browser with no account needed.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "How do you play Football Connections?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Select 4 footballers from a grid of 16 that share a hidden connection and submit your guess. Correct groups reveal with a colour. You have 4 mistakes before the game ends. Categories range from easy (yellow) to very hard (purple).",
+                  },
+                },
+              ],
+            },
           ],
         }}
       />

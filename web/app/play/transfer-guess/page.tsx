@@ -105,6 +105,35 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
                 },
               ],
             },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "How does the football transfer guessing game work?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "You see the two clubs involved in a transfer and the transfer fee. Guess which player made the move. You can reveal hints like the year, position, and nationality to help, but each hint lowers your maximum score.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "Is there a daily football transfer quiz?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Yes. Football IQ publishes a new Transfer Guess puzzle every day. Identify the player from a real transfer using clubs, fee, and optional hints. Free to play at football-iq.app.",
+                  },
+                },
+                {
+                  "@type": "Question",
+                  name: "What is Transfer Guess?",
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: "Transfer Guess is a daily football quiz where you name the player behind a real transfer. You start with clubs and fee, then choose to reveal hints like year, position, and nationality. Fewer hints mean more points.",
+                  },
+                },
+              ],
+            },
           ],
         }}
       />
