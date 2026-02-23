@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, Copy } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { APP_STORE_URL, WEB_PLAYABLE_GAMES } from "@/lib/constants";
 import {
   copyToClipboard,
@@ -36,6 +37,9 @@ export function PostGameCTA({
   shareText,
   gameSlug,
 }: PostGameCTAProps) {
+  const posthog = usePostHog();
+  const gameMode =
+    WEB_PLAYABLE_GAMES.find((g) => g.slug === gameSlug)?.dbMode ?? gameSlug;
   const [copied, setCopied] = useState(false);
   const [daysPlayed, setDaysPlayed] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -62,6 +66,13 @@ export function PostGameCTA({
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      try {
+        posthog?.capture("share_completed", {
+          game_mode: gameMode,
+          method: "clipboard",
+          platform: "web",
+        });
+      } catch {}
     }
   };
 

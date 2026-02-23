@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { Shield, PlaneTakeoff, Lock, Search, Lightbulb, Footprints, Circle } from "lucide-react";
 import type { CareerStep } from "@/types/careerPath";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { CTAButton } from "@/components/landing/CTAButton";
 import { cn } from "@/lib/utils";
 import { useGameComplete } from "./GamePageShell";
+import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
 // TYPES & REDUCER
@@ -122,12 +123,20 @@ export function CareerPathGame({
   puzzleDate,
 }: CareerPathGameProps) {
   const onGameComplete = useGameComplete();
+  const { trackGameStarted, trackGameCompleted } = useGameTracking(
+    "career_path",
+    puzzleDate
+  );
   const [state, dispatch] = useReducer(careerPathReducer, {
     revealedCount: 1,
     currentGuess: "",
     gameStatus: "playing",
     isShaking: false,
   });
+
+  useEffect(() => {
+    trackGameStarted();
+  }, [trackGameStarted]);
 
   const handleGuess = useCallback(() => {
     const prevStatus = state.gameStatus;
@@ -147,6 +156,7 @@ export function CareerPathGame({
         { won: true, cluesUsed: state.revealedCount, totalClues: careerSteps.length },
         puzzleDate
       );
+      trackGameCompleted("won", `${state.revealedCount}/${careerSteps.length}`);
       onGameComplete({ won: true, answer, shareText });
     } else {
       // Check if this guess causes game over
@@ -156,11 +166,12 @@ export function CareerPathGame({
           { won: false, cluesUsed: careerSteps.length, totalClues: careerSteps.length },
           puzzleDate
         );
+        trackGameCompleted("lost", `${careerSteps.length}/${careerSteps.length}`);
         onGameComplete({ won: false, answer, shareText });
       }
       setTimeout(() => dispatch({ type: "CLEAR_SHAKE" }), 500);
     }
-  }, [state.currentGuess, state.revealedCount, state.gameStatus, answer, careerSteps.length, puzzleDate, onGameComplete]);
+  }, [state.currentGuess, state.revealedCount, state.gameStatus, answer, careerSteps.length, puzzleDate, onGameComplete, trackGameCompleted]);
 
   const handleRevealNext = useCallback(() => {
     dispatch({ type: "REVEAL_NEXT", totalSteps: careerSteps.length });

@@ -31,6 +31,7 @@ import type { TimelineContent } from "@/lib/schemas/puzzle-schemas";
 import { generateTimelineShareText } from "@/lib/shareText";
 import { cn } from "@/lib/utils";
 import { useGameComplete } from "./GamePageShell";
+import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
 // TYPES
@@ -373,6 +374,10 @@ interface TimelineGameProps {
 
 export function TimelineGame({ content, puzzleDate }: TimelineGameProps) {
   const onGameComplete = useGameComplete();
+  const { trackGameStarted, trackGameCompleted } = useGameTracking(
+    "timeline",
+    puzzleDate
+  );
   const [showGiveUpConfirm, setShowGiveUpConfirm] = useState(false);
 
   const correctOrder = useMemo(() => {
@@ -411,6 +416,10 @@ export function TimelineGame({ content, puzzleDate }: TimelineGameProps) {
     })
   );
 
+  useEffect(() => {
+    trackGameStarted();
+  }, [trackGameStarted]);
+
   // 800ms reveal timer
   useEffect(() => {
     if (state.revealPhase !== "revealing") return;
@@ -440,12 +449,14 @@ export function TimelineGame({ content, puzzleDate }: TimelineGameProps) {
 
     if (state.gameStatus === "won") {
       triggerConfetti();
+      trackGameCompleted("won", `${state.attemptCount}/${MAX_ATTEMPTS}`);
       onGameComplete({
         won: true,
         answer: content.title || content.subject || "Timeline",
         shareText,
       });
     } else {
+      trackGameCompleted("lost", `${state.attemptCount}/${MAX_ATTEMPTS}`);
       onGameComplete({
         won: false,
         answer: content.title || content.subject || "Timeline",

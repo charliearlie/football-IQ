@@ -1,10 +1,10 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle } from "@/lib/fetchDailyPuzzle";
-import { FALLBACK_TIMELINE_PUZZLE } from "@/lib/constants";
+import { fetchDailyPuzzle, fetchNextPuzzleDate } from "@/lib/fetchDailyPuzzle";
 import type { TimelineContent } from "@/lib/schemas/puzzle-schemas";
 import { GamePageShell } from "@/components/play/GamePageShell";
 import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { TimelineGame } from "@/components/play/TimelineGame";
+import { NoPuzzleToday } from "@/components/play/NoPuzzleToday";
 import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
@@ -58,11 +58,38 @@ interface PageProps {
 export default async function TimelinePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const puzzle = await fetchDailyPuzzle("timeline", params.date);
+
+  // No live puzzle for today (only applies when not viewing a specific date)
+  if (!puzzle && !params.date) {
+    const nextDate = await fetchNextPuzzleDate("timeline");
+    return (
+      <GamePageShell title="Timeline" gameSlug="timeline">
+        <NoPuzzleToday
+          gameSlug="timeline"
+          gameTitle="Timeline"
+          nextDate={nextDate}
+        />
+      </GamePageShell>
+    );
+  }
+
   const puzzleDate =
     puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content =
-    (puzzle?.content as unknown as TimelineContent) ??
-    FALLBACK_TIMELINE_PUZZLE;
+  const content = puzzle?.content as unknown as TimelineContent;
+
+  // No puzzle for a specific historical date
+  if (!content) {
+    const nextDate = await fetchNextPuzzleDate("timeline");
+    return (
+      <GamePageShell title="Timeline" gameSlug="timeline">
+        <NoPuzzleToday
+          gameSlug="timeline"
+          gameTitle="Timeline"
+          nextDate={nextDate}
+        />
+      </GamePageShell>
+    );
+  }
 
   return (
     <>

@@ -11,6 +11,7 @@ import {
 } from "@/lib/shareText";
 import { cn } from "@/lib/utils";
 import { useGameComplete } from "./GamePageShell";
+import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
 // TYPES
@@ -307,6 +308,10 @@ function triggerConfetti() {
 
 export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
   const onGameComplete = useGameComplete();
+  const { trackGameStarted, trackGameCompleted } = useGameTracking(
+    "connections",
+    puzzleDate
+  );
 
   const groups = useMemo(
     () => content.groups as unknown as ConnectionsGroupWeb[],
@@ -328,6 +333,10 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
     lastGuessResult: null,
     revealingGroup: null,
   } satisfies ConnectionsState);
+
+  useEffect(() => {
+    trackGameStarted();
+  }, [trackGameStarted]);
 
   // Clear feedback after 1.5s
   useEffect(() => {
@@ -360,8 +369,10 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
 
     if (state.gameStatus === "won") {
       triggerConfetti();
+      trackGameCompleted("won", `${state.solvedGroups.length}/4`);
       onGameComplete({ won: true, answer: "Connections", shareText });
     } else {
+      trackGameCompleted("lost", `${state.solvedGroups.length}/4`);
       onGameComplete({ won: false, answer: "Connections", shareText });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

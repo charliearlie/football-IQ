@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { ArrowRight, Lock, Search, Lightbulb, Calendar, Shirt, Flag } from "lucide-react";
 import type { TransferGuessContent } from "@/lib/schemas/puzzle-schemas";
@@ -11,6 +11,7 @@ import { CTAButton } from "@/components/landing/CTAButton";
 import { FlagIcon } from "@/components/ui/flag-icon";
 import { cn } from "@/lib/utils";
 import { useGameComplete } from "./GamePageShell";
+import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
 // TYPES & REDUCER
@@ -126,6 +127,10 @@ const HINT_ICONS = [Calendar, Shirt, Flag] as const;
 
 export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProps) {
   const onGameComplete = useGameComplete();
+  const { trackGameStarted, trackGameCompleted } = useGameTracking(
+    "guess_the_transfer",
+    puzzleDate
+  );
   const [state, dispatch] = useReducer(transferGuessReducer, {
     gameStatus: "playing",
     currentGuess: "",
@@ -133,6 +138,10 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
     hintsRevealed: 0,
     isShaking: false,
   });
+
+  useEffect(() => {
+    trackGameStarted();
+  }, [trackGameStarted]);
 
   const handleGuess = useCallback(() => {
     const prevStatus = state.gameStatus;
@@ -155,6 +164,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
         },
         puzzleDate
       );
+      trackGameCompleted("won", `${state.hintsRevealed}/3`);
       onGameComplete({ won: true, answer: content.answer, shareText });
     } else {
       const newIncorrectCount = incorrectGuesses.length + 1;
@@ -167,6 +177,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
           },
           puzzleDate
         );
+        trackGameCompleted("lost", `${state.hintsRevealed}/3`);
         onGameComplete({ won: false, answer: content.answer, shareText });
       }
       setTimeout(() => dispatch({ type: "CLEAR_SHAKE" }), 500);
@@ -179,6 +190,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
     content.answer,
     puzzleDate,
     onGameComplete,
+    trackGameCompleted,
   ]);
 
   const handleRevealHint = useCallback(() => {

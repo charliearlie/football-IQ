@@ -1,10 +1,10 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle } from "@/lib/fetchDailyPuzzle";
-import { FALLBACK_CONNECTIONS_PUZZLE } from "@/lib/constants";
+import { fetchDailyPuzzle, fetchNextPuzzleDate } from "@/lib/fetchDailyPuzzle";
 import type { ConnectionsContent } from "@/lib/schemas/puzzle-schemas";
 import { GamePageShell } from "@/components/play/GamePageShell";
 import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { ConnectionsGame } from "@/components/play/ConnectionsGame";
+import { NoPuzzleToday } from "@/components/play/NoPuzzleToday";
 import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
@@ -59,11 +59,38 @@ interface PageProps {
 export default async function ConnectionsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const puzzle = await fetchDailyPuzzle("connections", params.date);
+
+  // No live puzzle for today (only applies when not viewing a specific date)
+  if (!puzzle && !params.date) {
+    const nextDate = await fetchNextPuzzleDate("connections");
+    return (
+      <GamePageShell title="Connections" gameSlug="connections">
+        <NoPuzzleToday
+          gameSlug="connections"
+          gameTitle="Connections"
+          nextDate={nextDate}
+        />
+      </GamePageShell>
+    );
+  }
+
   const puzzleDate =
     puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content =
-    (puzzle?.content as unknown as ConnectionsContent) ??
-    FALLBACK_CONNECTIONS_PUZZLE;
+  const content = puzzle?.content as unknown as ConnectionsContent;
+
+  // No puzzle for a specific historical date
+  if (!content) {
+    const nextDate = await fetchNextPuzzleDate("connections");
+    return (
+      <GamePageShell title="Connections" gameSlug="connections">
+        <NoPuzzleToday
+          gameSlug="connections"
+          gameTitle="Connections"
+          nextDate={nextDate}
+        />
+      </GamePageShell>
+    );
+  }
 
   return (
     <>

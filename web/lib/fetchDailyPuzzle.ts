@@ -43,3 +43,27 @@ export async function fetchDailyPuzzle(
     puzzle_date: data.puzzle_date ?? puzzleDate,
   };
 }
+
+/**
+ * Fetch the next scheduled live puzzle date after today for a game mode.
+ *
+ * Used to show "check back on {date}" when no puzzle exists today.
+ */
+export async function fetchNextPuzzleDate(
+  gameMode: string
+): Promise<string | null> {
+  const supabase = await createAdminClient();
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data } = await supabase
+    .from("daily_puzzles")
+    .select("puzzle_date")
+    .eq("game_mode", gameMode)
+    .eq("status", "live")
+    .gt("puzzle_date", today)
+    .order("puzzle_date", { ascending: true })
+    .limit(1)
+    .single();
+
+  return data?.puzzle_date ?? null;
+}

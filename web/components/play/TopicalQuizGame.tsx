@@ -1,11 +1,12 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import type { TopicalQuizContent } from "@/lib/schemas/puzzle-schemas";
 import { generateTopicalQuizShareText } from "@/lib/shareText";
 import { cn } from "@/lib/utils";
 import { useGameComplete } from "./GamePageShell";
+import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
 // TYPES & REDUCER
@@ -104,12 +105,20 @@ interface TopicalQuizGameProps {
 
 export function TopicalQuizGame({ content, puzzleDate }: TopicalQuizGameProps) {
   const onGameComplete = useGameComplete();
+  const { trackGameStarted, trackGameCompleted } = useGameTracking(
+    "topical_quiz",
+    puzzleDate
+  );
   const [state, dispatch] = useReducer(topicalQuizReducer, {
     currentQuestionIndex: 0,
     answers: [],
     gameStatus: "playing",
     selectedOptionIndex: null,
   });
+
+  useEffect(() => {
+    trackGameStarted();
+  }, [trackGameStarted]);
 
   const handleSelect = useCallback(
     (optionIndex: number) => {
@@ -139,6 +148,10 @@ export function TopicalQuizGame({ content, puzzleDate }: TopicalQuizGameProps) {
           const correctCount = quizResults.filter((a) => a.isCorrect).length;
           const shareText = generateTopicalQuizShareText(quizResults, puzzleDate);
           if (correctCount === 5) triggerConfetti();
+          trackGameCompleted(
+            correctCount >= 3 ? "won" : "lost",
+            `${correctCount}/${content.questions.length}`
+          );
           onGameComplete({
             won: correctCount >= 3,
             answer: `${correctCount * 2}/10`,
@@ -160,6 +173,7 @@ export function TopicalQuizGame({ content, puzzleDate }: TopicalQuizGameProps) {
       content,
       puzzleDate,
       onGameComplete,
+      trackGameCompleted,
     ]
   );
 
