@@ -25,6 +25,8 @@ import {
   buildGenerationPrompt,
   buildMatchResearchPrompt,
   buildHistoryResearchPrompt,
+  buildImageScenePrompt,
+  buildFinalImagePrompt,
 } from "./prompts";
 import type { GeneratedArticleRaw } from "./prompts";
 
@@ -371,7 +373,180 @@ async function saveArticleToDatabase(
 }
 
 // ============================================================================
-// OG IMAGE GENERATION
+// AI IMAGE GENERATION (DALL-E 3)
+// ============================================================================
+
+const OPENAI_IMAGES_API_URL = "https://api.openai.com/v1/images/generations";
+const IMAGE_SCENE_MODEL = "gpt-4o";
+
+/**
+ * Generates an AI editorial illustration for the article using DALL-E 3.
+ *
+ * Pipeline:
+ *   1. GPT-4o crafts a scene description from the article title + match data
+ *   2. DALL-E 3 generates a 1792x1024 illustration with locked style directive
+ *   3. GPT-4o Vision runs a quality gate (checks for AI artefacts)
+ *   4. Passing image is uploaded to Supabase Storage
+ *
+ * Returns the public URL on success, null on failure (caller should fall back
+ * to Satori card).
+ */
+async function generateArticleAIImage(
+  slug: string,
+  title: string,
+  footballData: DailyFootballData
+): Promise<string | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.error("[ArticleGenerator] OpenAI API key not configured — skipping AI image");
+    return null;
+  }
+
+  try {
+    // Step 1: Build match summaries for prompt context
+    const matchSummaries = footballData.matches.slice(0, 5).map(
+      (m) => `${m.homeTeam} ${m.homeGoals}-${m.awayGoals} ${m.awayTeam}`
+    );
+
+    // Step 2: GPT-4o generates a scene description
+    console.log("[ArticleGenerator] AI Image: Generating scene description with GPT-4o");
+    const scenePrompt = buildImageScenePrompt(title, matchSummaries);
+    const sceneDescription = await callOpenAI(
+      IMAGE_SCENE_MODEL,
+      [{ role: "user", content: scenePrompt }],
+      { temperature: 0.9, maxTokens: 150 }
+    );
+
+    if (!sceneDescription) {
+      console.warn("[ArticleGenerator] AI Image: Scene description generation failed");
+      return null;
+    }
+    console.log(`[ArticleGenerator] AI Image: Scene — "${sceneDescription.slice(0, 100)}..."`);
+
+    // Step 3: DALL-E 3 generates the image
+    console.log("[ArticleGenerator] AI Image: Generating illustration with DALL-E 3");
+    const finalPrompt = buildFinalImagePrompt(sceneDescription);
+
+    const imageResponse = await fetch(OPENAI_IMAGES_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: finalPrompt,
+        size: "1792x1024",
+        quality: "standard",
+        style: "vivid",
+        n: 1,
+        response_format: "b64_json",
+      }),
+    });
+
+    if (!imageResponse.ok) {
+      const errorData = await imageResponse.json().catch(() => ({})) as {
+        error?: { message?: string };
+      };
+      console.error(
+        `[ArticleGenerator] AI Image: DALL-E 3 API error ${imageResponse.status}: ${errorData?.error?.message ?? imageResponse.statusText}`
+      );
+      return null;
+    }
+
+    const imageData = await imageResponse.json() as {
+      data: Array<{ b64_json?: string; revised_prompt?: string }>;
+    };
+    const b64 = imageData.data?.[0]?.b64_json;
+
+    if (!b64) {
+      console.error("[ArticleGenerator] AI Image: No base64 data in DALL-E 3 response");
+      return null;
+    }
+
+    if (imageData.data[0].revised_prompt) {
+      console.log(`[ArticleGenerator] AI Image: DALL-E revised prompt — "${imageData.data[0].revised_prompt.slice(0, 100)}..."`);
+    }
+
+    // Step 4: Quality gate — GPT-4o Vision checks for AI artefacts
+    console.log("[ArticleGenerator] AI Image: Running quality gate with GPT-4o Vision");
+    const qualityCheckResponse = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: IMAGE_SCENE_MODEL,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Inspect this editorial illustration. Does it contain ANY of these defects: garbled text, distorted faces, mangled hands or fingers, visible words/letters/numbers, recognisable logos or crests, or other obvious AI artefacts? Answer with ONLY the word PASS or FAIL.",
+              },
+              {
+                type: "image_url",
+                image_url: { url: `data:image/png;base64,${b64}` },
+              },
+            ],
+          },
+        ],
+        max_tokens: 10,
+      }),
+    });
+
+    if (qualityCheckResponse.ok) {
+      const qualityData = await qualityCheckResponse.json() as OpenAIResponse;
+      const verdict = qualityData.choices?.[0]?.message?.content?.trim().toUpperCase() ?? "";
+      console.log(`[ArticleGenerator] AI Image: Quality gate verdict — ${verdict}`);
+
+      if (verdict.includes("FAIL")) {
+        console.warn("[ArticleGenerator] AI Image: Quality gate FAILED — falling back to Satori");
+        return null;
+      }
+    } else {
+      // If the quality check itself fails, accept the image (it likely passed DALL-E's own filters)
+      console.warn("[ArticleGenerator] AI Image: Quality gate API error — accepting image");
+    }
+
+    // Step 5: Upload to Supabase Storage
+    console.log("[ArticleGenerator] AI Image: Uploading to Supabase Storage");
+    const imageBuffer = Buffer.from(b64, "base64");
+
+    const supabase = await createAdminClient();
+    const storagePath = `blog/${slug}.png`;
+
+    const { error } = await supabase.storage
+      .from("og-images")
+      .upload(storagePath, imageBuffer, {
+        contentType: "image/png",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("[ArticleGenerator] AI Image: Failed to upload:", error);
+      return null;
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      console.error("[ArticleGenerator] NEXT_PUBLIC_SUPABASE_URL not set — cannot construct image URL");
+      return null;
+    }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/og-images/${storagePath}`;
+    console.log(`[ArticleGenerator] AI Image: Uploaded successfully — ${storagePath}`);
+    return publicUrl;
+  } catch (error) {
+    console.error("[ArticleGenerator] AI Image: Unexpected error:", error);
+    return null;
+  }
+}
+
+// ============================================================================
+// SATORI OG IMAGE GENERATION (FALLBACK)
 // ============================================================================
 
 const OG_WIDTH = 1200;
@@ -381,7 +556,7 @@ const OG_HEIGHT = 630;
  * Generates a branded OG image for the article using Satori and uploads
  * it to Supabase Storage. Returns the public URL on success, null on failure.
  *
- * Best-effort: failures are logged but do not block the pipeline.
+ * Used as a fallback when AI image generation fails or is unavailable.
  */
 async function generateArticleOGImage(
   slug: string,
@@ -530,8 +705,14 @@ export async function generateDailyArticle(
     }
 
     // Step 5: Generate OG image (best-effort — doesn't block the pipeline)
-    console.log("[ArticleGenerator] Step 5: Generating OG image");
-    const ogImageUrl = await generateArticleOGImage(article.slug, article.title, articleDate, footballData);
+    // Fallback chain: AI illustration → Satori card → on-demand API route
+    console.log("[ArticleGenerator] Step 5a: Trying AI image generation");
+    let ogImageUrl = await generateArticleAIImage(article.slug, article.title, footballData);
+
+    if (!ogImageUrl) {
+      console.log("[ArticleGenerator] Step 5b: AI image failed — falling back to Satori card");
+      ogImageUrl = await generateArticleOGImage(article.slug, article.title, articleDate, footballData);
+    }
 
     if (ogImageUrl) {
       const supabase = await createAdminClient();
@@ -542,6 +723,8 @@ export async function generateDailyArticle(
       if (ogUpdateError) {
         console.error("[ArticleGenerator] Failed to update og_image_url:", ogUpdateError);
       }
+    } else {
+      console.warn("[ArticleGenerator] Step 5: Both image methods failed — on-demand API route will serve as fallback");
     }
 
     console.log(
