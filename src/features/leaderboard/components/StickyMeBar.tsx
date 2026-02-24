@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { User } from 'lucide-react-native';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
-import { UserRank } from '../types/leaderboard.types';
+import { LeaderboardType, UserRank } from '../types/leaderboard.types';
 
 interface StickyMeBarProps {
   /** Current user's rank info */
@@ -22,8 +22,21 @@ interface StickyMeBarProps {
   displayName: string;
   /** Whether to show the bar */
   shouldShow: boolean;
+  /** Leaderboard type for score formatting */
+  leaderboardType?: LeaderboardType;
   /** Test ID for testing */
   testID?: string;
+}
+
+/**
+ * Format score for display based on leaderboard type.
+ * All-time scores use locale formatting with "IQ" suffix.
+ */
+function formatScore(score: number, leaderboardType: LeaderboardType): string {
+  if (leaderboardType === 'global') {
+    return `${score.toLocaleString()} IQ`;
+  }
+  return String(score);
 }
 
 /**
@@ -35,12 +48,13 @@ interface StickyMeBarProps {
  * Shows:
  * - "You" label
  * - Rank position
- * - Score
+ * - Score (formatted per leaderboard type)
  */
 export function StickyMeBar({
   userRank,
   displayName,
   shouldShow,
+  leaderboardType = 'daily',
   testID,
 }: StickyMeBarProps) {
   // Animation for show/hide
@@ -68,6 +82,8 @@ export function StickyMeBar({
     return null;
   }
 
+  const scoreText = formatScore(userRank.score, leaderboardType);
+
   return (
     <Animated.View
       style={[styles.container, animatedStyle]}
@@ -90,7 +106,7 @@ export function StickyMeBar({
         {/* Right: Rank and Score */}
         <View style={styles.rightSection}>
           <Text style={styles.rank}>#{userRank.rank}</Text>
-          <Text style={styles.score}>{userRank.score}</Text>
+          <Text style={styles.score}>{scoreText}</Text>
         </View>
       </View>
     </Animated.View>

@@ -92,6 +92,8 @@ export {
 // Scouting Report
 export { FieldExperienceSection } from './components/FieldExperienceSection';
 export type { FieldExperienceSectionProps } from './components/FieldExperienceSection';
+export { DetailedModeStatsSection } from './components/DetailedModeStatsSection';
+export type { DetailedModeStatsSectionProps } from './components/DetailedModeStatsSection';
 export { ScoutingReportCard, generateDeepLink } from './components/ScoutingReportCard';
 export type { ScoutingReportData, ScoutingReportCardProps } from './components/ScoutingReportCard';
 export { ScoutingReportOverlay } from './components/ScoutingReportOverlay';

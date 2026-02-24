@@ -20,6 +20,8 @@ import {
   PerformanceStats,
   UsePerformanceStatsResult,
   GameProficiency,
+  DetailedModeStats,
+  GAME_MODE_DISPLAY,
 } from '../types/stats.types';
 import {
   calculateProficiency,
@@ -154,6 +156,27 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
       // Calculate Field Experience (per-mode completion counts)
       const fieldExperience = calculateFieldExperience(attempts);
 
+      // Calculate detailed per-mode stats for MODE BREAKDOWN section
+      const detailedModeStats: DetailedModeStats[] = proficiencies
+        .filter((p) => p.gamesPlayed > 0)
+        .map((p) => {
+          const modeAttempts = groupedAttempts.get(p.gameMode) || [];
+          const scores = modeAttempts.map((a) => a.score ?? 0);
+          const modeDisplay = GAME_MODE_DISPLAY[p.gameMode];
+
+          return {
+            gameMode: p.gameMode,
+            displayName: modeDisplay.displayName,
+            skillName: modeDisplay.skillName,
+            gamesPlayed: p.gamesPlayed,
+            accuracyPercent: Math.round(p.percentage),
+            bestScore: scores.length > 0 ? Math.max(...scores) : 0,
+            totalPoints: scores.reduce((sum, s) => sum + s, 0),
+            perfectScores: p.perfectScores,
+          };
+        })
+        .sort((a, b) => b.gamesPlayed - a.gamesPlayed); // Most played first
+
       setStats({
         globalIQ,
         proficiencies,
@@ -164,6 +187,7 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
         longestStreak,
         badges,
         fieldExperience,
+        detailedModeStats,
       });
       setError(null);
       lastLoadTime.current = Date.now();

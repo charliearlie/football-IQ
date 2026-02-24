@@ -9,7 +9,7 @@ import { GameMode } from '@/features/puzzles/types/puzzle.types';
 /**
  * Type of leaderboard view.
  */
-export type LeaderboardType = 'daily' | 'global';
+export type LeaderboardType = 'daily' | 'yearly' | 'global';
 
 /**
  * A single entry in the leaderboard.
@@ -23,12 +23,16 @@ export interface LeaderboardEntry {
   displayName: string;
   /** Avatar URL (optional) */
   avatarUrl: string | null;
-  /** Score value (daily_score 0-500 or global_iq 0-100) */
+  /** Score value (daily_score 0-500, yearly_score, or total_iq) */
   score: number;
-  /** Number of games played (daily leaderboard only) */
+  /** Number of games played */
   gamesPlayed?: number;
   /** Timestamp of last completed puzzle (for tie-breaking display) */
   lastCompletedAt?: string;
+  /** Tier name for alltime entries */
+  tierName?: string;
+  /** Tier color hex string for alltime entries */
+  tierColor?: string;
 }
 
 /**
@@ -72,7 +76,26 @@ export interface DailyLeaderboardOptions {
 }
 
 /**
+ * Options for fetching yearly leaderboard.
+ */
+export interface YearlyLeaderboardOptions {
+  /** Year to fetch leaderboard for (defaults to current year) */
+  year?: number;
+  /** Maximum entries to return (defaults to 100) */
+  limit?: number;
+}
+
+/**
+ * Options for fetching all-time leaderboard.
+ */
+export interface AlltimeLeaderboardOptions {
+  /** Maximum entries to return (defaults to 100) */
+  limit?: number;
+}
+
+/**
  * Options for fetching global IQ leaderboard.
+ * @deprecated Use AlltimeLeaderboardOptions
  */
 export interface GlobalLeaderboardOptions {
   /** Maximum entries to return (defaults to 100) */

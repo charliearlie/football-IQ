@@ -23,9 +23,13 @@ interface DailyGoalCardProps {
   iqPointsToNext: number;
   iqNextTierName: string | null;
   iqTierColor: string;
+  // Rank props
+  userRank?: number | null;
+  totalUsers?: number | null;
   // Navigation
   onPressGames?: () => void;
   onPressIQ?: () => void;
+  onPressRank?: () => void;
 }
 
 export function DailyGoalCard({
@@ -39,8 +43,11 @@ export function DailyGoalCard({
   iqPointsToNext,
   iqNextTierName,
   iqTierColor,
+  userRank,
+  totalUsers,
   onPressGames,
   onPressIQ,
+  onPressRank,
 }: DailyGoalCardProps) {
   const progressWidth = useSharedValue(0);
 
@@ -86,6 +93,17 @@ export function DailyGoalCard({
             >
               <Text style={styles.label}>GAMES COMPLETED</Text>
               <Text style={styles.gamesValue}>{gamesCompleted} / {totalGames}</Text>
+              <View style={styles.archiveProgressBackground}>
+                <View
+                  style={[
+                    styles.archiveProgressFill,
+                    { width: `${totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : 0}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.archivePercentText}>
+                {totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : 0}% of archive complete
+              </Text>
             </Pressable>
 
             {/* Divider */}
@@ -108,6 +126,27 @@ export function DailyGoalCard({
                 />
               </View>
               <Text style={styles.progressText}>{progressText}</Text>
+            </Pressable>
+
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Your Rank */}
+            <Pressable
+              onPress={onPressRank}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+            >
+              <Text style={styles.label}>YOUR RANK</Text>
+              <View style={styles.rankRow}>
+                <Text style={styles.rankValue}>
+                  {userRank != null ? `#${userRank.toLocaleString()}` : '---'}
+                </Text>
+                <Text style={styles.rankContext}>
+                  {userRank != null && totalUsers != null
+                    ? `of ${totalUsers.toLocaleString()} players`
+                    : 'Play to rank up'}
+                </Text>
+              </View>
             </Pressable>
           </View>
         </View>
@@ -179,5 +218,38 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: HOME_COLORS.textSecondary,
     marginTop: 4,
+  },
+  archiveProgressBackground: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginTop: 6,
+  },
+  archiveProgressFill: {
+    height: '100%',
+    backgroundColor: HOME_COLORS.pitchGreen,
+    borderRadius: 3,
+  },
+  archivePercentText: {
+    fontFamily: HOME_FONTS.body,
+    fontSize: 11,
+    color: HOME_COLORS.textSecondary,
+    marginTop: 4,
+  },
+  rankRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  rankValue: {
+    fontFamily: HOME_FONTS.heading,
+    fontSize: 22,
+    color: HOME_COLORS.cardYellow,
+  },
+  rankContext: {
+    fontFamily: HOME_FONTS.body,
+    fontSize: 11,
+    color: HOME_COLORS.textSecondary,
   },
 });

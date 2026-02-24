@@ -78,6 +78,7 @@ jest.mock('lucide-react-native', () => ({
   Medal: () => null,
   User: () => null,
   Calendar: () => null,
+  CalendarRange: () => null,
   TrendingUp: () => null,
   Clock: () => null,
   AlertCircle: () => null,
@@ -98,12 +99,13 @@ function createMockEntry(overrides: Partial<EntryType> = {}): EntryType {
 
 describe('LeaderboardUI', () => {
   describe('LeaderboardToggle', () => {
-    it('renders Daily and All-Time options', () => {
+    it('renders Daily, This Year, and All-Time options', () => {
       const { getByText } = render(
         <LeaderboardToggle selected="daily" onSelect={() => {}} />
       );
 
       expect(getByText('Daily')).toBeTruthy();
+      expect(getByText('This Year')).toBeTruthy();
       expect(getByText('All-Time')).toBeTruthy();
     });
 

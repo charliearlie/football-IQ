@@ -6,9 +6,11 @@ import {
   ScrollView,
   RefreshControl,
   TextInput,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Trophy } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, fonts, fontWeights, spacing, borderRadius } from "@/theme";
 import {
@@ -19,6 +21,7 @@ import {
 } from "@/features/stats";
 import { ElitePlayerCard } from "@/features/stats/components/ScoutReport";
 import { FieldExperienceSection } from "@/features/stats/components/FieldExperienceSection";
+import { DetailedModeStatsSection } from "@/features/stats/components/DetailedModeStatsSection";
 import { IQCardData } from "@/features/stats/utils/shareIQ";
 import { ScoutingReportData } from "@/features/stats/components/ScoutingReportCard";
 import { useAuth } from "@/features/auth";
@@ -65,9 +68,13 @@ export default function ScoutReportScreen() {
     async function fetchRank() {
       if (!user?.id || !stats?.globalIQ) return;
 
-      const result = await getUserRank(user.id, "global");
-      if (result) {
-        setUserRank({ rank: result.rank, totalUsers: result.totalUsers });
+      try {
+        const result = await getUserRank(user.id, "global");
+        if (result) {
+          setUserRank({ rank: result.rank, totalUsers: result.totalUsers });
+        }
+      } catch (error) {
+        console.error("Error fetching user rank:", error);
       }
     }
 
@@ -273,13 +280,13 @@ export default function ScoutReportScreen() {
       {/* Header with Leaderboard Button */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scout Report</Text>
-        {/* <Pressable
+        <Pressable
           onPress={handleLeaderboardPress}
           style={styles.leaderboardButton}
           hitSlop={12}
         >
           <Trophy size={24} color={colors.cardYellow} />
-        </Pressable> */}
+        </Pressable>
       </View>
 
       <ScrollView
@@ -312,6 +319,17 @@ export default function ScoutReportScreen() {
             <FieldExperienceSection
               fieldExperience={stats.fieldExperience}
               testID="field-experience-section"
+            />
+          </View>
+        )}
+
+        {/* Mode Breakdown Section - per-mode detailed stats */}
+        {stats.detailedModeStats && stats.detailedModeStats.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>MODE BREAKDOWN</Text>
+            <DetailedModeStatsSection
+              stats={stats.detailedModeStats}
+              testID="detailed-mode-stats"
             />
           </View>
         )}

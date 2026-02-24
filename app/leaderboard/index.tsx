@@ -1,7 +1,7 @@
 /**
  * Leaderboard Screen
  *
- * Displays real-time rankings for daily score and global IQ.
+ * Displays real-time rankings for daily score, yearly score, and all-time IQ.
  * Features toggle between views and sticky "Me" bar.
  */
 
@@ -21,11 +21,31 @@ import {
   LeaderboardType,
 } from '@/features/leaderboard';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
+/**
+ * Returns the subtitle and score label for the given leaderboard type.
+ */
+function getSubtitleConfig(type: LeaderboardType): {
+  subtitle: string;
+  scoreLabel: string;
+} {
+  switch (type) {
+    case 'daily':
+      return { subtitle: "Today's Top Players", scoreLabel: 'Score out of 500' };
+    case 'yearly':
+      return { subtitle: `${CURRENT_YEAR} Rankings`, scoreLabel: `${CURRENT_YEAR} cumulative score` };
+    case 'global':
+      return { subtitle: 'All-Time IQ Rankings', scoreLabel: 'Cumulative IQ points' };
+  }
+}
+
 /**
  * Main leaderboard screen.
  *
  * Supports URL param `type` to set initial view:
  * - /leaderboard?type=daily (default)
+ * - /leaderboard?type=yearly
  * - /leaderboard?type=global
  */
 export default function LeaderboardScreen() {
@@ -35,7 +55,11 @@ export default function LeaderboardScreen() {
 
   // Determine initial type from URL params
   const initialType: LeaderboardType =
-    params.type === 'global' ? 'global' : 'daily';
+    params.type === 'global'
+      ? 'global'
+      : params.type === 'yearly'
+        ? 'yearly'
+        : 'daily';
   const [selectedType, setSelectedType] = useState<LeaderboardType>(initialType);
 
   // Fetch leaderboard data
@@ -62,8 +86,10 @@ export default function LeaderboardScreen() {
     userRank,
   });
 
+  const subtitleConfig = getSubtitleConfig(selectedType);
+
   /**
-   * Handle toggle between daily and global views.
+   * Handle toggle between leaderboard types.
    */
   const handleToggle = useCallback((type: LeaderboardType) => {
     setSelectedType(type);
@@ -100,17 +126,8 @@ export default function LeaderboardScreen() {
 
       {/* Subtitle */}
       <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>
-          {selectedType === 'daily'
-            ? "Today's Top Players"
-            : 'All-Time Football IQ'}
-        </Text>
-        {selectedType === 'daily' && (
-          <Text style={styles.scoreLabel}>Score out of 500</Text>
-        )}
-        {selectedType === 'global' && (
-          <Text style={styles.scoreLabel}>Global IQ (0-100)</Text>
-        )}
+        <Text style={styles.subtitle}>{subtitleConfig.subtitle}</Text>
+        <Text style={styles.scoreLabel}>{subtitleConfig.scoreLabel}</Text>
       </View>
 
       {/* Leaderboard List */}
@@ -120,7 +137,7 @@ export default function LeaderboardScreen() {
         isRefreshing={isRefreshing}
         onRefresh={refresh}
         currentUserId={user?.id}
-        showGamesPlayed={selectedType === 'daily'}
+        showGamesPlayed={selectedType === 'daily' || selectedType === 'yearly'}
         type={selectedType}
         error={error}
         onViewableItemsChanged={onViewableItemsChanged}
@@ -133,6 +150,7 @@ export default function LeaderboardScreen() {
         userRank={userRank}
         displayName={profile?.display_name ?? 'You'}
         shouldShow={stickyConfig.shouldShowStickyBar}
+        leaderboardType={selectedType}
         testID="sticky-me"
       />
     </SafeAreaView>

@@ -10,7 +10,7 @@ import { View, Text, StyleSheet, Image, ViewStyle } from 'react-native';
 import { User, Medal } from 'lucide-react-native';
 import { colors, textStyles, spacing, fonts, fontWeights } from '@/theme';
 import { GlassCard } from '@/components/GlassCard';
-import { LeaderboardEntry as EntryType } from '../types/leaderboard.types';
+import { LeaderboardEntry as EntryType, LeaderboardType } from '../types/leaderboard.types';
 
 interface LeaderboardEntryProps {
   /** Entry data */
@@ -19,6 +19,8 @@ interface LeaderboardEntryProps {
   isCurrentUser?: boolean;
   /** Whether to show games played count */
   showGamesPlayed?: boolean;
+  /** Leaderboard type for score formatting */
+  leaderboardType?: LeaderboardType;
   /** Test ID for testing */
   testID?: string;
 }
@@ -86,25 +88,40 @@ function Avatar({
 }
 
 /**
+ * Format score value based on leaderboard type.
+ * All-time scores use locale formatting with "IQ" suffix.
+ */
+function formatScore(score: number, leaderboardType: LeaderboardType): string {
+  if (leaderboardType === 'global') {
+    return `${score.toLocaleString()} IQ`;
+  }
+  return String(score);
+}
+
+/**
  * Single leaderboard entry row.
  *
  * Shows:
  * - Rank (medal for top 3)
  * - Avatar (or placeholder)
  * - Display name
+ * - Tier name (alltime only, colored by tier)
  * - Score
- * - Games played badge (optional, for daily leaderboard)
+ * - Games played badge (optional, for daily/yearly leaderboard)
  */
 export function LeaderboardEntry({
   entry,
   isCurrentUser = false,
   showGamesPlayed = false,
+  leaderboardType = 'daily',
   testID,
 }: LeaderboardEntryProps) {
   const containerStyle = useMemo((): ViewStyle => ({
     ...styles.container,
     ...(isCurrentUser ? styles.containerCurrentUser : {}),
   }), [isCurrentUser]);
+
+  const scoreText = formatScore(entry.score, leaderboardType);
 
   return (
     <GlassCard
@@ -121,6 +138,17 @@ export function LeaderboardEntry({
           >
             {entry.displayName}
           </Text>
+          {entry.tierName !== undefined && (
+            <Text
+              style={[
+                styles.tierName,
+                entry.tierColor !== undefined ? { color: entry.tierColor } : null,
+              ]}
+              numberOfLines={1}
+            >
+              {entry.tierName}
+            </Text>
+          )}
           {showGamesPlayed && entry.gamesPlayed !== undefined && (
             <Text style={styles.gamesPlayed}>
               {entry.gamesPlayed}/5
@@ -131,7 +159,7 @@ export function LeaderboardEntry({
 
       <View style={styles.rightSection}>
         <Text style={[styles.score, isCurrentUser && styles.scoreCurrentUser]}>
-          {entry.score}
+          {scoreText}
         </Text>
       </View>
     </GlassCard>
@@ -193,6 +221,11 @@ const styles = StyleSheet.create({
   },
   nameCurrentUser: {
     color: colors.pitchGreen,
+  },
+  tierName: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   gamesPlayed: {
     ...textStyles.caption,

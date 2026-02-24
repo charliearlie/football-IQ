@@ -7,7 +7,7 @@
 import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, View, ViewToken } from 'react-native';
 import { colors, spacing } from '@/theme';
-import { LeaderboardEntry as EntryType } from '../types/leaderboard.types';
+import { LeaderboardEntry as EntryType, LeaderboardType } from '../types/leaderboard.types';
 import { LeaderboardEntry } from './LeaderboardEntry';
 import { LeaderboardEmptyState } from './LeaderboardEmptyState';
 
@@ -24,8 +24,8 @@ interface LeaderboardListProps {
   currentUserId?: string;
   /** Whether to show games played (daily mode) */
   showGamesPlayed?: boolean;
-  /** Leaderboard type for empty state message */
-  type?: 'daily' | 'global';
+  /** Leaderboard type for empty state message and score formatting */
+  type?: LeaderboardType;
   /** Error if any */
   error?: Error | null;
   /** Callback for visible items change (for sticky bar) */
@@ -89,6 +89,7 @@ export function LeaderboardList({
           entry={item}
           isCurrentUser={item.userId === currentUserId}
           showGamesPlayed={showGamesPlayed}
+          leaderboardType={type}
           testID={`${testID}-entry-${item.rank}`}
         />
       )}

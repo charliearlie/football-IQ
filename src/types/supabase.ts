@@ -548,6 +548,34 @@ export type Database = {
           last_completed_at: string
         }[]
       }
+      get_alltime_leaderboard: {
+        Args: {
+          limit_count?: number
+        }
+        Returns: {
+          rank: number
+          user_id: string
+          display_name: string
+          avatar_url: string | null
+          total_iq: number
+          total_games: number
+        }[]
+      }
+      get_yearly_leaderboard: {
+        Args: {
+          for_year?: number
+          limit_count?: number
+        }
+        Returns: {
+          rank: number
+          user_id: string
+          display_name: string
+          avatar_url: string | null
+          yearly_score: number
+          games_played: number
+          last_completed_at: string
+        }[]
+      }
       get_global_iq_leaderboard: {
         Args: {
           limit_count?: number
