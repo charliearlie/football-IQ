@@ -59,7 +59,11 @@ Deep narrative coverage of the 2-3 most significant results. Each gets 2-3 parag
 Shorter but still insight-rich summaries of remaining notable results. 2-4 sentences per match, but each one must have a trivia hook — a stat, a record, a historical connection. Don't just summarise; find the interesting angle.
 
 ## The Numbers Game
-4-6 statistical facts, milestones, or trivia points from today's action. Frame these as compelling observations, not dry stats. Each should surprise or delight the reader. Connect them back to the day's matches where possible.
+4-6 statistical facts, milestones, or trivia points from yesterday's action. Each stat MUST genuinely surprise or delight a knowledgeable football fan. Frame them as compelling observations, not dry numbers.
+
+GOOD stats (include these): season-long records, all-time milestones (100th goal, 500th appearance), streaks (consecutive wins/losses/clean sheets), historical comparisons ("first time since 2003"), unusual statistical quirks ("both teams had exactly 50% possession for the first time in PL history"), league-table implications backed by numbers.
+
+BAD stats (NEVER include these): the minute a goal was scored ("71: the winner arrived in the 71st minute" — this is not trivia, it's a timestamp), a team scoring zero goals ("0: Everton did not score" — this is just restating the scoreline), possession or shot stats without historical context, any stat that merely re-describes something already covered in The Big Stories, any number that a reader could trivially derive from the scoreline itself.
 
 ## On This Day
 2-4 historical football facts for the match date. IMPORTANT: ONLY use facts provided in the HISTORICAL RESEARCH section below — do NOT invent or recall historical facts from your own knowledge, as these are frequently inaccurate. Present each fact with vivid narrative context — not just "In 2004, X happened" but "Twenty-two years ago, a young Wayne Rooney announced himself on the European stage..." Each fact must include the exact year and specific details. If the research provides source attributions, include them.
@@ -336,6 +340,7 @@ Evaluate against these criteria:
 4. PROSE: Is the writing varied in sentence length and rhythm? Does it avoid clichés and repetition?
 5. ENGAGEMENT: Would a serious football fan find this genuinely interesting to read?
 6. COMPLETENESS: Are all four sections (The Big Stories, Around the Grounds, The Numbers Game, On This Day) present and adequately developed?
+7. NUMBERS GAME QUALITY: Every stat in "The Numbers Game" must genuinely surprise or teach the reader something. Flag any stat that merely restates the scoreline (e.g. "0: Team X did not score"), states the minute a goal was scored without wider context, or repeats information already covered in The Big Stories. Each number should be a real trivia nugget — records, milestones, streaks, or historical firsts.
 
 Return a JSON object:
 {
