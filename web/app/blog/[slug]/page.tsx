@@ -52,6 +52,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description =
     article.meta_description ?? article.excerpt ?? undefined;
   const url = `https://football-iq.app/blog/${article.slug}`;
+  const ogImageUrl =
+    article.og_image_url ??
+    `https://football-iq.app/api/og/blog/${article.slug}`;
 
   return {
     title,
@@ -72,24 +75,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       publishedTime: article.published_at ?? undefined,
       authors: ["Football IQ"],
       siteName: "Football IQ",
-      ...(article.og_image_url && {
-        images: [
-          {
-            url: article.og_image_url,
-            width: 1200,
-            height: 630,
-            alt: article.title,
-          },
-        ],
-      }),
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(article.og_image_url && {
-        images: [article.og_image_url],
-      }),
+      images: [ogImageUrl],
     },
   };
 }
@@ -110,7 +109,10 @@ export default async function ArticlePage({ params }: PageProps) {
       {
         "@type": "NewsArticle",
         headline: article.title,
-        ...(article.og_image_url && { image: [article.og_image_url] }),
+        image: [
+          article.og_image_url ??
+            `https://football-iq.app/api/og/blog/${article.slug}`,
+        ],
         datePublished: article.published_at,
         dateModified: article.published_at,
         author: {
