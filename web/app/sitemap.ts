@@ -78,20 +78,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 0.8,
+      priority: 0.9,
     },
   ];
 
-  // Individual blog articles
+  // Individual blog articles — recent ones get "daily" to prompt recrawl
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const articlePages: MetadataRoute.Sitemap = (articles || []).map(
-    (article) => ({
-      url: `${baseUrl}/blog/${article.slug}`,
-      lastModified: article.published_at
+    (article) => {
+      const publishedDate = article.published_at
         ? new Date(article.published_at)
-        : new Date(),
-      changeFrequency: "never" as const,
-      priority: 0.7,
-    })
+        : new Date();
+      const isRecent = publishedDate.getTime() > sevenDaysAgo;
+      return {
+        url: `${baseUrl}/blog/${article.slug}`,
+        lastModified: publishedDate,
+        changeFrequency: isRecent ? ("daily" as const) : ("never" as const),
+        priority: 0.7,
+      };
+    }
   );
 
   return [...staticPages, ...blogPages, ...articlePages];

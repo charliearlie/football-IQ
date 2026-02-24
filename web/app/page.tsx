@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, APP_STORE_URL } from "@/lib/constants";
 import { GameHubCard } from "@/components/play/GameHubCard";
 import { AdSlot } from "@/components/play/AdSlot";
@@ -10,7 +10,9 @@ import { HeroStrip } from "@/components/landing/HeroStrip";
 import { DailyProgress } from "@/components/play/DailyProgress";
 import { Footer } from "@/components/landing/Footer";
 import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
+import { LatestDigest } from "@/components/landing/LatestDigest";
 import { JsonLd } from "@/components/JsonLd";
+import type { BlogArticleSummary } from "@/lib/blog/types";
 
 export const revalidate = 3600;
 
@@ -64,6 +66,20 @@ export default async function HomePage() {
 
   const liveModes = new Set(data?.map((r) => r.game_mode) ?? []);
 
+  // Fetch 3 latest published blog articles (anon client — respects RLS)
+  const anonSupabase = await createClient();
+  const { data: blogArticles } = await anonSupabase
+    .from("blog_articles")
+    .select(
+      "id, slug, title, subtitle, excerpt, article_date, meta_title, meta_description, published_at, og_image_url"
+    )
+    .eq("status", "published")
+    .order("article_date", { ascending: false })
+    .limit(3)
+    .returns<BlogArticleSummary[]>();
+
+  const latestArticles = blogArticles ?? [];
+
   const todayDate = new Date();
   const dayStr = todayDate.toLocaleDateString("en-GB", { weekday: "long" });
   const dateStr = todayDate.toLocaleDateString("en-GB", {
@@ -89,6 +105,7 @@ export default async function HomePage() {
                 name: "Football IQ",
                 url: "https://football-iq.app",
               },
+              hasPart: { "@id": "https://football-iq.app/blog/#blog" },
             },
             {
               "@type": "SoftwareApplication",
@@ -136,6 +153,27 @@ export default async function HomePage() {
                 },
               ],
             },
+            ...(latestArticles.length > 0
+              ? [
+                  {
+                    "@type": "Blog",
+                    "@id": "https://football-iq.app/blog/#blog",
+                    name: "Daily Football Digest",
+                    description:
+                      "Daily football news, match analysis and transfer coverage.",
+                    url: "https://football-iq.app/blog",
+                    isPartOf: {
+                      "@id": "https://football-iq.app/#website",
+                    },
+                    blogPost: latestArticles.map((a) => ({
+                      "@type": "BlogPosting",
+                      headline: a.title,
+                      url: `https://football-iq.app/blog/${a.slug}`,
+                      datePublished: a.published_at ?? a.article_date,
+                    })),
+                  },
+                ]
+              : []),
           ],
         }}
       />
@@ -245,6 +283,9 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* Latest blog articles — SEO internal linking + content discovery */}
+        <LatestDigest articles={latestArticles} />
       </div>
 
       <Footer />

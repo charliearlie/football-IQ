@@ -8,7 +8,7 @@ import type { BlogArticleSummary } from "@/lib/blog/types";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Daily Football Digest",
+  title: "Daily Football Digest | Football News & Match Analysis | Football IQ",
   description:
     "AI-generated daily football coverage — match analysis, transfer news, and tactical breakdowns. Updated every night.",
   alternates: {

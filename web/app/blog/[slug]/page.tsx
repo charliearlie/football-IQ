@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Script from "next/script";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { HeroStrip } from "@/components/landing/HeroStrip";
 import { Footer } from "@/components/landing/Footer";
 import { BlogHeader } from "@/components/blog/BlogHeader";
@@ -105,25 +106,53 @@ export default async function ArticlePage({ params }: PageProps) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    headline: article.title,
-    ...(article.og_image_url && { image: [article.og_image_url] }),
-    datePublished: article.published_at,
-    dateModified: article.published_at,
-    author: {
-      "@type": "Organization",
-      name: "Football IQ",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Football IQ",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://football-iq.app/images/favicon.png",
+    "@graph": [
+      {
+        "@type": "NewsArticle",
+        headline: article.title,
+        ...(article.og_image_url && { image: [article.og_image_url] }),
+        datePublished: article.published_at,
+        dateModified: article.published_at,
+        author: {
+          "@type": "Organization",
+          name: "Football IQ",
+        },
+        publisher: {
+          "@type": "Organization",
+          name: "Football IQ",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://football-iq.app/images/favicon.png",
+          },
+        },
+        mainEntityOfPage: `https://football-iq.app/blog/${article.slug}`,
+        description:
+          article.meta_description ?? article.excerpt ?? article.title,
       },
-    },
-    mainEntityOfPage: `https://football-iq.app/blog/${article.slug}`,
-    description: article.meta_description ?? article.excerpt ?? article.title,
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Football IQ",
+            item: "https://football-iq.app",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Daily Digest",
+            item: "https://football-iq.app/blog",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: article.title,
+            item: `https://football-iq.app/blog/${article.slug}`,
+          },
+        ],
+      },
+    ],
   };
 
   return (
@@ -145,6 +174,31 @@ export default async function ArticlePage({ params }: PageProps) {
       <HeroStrip />
 
       <article className="max-w-3xl mx-auto px-4 py-12">
+        {/* Breadcrumb navigation */}
+        <nav aria-label="Breadcrumb" className="mb-6">
+          <ol className="flex items-center gap-1.5 text-xs text-slate-500">
+            <li>
+              <Link href="/" className="hover:text-floodlight transition-colors">
+                Football IQ
+              </Link>
+            </li>
+            <li aria-hidden="true" className="select-none">/</li>
+            <li>
+              <Link href="/blog" className="hover:text-floodlight transition-colors">
+                Daily Digest
+              </Link>
+            </li>
+            <li aria-hidden="true" className="select-none">/</li>
+            <li
+              className="text-slate-400 truncate min-w-0 flex-1"
+              aria-current="page"
+              title={article.title}
+            >
+              {article.title}
+            </li>
+          </ol>
+        </nav>
+
         <BlogHeader
           title={article.title}
           subtitle={article.subtitle}
