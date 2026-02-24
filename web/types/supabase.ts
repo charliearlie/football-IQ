@@ -65,6 +65,86 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_articles: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          subtitle: string | null
+          content: string
+          excerpt: string | null
+          article_date: string
+          status: string
+          raw_match_data: Json | null
+          research_data: Json | null
+          review_factual: Json | null
+          review_quality: Json | null
+          review_sensitivity: Json | null
+          generation_model: string | null
+          published_at: string | null
+          published_by: string | null
+          meta_title: string | null
+          meta_description: string | null
+          og_image_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          subtitle?: string | null
+          content: string
+          excerpt?: string | null
+          article_date: string
+          status?: string
+          raw_match_data?: Json | null
+          research_data?: Json | null
+          review_factual?: Json | null
+          review_quality?: Json | null
+          review_sensitivity?: Json | null
+          generation_model?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          meta_title?: string | null
+          meta_description?: string | null
+          og_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          title?: string
+          subtitle?: string | null
+          content?: string
+          excerpt?: string | null
+          article_date?: string
+          status?: string
+          raw_match_data?: Json | null
+          research_data?: Json | null
+          review_factual?: Json | null
+          review_quality?: Json | null
+          review_sensitivity?: Json | null
+          generation_model?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          meta_title?: string | null
+          meta_description?: string | null
+          og_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_articles_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_puzzles: {
         Row: {
           content: Json

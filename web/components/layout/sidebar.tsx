@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   HeartPulse,
   History,
+  FileText,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -50,6 +51,7 @@ const navigation: NavSection[] = [
   {
     label: "Admin",
     items: [
+      { name: "Blog", href: "/admin/blog", icon: FileText },
       { name: "Users", href: "/admin/users", icon: BarChart3 },
       { name: "Content Health", href: "/admin/content", icon: HeartPulse },
       { name: "Career Path", href: "/admin/career-path", icon: Route },

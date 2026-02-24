@@ -8,13 +8,13 @@
 
 The core product is working. The funnel is broken.
 
-| Metric | Value | Signal |
-|--------|-------|--------|
-| Registered users | 262 | Acquisition is happening |
-| Ever played | 31 (12%) | **Activation is the #1 problem** |
-| Weekly active users | 8 | Retention is thin |
-| Premium subscribers | 5 | Conversion is possible |
-| Puzzle completion rate | 96% | The game itself is excellent |
+| Metric                 | Value    | Signal                           |
+| ---------------------- | -------- | -------------------------------- |
+| Registered users       | 262      | Acquisition is happening         |
+| Ever played            | 31 (12%) | **Activation is the #1 problem** |
+| Weekly active users    | 8        | Retention is thin                |
+| Premium subscribers    | 5        | Conversion is possible           |
+| Puzzle completion rate | 96%      | The game itself is excellent     |
 
 The 96% completion rate proves that once users reach a puzzle, they finish it. The problem is that 88% of registered users never reach one. The growth priority order is therefore:
 
@@ -25,114 +25,93 @@ The 96% completion rate proves that once users reach a puzzle, they finish it. T
 
 ---
 
-## Tier 1: This Week - Analytics & SEO Foundations
+## Tier 1: This Week - Analytics & SEO Foundations ✅
 
-*Being implemented now. No user-facing changes, but unblocks every data-driven decision going forward.*
+_Completed Feb 2026. All code changes deployed._
 
-### 1. PostHog Web Analytics
+### 1. ~~PostHog Web Analytics~~ ✅
 
-Install `posthog-js` on the Next.js web app using the same API key and EU host as the mobile app. This gives a unified view of web game plays, page views, and conversion events across both surfaces.
+Installed `posthog-js` on the Next.js web app using the same API key and EU host as the mobile app. Unified view of web game plays, page views, and conversion events across both surfaces.
 
 - **Files:** `web/components/PostHogProvider.tsx`, `web/app/layout.tsx`
-- **Why now:** Without web analytics, we cannot measure the impact of any SEO work or landing page changes.
+- **Note:** Vercel environment variables (`NEXT_PUBLIC_POSTHOG_API_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`) must be added manually in the Vercel dashboard.
 
-### 2. Google Search Console
+### 2. Google Search Console ⏳
 
 Verify ownership of the domain and submit the sitemap. This is the single most important non-code action for organic growth — without it, Google cannot communicate crawl errors or keyword rankings back to us.
 
-- **Action:** Add HTML tag to `web/app/layout.tsx` metadata, submit `https://footballiq.app/sitemap.xml`
+- **Action:** Add HTML tag to `web/app/layout.tsx` metadata, submit `https://football-iq.app/sitemap.xml`
+- **Status:** Manual action required — not a code change.
 
-### 3. Sitemap Fixes
+### 3. ~~Sitemap Fixes~~ ✅
 
-Two problems exist in the current sitemap:
-
-1. The `/play` hub page is missing entirely, so Google has no crawl entry point to the game pages.
-2. `lastModified: new Date()` on game pages tells Google the content changes every time the site rebuilds. This trains Google to ignore the freshness signal entirely.
-
-Fix both: add `/play` to the sitemap with a real static date, and replace `new Date()` with hardcoded last-modified dates on all game pages that only update when the page content genuinely changes.
+Added `/play` hub page to the sitemap. Removed misleading `lastModified: new Date()` from game pages so Google no longer treats every rebuild as a content change.
 
 - **File:** `web/app/sitemap.ts`
 
-### 4. Footer Internal Links
+### 4. ~~Footer Internal Links~~ ✅
 
-The footer currently contains no links to individual game pages. Internal links are the cheapest source of link equity — every page on the site should pass authority to the game pages that we want to rank.
-
-Add a "Play Games" column to the footer with links to all five game pages.
+Added a two-column footer with a "Play" column linking to all five web game pages, passing link equity from every page on the site.
 
 - **File:** `web/components/landing/Footer.tsx`
 
-### 5. FAQ Schema on Game Pages
+### 5. ~~FAQ Schema on Game Pages~~ ✅
 
-FAQPage structured data targets the "People Also Ask" boxes in Google search results. These boxes appear for informational queries like "daily footballer guessing game" and "football connections puzzle" — precisely the mid-funnel queries where someone is deciding whether to try a game.
-
-Add one FAQPage schema block per game page with 3-5 questions answering what the game is, how to play, and how it compares to similar games.
+Added FAQPage structured data to the JSON-LD `@graph` on all five game pages with 3 questions each, targeting "People Also Ask" boxes for mid-funnel queries.
 
 - **Files:** `web/app/play/career-path/page.tsx`, `web/app/play/transfer-guess/page.tsx`, `web/app/play/connections/page.tsx`, `web/app/play/timeline/page.tsx`, `web/app/play/topical-quiz/page.tsx`
 
-### 6. Organisation Schema
+### 6. ~~Organisation Schema~~ ✅
 
-An Organisation schema block in the root layout establishes Football IQ as a known entity in Google's knowledge graph. This supports brand queries and makes it more likely that rich results appear for branded searches over time.
+Added Organisation JSON-LD to the root layout for knowledge graph presence and branded search rich results.
 
 - **File:** `web/app/layout.tsx`
 
-### 7. Fix AdSense Rejection
+### 7. ~~Fix AdSense Rejection~~ ✅
 
-Pre-game banner ads in `GamePageShell` are currently showing before any content loads. This violates AdSense policy. The fix is to remove pre-game banner placements entirely and keep only post-game rectangle ads (which appear after the user has consumed content).
+Banner ads in `GamePageShell` now only render once game content has mounted (via `contentRef` callback), preventing ads on empty loading states. Post-game rectangle ads appear after game completion. This should resolve the "ads on screens without publisher content" rejection.
 
 - **File:** `web/components/play/GamePageShell.tsx`
 - **Impact:** Unblocks ad revenue on the web platform.
 
 ---
 
-## Tier 2: Next 2 Weeks - Activation & Session Depth
+## Tier 2: Activation & Session Depth ✅
 
-*The highest-leverage work in this entire roadmap. Fixing activation from 12% to even 30% would nearly triple the active user base with zero new acquisition spend.*
+_Completed Feb 2026. All code changes deployed._
 
-### 8. Remove Onboarding Name Requirement
+### 8. ~~Remove Onboarding Name Requirement~~ ✅
 
-This is the single biggest activation blocker identified. `BriefingScreen` currently requires a user to enter their name before they can play their first game. This is a friction wall placed at the worst possible moment — between a new user and the experience they came to try.
+Onboarding modal no longer shows. Users go straight to the home screen and can play immediately as anonymous guests. Display name defaults to "Football Fan" on leaderboards and "Guest Manager" in settings. `updateDisplayName()` is available for future optional name prompt.
 
-The fix: let users play immediately as anonymous guests. Ask for a name (or offer to skip) only after the first game completes, when the user has experienced value and has a reason to care about their identity.
-
-- **Files:** `src/features/auth/context/OnboardingContext.tsx`, `src/features/auth/components/FirstRunModal.tsx`, `src/features/auth/components/BriefingScreen.tsx`
+- **File:** `src/features/auth/context/OnboardingContext.tsx`
 - **Expected impact:** Activation rate from 12% to 30%+
 
-### 9. "Next Puzzle" Button on Result Modal
+<!-- ### 9. "Next Puzzle" Button on Result Modal
 
-After completing a game, users currently have to navigate back to the home screen to start the next one. This is an unnecessary interruption that kills session depth.
+After completing a game, show a prominent button to jump to the next unplayed daily puzzle. Chains sessions together.
 
-Add a primary green "Next Puzzle" button above the Share and Done buttons on all result modals. The button resolves the next unplayed game from `useDailyPuzzles`. When all daily games are complete, it transitions to "Play from Archive" using the existing `useRandomPlay` hook.
-
-- **Files:** `src/components/GameResultModal/BaseResultModal.tsx`, all game screen files
 - **Expected impact:** Average session length increases from ~1 game to 2-3 games.
 
 ### 10. Percentile Display for All Users
 
-The current implementation only shows percentile ranking to users in the top 25%. This is backwards — the users who most need motivation to return are those in the bottom 75%, and showing them "342 people played today. You scored better than 67%." gives them a concrete social comparison and a reason to improve.
+Show percentile ranking on the result modal for all users (not just premium). Needs careful approach — avoid showing raw player counts or "Top 0%" when data is sparse.
 
-Show the full percentile to everyone. No gate.
+### 11. "Last Time vs This Time" Comparison
 
-- **File:** `src/components/GameResultModal/BaseResultModal.tsx`
+Compare the user's score against their most recent previous attempt on the same game mode (not yesterday — since only Career Path and Transfer Guess are daily). Show improvement/regression indicator. -->
 
-### 11. "You vs Yesterday" Comparison
+### 12. ~~Web PostHog Event Tracking~~ ✅
 
-Self-comparison is one of the most reliable drivers of competence motivation. Showing a user their score today versus their score on the same game yesterday gives them a concrete improvement target that has nothing to do with other players.
+Added `game_started`, `game_completed`, and `share_completed` events to all 5 web game components + PostGameCTA. Events include `platform: "web"` property and match the mobile schema. Time tracking via start ref.
 
-Display a simple "Yesterday: 4 clues / Today: 2 clues" comparison on the result modal for repeat players.
-
-- **File:** `src/components/GameResultModal/BaseResultModal.tsx`
-
-### 12. Web PostHog Event Tracking
-
-The Tier 1 PostHog installation captures page views but not game events. Add explicit tracking for `game_started`, `game_completed`, and `share_completed` on web game components, matching the event schema already in use on mobile.
-
-- **Files:** `web/components/play/*.tsx`
+- **Files:** New `web/hooks/use-game-tracking.ts`, 5 web game components, `web/components/play/PostGameCTA.tsx`
 
 ---
 
 ## Tier 3: Month 1 - Leaderboards & Retention
 
-*These features give returning users a persistent reason to keep coming back. The current leaderboard is an all-time table that new users can never compete on — this discourages engagement rather than encouraging it.*
+_These features give returning users a persistent reason to keep coming back. The current leaderboard is an all-time table that new users can never compete on — this discourages engagement rather than encouraging it._
 
 ### 13. Yearly Leaderboard
 
@@ -170,7 +149,7 @@ The data already exists via `completedCount` and `totalCount` from `useArchivePu
 
 ## Tier 4: Month 1-2 - Archive Redesign & Content Packs
 
-*The archive is currently a flat list sorted by date. This makes it useful only for users who know what they're looking for. Redesigning it around game modes and introducing purchasable packs creates a genuine content catalogue.*
+_The archive is currently a flat list sorted by date. This makes it useful only for users who know what they're looking for. Redesigning it around game modes and introducing purchasable packs creates a genuine content catalogue._
 
 ### 17. Mode-First Archive Browsing
 
@@ -185,6 +164,7 @@ This reuses the `AdvancedFilterBar` filtering logic with a new entry point and s
 Test the content pack model with a single non-consumable IAP: "30 Classic Career Paths" at 99p. This is the lowest-risk way to validate purchase intent before building a full catalogue.
 
 Schema additions:
+
 - `packs` table: `id, name, description, price, puzzle_ids[]`
 - `user_pack_purchases` table: `user_id, pack_id, purchased_at`
 
@@ -208,7 +188,7 @@ After a user completes their third Career Path puzzle in a day, show a contextua
 
 ## Tier 5: Month 2 - SEO Content & Conversion
 
-*By month 2, Search Console should be showing which queries are getting impressions but low clicks. These tasks are planned now but should be validated against that data before execution.*
+_By month 2, Search Console should be showing which queries are getting impressions but low clicks. These tasks are planned now but should be validated against that data before execution._
 
 ### 21. Flagship Trivia Questions Page
 
@@ -237,7 +217,7 @@ These changes require an App Store submission but no code changes.
 
 ## Tier 6: Month 2-3 - Engagement Loops
 
-*Retention mechanics that create habitual daily behaviour. These are only worth building once activation is fixed — a leaky bucket doesn't benefit from a better retention pump.*
+_Retention mechanics that create habitual daily behaviour. These are only worth building once activation is fixed — a leaky bucket doesn't benefit from a better retention pump._
 
 ### 24. Deep-Link Notifications to First Unplayed Game
 
@@ -287,7 +267,7 @@ Trigger `expo-store-review` when all four conditions are met: 10+ puzzles comple
 
 ## Tier 7: Month 3+ - Scale-Dependent Features
 
-*These features are only valuable at scale, or require scale to build responsibly. Do not pull forward.*
+_These features are only valuable at scale, or require scale to build responsibly. Do not pull forward._
 
 ### 29. Content Packs Expansion
 
@@ -319,30 +299,30 @@ Individual pages per footballer can capture "X player career" and "X footballer 
 
 ## Keyword Strategy
 
-| Page | Target Keywords |
-|------|----------------|
-| Homepage (`/`) | "daily football quiz", "free football games online" |
-| `/play/career-path` | "guess the footballer career", "footballer guessing game" |
-| `/play/transfer-guess` | "football transfer quiz", "guess the transfer" |
-| `/play/connections` | "football connections game", "NYT connections football" |
-| `/play/timeline` | "football timeline quiz", "sort footballers in order" |
-| `/play/topical-quiz` | "weekly football quiz", "football news quiz" |
+| Page                         | Target Keywords                                                          |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| Homepage (`/`)               | "daily football quiz", "free football games online"                      |
+| `/play/career-path`          | "guess the footballer career", "footballer guessing game"                |
+| `/play/transfer-guess`       | "football transfer quiz", "guess the transfer"                           |
+| `/play/connections`          | "football connections game", "NYT connections football"                  |
+| `/play/timeline`             | "football timeline quiz", "sort footballers in order"                    |
+| `/play/topical-quiz`         | "weekly football quiz", "football news quiz"                             |
 | `/football-trivia-questions` | "football trivia questions and answers", "premier league quiz questions" |
 
 ---
 
 ## What NOT to Build (Yet)
 
-| Feature | Why Deferred |
-|---------|-------------|
-| Player pages (SEO) | Thin pages at scale trigger Google helpful content penalty; database not rich enough |
-| Blog | Single evergreen trivia questions page achieves the same traffic without ongoing maintenance cost |
-| A/B testing infrastructure | Need 1,000+ active users for statistical significance; results would be noise |
-| Live multiplayer | XL engineering effort, only creates value at scale |
-| Localisation | Need English-market traction first before splitting focus |
-| Email marketing | No email collection at registration; requires architecture change first |
-| New game modes | 11 modes is sufficient; fix activation before adding more content |
-| Daily game cap | Cannot enforce limits fairly until content catalogue is large enough |
+| Feature                    | Why Deferred                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| Player pages (SEO)         | Thin pages at scale trigger Google helpful content penalty; database not rich enough              |
+| Blog                       | Single evergreen trivia questions page achieves the same traffic without ongoing maintenance cost |
+| A/B testing infrastructure | Need 1,000+ active users for statistical significance; results would be noise                     |
+| Live multiplayer           | XL engineering effort, only creates value at scale                                                |
+| Localisation               | Need English-market traction first before splitting focus                                         |
+| Email marketing            | No email collection at registration; requires architecture change first                           |
+| New game modes             | 11 modes is sufficient; fix activation before adding more content                                 |
+| Daily game cap             | Cannot enforce limits fairly until content catalogue is large enough                              |
 
 ---
 
@@ -362,12 +342,12 @@ The visual language is strong: stadium navy, pitch green, Bebas Neue. The change
 
 ## Success Metrics by Tier
 
-| Tier | Primary Metric | Target |
-|------|---------------|--------|
-| Tier 1 (Analytics) | Search Console set up, web analytics live | Done by end of week |
-| Tier 2 (Activation) | % of registered users who play at least once | 12% → 35% |
-| Tier 3 (Retention) | Weekly active users | 8 → 30 |
-| Tier 4 (Monetisation) | Monthly revenue | Track first pack purchase |
-| Tier 5 (SEO) | Organic search impressions | 0 → 5,000/month |
-| Tier 6 (Loops) | D7 retention | Establish baseline |
-| Tier 7 (Scale) | Monthly active users | 500+ before building |
+| Tier                  | Primary Metric                               | Target                    |
+| --------------------- | -------------------------------------------- | ------------------------- |
+| Tier 1 (Analytics)    | Search Console set up, web analytics live    | Done by end of week       |
+| Tier 2 (Activation)   | % of registered users who play at least once | 12% → 35%                 |
+| Tier 3 (Retention)    | Weekly active users                          | 8 → 30                    |
+| Tier 4 (Monetisation) | Monthly revenue                              | Track first pack purchase |
+| Tier 5 (SEO)          | Organic search impressions                   | 0 → 5,000/month           |
+| Tier 6 (Loops)        | D7 retention                                 | Establish baseline        |
+| Tier 7 (Scale)        | Monthly active users                         | 500+ before building      |

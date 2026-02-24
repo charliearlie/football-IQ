@@ -13,6 +13,7 @@ export function Footer() {
             </p>
             <div className="space-y-2">
               {[
+                { href: "/blog", label: "Daily Digest" },
                 { href: "/play/career-path", label: "Career Path" },
                 { href: "/play/transfer-guess", label: "Transfer Guess" },
                 { href: "/play/connections", label: "Connections" },

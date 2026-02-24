@@ -9,6 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "sonner";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -40,6 +41,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
         </div>
       </div>
+      <Toaster theme="dark" toastOptions={{ className: "!bg-stadium-navy !border-white/10 !text-floodlight" }} />
     </TooltipProvider>
   );
 }

@@ -1,9 +1,21 @@
+import { createClient } from "@/lib/supabase/server";
 import type { MetadataRoute } from "next";
+import type { BlogArticleSitemapEntry } from "@/lib/blog/types";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://football-iq.app";
 
-  return [
+  // Fetch published blog articles
+  const supabase = await createClient();
+  const { data: articles } = await supabase
+    .from("blog_articles")
+    .select("slug, published_at")
+    .eq("status", "published")
+    .order("article_date", { ascending: false })
+    .returns<BlogArticleSitemapEntry[]>();
+
+  // Static pages
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -59,4 +71,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.2,
     },
   ];
+
+  // Blog index page
+  const blogPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+  ];
+
+  // Individual blog articles
+  const articlePages: MetadataRoute.Sitemap = (articles || []).map(
+    (article) => ({
+      url: `${baseUrl}/blog/${article.slug}`,
+      lastModified: article.published_at
+        ? new Date(article.published_at)
+        : new Date(),
+      changeFrequency: "never" as const,
+      priority: 0.7,
+    })
+  );
+
+  return [...staticPages, ...blogPages, ...articlePages];
 }
