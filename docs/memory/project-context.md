@@ -5,17 +5,19 @@
 Football IQ is a mobile trivia game featuring daily puzzles across 12 game modes:
 
 1. **Career Path** - Guess player from sequential career clues
-2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
+2. **Career Path Pro** - Premium version of Career Path with harder players
 3. **The Grid** - Fill 3x3 matrix with players matching criteria
 4. **The Chain** - Connect two players through shared club history (Inverse Par scoring)
 5. **The Thread** - Guess the club from a chronological list of kit sponsors/suppliers
 6. **Transfer Guess** - Identify player from transfer info
 7. **Goalscorer Recall** - Name scorers from historic match (timed)
 8. **Topical Quiz** - 5 multiple-choice questions
-9. **Top Tens** (Premium) - Name all 10 answers in a ranked list
+9. **Top Tens** - Name all 10 answers in a ranked list
 10. **Starting XI** - Identify hidden players on a tactical pitch lineup
 11. **Connections** - Group 16 footballers into 4 categories of 4
 12. **Timeline** - Sort 6 events into chronological order
+
+> **Note (Feb 2026):** All premium game modes are temporarily free for all users as part of an outreach and retention push. Career Path Pro, Top Tens, The Grid, and Timeline no longer require a subscription or ad watch to play. The archive 3-day lock still applies. Search for `// Temporarily disabled — all modes free for outreach` across the codebase to find and revert all related changes. Key files: `useDailyPuzzles.ts`, `PremiumOnlyGate.tsx`, `MiniGameCard.tsx`, `ArchiveList.tsx`, `database.ts`, `constants.ts`.
 
 ## Tech Stack
 

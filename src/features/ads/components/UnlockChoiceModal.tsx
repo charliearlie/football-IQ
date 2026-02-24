@@ -274,7 +274,6 @@ export function UnlockChoiceModal({
             <IdleContent
               onGoPremium={handleGoPremium}
               onWatchAd={handleWatchAd}
-              isAdReady={isRewardedAdReady}
               testID={testID}
             />
           )}
@@ -311,12 +310,10 @@ export function UnlockChoiceModal({
 function IdleContent({
   onGoPremium,
   onWatchAd,
-  isAdReady,
   testID,
 }: {
   onGoPremium: () => void;
   onWatchAd: () => void;
-  isAdReady: boolean;
   testID?: string;
 }) {
   return (
@@ -358,12 +355,11 @@ function IdleContent({
           </View>
         </View>
         <ElevatedButton
-          title={isAdReady ? 'Watch' : 'Loading...'}
+          title="Watch"
           onPress={onWatchAd}
           size="small"
-          topColor={isAdReady ? colors.pitchGreen : colors.glassBackground}
-          shadowColor={isAdReady ? colors.grassShadow : colors.glassBorder}
-          disabled={!isAdReady}
+          topColor={colors.pitchGreen}
+          shadowColor={colors.grassShadow}
           testID={`${testID}-watch-ad-button`}
         />
       </View>

@@ -149,7 +149,7 @@ export const ArchiveList = forwardRef<
       };
 
       // Check if this is a premium-only game mode
-      const isPremiumOnly = item.gameMode === 'career_path_pro' || item.gameMode === 'top_tens';
+      const isPremiumOnly = false; // Temporarily disabled — all modes free for outreach
 
       // Use UniversalGameCard for both locked and unlocked states
       // Note: date is NOT passed - DayHeader provides date context
