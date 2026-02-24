@@ -11,8 +11,13 @@
  * before being handed off to the review pipeline.
  */
 
+import { ImageResponse } from "@vercel/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/supabase";
+import type { OGFont } from "@/components/og/og-fonts";
+import { BlogArticleOGCard } from "@/components/og/BlogArticleOGCard";
 import { collectDailyFootballData } from "./api-football";
 import type { DailyFootballData } from "./api-football";
 import {
@@ -366,6 +371,100 @@ async function saveArticleToDatabase(
 }
 
 // ============================================================================
+// OG IMAGE GENERATION
+// ============================================================================
+
+const OG_WIDTH = 1200;
+const OG_HEIGHT = 630;
+
+/**
+ * Generates a branded OG image for the article using Satori and uploads
+ * it to Supabase Storage. Returns the public URL on success, null on failure.
+ *
+ * Best-effort: failures are logged but do not block the pipeline.
+ */
+async function generateArticleOGImage(
+  slug: string,
+  title: string,
+  articleDate: string,
+  footballData: DailyFootballData
+): Promise<string | null> {
+  try {
+    console.log("[ArticleGenerator] Generating OG image");
+
+    // Load fonts from public/fonts (Node.js runtime)
+    const fontsDir = join(process.cwd(), "public", "fonts");
+    const [montserratRegular, montserratSemiBold, bebasNeue] = await Promise.all([
+      readFile(join(fontsDir, "Montserrat-Regular.ttf")),
+      readFile(join(fontsDir, "Montserrat-SemiBold.ttf")),
+      readFile(join(fontsDir, "BebasNeue-Regular.ttf")),
+    ]);
+    const fonts: OGFont[] = [
+      { name: "Montserrat", data: montserratRegular.buffer as ArrayBuffer, weight: 400, style: "normal" },
+      { name: "Montserrat", data: montserratSemiBold.buffer as ArrayBuffer, weight: 600, style: "normal" },
+      { name: "Bebas Neue", data: bebasNeue.buffer as ArrayBuffer, weight: 400, style: "normal" },
+    ];
+
+    // Build props from football data
+    const matchResults = footballData.matches.slice(0, 3).map((m) => ({
+      home: m.homeTeam,
+      away: m.awayTeam,
+      homeGoals: m.homeGoals,
+      awayGoals: m.awayGoals,
+    }));
+
+    const competitions = [...new Set(footballData.matches.map((m) => m.league))].slice(0, 4);
+
+    const [year, month, day] = articleDate.split("-").map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day));
+    const formattedDate = utcDate.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+    // Render JSX → PNG
+    const imageResponse = new ImageResponse(
+      BlogArticleOGCard({ title, matchResults, competitions, date: formattedDate }),
+      { width: OG_WIDTH, height: OG_HEIGHT, fonts }
+    );
+    const arrayBuffer = await imageResponse.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Upload to Supabase Storage
+    const supabase = await createAdminClient();
+    const storagePath = `blog/${slug}.png`;
+
+    const { error } = await supabase.storage
+      .from("og-images")
+      .upload(storagePath, buffer, {
+        contentType: "image/png",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("[ArticleGenerator] Failed to upload OG image:", error);
+      return null;
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      console.error("[ArticleGenerator] NEXT_PUBLIC_SUPABASE_URL not set — cannot construct OG image URL");
+      return null;
+    }
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/og-images/${storagePath}`;
+
+    console.log(`[ArticleGenerator] OG image uploaded: ${storagePath}`);
+    return publicUrl;
+  } catch (error) {
+    console.error("[ArticleGenerator] OG image generation failed:", error);
+    return null;
+  }
+}
+
+// ============================================================================
 // MAIN EXPORT
 // ============================================================================
 
@@ -428,6 +527,21 @@ export async function generateDailyArticle(
         success: false,
         error: "Failed to save article to database",
       };
+    }
+
+    // Step 5: Generate OG image (best-effort — doesn't block the pipeline)
+    console.log("[ArticleGenerator] Step 5: Generating OG image");
+    const ogImageUrl = await generateArticleOGImage(article.slug, article.title, articleDate, footballData);
+
+    if (ogImageUrl) {
+      const supabase = await createAdminClient();
+      const { error: ogUpdateError } = await supabase
+        .from("blog_articles")
+        .update({ og_image_url: ogImageUrl })
+        .eq("id", articleId);
+      if (ogUpdateError) {
+        console.error("[ArticleGenerator] Failed to update og_image_url:", ogUpdateError);
+      }
     }
 
     console.log(

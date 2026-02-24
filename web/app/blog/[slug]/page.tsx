@@ -13,7 +13,7 @@ export const revalidate = 3600;
 
 type ArticleDetail = Pick<
   BlogArticleRow,
-  "id" | "slug" | "title" | "subtitle" | "excerpt" | "content" | "article_date" | "meta_title" | "meta_description" | "published_at"
+  "id" | "slug" | "title" | "subtitle" | "excerpt" | "content" | "article_date" | "meta_title" | "meta_description" | "published_at" | "og_image_url"
 >;
 
 interface PageProps {
@@ -26,7 +26,7 @@ async function getArticle(slug: string): Promise<ArticleDetail | null> {
   const { data, error } = await supabase
     .from("blog_articles")
     .select(
-      "id, slug, title, subtitle, excerpt, content, article_date, meta_title, meta_description, published_at"
+      "id, slug, title, subtitle, excerpt, content, article_date, meta_title, meta_description, published_at, og_image_url"
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -71,11 +71,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       publishedTime: article.published_at ?? undefined,
       authors: ["Football IQ"],
       siteName: "Football IQ",
+      ...(article.og_image_url && {
+        images: [
+          {
+            url: article.og_image_url,
+            width: 1200,
+            height: 630,
+            alt: article.title,
+          },
+        ],
+      }),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      ...(article.og_image_url && {
+        images: [article.og_image_url],
+      }),
     },
   };
 }
@@ -94,6 +107,7 @@ export default async function ArticlePage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline: article.title,
+    ...(article.og_image_url && { image: [article.og_image_url] }),
     datePublished: article.published_at,
     dateModified: article.published_at,
     author: {

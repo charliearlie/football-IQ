@@ -41,6 +41,7 @@ export interface BlogArticleSummary {
   meta_title: string | null;
   meta_description: string | null;
   published_at: string | null;
+  og_image_url: string | null;
 }
 
 /** Subset used in the sitemap */
