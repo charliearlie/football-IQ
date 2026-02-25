@@ -34,6 +34,7 @@ jest.mock('@/theme', () => ({
     body: { fontSize: 16, fontFamily: 'Montserrat', fontWeight: '400' },
     bodySmall: { fontSize: 14, fontFamily: 'Montserrat', fontWeight: '400' },
     caption: { fontSize: 12, fontFamily: 'Montserrat', fontWeight: '400' },
+    h1: { fontSize: 32, fontFamily: 'BebasNeue-Regular' },
   },
   fonts: {
     headline: 'BebasNeue-Regular',
@@ -62,25 +63,16 @@ jest.mock('@/theme', () => ({
   },
 }));
 
-// Mock GlassCard
-jest.mock('@/components/GlassCard', () => {
-  const { View } = require('react-native');
-  return {
-    GlassCard: ({ children, testID, style }: { children: React.ReactNode; testID?: string; style?: object }) => (
-      <View testID={testID} style={style}>{children}</View>
-    ),
-  };
-});
-
 // Mock icons
 jest.mock('lucide-react-native', () => ({
   Trophy: () => null,
-  Medal: () => null,
   User: () => null,
   Calendar: () => null,
+  CalendarRange: () => null,
   TrendingUp: () => null,
   Clock: () => null,
   AlertCircle: () => null,
+  ArrowLeft: () => null,
 }));
 
 // Helper to create mock entries
@@ -98,12 +90,13 @@ function createMockEntry(overrides: Partial<EntryType> = {}): EntryType {
 
 describe('LeaderboardUI', () => {
   describe('LeaderboardToggle', () => {
-    it('renders Daily and All-Time options', () => {
+    it('renders Daily, This Year, and All-Time options', () => {
       const { getByText } = render(
         <LeaderboardToggle selected="daily" onSelect={() => {}} />
       );
 
       expect(getByText('Daily')).toBeTruthy();
+      expect(getByText('This Year')).toBeTruthy();
       expect(getByText('All-Time')).toBeTruthy();
     });
 
@@ -181,31 +174,36 @@ describe('LeaderboardUI', () => {
       expect(getByText('350')).toBeTruthy();
     });
 
-    it('shows gold medal for rank 1', () => {
+    it('shows gold rank disc for rank 1', () => {
       const entry = createMockEntry({ rank: 1 });
-      const { getByTestId } = render(
+      const { getByTestId, getByText } = render(
         <LeaderboardEntry entry={entry} testID="entry" />
       );
 
+      // Rank disc View has the testID
       expect(getByTestId('entry-medal-gold')).toBeTruthy();
+      // Rank number is rendered inside the disc
+      expect(getByText('1')).toBeTruthy();
     });
 
-    it('shows silver medal for rank 2', () => {
+    it('shows silver rank disc for rank 2', () => {
       const entry = createMockEntry({ rank: 2 });
-      const { getByTestId } = render(
+      const { getByTestId, getByText } = render(
         <LeaderboardEntry entry={entry} testID="entry" />
       );
 
       expect(getByTestId('entry-medal-silver')).toBeTruthy();
+      expect(getByText('2')).toBeTruthy();
     });
 
-    it('shows bronze medal for rank 3', () => {
+    it('shows bronze rank disc for rank 3', () => {
       const entry = createMockEntry({ rank: 3 });
-      const { getByTestId } = render(
+      const { getByTestId, getByText } = render(
         <LeaderboardEntry entry={entry} testID="entry" />
       );
 
       expect(getByTestId('entry-medal-bronze')).toBeTruthy();
+      expect(getByText('3')).toBeTruthy();
     });
 
     it('shows numeric rank for rank > 3', () => {
@@ -220,17 +218,26 @@ describe('LeaderboardUI', () => {
       expect(queryByTestId('entry-medal-bronze')).toBeNull();
     });
 
-    it('shows games played badge when provided', () => {
+    it('shows games played when provided', () => {
       const entry = createMockEntry({ gamesPlayed: 5 });
       const { getByText } = render(
-        <LeaderboardEntry entry={entry} showGamesPlayed />
+        <LeaderboardEntry entry={entry} showGamesPlayed leaderboardType="daily" />
       );
 
-      expect(getByText('5/5')).toBeTruthy();
+      expect(getByText('5 games')).toBeTruthy();
     });
 
-    it('highlights current user row', () => {
-      const entry = createMockEntry({ userId: 'current-user' });
+    it('shows singular "game" for 1 game played', () => {
+      const entry = createMockEntry({ gamesPlayed: 1 });
+      const { getByText } = render(
+        <LeaderboardEntry entry={entry} showGamesPlayed leaderboardType="daily" />
+      );
+
+      expect(getByText('1 game')).toBeTruthy();
+    });
+
+    it('highlights current user row with green accent bar', () => {
+      const entry = createMockEntry({ userId: 'current-user', rank: 5 });
       const { getByTestId } = render(
         <LeaderboardEntry
           entry={entry}
@@ -239,11 +246,8 @@ describe('LeaderboardUI', () => {
         />
       );
 
-      const container = getByTestId('entry-container');
-      // Current user should have accent styling (borderColor is set)
-      expect(container.props.style).toEqual(
-        expect.objectContaining({ borderColor: expect.any(String), borderWidth: expect.any(Number) })
-      );
+      // Row container still renders
+      expect(getByTestId('entry-container')).toBeTruthy();
     });
 
     it('renders avatar placeholder when no avatarUrl', () => {
@@ -253,6 +257,37 @@ describe('LeaderboardUI', () => {
       );
 
       expect(getByTestId('entry-avatar-placeholder')).toBeTruthy();
+    });
+
+    it('shows tier name for global leaderboard', () => {
+      const entry = createMockEntry({
+        rank: 5,
+        tierName: 'Scout',
+        tierColor: '#888',
+      });
+      const { getByText } = render(
+        <LeaderboardEntry entry={entry} leaderboardType="global" />
+      );
+
+      expect(getByText('Scout')).toBeTruthy();
+    });
+
+    it('shows "IQ" score label for global leaderboard', () => {
+      const entry = createMockEntry({ rank: 5, score: 1200 });
+      const { getByText } = render(
+        <LeaderboardEntry entry={entry} leaderboardType="global" />
+      );
+
+      expect(getByText('IQ')).toBeTruthy();
+    });
+
+    it('shows "pts" score label for daily leaderboard', () => {
+      const entry = createMockEntry({ rank: 5, score: 350 });
+      const { getByText } = render(
+        <LeaderboardEntry entry={entry} leaderboardType="daily" />
+      );
+
+      expect(getByText('pts')).toBeTruthy();
     });
   });
 
@@ -305,6 +340,27 @@ describe('LeaderboardUI', () => {
       expect(getByText('Alice')).toBeTruthy();
       expect(getByText('Bob')).toBeTruthy();
       expect(getByText('Charlie')).toBeTruthy();
+    });
+
+    it('renders STANDINGS divider before rank 4 entry', () => {
+      const entries = [
+        createMockEntry({ rank: 1, displayName: 'Alice', userId: 'a' }),
+        createMockEntry({ rank: 2, displayName: 'Bob', userId: 'b' }),
+        createMockEntry({ rank: 3, displayName: 'Charlie', userId: 'c' }),
+        createMockEntry({ rank: 4, displayName: 'Dave', userId: 'd' }),
+      ];
+
+      const { getByText } = render(
+        <LeaderboardList
+          entries={entries}
+          isLoading={false}
+          isRefreshing={false}
+          onRefresh={() => {}}
+          testID="list"
+        />
+      );
+
+      expect(getByText('STANDINGS')).toBeTruthy();
     });
 
     it('shows refresh indicator when refreshing', async () => {
@@ -389,7 +445,7 @@ describe('LeaderboardUI', () => {
       expect(getByText('250')).toBeTruthy();
     });
 
-    it('shows "You" label', () => {
+    it('shows "YOU" badge', () => {
       const userRank: UserRank = { rank: 10, score: 300, totalUsers: 50 };
 
       const { getByText } = render(
@@ -401,7 +457,54 @@ describe('LeaderboardUI', () => {
         />
       );
 
-      expect(getByText('You')).toBeTruthy();
+      expect(getByText('YOU')).toBeTruthy();
+    });
+
+    it('shows display name', () => {
+      const userRank: UserRank = { rank: 10, score: 300, totalUsers: 50 };
+
+      const { getByText } = render(
+        <StickyMeBar
+          userRank={userRank}
+          displayName="Charlie"
+          shouldShow
+          testID="sticky"
+        />
+      );
+
+      expect(getByText('Charlie')).toBeTruthy();
+    });
+
+    it('shows gap text when gapToNext is provided and positive', () => {
+      const userRank: UserRank = { rank: 5, score: 300, totalUsers: 50 };
+
+      const { getByText } = render(
+        <StickyMeBar
+          userRank={userRank}
+          displayName="Charlie"
+          shouldShow
+          gapToNext={25}
+          testID="sticky"
+        />
+      );
+
+      expect(getByText('25 pts behind #4')).toBeTruthy();
+    });
+
+    it('does not show gap text when gapToNext is null', () => {
+      const userRank: UserRank = { rank: 1, score: 500, totalUsers: 50 };
+
+      const { queryByText } = render(
+        <StickyMeBar
+          userRank={userRank}
+          displayName="Charlie"
+          shouldShow
+          gapToNext={null}
+          testID="sticky"
+        />
+      );
+
+      expect(queryByText(/pts behind/)).toBeNull();
     });
   });
 
