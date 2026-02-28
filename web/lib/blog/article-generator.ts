@@ -455,7 +455,7 @@ async function generateArticleAIImage(
       `[ArticleGenerator] AI Image: Scene — "${sceneDescription.slice(0, 100)}..."`,
     );
 
-    // Step 3: DALL-E 3 generates the image
+    // Step 3: GPT-Image 1 generates the image
     console.log(
       "[ArticleGenerator] AI Image: Generating illustration with DALL-E 3",
     );

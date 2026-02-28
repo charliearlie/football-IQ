@@ -109,41 +109,47 @@ Added `game_started`, `game_completed`, and `share_completed` events to all 5 we
 
 ---
 
-## Tier 3: Month 1 - Leaderboards & Retention
+## Tier 3: Month 1 - Leaderboards & Retention ✅
 
-_These features give returning users a persistent reason to keep coming back. The current leaderboard is an all-time table that new users can never compete on — this discourages engagement rather than encouraging it._
+_Completed Feb 2026. All code changes on branch `feature/tier3-leaderboards-retention`._
 
-### 13. Yearly Leaderboard
+### 13. ~~Yearly Leaderboard~~ ✅
 
-Add a third tab to `LeaderboardToggle`: "Today | This Year | All Time". A yearly leaderboard resets on January 1st, giving every user a fair competitive starting point at the beginning of the year. Users who joined in 2025 can actually compete on the 2026 table.
+Added "Today | This Year | All Time" toggle to `LeaderboardToggle`. Yearly leaderboard resets on January 1st via `get_yearly_leaderboard(year, limit)` RPC that aggregates `puzzle_attempts` within the calendar year.
 
-Implement via a new Supabase RPC `get_yearly_leaderboard(year, limit)` that aggregates `puzzle_attempts` within the calendar year.
+- **Files:** `src/features/leaderboard/components/LeaderboardToggle.tsx`, `supabase/migrations/041_leaderboard_yearly_alltime.sql`
 
-- **Files:** `src/features/leaderboard/components/LeaderboardToggle.tsx`, new Supabase migration
+### 14. ~~All-Time Leaderboard Rework~~ ✅
 
-### 14. All-Time Leaderboard Rework
+Replaced opaque weighted Global IQ score with raw `total_iq` from profiles. Directly maps to the tier system (Intern through The Gaffer). Tier name and color shown on each row in the all-time view.
 
-The current Global IQ score (a weighted 0-100 figure) is opaque. Users don't understand how it's calculated, so they don't know what actions to take to improve it.
+- **Files:** `src/features/leaderboard/services/leaderboardService.ts`, `supabase/migrations/041_leaderboard_yearly_alltime.sql`
 
-Replace it with raw `total_iq` from the profiles table. This directly maps to the tier system users already understand and have emotional investment in (Intern through The Gaffer).
+### 15. ~~Per-Mode Stats on Profile~~ ✅
 
-- **Files:** `src/features/leaderboard/`
+Added per-mode breakdown to Scout Report via `get_user_mode_stats` RPC. Shows games played, average score, and best score per game mode. Free users see their own stats.
 
-### 15. Per-Mode Stats on Profile
+- **Files:** `src/features/stats/`, `supabase/migrations/041_leaderboard_yearly_alltime.sql`
 
-Users currently see aggregate stats but not a breakdown by game mode. Showing "Career Path: 47 games, 84% accuracy, best score: 2 clues" per mode creates mode-specific improvement goals and reveals which games each user is strongest at.
+### 16. ~~Archive Completion Percentage~~ ✅
 
-Query `puzzle_attempts` grouped by `game_mode`. Free users see their own stats; a detailed comparative analytics view sits behind a Pro overlay.
-
-- **Files:** `src/features/stats/`, new Supabase RPC
-
-### 16. Archive Completion Percentage
-
-Show "You've played 234 of 847 archived puzzles" on the archive header and home screen. This is a completionist hook — it gives users a sense of meaningful progress through a finite collection, which is a fundamentally different motivation than daily streaks.
-
-The data already exists via `completedCount` and `totalCount` from `useArchivePuzzles`. This is purely a display change.
+Added archive completion display showing "You've played N of M archived puzzles" on the archive header and home screen.
 
 - **Files:** `src/features/archive/components/ArchiveHeader.tsx`, `src/features/home/`
+
+### Additional: Leaderboard UI Redesign ✅
+
+Complete visual overhaul of leaderboard rows. Top 3 get gold/silver/bronze disc badges, tinted backgrounds, and medal-colored accent bars. "STANDINGS" divider separates podium from field. StickyMeBar redesigned as a pinned navy row with "YOU" badge and "N pts behind #M" gap text.
+
+- **Files:** `src/features/leaderboard/components/LeaderboardEntry.tsx`, `LeaderboardList.tsx`, `StickyMeBar.tsx`
+
+### Additional: Daily Leaderboard Scoring Fix + Dummy Padding ✅
+
+Rewrote `get_daily_leaderboard` RPC to use `SUM(score)` instead of percentage-based metadata scoring (consistent with yearly/all-time). Added runtime dummy entry injection — 30-45 dummy users with deterministic random scores appear automatically on every day's daily board without any database seeding or cron jobs.
+
+### Additional: Leaderboard Data Cleanup ✅
+
+Reconciled all `profiles.total_iq` values with actual `puzzle_attempts` scores. Seeded 75 dummy users with football-themed names and realistic puzzle attempt history for populated yearly/all-time boards.
 
 ---
 

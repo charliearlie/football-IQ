@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.pitchGreen,
     fontSize: 12,
-    fontFamily: "Montserrat",
+    fontFamily: "Inter",
     fontWeight: "700",
     textTransform: "uppercase",
   },
@@ -664,13 +664,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   versionText: {
-    fontFamily: "Montserrat",
+    fontFamily: "Inter",
     fontSize: 12,
     color: colors.textSecondary,
     marginBottom: 4,
   },
   copyrightText: {
-    fontFamily: "Montserrat",
+    fontFamily: "Inter",
     fontSize: 10,
     color: colors.textSecondary,
     opacity: 0.6,

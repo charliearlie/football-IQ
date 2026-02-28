@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SquishCard } from '@/components/SquishCard';
 import { DailyProgressRing } from './DailyProgressRing';
 
 interface DailyGoalCardProps {
@@ -68,90 +68,91 @@ export function DailyGoalCard({
     : `${iqPointsToNext >= 1000 ? iqPointsToNext.toLocaleString() : iqPointsToNext} pts to ${iqNextTierName}`;
 
   return (
-    <View style={styles.wrapper}>
-      <LinearGradient
-        colors={[HOME_COLORS.glassBg, 'rgba(255,255,255,0.02)']}
-        style={styles.card}
-      >
-        <View style={styles.row}>
-          {/* Left: Ring */}
-          <View style={styles.ringContainer}>
-            <DailyProgressRing
-              percent={percent}
-              countString={countString}
-              isComplete={isComplete}
-              size={110}
-            />
-          </View>
-
-          {/* Right: Stats Column */}
-          <View style={styles.statsColumn}>
-            {/* Games Completed */}
-            <Pressable
-              onPress={onPressGames}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={styles.label}>GAMES COMPLETED</Text>
-              <Text style={styles.gamesValue}>{gamesCompleted} / {totalGames}</Text>
-              <View style={styles.archiveProgressBackground}>
-                <View
-                  style={[
-                    styles.archiveProgressFill,
-                    { width: `${totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : 0}%` },
-                  ]}
-                />
-              </View>
-              <Text style={styles.archivePercentText}>
-                {totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : 0}% of archive complete
-              </Text>
-            </Pressable>
-
-            {/* Divider */}
-            <View style={styles.divider} />
-
-            {/* IQ Level */}
-            <Pressable
-              onPress={onPressIQ}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={styles.label}>IQ LEVEL</Text>
-              <Text style={styles.iqValue}>{iqTitle}</Text>
-              <View style={styles.progressBarBackground}>
-                <Animated.View
-                  style={[
-                    styles.progressBarFill,
-                    { backgroundColor: HOME_COLORS.pitchGreen },
-                    progressBarStyle,
-                  ]}
-                />
-              </View>
-              <Text style={styles.progressText}>{progressText}</Text>
-            </Pressable>
-
-            {/* Divider */}
-            <View style={styles.divider} />
-
-            {/* Your Rank */}
-            <Pressable
-              onPress={onPressRank}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={styles.label}>YOUR RANK</Text>
-              <View style={styles.rankRow}>
-                <Text style={styles.rankValue}>
-                  {userRank != null ? `#${userRank.toLocaleString()}` : '---'}
-                </Text>
-                <Text style={styles.rankContext}>
-                  {userRank != null && totalUsers != null
-                    ? `of ${totalUsers.toLocaleString()} players`
-                    : 'Play to rank up'}
-                </Text>
-              </View>
-            </Pressable>
-          </View>
+    <SquishCard
+      style={styles.wrapper}
+      contentStyle={styles.card}
+      shadowColor={HOME_COLORS.surfaceShadow}
+      depth={3}
+      radius={20}
+    >
+      <View style={styles.row}>
+        {/* Left: Ring */}
+        <View style={styles.ringContainer}>
+          <DailyProgressRing
+            percent={percent}
+            countString={countString}
+            isComplete={isComplete}
+            size={110}
+          />
         </View>
-      </LinearGradient>
-    </View>
+
+        {/* Right: Stats Column */}
+        <View style={styles.statsColumn}>
+          {/* Games Completed */}
+          <Pressable
+            onPress={onPressGames}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={styles.label}>GAMES COMPLETED</Text>
+            <Text style={styles.gamesValue}>{gamesCompleted} / {totalGames}</Text>
+            <View style={styles.archiveProgressBackground}>
+              <View
+                style={[
+                  styles.archiveProgressFill,
+                  { width: `${totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : 0}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.archivePercentText}>
+              {totalGames > 0 ? Math.round((gamesCompleted / totalGames) * 100) : 0}% of archive complete
+            </Text>
+          </Pressable>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* IQ Level */}
+          <Pressable
+            onPress={onPressIQ}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={styles.label}>IQ LEVEL</Text>
+            <Text style={styles.iqValue}>{iqTitle}</Text>
+            <View style={styles.progressBarBackground}>
+              <Animated.View
+                style={[
+                  styles.progressBarFill,
+                  { backgroundColor: HOME_COLORS.pitchGreen },
+                  progressBarStyle,
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>{progressText}</Text>
+          </Pressable>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Your Rank */}
+          <Pressable
+            onPress={onPressRank}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={styles.label}>YOUR RANK</Text>
+            <View style={styles.rankRow}>
+              <Text style={styles.rankValue}>
+                {userRank != null ? `#${userRank.toLocaleString()}` : '---'}
+              </Text>
+              <Text style={styles.rankContext}>
+                {userRank != null && totalUsers != null
+                  ? `of ${totalUsers.toLocaleString()} players`
+                  : 'Play to rank up'}
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+      </View>
+    </SquishCard>
   );
 }
 
@@ -159,10 +160,7 @@ const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 20,
     marginTop: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: HOME_COLORS.glassBorder,
-    overflow: 'hidden',
+    borderRadius: 20,
   },
   card: {
     paddingVertical: 16,

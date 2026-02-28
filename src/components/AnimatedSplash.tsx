@@ -330,6 +330,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   taglineFont: {
-    fontFamily: fonts.body, // Montserrat
+    fontFamily: fonts.body, // Inter
   },
 });

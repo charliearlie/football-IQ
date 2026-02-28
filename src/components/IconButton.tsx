@@ -35,13 +35,12 @@ const VARIANT_COLORS: Record<IconButtonVariant, VariantColorConfig> = {
   secondary: {
     backgroundColor: colors.stadiumNavy,
     shadowColor: '#0A1628',
-    borderColor: colors.floodlightWhite,
     iconColor: colors.floodlightWhite,
   },
   outline: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: 'rgba(255, 255, 255, 0.2)',
-    borderColor: colors.glassBorder,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    shadowColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     iconColor: colors.floodlightWhite,
   },
 };
@@ -167,7 +166,6 @@ export function IconButton({
               width: sizeConfig.size,
               height: sizeConfig.size,
               backgroundColor: variantColors.shadowColor,
-              borderColor: variantColors.shadowColor,
             },
           ]}
         />
@@ -210,11 +208,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     borderRadius: borderRadius.lg,
-    borderWidth: 2,
   },
   topLayer: {
     borderRadius: borderRadius.lg,
-    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

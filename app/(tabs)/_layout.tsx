@@ -34,6 +34,7 @@ export default function TabLayout() {
           },
           tabBarLabelStyle: {
             fontFamily: fonts.body,
+            fontWeight: '600' as const,
             fontSize: 12,
             marginTop: 4,
           },

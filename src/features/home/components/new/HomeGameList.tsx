@@ -55,9 +55,9 @@ function DailyCompleteCard() {
 
 const completeStyles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#1E293B',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 16,
     alignItems: 'center',
     paddingVertical: 24,
