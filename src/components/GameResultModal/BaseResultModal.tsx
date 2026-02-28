@@ -326,7 +326,7 @@ export function BaseResultModal({
   const effectiveNewIQ = newIQ ?? (showRetention ? authTotalIQ : undefined);
 
   // ViewShot ref for image capture
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShot>(null!);
 
   // Image sharing state
   const [isImageSharing, setIsImageSharing] = useState(false);

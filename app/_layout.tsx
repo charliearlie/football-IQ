@@ -233,6 +233,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     "BebasNeue-Regular": require("../assets/fonts/BebasNeue-Regular.ttf"),
     Montserrat: require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
+    Inter: require("../assets/fonts/Inter-VariableFont.ttf"),
   });
   const [dbReady, setDbReady] = useState(false);
   const [initTimedOut, setInitTimedOut] = useState(false);
@@ -282,7 +283,7 @@ export default function RootLayout() {
     }
   }, []);
 
-  // SoundService initialization disabled until expo-av native module is linked.
+  // SoundService initialization disabled — migrated to expo-audio.
   // Run `npx expo prebuild` and rebuild to enable.
   // See src/services/sound/SoundService.ts for the implementation.
 
@@ -322,7 +323,11 @@ export default function RootLayout() {
   useEffect(() => {
     if ((fontsLoaded || fontError) && dbReady) {
       (async () => {
-        await SplashScreen.hideAsync();
+        try {
+          await SplashScreen.hideAsync();
+        } catch (e) {
+          console.warn("[SplashScreen] hideAsync failed:", e);
+        }
         setTimeout(() => setNativeSplashHidden(true), 100);
       })();
     }
@@ -331,6 +336,17 @@ export default function RootLayout() {
   const handleSplashAnimationComplete = useCallback(() => {
     setSplashAnimationComplete(true);
   }, []);
+
+  // Failsafe: force-dismiss splash after 5s to prevent permanent black screen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!splashAnimationComplete) {
+        console.warn("[RootLayout] Splash failsafe timeout — forcing dismiss");
+        setSplashAnimationComplete(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [splashAnimationComplete]);
 
   const fontsReady = fontsLoaded || fontError;
   const coreReady = (fontsReady && dbReady) || initTimedOut;
@@ -355,7 +371,14 @@ export default function RootLayout() {
             <View style={styles.container}>
               <Stack
                 screenOptions={{
-                  headerStyle: { backgroundColor: colors.stadiumNavy },
+                  // Liquid Glass translucent headers on iOS, solid on Android
+                  headerStyle: Platform.select({
+                    ios: { backgroundColor: "transparent" },
+                    default: { backgroundColor: colors.stadiumNavy },
+                  }),
+                  headerTransparent: Platform.OS === "ios",
+                  headerBlurEffect:
+                    Platform.OS === "ios" ? "systemMaterial" : undefined,
                   headerTintColor: colors.floodlightWhite,
                   headerTitleStyle: { fontFamily: fonts.headline },
                   contentStyle: { backgroundColor: colors.stadiumNavy },
@@ -385,6 +408,22 @@ export default function RootLayout() {
                   options={{
                     title: "Submit Idea",
                     headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="day-detail-sheet"
+                  options={{
+                    presentation: "formSheet",
+                    headerShown: false,
+                    gestureEnabled: true,
+                  }}
+                />
+                <Stack.Screen
+                  name="report-error-sheet"
+                  options={{
+                    presentation: "formSheet",
+                    headerShown: false,
+                    gestureEnabled: true,
                   }}
                 />
                 <Stack.Screen name="+not-found" />

@@ -10,7 +10,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useEffect,
   useState,
   useCallback,
@@ -72,6 +72,7 @@ export function AdProvider({ children }: AdProviderProps) {
   const rewardedAdLoadedRef = useRef(false);
   const rewardCallbackRef = useRef<((rewarded: boolean) => void) | null>(null);
   const unsubscribersRef = useRef<(() => void)[]>([]);
+  const adClickedRef = useRef(false);
 
   // Determine if ads should be shown
   const shouldShowAds = useMemo(() => {
@@ -126,6 +127,7 @@ export function AdProvider({ children }: AdProviderProps) {
     unsubscribersRef.current = [];
     rewardedAdRef.current = null;
     rewardedAdLoadedRef.current = false;
+    adClickedRef.current = false;
   }, []);
 
   // Load a rewarded ad using the actual SDK
@@ -182,7 +184,19 @@ export function AdProvider({ children }: AdProviderProps) {
         const unsubscribeClosed = rewarded.addAdEventListener(
           AdEventType.CLOSED,
           () => {
-            // If user closed without earning reward, resolve with false
+            if (adClickedRef.current) {
+              // User returned from click-through (e.g. App Store popup) — ad was interrupted, not dismissed
+              // Clean up old ad instance and let modal auto-reload a fresh one
+              adClickedRef.current = false;
+              if (rewardCallbackRef.current) {
+                rewardCallbackRef.current(false);
+                rewardCallbackRef.current = null;
+              }
+              cleanupRewardedAd();
+              setRewardedAdState('idle');
+              return;
+            }
+            // Normal dismissal — user closed without watching
             if (rewardCallbackRef.current) {
               rewardCallbackRef.current(false);
               rewardCallbackRef.current = null;
@@ -204,6 +218,11 @@ export function AdProvider({ children }: AdProviderProps) {
           }
         );
 
+        const unsubscribeClicked = rewarded.addAdEventListener(
+          AdEventType.CLICKED,
+          () => { adClickedRef.current = true; }
+        );
+
         // Store reference and unsubscribers for cleanup
         rewardedAdRef.current = rewarded;
         unsubscribersRef.current = [
@@ -211,6 +230,7 @@ export function AdProvider({ children }: AdProviderProps) {
           unsubscribeError,
           unsubscribeClosed,
           unsubscribeEarned,
+          unsubscribeClicked,
         ];
 
         // Load the ad
@@ -278,7 +298,7 @@ export function AdProvider({ children }: AdProviderProps) {
     ]
   );
 
-  return <AdContext.Provider value={value}>{children}</AdContext.Provider>;
+  return <AdContext value={value}>{children}</AdContext>;
 }
 
 /**
@@ -288,7 +308,7 @@ export function AdProvider({ children }: AdProviderProps) {
  * @throws Error if used outside of AdProvider
  */
 export function useAds(): AdContextValue {
-  const context = useContext(AdContext);
+  const context = use(AdContext);
   if (!context) {
     throw new Error('useAds must be used within an AdProvider');
   }
@@ -300,5 +320,5 @@ export function useAds(): AdContextValue {
  * Useful for components that may or may not have ad support.
  */
 export function useAdsOptional(): AdContextValue | null {
-  return useContext(AdContext);
+  return use(AdContext);
 }

@@ -10,7 +10,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useEffect,
   useState,
   useCallback,
@@ -132,12 +132,12 @@ export function IntegrityGuardProvider({
   };
 
   return (
-    <IntegrityContext.Provider value={contextValue}>
+    <IntegrityContext value={contextValue}>
       {children}
       {state.status === 'tampered' && (
         <TimeTamperedOverlay onRetry={recheckTime} />
       )}
-    </IntegrityContext.Provider>
+    </IntegrityContext>
   );
 }
 
@@ -165,7 +165,7 @@ export function IntegrityGuardProvider({
  * ```
  */
 export function useIntegrity(): IntegrityContextValue {
-  const context = useContext(IntegrityContext);
+  const context = use(IntegrityContext);
 
   if (!context) {
     throw new Error('useIntegrity must be used within IntegrityGuardProvider');

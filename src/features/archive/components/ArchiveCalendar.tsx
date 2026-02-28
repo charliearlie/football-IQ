@@ -92,17 +92,20 @@ export function ArchiveCalendar({
   // actually it does, but we used custom empty checks before.
   // We'll render Header then EmptyState if empty.
 
+  // Cast needed: FlashList types don't expose estimatedItemSize in this RN/TS version
+  const TypedFlashList = FlashList as React.ComponentType<any>;
+
   return (
-    <FlashList
+    <TypedFlashList
       data={listData}
       renderItem={renderItem}
-      keyExtractor={(item) =>
+      keyExtractor={(item: CalendarListItem) =>
         item.type === 'premium-upsell'
           ? 'premium-upsell-banner'
           : item.data.dateString
       }
       estimatedItemSize={80}
-      overrideItemLayout={(layout, item) => {
+      overrideItemLayout={(layout: { size?: number; span?: number }, item: CalendarListItem) => {
         layout.size = item.type === 'premium-upsell' ? 120 : 80;
       }}
       ListHeaderComponent={ListHeaderComponent}

@@ -36,6 +36,8 @@ export async function initializeNotifications(): Promise<void> {
       shouldShowAlert: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
     }),
   });
 

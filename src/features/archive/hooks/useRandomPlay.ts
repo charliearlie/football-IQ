@@ -84,7 +84,7 @@ export function useRandomPlay(): UseRandomPlayResult {
           'All Caught Up!',
           isPremium
             ? "You've played all available puzzles. Check back tomorrow for new games!"
-            : "You've played all free puzzles. Upgrade to Pro for unlimited access to the full archive!",
+            : "You've played all available puzzles in the last 3 days. Upgrade to Pro for unlimited access to the full archive!",
           [{ text: 'OK' }]
         );
         return;

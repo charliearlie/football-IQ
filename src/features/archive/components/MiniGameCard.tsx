@@ -68,7 +68,7 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
   const isComplete = puzzle.status === 'done';
   const isLocked = puzzle.isLocked;
   const isResume = puzzle.status === 'resume';
-  const isPremiumOnly = puzzle.gameMode === 'career_path_pro' || puzzle.gameMode === 'top_tens';
+  const isPremiumOnly = false; // Temporarily disabled — all modes free for outreach
 
   // Get title
   const title = GAME_MODE_TITLES[puzzle.gameMode];

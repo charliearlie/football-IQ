@@ -5,7 +5,7 @@
  * Supports pagination, pull-to-refresh, and sticky section headers.
  */
 
-import React, { useCallback, forwardRef } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -44,6 +44,8 @@ interface ArchiveListProps {
   hasMore: boolean;
   /** Component to render at top of list (filter) */
   ListHeaderComponent?: React.ReactElement;
+  /** Ref for the SectionList */
+  ref?: React.Ref<SectionListType<ArchivePuzzle, ArchiveSection>>;
   /** Test ID for testing */
   testID?: string;
 }
@@ -90,24 +92,19 @@ function LoadingFooter() {
  *
  * Uses SectionList for efficient rendering with sticky month headers.
  */
-export const ArchiveList = forwardRef<
-  SectionListType<ArchivePuzzle, ArchiveSection>,
-  ArchiveListProps
->(function ArchiveList(
-  {
-    sections,
-    onPuzzlePress,
-    onLockedPress,
-    onEndReached,
-    onRefresh,
-    refreshing,
-    isLoading,
-    hasMore,
-    ListHeaderComponent,
-    testID,
-  },
-  ref
-) {
+export function ArchiveList({
+  sections,
+  onPuzzlePress,
+  onLockedPress,
+  onEndReached,
+  onRefresh,
+  refreshing,
+  isLoading,
+  hasMore,
+  ListHeaderComponent,
+  ref,
+  testID,
+}: ArchiveListProps) {
   /**
    * Render section header (month/year).
    */
@@ -149,7 +146,7 @@ export const ArchiveList = forwardRef<
       };
 
       // Check if this is a premium-only game mode
-      const isPremiumOnly = item.gameMode === 'career_path_pro' || item.gameMode === 'top_tens';
+      const isPremiumOnly = false; // Temporarily disabled — all modes free for outreach
 
       // Use UniversalGameCard for both locked and unlocked states
       // Note: date is NOT passed - DayHeader provides date context
@@ -242,7 +239,7 @@ export const ArchiveList = forwardRef<
       testID={testID}
     />
   );
-});
+}
 
 const styles = StyleSheet.create({
   contentContainer: {

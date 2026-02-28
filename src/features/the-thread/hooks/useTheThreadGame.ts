@@ -318,9 +318,7 @@ export function useTheThreadGame(puzzle: ParsedLocalPuzzle | null, isFocused: bo
       };
     }
 
-    // @ts-expect-error - dynamic import supported at runtime by Metro bundler
     const { Share, Platform } = await import("react-native");
-    // @ts-expect-error - dynamic import supported at runtime by Metro bundler
     const ExpoClipboard = await import("expo-clipboard");
 
     const emojiGrid = generateThreadEmojiGrid(state.score);

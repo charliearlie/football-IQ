@@ -1,13 +1,13 @@
 /**
  * LeaderboardToggle Component
  *
- * Toggle between Daily and All-Time leaderboard views.
+ * Toggle between Daily, This Year, and All-Time leaderboard views.
  * Adapts the GameModeFilter pattern from the archive feature.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Calendar, TrendingUp } from 'lucide-react-native';
+import { Calendar, CalendarRange, TrendingUp } from 'lucide-react-native';
 import { colors, textStyles, spacing, borderRadius } from '@/theme';
 import { LeaderboardType } from '../types/leaderboard.types';
 
@@ -33,6 +33,11 @@ const TOGGLE_OPTIONS: ToggleOption[] = [
     icon: <Calendar size={18} />,
   },
   {
+    value: 'yearly',
+    label: 'This Year',
+    icon: <CalendarRange size={18} />,
+  },
+  {
     value: 'global',
     label: 'All-Time',
     icon: <TrendingUp size={18} />,
@@ -53,7 +58,8 @@ function ToggleChip({
   onPress: () => void;
   testID?: string;
 }) {
-  const Icon = React.cloneElement(option.icon as React.ReactElement, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Icon = React.cloneElement(option.icon as React.ReactElement<any>, {
     color: isSelected ? colors.stadiumNavy : colors.floodlightWhite,
   });
 
@@ -75,10 +81,11 @@ function ToggleChip({
 }
 
 /**
- * Toggle between Daily and All-Time leaderboards.
+ * Toggle between Daily, This Year, and All-Time leaderboards.
  *
  * Daily shows total points from today's 5 puzzles (0-500).
- * All-Time shows global IQ ranking (0-100).
+ * This Year shows cumulative score for the current year.
+ * All-Time shows total cumulative IQ points.
  */
 export function LeaderboardToggle({
   selected,

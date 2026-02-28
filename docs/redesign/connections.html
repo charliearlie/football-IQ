@@ -1,627 +1,143 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <title>Football IQ - Connections Ultimate</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football IQ - Connections</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg-dark: #05050A; --bg-surface: #0E121A;
+    --glass-panel: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.08);
+    --neon-green: #2EFC5D; --neon-green-glow: rgba(46, 252, 93, 0.3); --neon-green-dark: #1A9E38;
+    --danger-red: #FF3366; --text-pure: #FFFFFF; --text-off: #A0ABC0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Outfit', sans-serif; background-color: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-image: radial-gradient(circle at 50% 0%, #1a1f35 0%, #000 70%); }
+  
+  .app-container {
+    width: 100%; max-width: 414px; height: 896px; max-height: 90vh; background-color: var(--bg-dark);
+    border-radius: 44px; overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 0 10px #111, 0 30px 60px rgba(0,0,0,0.8);
+    display: flex; flex-direction: column; position: relative; color: var(--text-pure);
+  }
+  .app-container::-webkit-scrollbar { display: none; }
+  .app-container { -ms-overflow-style: none; scrollbar-width: none; }
+  
+  .ambient-glow { position: absolute; top: -50px; left: -100px; width: 350px; height: 350px; background: radial-gradient(circle, var(--neon-green-glow) 0%, transparent 60%); opacity: 0.2; pointer-events: none; z-index: 0; }
+  .content-wrapper { display: flex; flex-direction: column; padding: 24px; gap: 24px; flex-grow: 1; z-index: 1; }
+  
+  .squish-btn { cursor: pointer; transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+  .squish-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  .game-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .back-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
+  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; line-height: 1; margin-top: 4px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .help-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--text-off); }
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+  .objective-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+  .obj-label { font-size: 11px; color: var(--neon-green); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+  .obj-title { font-size: 16px; font-weight: 600; color: var(--text-pure); }
+  
+  .mistakes-container { display: flex; flex-direction: column; align-items: flex-end; }
+  .mistakes-label { font-size: 10px; color: var(--text-off); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green-glow); }
 
-    <!-- Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+  .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex-grow: 1; align-content: start; }
+  .grid-card {
+    aspect-ratio: 1; background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 8px; box-shadow: 0 6px 0 rgba(0,0,0,0.6); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.5px; 
+    line-height: 1.1; color: var(--text-pure); word-break: break-word; user-select: none; cursor: pointer;
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .grid-card:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+  .grid-card.selected {
+    transform: translateY(6px); box-shadow: 0 0 0 transparent; background: rgba(46, 252, 93, 0.15); border-color: var(--neon-green); color: var(--neon-green);
+  }
 
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              pitchGreen: "#58CC02",
-              grassShadow: "#46A302",
-              stadiumNavy: "#0F172A",
-              navyLight: "#1E293B",
-              floodlightWhite: "#F8FAFC",
-              cardYellow: "#FACC15",
-              redCard: "#EF4444",
-              glassBg: "rgba(255, 255, 255, 0.05)",
-              glassBorder: "rgba(255, 255, 255, 0.1)",
-              textSecondary: "rgba(248, 250, 252, 0.6)",
-            },
-            fontFamily: {
-              bebas: ['"Bebas Neue"', "sans-serif"],
-              montserrat: ['"Montserrat"', "sans-serif"],
-            },
-            boxShadow: {
-              glow: "0 0 20px rgba(88, 204, 2, 0.2)",
-              "glow-active": "0 0 25px rgba(88, 204, 2, 0.4)",
-              "3d": "0 6px 0 #0f172a", // Deep shadow for unpressed tiles
-              "3d-hover": "0 4px 0 #0f172a",
-              "3d-pressed": "0 0 0 #0f172a", // No shadow when pressed
-              "3d-green": "0 6px 0 #3a8501", // Green button shadow
-              "3d-green-pressed": "0 0 0 #3a8501",
-              "inner-light": "inset 0 1px 0 rgba(255,255,255,0.1)",
-              "inner-depth": "inset 0 4px 6px rgba(0,0,0,0.2)", // For pressed state
-            },
-            animation: {
-              shake: "shake 0.5s cubic-bezier(.36,.07,.19,.97) both",
-              pop: "pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards",
-              merge: "merge 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
-              "pulse-slow": "pulse-ring 2s infinite",
-              shimmer: "shimmer 2s linear infinite",
-            },
-            keyframes: {
-              shake: {
-                "10%, 90%": { transform: "translate3d(-1px, 0, 0)" },
-                "20%, 80%": { transform: "translate3d(2px, 0, 0)" },
-                "30%, 50%, 70%": { transform: "translate3d(-4px, 0, 0)" },
-                "40%, 60%": { transform: "translate3d(4px, 0, 0)" },
-              },
-              pop: {
-                "0%": { transform: "scale(0.9)", opacity: "0" },
-                "100%": { transform: "scale(1)", opacity: "1" },
-              },
-              merge: {
-                "0%": {
-                  opacity: "0",
-                  transform: "translateY(20px) scale(0.9)",
-                },
-                "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
-              },
-              "pulse-ring": {
-                "0%": { boxShadow: "0 0 0 0 rgba(88, 204, 2, 0.7)" },
-                "70%": { boxShadow: "0 0 0 10px rgba(88, 204, 2, 0)" },
-                "100%": { boxShadow: "0 0 0 0 rgba(88, 204, 2, 0)" },
-              },
-              shimmer: {
-                "0%": { transform: "translateX(-100%)" },
-                "100%": { transform: "translateX(100%)" },
-              },
-            },
-          },
-        },
-      };
-    </script>
-
-    <style>
-      body {
-        background-color: #0f172a;
-        /* Tactical Grid Background */
-        background-image:
-          radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 80%),
-          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size:
-          100% 100%,
-          40px 40px,
-          40px 40px;
-        color: #f8fafc;
-        font-family: "Montserrat", sans-serif;
-        height: 100vh;
-        overflow: hidden;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      /* Premium Glassmorphism */
-      .glass-panel {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-      }
-
-      /* Tile Physics */
-      .game-tile {
-        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        touch-action: manipulation;
-      }
-
-      /* Default State: "Floating" Glass */
-      .game-tile-default {
-        background: linear-gradient(
-          145deg,
-          rgba(255, 255, 255, 0.07) 0%,
-          rgba(255, 255, 255, 0.03) 100%
-        );
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: var(--3d), var(--inner-light);
-        color: #f8fafc;
-      }
-      .game-tile-default:active {
-        transform: translateY(6px);
-        box-shadow: var(--3d-pressed), var(--inner-light);
-      }
-
-      /* Selected State: "Pressed" & Glowing */
-      .game-tile-selected {
-        background: #58cc02;
-        border: 1px solid #46a302;
-        color: #0f172a;
-        transform: translateY(6px); /* Physically depressed */
-        box-shadow:
-          var(--3d-pressed),
-          var(--inner-depth),
-          0 0 15px rgba(88, 204, 2, 0.3);
-      }
-
-      /* Error State */
-      .game-tile-error {
-        background: #ef4444 !important;
-        border-color: #991b1b !important;
-        color: white !important;
-        box-shadow: var(--3d-pressed) !important;
-        transform: translateY(6px);
-      }
-
-      /* Shimmer Overlay for Solved Cards */
-      .shimmer-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          to right,
-          transparent 0%,
-          rgba(255, 255, 255, 0.1) 50%,
-          transparent 100%
-        );
-        transform: skewX(-20deg) translateX(-150%);
-        animation: shimmer 3s infinite;
-        pointer-events: none;
-      }
-
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-    </style>
-  </head>
-  <body
-    class="flex flex-col h-full max-w-md mx-auto relative antialiased selection:bg-pitchGreen selection:text-stadiumNavy"
-  >
-    <!-- Header -->
-    <header
-      class="flex-none pt-8 pb-2 px-5 flex justify-between items-center z-10"
-    >
-      <button
-        class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center active:scale-90 transition-transform text-white/80 hover:text-white hover:bg-white/5 group"
-      >
-        <i
-          data-lucide="arrow-left"
-          class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"
-        ></i>
-      </button>
-
-      <div class="text-center">
-        <h1
-          class="font-bebas text-3xl tracking-[0.2em] text-white drop-shadow-md"
-        >
-          CONNECTIONS
-        </h1>
-        <div
-          class="h-0.5 w-12 bg-pitchGreen mx-auto rounded-full mt-1 opacity-80 shadow-[0_0_10px_#58CC02]"
-        ></div>
+  .connections-controls { display: flex; flex-direction: column; gap: 12px; }
+  .tools-row { display: flex; gap: 10px; }
+  .tool-btn {
+    flex: 1; background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px 0;
+    display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; 
+    letter-spacing: 1px; color: var(--text-off); box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+  }
+  .tool-btn.danger { color: var(--danger-red); }
+  
+  .conn-submit {
+    width: 100%; background: var(--neon-green); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+    letter-spacing: 2px; padding: 16px; border-radius: 16px; border: none; box-shadow: 0 6px 0 var(--neon-green-dark); 
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="ambient-glow"></div>
+  <div class="content-wrapper">
+    
+    <div class="game-header">
+      <div class="header-left">
+        <div class="back-btn squish-btn"><i data-lucide="chevron-left" size="24"></i></div>
+        <div class="game-title">CONNECTIONS</div>
       </div>
+      <div class="header-right">
+        <div class="help-btn squish-btn"><i data-lucide="help-circle" size="18"></i></div>
+      </div>
+    </div>
 
-      <button
-        class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center active:scale-90 transition-transform text-white/80 hover:text-white hover:bg-white/5"
-      >
-        <i data-lucide="help-circle" class="w-5 h-5"></i>
-      </button>
-    </header>
-
-    <!-- Game Status -->
-    <div class="px-6 py-4 flex-none">
-      <div class="flex justify-between items-end border-b border-white/5 pb-4">
-        <div class="text-left">
-          <p
-            class="text-pitchGreen text-[10px] font-bold uppercase tracking-widest mb-1"
-          >
-            Objective
-          </p>
-          <p class="text-white text-sm font-medium opacity-90">
-            Find groups of four
-          </p>
-        </div>
-
-        <div class="text-right">
-          <p
-            class="text-textSecondary text-[10px] font-bold uppercase tracking-widest mb-1.5"
-          >
-            Mistakes Left
-          </p>
-          <div class="flex gap-2" id="lives-container">
-            <!-- Lives injected via JS -->
-          </div>
+    <div class="objective-header">
+      <div>
+        <div class="obj-label">Objective</div>
+        <div class="obj-title">Find groups of four</div>
+      </div>
+      <div class="mistakes-container">
+        <div class="mistakes-label">Mistakes Left</div>
+        <div class="dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
         </div>
       </div>
     </div>
 
-    <!-- Game Board Area -->
-    <main
-      class="flex-grow flex flex-col px-4 py-2 overflow-y-auto no-scrollbar relative mask-image-b"
-    >
-      <!-- Solved Categories (Dynamic) -->
-      <div
-        id="solved-container"
-        class="space-y-3 mb-3 w-full perspective-[1000px]"
-      >
-        <!-- Cards appear here -->
+    <div class="grid-container" id="conn-grid">
+      <div class="grid-card">TIM<br>HOWARD</div><div class="grid-card">MOHAMED<br>SALAH</div><div class="grid-card">PIERRE-<br>EMERICK</div><div class="grid-card">LOUIS<br>SAHA</div>
+      <div class="grid-card">SERGIO<br>AGUERO</div><div class="grid-card">JERMAIN<br>DEFOE</div><div class="grid-card">MAROUANE<br>FELLAINI</div><div class="grid-card">DIMITAR<br>BERBATOV</div>
+      <div class="grid-card">PAVEL<br>NEDVED</div><div class="grid-card">ROBERTO<br>BAGGIO</div><div class="grid-card">SADIO<br>MANE</div><div class="grid-card">RONALDO<br>NAZARIO</div>
+      <div class="grid-card">FABIO<br>CANNAVARO</div><div class="grid-card">DIDIER<br>DROGBA</div><div class="grid-card">PHIL<br>NEVILLE</div><div class="grid-card">ANDY<br>COLE</div>
+    </div>
+
+    <div class="connections-controls">
+      <div class="tools-row">
+        <div class="tool-btn squish-btn"><i data-lucide="shuffle" size="14"></i> Shuffle</div>
+        <div class="tool-btn squish-btn" id="deselect-btn"><i data-lucide="x" size="14"></i> Deselect</div>
+        <div class="tool-btn danger squish-btn"><i data-lucide="flag" size="14"></i> Give Up</div>
       </div>
+      <button class="conn-submit squish-btn">SUBMIT</button>
+    </div>
 
-      <!-- Grid (Dynamic) -->
-      <div
-        id="grid-container"
-        class="grid grid-cols-4 gap-2.5 w-full mx-auto relative transition-all duration-500 pb-20"
-      >
-        <!-- Tiles appear here -->
-      </div>
-    </main>
+  </div>
+</div>
+<script>
+  lucide.createIcons();
 
-    <!-- Footer Controls -->
-    <footer
-      class="flex-none px-5 pb-8 pt-6 z-20 glass-panel rounded-t-[32px] border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
-    >
-      <!-- Action Buttons -->
-      <div class="flex justify-center gap-3 mb-6">
-        <button
-          onclick="shuffleGrid()"
-          class="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest text-textSecondary hover:text-white hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2 group"
-        >
-          <i
-            data-lucide="shuffle"
-            class="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500"
-          ></i>
-          SHUFFLE
-        </button>
-        <button
-          onclick="deselectAll()"
-          class="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest text-textSecondary hover:text-white hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2 group"
-        >
-          <i
-            data-lucide="x"
-            class="w-3.5 h-3.5 group-hover:text-redCard transition-colors"
-          ></i>
-          DESELECT
-        </button>
-      </div>
+  const gridCards = document.querySelectorAll('.grid-card');
+  const deselectBtn = document.getElementById('deselect-btn');
+  
+  gridCards.forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      const selected = document.querySelectorAll('.grid-card.selected');
+      if(selected.length > 4) { card.classList.remove('selected'); }
+    });
+  });
 
-      <!-- Submit Button -->
-      <div class="relative group">
-        <div
-          id="submit-glow"
-          class="absolute -inset-1 bg-pitchGreen rounded-2xl blur opacity-0 transition duration-500"
-        ></div>
-        <button
-          id="submit-btn"
-          onclick="submitGuess()"
-          disabled
-          class="relative w-full h-14 bg-pitchGreen rounded-xl font-bebas text-2xl text-stadiumNavy tracking-[0.15em] shadow-3d-green transition-all transform active:translate-y-[6px] active:shadow-3d-green-pressed disabled:opacity-40 disabled:shadow-none disabled:translate-y-[0px] disabled:bg-white/10 disabled:text-white/30 flex items-center justify-center gap-2 overflow-hidden"
-        >
-          <span class="relative z-10 flex items-center gap-2">
-            SUBMIT
-            <i data-lucide="chevron-right" class="w-5 h-5 stroke-[3]"></i>
-          </span>
-        </button>
-      </div>
-
-      <!-- Dev Hint -->
-      <div
-        class="mt-4 text-center opacity-0 hover:opacity-100 transition-opacity duration-500"
-      >
-        <p
-          class="text-[9px] text-white/30 font-mono cursor-pointer tracking-widest"
-          onclick="autoSolveDemo()"
-        >
-          DEV: AUTO-SOLVE
-        </p>
-      </div>
-    </footer>
-
-    <script>
-      // Initialize Icons
-      lucide.createIcons();
-
-      // Game Data
-      const categories = [
-        {
-          title: "BALLON D'OR WINNERS",
-          color: "bg-cardYellow",
-          textColor: "text-stadiumNavy",
-          icon: "trophy",
-          items: ["MESSI", "RONALDO", "ZIDANE", "KAKA"],
-        },
-        {
-          title: "PREMIER LEAGUE CLUBS",
-          color: "bg-pitchGreen",
-          textColor: "text-stadiumNavy",
-          icon: "shield",
-          items: ["ARSENAL", "CHELSEA", "LIVERPOOL", "SPURS"],
-        },
-        {
-          title: "ITALIAN LEGENDS",
-          color: "bg-[#3B82F6]", // Azure Blue
-          textColor: "text-white",
-          icon: "flag",
-          items: ["MALDINI", "TOTTI", "PIRLO", "BUFFON"],
-        },
-        {
-          title: "FOOTBALL POSITIONS",
-          color: "bg-white/10", // Neutral Glass
-          textColor: "text-white",
-          icon: "users",
-          items: ["STRIKER", "WINGER", "KEEPER", "BACK"],
-        },
-      ];
-
-      // State
-      let gridItems = [];
-      let selectedIndices = new Set();
-      let solvedCount = 0;
-      let lives = 4;
-
-      // Initialize Game
-      function initGame() {
-        let allItems = [];
-        categories.forEach((cat, catIndex) => {
-          cat.items.forEach((item) => {
-            allItems.push({ word: item, categoryIndex: catIndex });
-          });
-        });
-
-        gridItems = shuffleArray(allItems);
-        renderGrid();
-        renderLives();
-      }
-
-      function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
-
-      // Render Lives as Balls
-      function renderLives() {
-        const container = document.getElementById("lives-container");
-        container.innerHTML = "";
-        for (let i = 0; i < 4; i++) {
-          const life = document.createElement("div");
-          // Use a styled circle to represent a "ball"
-          if (i < lives) {
-            life.className =
-              "w-3 h-3 rounded-full bg-pitchGreen shadow-[0_0_6px_#58CC02] transition-all duration-300 transform scale-100";
-          } else {
-            life.className =
-              "w-3 h-3 rounded-full border border-white/20 bg-transparent scale-75"; // Empty state
-          }
-          container.appendChild(life);
-        }
-      }
-
-      function renderGrid() {
-        const gridContainer = document.getElementById("grid-container");
-        gridContainer.innerHTML = "";
-
-        gridItems.forEach((item, index) => {
-          const tile = document.createElement("button");
-          const isSelected = selectedIndices.has(index);
-
-          // Base classes
-          let baseClasses =
-            "game-tile w-full aspect-square rounded-xl flex items-center justify-center p-1 text-center font-bebas text-lg leading-tight tracking-wide select-none outline-none ";
-
-          if (isSelected) {
-            tile.className = baseClasses + "game-tile-selected z-10";
-          } else {
-            tile.className =
-              baseClasses + "game-tile-default hover:bg-white/10";
-          }
-
-          // Text sizing logic
-          const fontSize =
-            item.word.length > 8 ? "text-[13px] leading-4" : "text-lg";
-          tile.innerHTML = `<span class="${fontSize} pointer-events-none drop-shadow-md relative z-10">${item.word}</span>`;
-
-          // Add click ripple effect logic (simple version)
-          tile.onclick = () => toggleSelection(index);
-          gridContainer.appendChild(tile);
-        });
-
-        updateSubmitButton();
-      }
-
-      function toggleSelection(index) {
-        // Haptic pattern would go here navigator.vibrate(10)
-
-        if (selectedIndices.has(index)) {
-          selectedIndices.delete(index);
-        } else {
-          if (selectedIndices.size < 4) {
-            selectedIndices.add(index);
-          } else {
-            // Slight visual feedback for "Max Reached" could go here
-            return;
-          }
-        }
-        renderGrid();
-      }
-
-      function updateSubmitButton() {
-        const btn = document.getElementById("submit-btn");
-        const glow = document.getElementById("submit-glow");
-
-        if (selectedIndices.size === 4) {
-          btn.disabled = false;
-          btn.classList.remove("opacity-40");
-          btn.classList.add("animate-pulse-slow"); // Subtle pulse
-          glow.classList.replace("opacity-0", "opacity-60");
-        } else {
-          btn.disabled = true;
-          btn.classList.add("opacity-40");
-          btn.classList.remove("animate-pulse-slow");
-          glow.classList.replace("opacity-60", "opacity-0");
-        }
-      }
-
-      function deselectAll() {
-        selectedIndices.clear();
-        renderGrid();
-      }
-
-      function shuffleGrid() {
-        gridItems = shuffleArray(gridItems);
-        selectedIndices.clear();
-        renderGrid();
-      }
-
-      function submitGuess() {
-        const selectedArray = Array.from(selectedIndices).map(
-          (i) => gridItems[i],
-        );
-        const firstCategory = selectedArray[0].categoryIndex;
-        const isMatch = selectedArray.every(
-          (item) => item.categoryIndex === firstCategory,
-        );
-
-        if (isMatch) {
-          handleSuccess(firstCategory);
-        } else {
-          handleError();
-        }
-      }
-
-      function handleSuccess(categoryIndex) {
-        const catData = categories[categoryIndex];
-
-        // 1. Create the merged card
-        const solvedRow = document.createElement("div");
-
-        // Card Style based on category color
-        // If color is white/10 (glass), we need to ensure text is readable and border exists
-        const isGlass = catData.color.includes("white");
-        const cardBg = isGlass
-          ? "bg-white/10 border border-white/20"
-          : catData.color;
-
-        solvedRow.className = `w-full ${cardBg} rounded-xl p-4 shadow-glow animate-merge flex flex-col items-center justify-center text-center relative overflow-hidden group transform transition-all hover:scale-[1.02]`;
-
-        solvedRow.innerHTML = `
-                <!-- Shimmer Effect -->
-                <div class="shimmer-overlay"></div>
-                
-                <!-- Content -->
-                <div class="relative z-10 flex flex-col items-center">
-                    <h3 class="font-bebas text-2xl ${catData.textColor} tracking-widest mb-1 flex items-center gap-2">
-                        ${catData.title}
-                    </h3>
-                    <p class="font-montserrat text-[10px] font-bold ${catData.textColor} opacity-80 uppercase tracking-[0.15em]">
-                        ${catData.items.join(", ")}
-                    </p>
-                </div>
-                
-                <!-- Bottom Stripe for definition -->
-                <div class="absolute bottom-0 left-0 w-full h-1 bg-black/20"></div>
-            `;
-
-        document.getElementById("solved-container").appendChild(solvedRow);
-
-        // 2. Remove items and re-render
-        gridItems = gridItems.filter(
-          (item) => item.categoryIndex !== categoryIndex,
-        );
-        selectedIndices.clear();
-        renderGrid();
-        solvedCount++;
-
-        if (gridItems.length === 0) {
-          setTimeout(() => {
-            // Victory Celebration
-            launchConfetti();
-          }, 500);
-        }
-      }
-
-      function handleError() {
-        const grid = document.getElementById("grid-container");
-        const tiles = grid.children;
-        const submitBtn = document.getElementById("submit-btn");
-
-        // Visual Shake & Red Flash
-        selectedIndices.forEach((index) => {
-          const tile = tiles[index]; // Note: This mapping works because render order matches array order
-          if (tile) {
-            tile.classList.add("animate-shake", "game-tile-error");
-          }
-        });
-
-        // Shake button too
-        submitBtn.classList.add("animate-shake");
-
-        // Logic: Remove life
-        lives--;
-        renderLives();
-
-        setTimeout(() => {
-          // Reset styling
-          selectedIndices.forEach((index) => {
-            const tile = tiles[index];
-            if (tile) {
-              tile.classList.remove("animate-shake", "game-tile-error");
-            }
-          });
-          submitBtn.classList.remove("animate-shake");
-
-          if (lives === 0) {
-            alert("GAME OVER! Try again.");
-            location.reload();
-          }
-
-          // Keep selection or clear? Usually connections keeps selection to let you adjust one
-          // But for visual reset we re-render
-          renderGrid();
-        }, 600);
-      }
-
-      // Demo Helper
-      function autoSolveDemo() {
-        deselectAll();
-        if (gridItems.length === 0) return;
-        const targetCat = gridItems[0].categoryIndex;
-        gridItems.forEach((item, index) => {
-          if (item.categoryIndex === targetCat) selectedIndices.add(index);
-        });
-        renderGrid();
-        setTimeout(submitGuess, 400);
-      }
-
-      function launchConfetti() {
-        // Simple visual alert for demo
-        const btn = document.getElementById("submit-btn");
-        btn.innerHTML = "VICTORY!";
-        btn.classList.replace("bg-pitchGreen", "bg-gold");
-        btn.classList.add("text-stadiumNavy");
-      }
-
-      // Initialize
-      initGame();
-    </script>
-  </body>
+  deselectBtn.addEventListener('click', () => {
+    gridCards.forEach(card => card.classList.remove('selected'));
+  });
+</script>
+</body>
 </html>

@@ -13,6 +13,7 @@ module.exports = {
     '/android/',
     '/ios/',
     '/web/',
+    '/.worktrees/',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

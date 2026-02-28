@@ -63,8 +63,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timerText: {
-    fontFamily: HOME_FONTS.heading,
-    fontSize: 18, // Bigger
-    marginTop: 2,
+    fontFamily: HOME_FONTS.body,
+    fontWeight: '700',
+    fontSize: 18,
   }
 });

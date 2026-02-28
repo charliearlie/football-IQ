@@ -1,11 +1,12 @@
 /**
  * ReportErrorSheet Component
  *
- * Bottom sheet for reporting errors in career path puzzles.
- * Uses the Modal + Pressable pattern from DayDetailSheet.
- *
+ * Content component for the report error native formSheet.
  * Provides quick-select chips for common report types
  * and an optional comment field.
+ *
+ * Rendered inside app/report-error-sheet.tsx route with
+ * presentation: 'formSheet' for native sheet + Liquid Glass on iOS 26.
  */
 
 import { useState } from 'react';
@@ -13,14 +14,13 @@ import {
   View,
   Text,
   StyleSheet,
-  Modal,
   Pressable,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { X, AlertTriangle, Check } from 'lucide-react-native';
+import { AlertTriangle, Check } from 'lucide-react-native';
 import { colors, fonts, borderRadius, spacing } from '@/theme';
-import { triggerMedium, triggerSuccess } from '@/lib/haptics';
+import { triggerMedium } from '@/lib/haptics';
 import { ElevatedButton } from '@/components';
 
 /**
@@ -65,45 +65,34 @@ const REPORT_OPTIONS: { type: ReportType; label: string; description: string }[]
 ];
 
 export interface ReportErrorSheetProps {
-  /** Whether sheet is visible */
-  visible: boolean;
   /** Puzzle ID to report */
-  puzzleId: string | null;
-  /** Callback to dismiss sheet */
-  onDismiss: () => void;
+  puzzleId: string;
   /** Callback when report is submitted */
   onSubmit: (reportType: ReportType, comment?: string) => Promise<void>;
+  /** Whether submission succeeded (controlled by route) */
+  isSuccess: boolean;
   /** Test ID for testing */
   testID?: string;
 }
 
-const HANDLE_HEIGHT = 4;
-const HANDLE_WIDTH = 40;
-
 /**
- * ReportErrorSheet - Bottom sheet for submitting error reports.
+ * ReportErrorSheet - Content for the error report native formSheet.
  *
  * Mobile-native pattern for error reporting with:
  * - Quick-select chips for report types
  * - Optional comment field
  * - Haptic feedback on submission
+ *
+ * Rendered inside a native formSheet route (app/report-error-sheet.tsx).
  */
 export function ReportErrorSheet({
-  visible,
-  puzzleId,
-  onDismiss,
   onSubmit,
+  isSuccess,
   testID,
 }: ReportErrorSheetProps) {
   const [selectedType, setSelectedType] = useState<ReportType | null>(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  // Don't render when not visible
-  if (!visible || !puzzleId) {
-    return null;
-  }
 
   const handleTypeSelect = (type: ReportType) => {
     triggerMedium();
@@ -116,191 +105,109 @@ export function ReportErrorSheet({
     setIsSubmitting(true);
     try {
       await onSubmit(selectedType, comment.trim() || undefined);
-      triggerSuccess();
-      setIsSuccess(true);
-
-      // Reset and close after success animation
-      setTimeout(() => {
-        setSelectedType(null);
-        setComment('');
-        setIsSuccess(false);
-        onDismiss();
-      }, 1500);
+      // Success state is managed by the route via isSuccess prop
     } catch (error) {
       console.error('[ReportErrorSheet] Submit failed:', error);
       setIsSubmitting(false);
     }
   };
 
-  const handleDismiss = () => {
-    if (!isSubmitting) {
-      setSelectedType(null);
-      setComment('');
-      onDismiss();
-    }
-  };
-
   // Success state
   if (isSuccess) {
     return (
-      <Modal visible={true} transparent animationType="fade" onRequestClose={() => {}}>
-        <View style={styles.backdrop}>
-          <View style={styles.backdropFill} />
-        </View>
-        <View style={[styles.sheet, styles.successSheet]} testID={testID}>
-          <View style={styles.successContent}>
-            <View style={styles.successIcon}>
-              <Check size={32} color={colors.pitchGreen} />
-            </View>
-            <Text style={styles.successTitle}>Scout Notified</Text>
-            <Text style={styles.successMessage}>
-              Thanks for helping improve our records
-            </Text>
+      <View style={styles.successContainer} testID={testID}>
+        <View style={styles.successContent}>
+          <View style={styles.successIcon}>
+            <Check size={32} color={colors.pitchGreen} />
           </View>
+          <Text style={styles.successTitle}>Scout Notified</Text>
+          <Text style={styles.successMessage}>
+            Thanks for helping improve our records
+          </Text>
         </View>
-      </Modal>
+      </View>
     );
   }
 
   return (
-    <Modal visible={true} transparent animationType="fade" onRequestClose={handleDismiss}>
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={handleDismiss}>
-        <View style={styles.backdropFill} />
-      </Pressable>
-
-      {/* Sheet */}
-      <View style={styles.sheet} testID={testID}>
-        {/* Drag Handle */}
-        <View style={styles.handleContainer}>
-          <View style={styles.handle} />
-        </View>
-
-        {/* Close Button */}
-        <Pressable
-          onPress={handleDismiss}
-          style={styles.closeButton}
-          hitSlop={12}
-          accessibilityLabel="Close"
-          accessibilityRole="button"
-          disabled={isSubmitting}
-        >
-          <X size={20} color={colors.textSecondary} />
-        </Pressable>
-
-        {/* Header */}
-        <View style={styles.header}>
-          <AlertTriangle size={20} color={colors.cardYellow} />
-          <Text style={styles.title}>Report an Error</Text>
-        </View>
-        <Text style={styles.subtitle}>What's wrong with this puzzle?</Text>
-
-        {/* Report Type Chips */}
-        <View style={styles.chipsContainer}>
-          {REPORT_OPTIONS.map((option) => (
-            <Pressable
-              key={option.type}
-              style={[
-                styles.chip,
-                selectedType === option.type && styles.chipSelected,
-              ]}
-              onPress={() => handleTypeSelect(option.type)}
-              disabled={isSubmitting}
-            >
-              <Text
-                style={[
-                  styles.chipLabel,
-                  selectedType === option.type && styles.chipLabelSelected,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Description of selected type */}
-        {selectedType && (
-          <Text style={styles.description}>
-            {REPORT_OPTIONS.find((o) => o.type === selectedType)?.description}
-          </Text>
-        )}
-
-        {/* Optional comment */}
-        <TextInput
-          style={styles.commentInput}
-          placeholder="Add details (optional)"
-          placeholderTextColor={colors.textSecondary}
-          value={comment}
-          onChangeText={setComment}
-          multiline
-          maxLength={500}
-          editable={!isSubmitting}
-        />
-
-        {/* Submit Button */}
-        <View style={styles.submitContainer}>
-          {isSubmitting ? (
-            <ActivityIndicator size="small" color={colors.pitchGreen} />
-          ) : (
-            <ElevatedButton
-              title="Submit Report"
-              onPress={handleSubmit}
-              size="large"
-              fullWidth
-              disabled={!selectedType}
-            />
-          )}
-        </View>
+    <View style={styles.container} testID={testID}>
+      {/* Header */}
+      <View style={styles.header}>
+        <AlertTriangle size={20} color={colors.cardYellow} />
+        <Text style={styles.title}>Report an Error</Text>
       </View>
-    </Modal>
+      <Text style={styles.subtitle}>What's wrong with this puzzle?</Text>
+
+      {/* Report Type Chips */}
+      <View style={styles.chipsContainer}>
+        {REPORT_OPTIONS.map((option) => (
+          <Pressable
+            key={option.type}
+            style={[
+              styles.chip,
+              selectedType === option.type && styles.chipSelected,
+            ]}
+            onPress={() => handleTypeSelect(option.type)}
+            disabled={isSubmitting}
+          >
+            <Text
+              style={[
+                styles.chipLabel,
+                selectedType === option.type && styles.chipLabelSelected,
+              ]}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Description of selected type */}
+      {selectedType && (
+        <Text style={styles.description}>
+          {REPORT_OPTIONS.find((o) => o.type === selectedType)?.description}
+        </Text>
+      )}
+
+      {/* Optional comment */}
+      <TextInput
+        style={styles.commentInput}
+        placeholder="Add details (optional)"
+        placeholderTextColor={colors.textSecondary}
+        value={comment}
+        onChangeText={setComment}
+        multiline
+        maxLength={500}
+        editable={!isSubmitting}
+      />
+
+      {/* Submit Button */}
+      <View style={styles.submitContainer}>
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color={colors.pitchGreen} />
+        ) : (
+          <ElevatedButton
+            title="Submit Report"
+            onPress={handleSubmit}
+            size="large"
+            fullWidth
+            disabled={!selectedType}
+          />
+        )}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-  },
-  backdropFill: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.stadiumNavy,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+  container: {
     paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
     paddingBottom: spacing['3xl'],
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colors.glassBorder,
   },
-  successSheet: {
+  successContainer: {
+    paddingHorizontal: spacing.xl,
     paddingVertical: spacing['2xl'],
-  },
-  handleContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  handle: {
-    width: HANDLE_WIDTH,
-    height: HANDLE_HEIGHT,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: HANDLE_HEIGHT / 2,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.lg,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',

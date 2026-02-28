@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football IQ - Career Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg-dark: #05050A; --bg-surface: #0E121A;
+    --glass-panel: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.08);
+    --neon-green: #2EFC5D; --neon-green-glow: rgba(46, 252, 93, 0.3); --neon-green-dark: #1A9E38;
+    --gold-primary: #FFD700; --text-pure: #FFFFFF; --text-off: #A0ABC0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Outfit', sans-serif; background-color: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-image: radial-gradient(circle at 50% 0%, #1a1f35 0%, #000 70%); }
+  
+  .app-container {
+    width: 100%; max-width: 414px; height: 896px; max-height: 90vh; background-color: var(--bg-dark);
+    border-radius: 44px; overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 0 10px #111, 0 30px 60px rgba(0,0,0,0.8);
+    display: flex; flex-direction: column; position: relative; color: var(--text-pure);
+  }
+  .app-container::-webkit-scrollbar { display: none; }
+  .app-container { -ms-overflow-style: none; scrollbar-width: none; }
+  
+  .ambient-glow { position: absolute; top: -50px; left: -100px; width: 350px; height: 350px; background: radial-gradient(circle, var(--neon-green-glow) 0%, transparent 60%); opacity: 0.2; pointer-events: none; z-index: 0; }
+  .content-wrapper { display: flex; flex-direction: column; padding: 24px; gap: 24px; flex-grow: 1; z-index: 1; }
+  
+  .squish-btn { cursor: pointer; transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+  .squish-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+
+  .game-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .back-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
+  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; line-height: 1; margin-top: 4px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .help-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--text-off); }
+
+  .step-counter { font-size: 13px; font-weight: 700; color: var(--text-off); text-transform: uppercase; letter-spacing: 1px; }
+  .step-highlight { color: var(--neon-green); font-family: 'Space Grotesk', sans-serif; font-size: 16px;}
+
+  .timeline-container { display: flex; gap: 16px; position: relative; flex-grow: 1; }
+  .timeline-track { width: 2px; background: rgba(255,255,255,0.1); position: relative; margin-left: 11px; margin-top: 20px; margin-bottom: 20px; }
+  .timeline-progress { position: absolute; top: 0; left: 0; width: 100%; height: 25%; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green-glow); }
+  .timeline-nodes { position: absolute; top: 0; left: -11px; width: 24px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+  .node { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-dark); border: 2px solid rgba(255,255,255,0.2); z-index: 2; }
+  .node.active { border-color: var(--neon-green); background: var(--neon-green-dark); box-shadow: 0 0 15px var(--neon-green-glow); }
+
+  .clues-list { display: flex; flex-direction: column; gap: 16px; flex: 1; justify-content: space-between; padding-bottom: 10px;}
+  .clue-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
+  .clue-card.active { border-color: rgba(46, 252, 93, 0.4); box-shadow: 0 8px 16px rgba(0,0,0,0.6), inset 0 0 20px rgba(46, 252, 93, 0.05); }
+  .clue-card.locked { background: rgba(255,255,255,0.02); border-style: dashed; border-color: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; min-height: 80px; box-shadow: none; }
+  
+  .clue-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .team-name { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; line-height: 1; }
+  .years { font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: var(--text-off); font-weight: 700; }
+  
+  .clue-stats { display: flex; gap: 12px; }
+  .stat-badge { background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; display: flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); }
+
+  .game-controls { background: var(--bg-surface); padding: 20px; border-radius: 24px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 16px; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+  .input-row { display: flex; gap: 12px; }
+  .search-input { flex: 1; background: #05050A; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 0 16px; color: var(--text-pure); font-family: 'Outfit', sans-serif; font-size: 15px; outline: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+  .search-input:focus { border-color: var(--neon-green); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 0 1px var(--neon-green); }
+  .submit-btn { background: var(--neon-green); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; padding: 0 24px; border-radius: 16px; border: none; box-shadow: 0 6px 0 var(--neon-green-dark); display: flex; align-items: center; justify-content: center; }
+  .reveal-row { display: flex; justify-content: center; }
+  .reveal-btn { background: transparent; border: none; color: var(--gold-primary); font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="ambient-glow"></div>
+  <div class="content-wrapper">
+    
+    <div class="game-header">
+      <div class="header-left">
+        <div class="back-btn squish-btn"><i data-lucide="chevron-left" size="24"></i></div>
+        <div class="game-title">CAREER PATH PRO</div>
+      </div>
+      <div class="header-right">
+        <div class="step-counter">Step <span class="step-highlight">1</span> of 5</div>
+        <div class="help-btn squish-btn"><i data-lucide="help-circle" size="18"></i></div>
+      </div>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-track">
+        <div class="timeline-progress"></div>
+        <div class="timeline-nodes">
+          <div class="node active"></div>
+          <div class="node"></div>
+          <div class="node"></div>
+          <div class="node"></div>
+          <div class="node"></div>
+        </div>
+      </div>
+
+      <div class="clues-list">
+        <div class="clue-card active">
+          <div class="clue-header">
+            <div class="team-name">BAYERN MUNICH</div>
+            <div class="years">1993-1998</div>
+          </div>
+          <div class="clue-stats">
+            <div class="stat-badge"><i data-lucide="shoe-prints" size="14"></i> 105</div>
+            <div class="stat-badge"><i data-lucide="target" size="14"></i> 6</div>
+          </div>
+        </div>
+        <div class="clue-card locked"><i data-lucide="lock" size="24" color="rgba(255,255,255,0.2)"></i></div>
+        <div class="clue-card locked"><i data-lucide="lock" size="24" color="rgba(255,255,255,0.2)"></i></div>
+        <div class="clue-card locked"><i data-lucide="lock" size="24" color="rgba(255,255,255,0.2)"></i></div>
+        <div class="clue-card locked"><i data-lucide="lock" size="24" color="rgba(255,255,255,0.2)"></i></div>
+      </div>
+    </div>
+
+    <div class="game-controls">
+      <div class="input-row">
+        <input type="text" class="search-input" placeholder="Search player...">
+        <button class="submit-btn squish-btn">SUBMIT</button>
+      </div>
+      <div class="reveal-row">
+        <button class="reveal-btn"><i data-lucide="chevron-right" size="16"></i> Reveal next step</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

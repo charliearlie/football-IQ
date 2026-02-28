@@ -1130,7 +1130,7 @@ export async function getCatalogEntryCountIncomplete(): Promise<number> {
  *
  * For non-premium users:
  * - Only puzzles within last 3 days OR with valid ad unlock
- * - Excludes premium-only game modes (career_path_pro, top_tens)
+ * - All game modes included (premium mode exclusion temporarily disabled for outreach)
  *
  * For premium users:
  * - Full backlog access, all game modes
@@ -1158,7 +1158,7 @@ export async function getRandomUnplayedPuzzle(
     );
   }
 
-  // Non-premium: 3-day window OR ad-unlocked, exclude premium modes
+  // Non-premium: 3-day window OR ad-unlocked (premium mode filter temporarily removed for outreach)
   return database.getFirstAsync<LocalCatalogEntry>(
     `SELECT pc.* FROM puzzle_catalog pc
      LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
@@ -1166,7 +1166,6 @@ export async function getRandomUnplayedPuzzle(
      WHERE pc.puzzle_date <= date('now', 'localtime')
        AND a.id IS NULL
        AND pc.is_special = 0
-       AND pc.is_premium = 0
        AND (pc.puzzle_date >= $freeWindowStart OR up.puzzle_id IS NOT NULL)
      ORDER BY RANDOM()
      LIMIT 1`,

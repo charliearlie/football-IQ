@@ -24,6 +24,7 @@ const mockPuzzle: ParsedLocalPuzzle = {
   synced_at: null,
   updated_at: null,
   is_special: 0,
+  is_premium: 0,
   event_title: null,
   event_subtitle: null,
   event_tag: null,
@@ -118,11 +119,6 @@ jest.mock('@/features/ads', () => {
 // Mock career path components that aren't under test
 jest.mock('../components/ScoutingDisclaimer', () => ({
   ScoutingDisclaimer: jest.fn(() => null),
-}));
-
-jest.mock('../components/ReportErrorSheet', () => ({
-  ReportErrorSheet: jest.fn(() => null),
-  ReportType: {},
 }));
 
 jest.mock('../services/reportService', () => ({

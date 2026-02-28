@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 20,
     marginTop: 24,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   container: {
@@ -149,16 +149,18 @@ const styles = StyleSheet.create({
   button: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 4,
   },
   buttonText: {
-    fontFamily: HOME_FONTS.heading,
+    fontFamily: HOME_FONTS.body,
+    fontWeight: '800',
     color: '#fff',
     fontSize: 14,
-    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

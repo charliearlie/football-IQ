@@ -102,6 +102,8 @@ export interface UseArchivePuzzlesResult {
   hasMore: boolean;
   /** Load the next page of puzzles */
   loadMore: () => void;
+  /** Load ALL remaining pages in a single batched state update */
+  loadAll: () => Promise<void>;
   /** Pull-to-refresh handler */
   refresh: () => Promise<void>;
 }

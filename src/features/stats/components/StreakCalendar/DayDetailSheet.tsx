@@ -1,27 +1,17 @@
 /**
  * DayDetailSheet Component
  *
- * Bottom sheet replacing the tooltip for day details.
+ * Content component for the day detail native formSheet.
  * Shows date, IQ earned, game mode completion icons, and CTA
  * to complete missing games in the archive.
  *
- * Benefits over tooltip:
- * - No clipping issues (slides from bottom)
- * - More content space
- * - Mobile-native interaction pattern
- * - Gesture dismiss support
+ * Rendered inside app/day-detail-sheet.tsx route with
+ * presentation: 'formSheet' for native sheet + Liquid Glass on iOS 26.
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Image,
-} from 'react-native';
-import { Grid3X3, X } from 'lucide-react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { Grid3X3 } from 'lucide-react-native';
 import { colors, fonts, borderRadius, spacing } from '@/theme';
 import { CalendarDay } from '../../types/calendar.types';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -30,20 +20,13 @@ import { triggerMedium } from '@/lib/haptics';
 import { ElevatedButton } from '@/components';
 
 export interface DayDetailSheetProps {
-  /** Day data to display (null when hidden) */
-  day: CalendarDay | null;
-  /** Whether sheet is visible */
-  visible: boolean;
-  /** Callback to dismiss sheet */
-  onDismiss: () => void;
+  /** Day data to display */
+  day: CalendarDay;
   /** Callback to navigate to archive for incomplete games */
   onCompleteGames: (date: string) => void;
   /** Test ID for testing */
   testID?: string;
 }
-
-const HANDLE_HEIGHT = 4;
-const HANDLE_WIDTH = 40;
 
 /**
  * Format date for display.
@@ -113,23 +96,16 @@ function GameModeIcon({
 }
 
 /**
- * DayDetailSheet - Bottom sheet for calendar day details.
+ * DayDetailSheet - Content for the calendar day detail native formSheet.
  *
- * Replaces tooltip with a mobile-native bottom sheet pattern.
  * Shows completion status and provides CTA to complete missing games.
+ * Rendered inside a native formSheet route (app/day-detail-sheet.tsx).
  */
 export function DayDetailSheet({
   day,
-  visible,
-  onDismiss,
   onCompleteGames,
   testID,
 }: DayDetailSheetProps) {
-  // Don't render anything when not visible - prevents touch interception during close
-  if (!visible || !day) {
-    return null;
-  }
-
   const completedCount = day.count;
   const totalGames = day.gameModes.length;
   const hasIncomplete = completedCount < totalGames;
@@ -140,140 +116,71 @@ export function DayDetailSheet({
     onCompleteGames(day.date);
   };
 
-  const handleDismiss = () => {
-    onDismiss();
-  };
-
   return (
-    <Modal
-      visible={true}
-      transparent
-      animationType="fade"
-      onRequestClose={handleDismiss}
-    >
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={handleDismiss}>
-        <View style={styles.backdropFill} />
-      </Pressable>
+    <View style={styles.container} testID={testID}>
+      {/* Date */}
+      <Text style={styles.dateText}>{formatDetailDate(day.date)}</Text>
 
-      {/* Sheet */}
-      <View style={styles.sheet} testID={testID}>
-        {/* Drag Handle */}
-        <View style={styles.handleContainer}>
-          <View style={styles.handle} />
-        </View>
+      {/* IQ Earned */}
+      <Text style={styles.iqText}>
+        {day.totalIQ > 0 ? `+${day.totalIQ}` : '0'} IQ
+      </Text>
 
-        {/* Close Button */}
-        <Pressable
-          onPress={handleDismiss}
-          style={styles.closeButton}
-          hitSlop={12}
-          accessibilityLabel="Close"
-          accessibilityRole="button"
-        >
-          <X size={20} color={colors.textSecondary} />
-        </Pressable>
-
-        {/* Date */}
-        <Text style={styles.dateText}>{formatDetailDate(day.date)}</Text>
-
-        {/* IQ Earned */}
-        <Text style={styles.iqText}>
-          {day.totalIQ > 0 ? `+${day.totalIQ}` : '0'} IQ
-        </Text>
-
-        {/* Game Mode Icons */}
-        <View style={styles.gameModeRow}>
-          {day.gameModes.map((gm, index) => (
-            <GameModeIcon
-              key={`${gm.gameMode}-${index}`}
-              gameMode={gm.gameMode}
-              completed={gm.completed}
-            />
-          ))}
-        </View>
-
-        {/* Completion Count */}
-        <Text style={styles.countText}>
-          {completedCount} of {totalGames} games completed
-        </Text>
-
-        {/* CTA for incomplete days */}
-        {hasIncomplete && (
-          <View style={styles.ctaContainer}>
-            <ElevatedButton
-              title="Complete Missing Games"
-              onPress={handleCompletePress}
-              size="large"
-              fullWidth
-            />
-            <Text style={styles.motivationText}>
-              {remainingGames === 1
-                ? '1 more game to perfect day!'
-                : `${remainingGames} more games to perfect day!`}
-            </Text>
-          </View>
-        )}
-
-        {/* Perfect day message */}
-        {!hasIncomplete && totalGames > 0 && (
-          <View style={styles.perfectContainer}>
-            <Text style={styles.perfectText}>🎉 Perfect Day!</Text>
-          </View>
-        )}
-
-        {/* No games available message */}
-        {totalGames === 0 && (
-          <View style={styles.noGamesContainer}>
-            <Text style={styles.noGamesText}>No games available for this day</Text>
-          </View>
-        )}
+      {/* Game Mode Icons */}
+      <View style={styles.gameModeRow}>
+        {day.gameModes.map((gm, index) => (
+          <GameModeIcon
+            key={`${gm.gameMode}-${index}`}
+            gameMode={gm.gameMode}
+            completed={gm.completed}
+          />
+        ))}
       </View>
-    </Modal>
+
+      {/* Completion Count */}
+      <Text style={styles.countText}>
+        {completedCount} of {totalGames} games completed
+      </Text>
+
+      {/* CTA for incomplete days */}
+      {hasIncomplete && (
+        <View style={styles.ctaContainer}>
+          <ElevatedButton
+            title="Complete Missing Games"
+            onPress={handleCompletePress}
+            size="large"
+            fullWidth
+          />
+          <Text style={styles.motivationText}>
+            {remainingGames === 1
+              ? '1 more game to perfect day!'
+              : `${remainingGames} more games to perfect day!`}
+          </Text>
+        </View>
+      )}
+
+      {/* Perfect day message */}
+      {!hasIncomplete && totalGames > 0 && (
+        <View style={styles.perfectContainer}>
+          <Text style={styles.perfectText}>🎉 Perfect Day!</Text>
+        </View>
+      )}
+
+      {/* No games available message */}
+      {totalGames === 0 && (
+        <View style={styles.noGamesContainer}>
+          <Text style={styles.noGamesText}>No games available for this day</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-  },
-  backdropFill: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.stadiumNavy,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+  container: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing['3xl'], // Safe area padding
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  handleContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  handle: {
-    width: HANDLE_WIDTH,
-    height: HANDLE_HEIGHT,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: HANDLE_HEIGHT / 2,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.lg,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: spacing.md,
+    paddingBottom: spacing['3xl'],
   },
   dateText: {
     fontFamily: fonts.body,

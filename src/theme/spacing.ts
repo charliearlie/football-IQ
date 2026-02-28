@@ -1,5 +1,5 @@
 /**
- * Digital Pitch Design System - Spacing Scale
+ * Premium Sports Game Design System - Spacing Scale
  *
  * Consistent spacing creates visual rhythm and hierarchy.
  * Based on a 4px base unit.
@@ -25,7 +25,8 @@ export const spacing = {
 } as const;
 
 /**
- * Border radius values for consistent rounded corners
+ * Border radius values for consistent rounded corners.
+ * Inner elements: 16px (xl). Main layout cards: 20-24px (2xl-3xl).
  */
 export const borderRadius = {
   /** 4px - Subtle rounding */
@@ -34,26 +35,27 @@ export const borderRadius = {
   md: 8,
   /** 12px - Medium rounding */
   lg: 12,
-  /** 16px - Friendly, not sharp (buttons) */
+  /** 16px - Inner elements, buttons */
   xl: 16,
-  /** 24px - Pills, tags */
-  '2xl': 24,
+  /** 20px - Main layout cards */
+  '2xl': 20,
+  /** 24px - Largest cards */
+  '3xl': 24,
   /** Full circle */
   full: 9999,
 } as const;
 
 /**
  * Shadow offset for 3D button effect (legacy naming)
- * Values create prominent tactile depth like Duolingo/Headspace
  * @deprecated Use depthOffset instead for new components
  */
 export const shadowOffset = {
   /** Small button press depth */
-  buttonSmall: 5,
+  buttonSmall: 3,
   /** Standard button press depth */
-  button: 8,
+  button: 4,
   /** Large button press depth */
-  buttonLarge: 10,
+  buttonLarge: 5,
 } as const;
 
 /**
@@ -63,8 +65,6 @@ export const shadowOffset = {
  * The "Solid Layer" architecture uses two absolute-positioned Views:
  * - Bottom layer: Fixed position, darker color (the "depth/shadow")
  * - Top layer: Animated translateY on press (the "face")
- *
- * @see src/features/tic-tac-toe/components/GridCell.tsx for reference implementation
  */
 export const depthOffset = {
   /** No depth - flat appearance */
@@ -72,19 +72,19 @@ export const depthOffset = {
   /** Minimal depth for sunk/recessed elements (empty grid cells) */
   sunk: 1,
   /** Cards and containers */
-  card: 2,
+  card: 3,
   /** Grid cells (filled state) */
   cell: 3,
   /** Tic-tac-toe cells */
   tictacCell: 4,
   /** Tiny buttons (for compact cards) */
-  buttonTiny: 3,
+  buttonTiny: 2,
   /** Small buttons */
-  buttonSmall: 5,
+  buttonSmall: 3,
   /** Standard buttons */
-  button: 8,
+  button: 4,
   /** Large buttons */
-  buttonLarge: 10,
+  buttonLarge: 5,
 } as const;
 
 export type DepthLevel = keyof typeof depthOffset;

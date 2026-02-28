@@ -58,6 +58,7 @@ const createMockPuzzle = (): ParsedLocalPuzzle => ({
   synced_at: new Date().toISOString(),
   updated_at: null,
   is_special: 0,
+  is_premium: 0,
   event_title: null,
   event_subtitle: null,
   event_tag: null,

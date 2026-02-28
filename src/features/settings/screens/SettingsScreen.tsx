@@ -159,11 +159,8 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "2.5.2";
+  const appVersion = Constants.expoConfig?.version ?? "3.0.0";
 
-  /**
-   * Handle version text tap for secret dev menu
-   */
   const handleVersionTap = useCallback(() => {
     const now = Date.now();
     if (now - lastTapTimeRef.current > 2000) {
@@ -633,7 +630,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.pitchGreen,
     fontSize: 12,
-    fontFamily: "Montserrat",
+    fontFamily: "Inter",
     fontWeight: "700",
     textTransform: "uppercase",
   },
@@ -664,13 +661,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   versionText: {
-    fontFamily: "Montserrat",
+    fontFamily: "Inter",
     fontSize: 12,
     color: colors.textSecondary,
     marginBottom: 4,
   },
   copyrightText: {
-    fontFamily: "Montserrat",
+    fontFamily: "Inter",
     fontSize: 10,
     color: colors.textSecondary,
     opacity: 0.6,

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football IQ - Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg-dark: #05050A; 
+    --bg-surface: #0E121A;
+    --glass-panel: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --neon-green: #2EFC5D;
+    --neon-green-glow: rgba(46, 252, 93, 0.3);
+    --neon-green-dark: #1A9E38;
+    --gold-primary: #FFD700;
+    --accent-blue: #00E5FF;
+    --text-pure: #FFFFFF;
+    --text-off: #A0ABC0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Outfit', sans-serif; background-color: #000; display: flex;
+    justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
+    background-image: radial-gradient(circle at 50% 0%, #1a1f35 0%, #000 70%);
+  }
+
+  .app-container {
+    width: 100%; max-width: 414px; height: 896px; max-height: 90vh;
+    background-color: var(--bg-dark); border-radius: 44px; overflow-y: auto; overflow-x: hidden;
+    box-shadow: 0 0 0 10px #111, 0 30px 60px rgba(0,0,0,0.8); display: flex; flex-direction: column;
+    position: relative; color: var(--text-pure);
+  }
+  .app-container::-webkit-scrollbar { display: none; }
+  .app-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .ambient-glow {
+    position: absolute; top: -50px; left: -100px; width: 350px; height: 350px;
+    background: radial-gradient(circle, var(--neon-green-glow) 0%, transparent 60%);
+    opacity: 0.2; pointer-events: none; z-index: 0;
+  }
+
+  .content-wrapper {
+    display: flex; flex-direction: column; padding: 24px 24px 100px 24px;
+    gap: 24px; flex-grow: 1; z-index: 1;
+  }
+
+  .squish-btn { cursor: pointer; transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+  .squish-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1.5px;
+    line-height: 1; background: linear-gradient(to bottom, #FFF, #A0ABC0);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  
+  .header-actions { display: flex; gap: 12px; }
+  .status-pill {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+    padding: 6px 14px; border-radius: 99px; display: flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 800; box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+  }
+  .status-pill.pro { background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), transparent); border-color: rgba(255, 215, 0, 0.3); color: var(--gold-primary); }
+
+  .objectives-card {
+    background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px;
+    position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .objectives-bg-accent {
+    position: absolute; top: 0; right: 0; width: 150px; height: 150px;
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  }
+  .obj-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; position: relative; z-index: 1; }
+  .obj-title { font-size: 11px; color: var(--neon-green); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+  .obj-main { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; line-height: 1; }
+
+  .daily-ring-container { position: relative; width: 54px; height: 54px; }
+  .daily-ring-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 4; }
+  .daily-ring-fill { 
+    fill: none; stroke: var(--neon-green); stroke-width: 4; stroke-linecap: round;
+    stroke-dasharray: 100; stroke-dashoffset: 25; transform: rotate(-90deg); transform-origin: 50% 50%;
+  }
+  .daily-ring-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-pure); }
+
+  .level-track { margin-top: 10px; position: relative; z-index: 1; }
+  .level-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--text-off); margin-bottom: 8px; text-transform: uppercase; }
+  .xp-highlight { color: var(--text-pure); font-family: 'Space Grotesk', sans-serif;}
+  .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+  .progress-fill { width: 85%; height: 100%; background: linear-gradient(90deg, var(--neon-green-dark), var(--neon-green)); border-radius: 8px; box-shadow: 0 0 10px var(--neon-green-glow); }
+
+  .flashback-banner {
+    background: linear-gradient(135deg, rgba(178, 0, 255, 0.2), rgba(14, 18, 26, 0.8)); border: 1px solid rgba(178, 0, 255, 0.3); border-radius: 20px;
+    padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .fb-content h3 { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px;}
+  .fb-content p { font-size: 12px; color: var(--text-off); font-weight: 600;}
+  .fb-btn { background: rgba(255,255,255,0.1); color: var(--text-pure); padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; backdrop-filter: blur(4px); }
+
+  .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; margin-top: 8px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; color: var(--text-pure); }
+  .timer { font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: var(--neon-green); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+  .scenarios-list { display: flex; flex-direction: column; gap: 16px; }
+  .scenario-card { background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 6px 0 rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+  .up-next { border-color: var(--neon-green-dark); box-shadow: 0 6px 0 rgba(0,0,0,0.6), inset 0 0 20px rgba(46, 252, 93, 0.05); }
+  .up-next-tag { position: absolute; top: 0; left: 16px; background: var(--neon-green); color: #000; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px; border-radius: 0 0 6px 6px; }
+  .sc-icon { width: 56px; height: 56px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--text-pure); }
+  .sc-info { flex: 1; margin-top: 4px;}
+  .sc-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; line-height: 1;}
+  .sc-desc { font-size: 12px; color: var(--text-off); font-weight: 600; margin-top: 4px;}
+
+  .play-btn { width: 48px; height: 48px; background: var(--neon-green); color: #000; border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 var(--neon-green-dark); transition: all 0.1s; }
+  .play-btn.secondary { background: var(--glass-panel); color: var(--text-pure); box-shadow: 0 4px 0 rgba(0,0,0,0.5); border: 1px solid var(--glass-border); }
+  .scenario-card:active .play-btn { box-shadow: 0 0 0 transparent; transform: translateY(4px); }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="ambient-glow"></div>
+  <div class="content-wrapper">
+    
+    <header>
+      <div class="logo-text">FOOTBALL IQ</div>
+      <div class="header-actions">
+        <div class="status-pill pro squish-btn"><i data-lucide="sparkles" size="14"></i> PRO</div>
+        <div class="status-pill streak squish-btn"><i data-lucide="flame" size="16" color="#FF4500" fill="#FF4500"></i> 3</div>
+      </div>
+    </header>
+
+    <div class="objectives-card">
+      <div class="objectives-bg-accent"></div>
+      <div class="obj-header">
+        <div>
+          <div class="obj-title">Season 1: Kickoff</div>
+          <div class="obj-main">DAILY OBJECTIVES</div>
+        </div>
+        <div class="daily-ring-container">
+          <svg viewBox="0 0 36 36" width="54" height="54">
+            <path class="daily-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="daily-ring-fill" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div class="daily-ring-text">3/4</div>
+        </div>
+      </div>
+      <div class="level-track">
+        <div class="level-labels">
+          <span>IQ LVL: Intern</span>
+          <span><span class="xp-highlight">3</span> PTS TO ANALYST</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="flashback-banner squish-btn">
+      <div class="fb-content">
+        <h3>SBC: PAST GAMES</h3>
+        <p>Unlock the last 3 days of archives</p>
+      </div>
+      <div class="fb-btn">Explore</div>
+    </div>
+
+    <div>
+      <div class="section-header">
+        <div class="section-title">MATCHDAY FIXTURES</div>
+        <div class="timer"><i data-lucide="clock" size="14"></i> 15:30:00</div>
+      </div>
+      <div class="scenarios-list">
+        
+        <div class="scenario-card up-next squish-btn">
+          <div class="up-next-tag">Next Match</div>
+          <div class="sc-icon" style="color: var(--neon-green); border-color: var(--neon-green-glow);">
+            <i data-lucide="git-commit-horizontal" size="26" stroke-width="2.5"></i>
+          </div>
+          <div class="sc-info">
+            <div class="sc-title">CAREER PATH PRO</div>
+            <div class="sc-desc">Follow the journey</div>
+          </div>
+          <div class="play-btn"><i data-lucide="play" fill="currentColor" size="20"></i></div>
+        </div>
+
+        <div class="scenario-card squish-btn">
+          <div class="sc-icon" style="color: var(--gold-primary);">
+            <i data-lucide="repeat-2" size="26" stroke-width="2.5"></i>
+          </div>
+          <div class="sc-info">
+            <div class="sc-title">TRANSFER GUESS</div>
+            <div class="sc-desc">Who made the move?</div>
+          </div>
+          <div class="play-btn secondary"><i data-lucide="play" fill="currentColor" size="20"></i></div>
+        </div>
+        
+        <div class="scenario-card squish-btn">
+          <div class="sc-icon" style="color: var(--accent-blue);">
+            <i data-lucide="arrow-down-up" size="26" stroke-width="2.5"></i>
+          </div>
+          <div class="sc-info">
+            <div class="sc-title">TIMELINE</div>
+            <div class="sc-desc">Order the career events</div>
+          </div>
+          <div class="play-btn secondary"><i data-lucide="play" fill="currentColor" size="20"></i></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

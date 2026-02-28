@@ -25,7 +25,7 @@ describe("generateCareerPathShareText", () => {
   it("includes the correct header line", () => {
     const result: CareerPathResult = { won: true, cluesUsed: 3, totalClues: 6 };
     const text = generateCareerPathShareText(result, puzzleDate);
-    expect(text).toContain("Football IQ - Career Path");
+    expect(text).toContain("Guess this career? I got it in 3 clues");
   });
 
   it("formats the date as '19 Feb'", () => {
@@ -92,7 +92,7 @@ describe("generateTransferGuessShareText", () => {
   it("includes the correct header line", () => {
     const result: TransferGuessResult = { won: true, hintsRevealed: 1, guessCount: 1 };
     const text = generateTransferGuessShareText(result, puzzleDate);
-    expect(text).toContain("Football IQ - Transfer Guess");
+    expect(text).toContain("I named this transfer with just 1 hint");
   });
 
   it("formats the date as '19 Feb'", () => {
@@ -243,7 +243,7 @@ describe("generateConnectionsShareText", () => {
 
   it("includes the correct header line", () => {
     const text = generateConnectionsShareText([], allGroups, 0, puzzleDate);
-    expect(text).toContain("Football IQ - Connections");
+    expect(text).toContain("Can you find all 4 groups?");
   });
 
   it("formats the date as '19 Feb'", () => {
@@ -351,7 +351,7 @@ describe("generateTopicalQuizShareText", () => {
   it("includes the correct header line", () => {
     const answers: QuizAnswerResult[] = [{ isCorrect: true }];
     const text = generateTopicalQuizShareText(answers, puzzleDate);
-    expect(text).toContain("Football IQ - Quiz");
+    expect(text).toContain("on today's football quiz. Beat that.");
   });
 
   it("formats the date as '19 Feb'", () => {
@@ -456,7 +456,7 @@ describe("generateTimelineShareText", () => {
     const text = generateTimelineShareText(
       firstAttemptResults, 3, 3, puzzleDate
     );
-    expect(text).toContain("Football IQ - Timeline");
+    expect(text).toContain("Put this career in order? I got 4/6");
   });
 
   it("formats the date as '19 Feb'", () => {

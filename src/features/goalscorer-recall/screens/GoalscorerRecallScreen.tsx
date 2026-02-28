@@ -128,7 +128,7 @@ export function GoalscorerRecallScreen({
     }
   }, [isReviewMode, puzzle, shouldShowIntro, state.gameStatus, isOnboardingReady, startGame]);
   const [lastFoundGoalId, setLastFoundGoalId] = useState<string | undefined>();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollView>(null!);
 
   // Fetch saved attempt data for review mode
   const { metadata: reviewMetadata, isLoading: isReviewLoading } =

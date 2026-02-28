@@ -33,7 +33,7 @@ export function ScoutingReportOverlay({
   onClose,
   data,
 }: ScoutingReportOverlayProps) {
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShot>(null!);
   const [isSharing, setIsSharing] = useState(false);
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared' | 'error'>(
     'idle'

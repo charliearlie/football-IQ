@@ -187,7 +187,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "2.5.2",
+      version: "3.0.0",
     },
   },
 }));
@@ -231,11 +231,12 @@ jest.mock("@/hooks/useHaptics", () => ({
 }));
 
 // Mock React Native Linking
-jest.mock("react-native/Libraries/Linking/Linking", () => ({
+const mockLinking = {
   openURL: jest.fn(),
   canOpenURL: jest.fn().mockResolvedValue(true),
   openSettings: jest.fn(),
-}));
+};
+jest.spyOn(require("react-native"), "Linking", "get").mockReturnValue(mockLinking);
 
 // Mock expo-linear-gradient
 jest.mock("expo-linear-gradient", () => {

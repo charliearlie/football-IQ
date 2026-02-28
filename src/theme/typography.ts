@@ -2,29 +2,32 @@ import { TextStyle } from 'react-native';
 import { colors } from './colors';
 
 /**
- * Digital Pitch Design System - Typography
+ * Premium Sports Game Design System - Typography
  *
  * Headlines: Bebas Neue - Strong, athletic, condensed
- * Body/UI: Montserrat - Clean, modern, high legibility (variable font)
+ *   Used ONLY for: page headers, game mode titles, large scores
+ * Body/UI: Inter - Clean, modern, high legibility (variable font)
+ *   Used for: buttons, sub-headings, descriptions, stats, nav
  */
 
 export const fonts = {
   headline: 'BebasNeue-Regular',
-  body: 'Montserrat',
-  subheading: 'Montserrat',
+  body: 'Inter',
+  subheading: 'Inter',
 } as const;
 
 export type FontFamily = (typeof fonts)[keyof typeof fonts];
 
 /**
- * Font weight constants for Montserrat variable font.
- * Use these for consistent weight references.
+ * Font weight constants for Inter variable font.
+ * Use heavy weights (600, 700, 800) to establish visual hierarchy.
  */
 export const fontWeights = {
   regular: '400',
   medium: '500',
   semiBold: '600',
   bold: '700',
+  extraBold: '800',
 } as const;
 
 /**
@@ -32,7 +35,7 @@ export const fontWeights = {
  * All styles use Floodlight White as the default color.
  */
 export const textStyles: Record<string, TextStyle> = {
-  // Large headlines (game titles, main headings)
+  // Large headlines (game titles, main headings) — Bebas Neue
   h1: {
     fontFamily: fonts.headline,
     fontSize: 32,
@@ -41,7 +44,7 @@ export const textStyles: Record<string, TextStyle> = {
     letterSpacing: 1,
   },
 
-  // Section headers
+  // Section headers — Bebas Neue
   h2: {
     fontFamily: fonts.headline,
     fontSize: 24,
@@ -50,7 +53,7 @@ export const textStyles: Record<string, TextStyle> = {
     letterSpacing: 0.5,
   },
 
-  // Small headers
+  // Small headers — Bebas Neue
   h3: {
     fontFamily: fonts.headline,
     fontSize: 20,
@@ -58,16 +61,16 @@ export const textStyles: Record<string, TextStyle> = {
     color: colors.floodlightWhite,
   },
 
-  // Emphasized text, labels
+  // Emphasized text, labels — Inter Bold
   subtitle: {
     fontFamily: fonts.body,
-    fontWeight: fontWeights.semiBold,
+    fontWeight: fontWeights.bold,
     fontSize: 18,
     lineHeight: 24,
     color: colors.floodlightWhite,
   },
 
-  // Primary body text
+  // Primary body text — Inter Regular
   body: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.regular,
@@ -76,7 +79,7 @@ export const textStyles: Record<string, TextStyle> = {
     color: colors.floodlightWhite,
   },
 
-  // Secondary body text
+  // Secondary body text — Inter Regular
   bodySmall: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.regular,
@@ -85,7 +88,7 @@ export const textStyles: Record<string, TextStyle> = {
     color: colors.textSecondary,
   },
 
-  // Captions, labels, hints
+  // Captions, labels, hints — Inter Regular
   caption: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.regular,
@@ -94,29 +97,32 @@ export const textStyles: Record<string, TextStyle> = {
     color: colors.textSecondary,
   },
 
-  // Button text - Bebas Neue for athletic/sporty feel
+  // Button text — Inter ExtraBold (replaces Bebas Neue)
   button: {
-    fontFamily: fonts.headline,
-    fontSize: 18,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.extraBold,
+    fontSize: 16,
     lineHeight: 20,
     color: colors.stadiumNavy,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 
-  // Large button text
+  // Large button text — Inter ExtraBold
   buttonLarge: {
-    fontFamily: fonts.headline,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.extraBold,
     fontSize: 18,
     lineHeight: 24,
     color: colors.stadiumNavy,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 
-  // Small button text
+  // Small button text — Inter Bold
   buttonSmall: {
-    fontFamily: fonts.headline,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.bold,
     fontSize: 14,
     lineHeight: 16,
     color: colors.stadiumNavy,
@@ -124,9 +130,10 @@ export const textStyles: Record<string, TextStyle> = {
     letterSpacing: 0.25,
   },
 
-  // Tiny button text (for compact cards)
+  // Tiny button text (for compact cards) — Inter Bold
   buttonTiny: {
-    fontFamily: fonts.headline,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.bold,
     fontSize: 11,
     lineHeight: 14,
     color: colors.stadiumNavy,

@@ -36,19 +36,18 @@ const VARIANT_COLORS: Record<ButtonVariant, VariantColorConfig> = {
   },
   secondary: {
     backgroundColor: colors.stadiumNavy,
-    shadowColor: '#0A1628', // Darker navy
-    borderColor: colors.floodlightWhite,
+    shadowColor: '#0A1628',
     textColor: colors.floodlightWhite,
   },
   danger: {
     backgroundColor: colors.redCard,
-    shadowColor: '#B91C1C', // Darker red
+    shadowColor: '#B91C1C',
     textColor: colors.floodlightWhite,
   },
   outline: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glass background
-    shadowColor: 'rgba(255, 255, 255, 0.2)', // Slightly visible depth
-    borderColor: colors.floodlightWhite,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    shadowColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     textColor: colors.floodlightWhite,
   },
 };
@@ -60,6 +59,8 @@ export interface ElevatedButtonProps {
   onPress: () => void;
   /** Optional leading icon (rendered before title) */
   icon?: ReactNode;
+  /** Optional trailing icon (pushed to far right of button) */
+  rightIcon?: ReactNode;
   /** Semantic color variant (default: 'primary') */
   variant?: ButtonVariant;
   /** Background color (overrides variant) */
@@ -143,6 +144,7 @@ export function ElevatedButton({
   title,
   onPress,
   icon,
+  rightIcon,
   variant = 'primary',
   topColor,
   shadowColor,
@@ -221,9 +223,8 @@ export function ElevatedButton({
         style={[
           styles.shadowLayer,
           {
-            top: depth, // Start where the top layer ends when pressed
+            top: depth,
             backgroundColor: depthColor,
-            borderColor: depthColor,
             borderRadius: props.borderRadius ?? borderRadius['2xl'],
           },
         ]}
@@ -235,7 +236,6 @@ export function ElevatedButton({
           styles.topLayer,
           {
             backgroundColor: backgroundColor,
-            borderColor: borderColor,
             paddingHorizontal: props.paddingHorizontal ?? sizeConfig.paddingHorizontal,
             paddingVertical: props.paddingVertical ?? sizeConfig.paddingVertical,
             borderRadius: props.borderRadius ?? borderRadius['2xl'],
@@ -243,13 +243,14 @@ export function ElevatedButton({
           animatedTopStyle,
         ]}
       >
-        <View style={styles.content}>
+        <View style={[styles.content, rightIcon ? styles.contentWithRight : undefined]}>
           {icon && <View style={styles.iconContainer}>{icon}</View>}
           {title ? (
             <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
               {title}
             </Text>
           ) : null}
+          {rightIcon && <View style={styles.rightIconContainer}>{rightIcon}</View>}
         </View>
       </Animated.View>
     </Pressable>
@@ -271,11 +272,9 @@ const styles = StyleSheet.create({
     right: 0,
     // top is set dynamically based on depth
     borderRadius: borderRadius['2xl'],
-    borderWidth: 2,
   },
   topLayer: {
     borderRadius: borderRadius['2xl'],
-    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -285,7 +284,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
+  contentWithRight: {
+    alignSelf: 'stretch',
+  },
   iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rightIconContainer: {
+    position: 'absolute',
+    right: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -207,7 +207,7 @@ export function AdvancedFilterBar({
       {/* Random Play Button */}
       <View style={styles.randomPlayRow}>
         <ElevatedButton
-          title="Random Unplayed Game"
+          title="Surprise Me"
           icon={<Shuffle size={18} color={colors.stadiumNavy} />}
           onPress={onRandomPlay}
           disabled={isRandomLoading}

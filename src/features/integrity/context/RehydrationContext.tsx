@@ -15,7 +15,7 @@
 
 import React, {
   createContext,
-  useContext,
+  use,
   useEffect,
   useState,
   useRef,
@@ -170,14 +170,14 @@ export function RehydrationProvider({ children }: RehydrationProviderProps) {
   const showOverlay = status === 'idle' || status === 'checking' || status === 'rehydrating';
 
   return (
-    <RehydrationContext.Provider value={value}>
+    <RehydrationContext value={value}>
       {children}
       {showOverlay && (
         <View style={[StyleSheet.absoluteFill, styles.overlay]}>
           {status === 'rehydrating' ? <RehydrationLoadingScreen /> : null}
         </View>
       )}
-    </RehydrationContext.Provider>
+    </RehydrationContext>
   );
 }
 
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
  * Hook to access rehydration state.
  */
 export function useRehydration(): RehydrationContextValue {
-  const context = useContext(RehydrationContext);
+  const context = use(RehydrationContext);
   if (!context) {
     throw new Error('useRehydration must be used within a RehydrationProvider');
   }

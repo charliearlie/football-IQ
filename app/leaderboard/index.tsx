@@ -1,16 +1,17 @@
 /**
  * Leaderboard Screen
  *
- * Displays real-time rankings for daily score and global IQ.
+ * Displays real-time rankings for daily score, yearly score, and all-time IQ.
  * Features toggle between views and sticky "Me" bar.
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, textStyles, spacing } from '@/theme';
+import { colors, textStyles, spacing, fonts, fontWeights } from '@/theme';
 import { useAuth } from '@/features/auth';
 import {
   useLeaderboard,
@@ -21,11 +22,29 @@ import {
   LeaderboardType,
 } from '@/features/leaderboard';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
+/**
+ * Returns a single compact context line for the given leaderboard type.
+ * e.g. "Today · 34 players", "2026 · Cumulative score", "All Time · IQ Points"
+ */
+function getContextLine(type: LeaderboardType, totalUsers?: number): string {
+  switch (type) {
+    case 'daily':
+      return totalUsers != null ? `Today · ${totalUsers} players` : 'Today';
+    case 'yearly':
+      return `${CURRENT_YEAR} · Cumulative score`;
+    case 'global':
+      return 'All Time · IQ Points';
+  }
+}
+
 /**
  * Main leaderboard screen.
  *
  * Supports URL param `type` to set initial view:
  * - /leaderboard?type=daily (default)
+ * - /leaderboard?type=yearly
  * - /leaderboard?type=global
  */
 export default function LeaderboardScreen() {
@@ -35,7 +54,11 @@ export default function LeaderboardScreen() {
 
   // Determine initial type from URL params
   const initialType: LeaderboardType =
-    params.type === 'global' ? 'global' : 'daily';
+    params.type === 'global'
+      ? 'global'
+      : params.type === 'yearly'
+        ? 'yearly'
+        : 'daily';
   const [selectedType, setSelectedType] = useState<LeaderboardType>(initialType);
 
   // Fetch leaderboard data
@@ -62,8 +85,19 @@ export default function LeaderboardScreen() {
     userRank,
   });
 
+  // Compute gap between user and the entry one rank above them
+  const gapToNext = useMemo<number | null>(() => {
+    if (!userRank || userRank.rank <= 1) return null;
+    const oneAbove = entries.find((e) => e.rank === userRank.rank - 1);
+    if (!oneAbove) return null;
+    const gap = oneAbove.score - userRank.score;
+    return gap > 0 ? gap : null;
+  }, [entries, userRank]);
+
+  const contextLine = getContextLine(selectedType, userRank?.totalUsers);
+
   /**
-   * Handle toggle between daily and global views.
+   * Handle toggle between leaderboard types.
    */
   const handleToggle = useCallback((type: LeaderboardType) => {
     setSelectedType(type);
@@ -77,6 +111,8 @@ export default function LeaderboardScreen() {
   }, [router]);
 
   return (
+    <>
+    <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
@@ -98,20 +134,8 @@ export default function LeaderboardScreen() {
         testID="leaderboard-toggle"
       />
 
-      {/* Subtitle */}
-      <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>
-          {selectedType === 'daily'
-            ? "Today's Top Players"
-            : 'All-Time Football IQ'}
-        </Text>
-        {selectedType === 'daily' && (
-          <Text style={styles.scoreLabel}>Score out of 500</Text>
-        )}
-        {selectedType === 'global' && (
-          <Text style={styles.scoreLabel}>Global IQ (0-100)</Text>
-        )}
-      </View>
+      {/* Compact context line */}
+      <Text style={styles.contextLine}>{contextLine}</Text>
 
       {/* Leaderboard List */}
       <LeaderboardList
@@ -120,7 +144,7 @@ export default function LeaderboardScreen() {
         isRefreshing={isRefreshing}
         onRefresh={refresh}
         currentUserId={user?.id}
-        showGamesPlayed={selectedType === 'daily'}
+        showGamesPlayed={selectedType === 'daily' || selectedType === 'yearly'}
         type={selectedType}
         error={error}
         onViewableItemsChanged={onViewableItemsChanged}
@@ -133,9 +157,12 @@ export default function LeaderboardScreen() {
         userRank={userRank}
         displayName={profile?.display_name ?? 'You'}
         shouldShow={stickyConfig.shouldShowStickyBar}
+        leaderboardType={selectedType}
+        gapToNext={gapToNext}
         testID="sticky-me"
       />
     </SafeAreaView>
+    </>
   );
 }
 
@@ -165,17 +192,12 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  subtitleContainer: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  subtitle: {
-    ...textStyles.h2,
-    color: colors.floodlightWhite,
-    marginBottom: spacing.xs,
-  },
-  scoreLabel: {
-    ...textStyles.caption,
+  contextLine: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
+    fontSize: 12,
     color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
   },
 });

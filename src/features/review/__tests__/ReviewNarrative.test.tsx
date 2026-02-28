@@ -8,13 +8,6 @@ jest.mock('expo-blur', () => ({
   BlurView: 'BlurView',
 }));
 
-// Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
-  return Reanimated;
-});
-
 describe('Review Mode - Career Path Narrative', () => {
   const mockClubStep: CareerStep = {
     type: 'club',

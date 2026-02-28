@@ -2,12 +2,6 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { DossierSlot } from '../components/DossierSlot';
 
-// Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  return Reanimated;
-});
-
 // Mock FlagIcon component
 jest.mock('@/components/FlagIcon', () => ({
   FlagIcon: ({ code, testID }: { code: string; testID?: string }) => {

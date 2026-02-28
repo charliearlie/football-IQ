@@ -434,6 +434,8 @@ describe('getCtaText', () => {
   it('returns "Claim Offer" when offer is active', () => {
     const offer: OfferInfo = {
       isOfferActive: true,
+      isFreeTrial: false,
+      trialPeriodText: null,
       discountedPriceString: '$2.99',
       originalPriceString: '$5.99',
       savingsText: 'Save 50%',
@@ -448,6 +450,8 @@ describe('getCtaText', () => {
   it('returns "Subscribe" when no offer', () => {
     const offer: OfferInfo = {
       isOfferActive: false,
+      isFreeTrial: false,
+      trialPeriodText: null,
       discountedPriceString: '$5.99',
       originalPriceString: '$5.99',
       savingsText: '',

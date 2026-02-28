@@ -274,6 +274,54 @@ CRITICAL RULES:
 }
 
 // ============================================================================
+// IMAGE PROMPT BUILDER
+// ============================================================================
+
+/**
+ * Locked style directive for AI-generated article images.
+ * This prefix is prepended to every image generation prompt to enforce
+ * a consistent editorial illustration style and prevent AI slop.
+ */
+const IMAGE_STYLE_DIRECTIVE = `Flat vector editorial illustration for a football news article. Style: geometric shapes, clean lines, limited palette (deep navy #0F172A, electric green #58CC02, warm amber highlights, cool slate greys). Abstract and atmospheric — NOT photorealistic. Silhouetted or faceless figures only. NEVER include any text, words, letters, numbers, logos, crests, or scoreboards in the image.`;
+
+/**
+ * Builds the prompt sent to GPT-4o to craft a specific image scene description.
+ * GPT-4o reads the article title + match context and produces a 1-2 sentence
+ * scene that the image model will render.
+ */
+export function buildImageScenePrompt(
+  title: string,
+  matchSummaries: string[]
+): string {
+  const matchContext =
+    matchSummaries.length > 0
+      ? `\nKey results: ${matchSummaries.join("; ")}`
+      : "";
+
+  return `You are an art director creating a scene description for an editorial football illustration.
+
+Article headline: "${title}"${matchContext}
+
+Write a single vivid scene description (1-2 sentences, max 60 words) that captures the emotional essence of this football article. The scene should be abstract and atmospheric — think silhouettes, light beams, geometric pitch patterns, or symbolic representations of the action.
+
+RULES:
+- Focus on mood and atmosphere, not literal depictions
+- Use elements like: stadium silhouettes, floodlight beams, pitch geometry, abstract player forms, football trajectories, goal nets as geometric patterns
+- NEVER describe text, numbers, scoreboards, specific team colours, logos, or recognisable faces
+- The scene must work as a standalone illustration without any context
+
+Return ONLY the scene description, nothing else.`;
+}
+
+/**
+ * Combines the locked style directive with a GPT-4o-generated scene description
+ * to produce the final DALL-E 3 prompt.
+ */
+export function buildFinalImagePrompt(sceneDescription: string): string {
+  return `${IMAGE_STYLE_DIRECTIVE}\n\nScene: ${sceneDescription}`;
+}
+
+// ============================================================================
 // REVIEW PROMPT BUILDERS
 // ============================================================================
 
