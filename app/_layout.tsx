@@ -227,7 +227,7 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
       </RehydrationProvider>
     </IntegrityGuardProvider>
   );
-}
+});
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -323,7 +323,11 @@ export default function RootLayout() {
   useEffect(() => {
     if ((fontsLoaded || fontError) && dbReady) {
       (async () => {
-        await SplashScreen.hideAsync();
+        try {
+          await SplashScreen.hideAsync();
+        } catch (e) {
+          console.warn("[SplashScreen] hideAsync failed:", e);
+        }
         setTimeout(() => setNativeSplashHidden(true), 100);
       })();
     }
@@ -332,6 +336,17 @@ export default function RootLayout() {
   const handleSplashAnimationComplete = useCallback(() => {
     setSplashAnimationComplete(true);
   }, []);
+
+  // Failsafe: force-dismiss splash after 5s to prevent permanent black screen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!splashAnimationComplete) {
+        console.warn("[RootLayout] Splash failsafe timeout — forcing dismiss");
+        setSplashAnimationComplete(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [splashAnimationComplete]);
 
   const fontsReady = fontsLoaded || fontError;
   const coreReady = (fontsReady && dbReady) || initTimedOut;
