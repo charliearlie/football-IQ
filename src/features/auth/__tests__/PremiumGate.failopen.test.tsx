@@ -121,16 +121,18 @@ describe('PremiumGate Fail-Open Security Tests', () => {
         expect(queryByText('Protected Content')).toBeFalsy();
       });
 
-      // Should redirect to archive with unlock modal
-      expect(mockRouter.replace).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: '/(tabs)/archive',
-          params: expect.objectContaining({
-            showUnlock: 'true',
-            unlockPuzzleId: 'puzzle-123',
-          }),
-        })
-      );
+      // Should redirect to archive with unlock modal (async effect)
+      await waitFor(() => {
+        expect(mockRouter.replace).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pathname: '/(tabs)/archive',
+            params: expect.objectContaining({
+              showUnlock: 'true',
+              unlockPuzzleId: 'puzzle-123',
+            }),
+          })
+        );
+      });
     });
   });
 

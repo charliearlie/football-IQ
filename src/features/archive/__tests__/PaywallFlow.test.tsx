@@ -62,12 +62,6 @@ jest.mock('@/components/ProBadge', () => ({
   ProBadge: 'ProBadge',
 }));
 
-// Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  return Reanimated;
-});
-
 // Mock ElevatedButton
 jest.mock('@/components/ElevatedButton', () => ({
   ElevatedButton: ({ title, onPress, testID }: any) => {
