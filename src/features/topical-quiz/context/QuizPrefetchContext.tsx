@@ -53,7 +53,7 @@ export function QuizPrefetchProvider({ children }: { children: React.ReactNode }
     try {
       return typeof quizPuzzle.content === 'string'
         ? JSON.parse(quizPuzzle.content)
-        : quizPuzzle.content;
+        : quizPuzzle.content as TopicalQuizContent;
     } catch {
       return null;
     }

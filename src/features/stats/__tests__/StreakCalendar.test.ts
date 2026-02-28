@@ -62,6 +62,7 @@ describe('Streak Calendar - Data Aggregation', () => {
           difficulty: null,
           synced_at: '2026-01-15T00:00:00Z',
           is_special: 0,
+          is_premium: 0,
         },
       ];
 
@@ -167,9 +168,9 @@ describe('Streak Calendar - Data Aggregation', () => {
   describe('Multiple Game Modes Per Day', () => {
     it('groups multiple games on same day correctly', async () => {
       const mockCatalog: LocalCatalogEntry[] = [
-        { id: 'p1', puzzle_date: '2026-01-15', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p2', puzzle_date: '2026-01-15', game_mode: 'guess_the_transfer', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p3', puzzle_date: '2026-01-15', game_mode: 'tic_tac_toe', difficulty: null, synced_at: '', is_special: 0 },
+        { id: 'p1', puzzle_date: '2026-01-15', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p2', puzzle_date: '2026-01-15', game_mode: 'guess_the_transfer', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p3', puzzle_date: '2026-01-15', game_mode: 'tic_tac_toe', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
       ];
 
       const mockAttempts: CalendarAttemptRow[] = [
@@ -193,17 +194,17 @@ describe('Streak Calendar - Data Aggregation', () => {
       // Day 1: 4 games, Day 2: 6 games (weekend)
       const mockCatalog: LocalCatalogEntry[] = [
         // Monday - 4 games
-        { id: 'p1', puzzle_date: '2026-01-12', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p2', puzzle_date: '2026-01-12', game_mode: 'guess_the_transfer', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p3', puzzle_date: '2026-01-12', game_mode: 'tic_tac_toe', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p4', puzzle_date: '2026-01-12', game_mode: 'topical_quiz', difficulty: null, synced_at: '', is_special: 0 },
+        { id: 'p1', puzzle_date: '2026-01-12', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p2', puzzle_date: '2026-01-12', game_mode: 'guess_the_transfer', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p3', puzzle_date: '2026-01-12', game_mode: 'tic_tac_toe', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p4', puzzle_date: '2026-01-12', game_mode: 'topical_quiz', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
         // Saturday - 6 games
-        { id: 'p5', puzzle_date: '2026-01-17', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p6', puzzle_date: '2026-01-17', game_mode: 'guess_the_transfer', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p7', puzzle_date: '2026-01-17', game_mode: 'tic_tac_toe', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p8', puzzle_date: '2026-01-17', game_mode: 'topical_quiz', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p9', puzzle_date: '2026-01-17', game_mode: 'the_grid', difficulty: null, synced_at: '', is_special: 0 },
-        { id: 'p10', puzzle_date: '2026-01-17', game_mode: 'top_tens', difficulty: null, synced_at: '', is_special: 0 },
+        { id: 'p5', puzzle_date: '2026-01-17', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p6', puzzle_date: '2026-01-17', game_mode: 'guess_the_transfer', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p7', puzzle_date: '2026-01-17', game_mode: 'tic_tac_toe', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p8', puzzle_date: '2026-01-17', game_mode: 'topical_quiz', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p9', puzzle_date: '2026-01-17', game_mode: 'the_grid', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+        { id: 'p10', puzzle_date: '2026-01-17', game_mode: 'top_tens', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
       ];
 
       mockGetAllCatalogEntries.mockResolvedValue(mockCatalog);
@@ -396,9 +397,9 @@ describe('Streak Calendar - Future Date Handling', () => {
 
   it('does not include future dates in calendar', async () => {
     const mockCatalog: LocalCatalogEntry[] = [
-      { id: 'p1', puzzle_date: '2026-01-15', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 }, // Today
-      { id: 'p2', puzzle_date: '2026-01-16', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 }, // Tomorrow
-      { id: 'p3', puzzle_date: '2026-01-17', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 }, // Future
+      { id: 'p1', puzzle_date: '2026-01-15', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 }, // Today
+      { id: 'p2', puzzle_date: '2026-01-16', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 }, // Tomorrow
+      { id: 'p3', puzzle_date: '2026-01-17', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 }, // Future
     ];
 
     mockGetAllCatalogEntries.mockResolvedValue(mockCatalog);
@@ -421,8 +422,8 @@ describe('Streak Calendar - Month Boundary Edge Cases', () => {
 
     // 2026 is NOT a leap year - Feb has 28 days
     const mockCatalog: LocalCatalogEntry[] = [
-      { id: 'p1', puzzle_date: '2026-02-28', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
-      { id: 'p2', puzzle_date: '2026-03-01', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
+      { id: 'p1', puzzle_date: '2026-02-28', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
+      { id: 'p2', puzzle_date: '2026-03-01', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
     ];
 
     mockGetAllCatalogEntries.mockResolvedValue(mockCatalog);
@@ -441,7 +442,7 @@ describe('Streak Calendar - Month Boundary Edge Cases', () => {
     jest.setSystemTime(new Date('2026-02-01T12:00:00Z'));
 
     const mockCatalog: LocalCatalogEntry[] = [
-      { id: 'p1', puzzle_date: '2026-01-31', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
+      { id: 'p1', puzzle_date: '2026-01-31', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
     ];
 
     mockGetAllCatalogEntries.mockResolvedValue(mockCatalog);
@@ -457,7 +458,7 @@ describe('Streak Calendar - Month Boundary Edge Cases', () => {
     jest.setSystemTime(new Date('2026-05-01T12:00:00Z'));
 
     const mockCatalog: LocalCatalogEntry[] = [
-      { id: 'p1', puzzle_date: '2026-04-30', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0 },
+      { id: 'p1', puzzle_date: '2026-04-30', game_mode: 'career_path', difficulty: null, synced_at: '', is_special: 0, is_premium: 0 },
     ];
 
     mockGetAllCatalogEntries.mockResolvedValue(mockCatalog);

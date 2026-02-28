@@ -243,6 +243,7 @@ export async function performRehydration(
         synced_at: new Date().toISOString(),
         updated_at: attempt.daily_puzzles.updated_at ?? null,
         is_special: attempt.daily_puzzles.is_special ? 1 : 0,
+        is_premium: 0,
         event_title: attempt.daily_puzzles.event_title ?? null,
         event_subtitle: attempt.daily_puzzles.event_subtitle ?? null,
         event_tag: attempt.daily_puzzles.event_tag ?? null,
