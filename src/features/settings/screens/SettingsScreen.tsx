@@ -161,9 +161,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   // App version
   const appVersion = Constants.expoConfig?.version ?? "3.0.0";
 
-  /**
-   * Handle version text tap for secret dev menu
-   */
   const handleVersionTap = useCallback(() => {
     const now = Date.now();
     if (now - lastTapTimeRef.current > 2000) {
