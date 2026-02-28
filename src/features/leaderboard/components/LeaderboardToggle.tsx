@@ -58,7 +58,8 @@ function ToggleChip({
   onPress: () => void;
   testID?: string;
 }) {
-  const Icon = React.cloneElement(option.icon as React.ReactElement, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Icon = React.cloneElement(option.icon as React.ReactElement<any>, {
     color: isSelected ? colors.stadiumNavy : colors.floodlightWhite,
   });
 

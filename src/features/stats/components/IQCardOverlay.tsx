@@ -116,7 +116,7 @@ function IQCard({ data }: { data: IQCardData }) {
  * Modal overlay for viewing and sharing the IQ Card.
  */
 export function IQCardOverlay({ visible, onClose, data }: IQCardOverlayProps) {
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShot>(null!);
   const [isSharing, setIsSharing] = useState(false);
   const [shareStatus, setShareStatus] = useState<"idle" | "shared" | "error">(
     "idle",

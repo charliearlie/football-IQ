@@ -229,6 +229,9 @@ interface InnerProps {
   onPuzzlePress: (puzzle: ArchivePuzzle) => void;
 }
 
+// Cast needed: FlashList types don't expose estimatedItemSize in this RN/TS version
+const TypedFlashList = FlashList as React.ComponentType<any>;
+
 function ModeDetailSheetInner({ mode, visible, onClose, onPuzzlePress }: InnerProps) {
   const insets = useSafeAreaInsets();
 
@@ -348,7 +351,7 @@ function ModeDetailSheetInner({ mode, visible, onClose, onPuzzlePress }: InnerPr
           <View style={styles.separator} />
 
           {/* ── Puzzle list ── */}
-          <FlashList
+          <TypedFlashList
             data={mode.puzzles}
             renderItem={renderItem}
             keyExtractor={keyExtractor}

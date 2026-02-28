@@ -243,7 +243,7 @@ export function ElevatedButton({
           animatedTopStyle,
         ]}
       >
-        <View style={[styles.content, rightIcon && styles.contentWithRight]}>
+        <View style={[styles.content, rightIcon ? styles.contentWithRight : undefined]}>
           {icon && <View style={styles.iconContainer}>{icon}</View>}
           {title ? (
             <Text style={[sizeConfig.textStyle, { color: textColor }, textStyle]}>
