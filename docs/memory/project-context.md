@@ -5,17 +5,19 @@
 Football IQ is a mobile trivia game featuring daily puzzles across 12 game modes:
 
 1. **Career Path** - Guess player from sequential career clues
-2. **Career Path Pro** (Premium) - Premium version of Career Path with harder players
+2. **Career Path Pro** - Premium version of Career Path with harder players
 3. **The Grid** - Fill 3x3 matrix with players matching criteria
 4. **The Chain** - Connect two players through shared club history (Inverse Par scoring)
 5. **The Thread** - Guess the club from a chronological list of kit sponsors/suppliers
 6. **Transfer Guess** - Identify player from transfer info
 7. **Goalscorer Recall** - Name scorers from historic match (timed)
 8. **Topical Quiz** - 5 multiple-choice questions
-9. **Top Tens** (Premium) - Name all 10 answers in a ranked list
+9. **Top Tens** - Name all 10 answers in a ranked list
 10. **Starting XI** - Identify hidden players on a tactical pitch lineup
 11. **Connections** - Group 16 footballers into 4 categories of 4
 12. **Timeline** - Sort 6 events into chronological order
+
+> **Note (Feb 2026):** All premium game modes are temporarily free for all users as part of an outreach and retention push. Career Path Pro, Top Tens, The Grid, and Timeline no longer require a subscription or ad watch to play. The archive 3-day lock still applies. Search for `// Temporarily disabled — all modes free for outreach` across the codebase to find and revert all related changes. Key files: `useDailyPuzzles.ts`, `PremiumOnlyGate.tsx`, `MiniGameCard.tsx`, `ArchiveList.tsx`, `database.ts`, `constants.ts`.
 
 ## Tech Stack
 
@@ -435,18 +437,37 @@ Database-driven system for time-limited event puzzles shown via a premium banner
 - **Default tag**: "LIMITED TIME"
 - **Files**: `src/features/home/hooks/useSpecialEvent.ts`, `src/features/home/config/events.ts`, `src/features/home/components/new/EventBanner.tsx`, `supabase/migrations/033_special_events.sql`
 
-### Archive Screen
+### Archive Screen (Mode-First Redesign, Feb 2026)
 
-Historical puzzle browser with premium gating and "Velvet Rope" locked card design.
+Two-tab archive browser: **BY GAME** (default) and **BY DATE**.
 
-- **Filters**: All, Incomplete, or by game mode
+**BY GAME tab** (mode-first, designed to fix 99% bounce rate):
+- **SmartRecommendation**: Priority-ordered hero card at top — surfaces resume-in-progress > almost-perfect-day > your-strongest-mode. Returns null if no recommendation.
+- **ModeGrid**: 2-column card grid of all 12 game modes. Each `ModeGridCard` (130px fixed height) shows: 40x40 icon, mode title, "X of Y played" subtitle, 4px progress bar, avg score. Border color varies by state (green for unplayed, gold for locked, bright green for completed).
+- **ModeDetailSheet**: Modal bottom sheet on mode tap. Shows stats strip (played/avg/best), "SURPRISE ME" random play button, FlashList of all puzzles for that mode with play/resume/done/locked states.
+- **`useModeStats` hook**: Pure client-side aggregation of `ArchivePuzzle[]` into `ModeStats[]` per game mode. No new DB queries.
+
+**BY DATE tab** (original calendar view, unchanged):
+- Chronological FlashList of collapsible `MatchdayCard` accordion rows
+- `AdvancedFilterBar`: Status segment (All/Incomplete/Perfect) + Game Mode dropdown + "Surprise Me" button
+- `ArchiveCalendar` with premium upsell injection
+
+**Shared infrastructure** (unchanged):
+- `useArchivePuzzles('all')` — single data source for both tabs
+- `handlePuzzlePress` — gating, result modal, navigation logic
+- `useGatedNavigation` — premium access control
 - **Catalog sync**: `get_puzzle_catalog()` RPC bypasses RLS to show locked puzzle metadata
 - **Completed puzzles**: Always unlocked for viewing results
-- **Random Play**: "Random Unplayed Game" button in filter bar selects random incomplete puzzle
-  - Non-premium: 3-day window + ad-unlocked puzzles, excludes `career_path_pro`/`top_tens`
-  - Premium: full backlog, all game modes
-  - Shows "All Caught Up!" alert when no unplayed puzzles remain
-- **Files**: `src/features/archive/`, `app/(tabs)/archive.tsx`
+
+**New files:**
+- `src/features/archive/hooks/useModeStats.ts` — ModeStats aggregation hook
+- `src/features/archive/components/ArchiveTabBar.tsx` — BY GAME | BY DATE tabs
+- `src/features/archive/components/SmartRecommendation.tsx` — Smart play-next card
+- `src/features/archive/components/ModeGridCard.tsx` — Per-mode 2-col card
+- `src/features/archive/components/ModeGrid.tsx` — Grid layout wrapper
+- `src/features/archive/components/ModeDetailSheet.tsx` — Modal bottom sheet
+
+**Key files**: `src/features/archive/`, `app/(tabs)/archive.tsx`
 
 ### Premium Gating
 

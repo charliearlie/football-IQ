@@ -41,7 +41,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { ElevatedButton } from '@/components/ElevatedButton';
 import { useAds } from '../context/AdContext';
-import { formatPuzzleDate } from '@/features/archive/utils/dateGrouping';
+import { formatPuzzleDate, isWithinFreeWindow } from '@/features/archive/utils/dateGrouping';
 import { GAME_MODE_ROUTES } from '@/features/archive/constants/routes';
 import { UnlockChoiceModalProps, UnlockChoiceState } from '../types/ads.types';
 import { colors } from '@/theme/colors';
@@ -67,6 +67,9 @@ export function UnlockChoiceModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { loadRewardedAd, showRewardedAd, grantAdUnlock, isRewardedAdReady } = useAds();
+
+  // Determine if this is an older puzzle (outside the 3-day free window)
+  const isOlderPuzzle = puzzleDate ? !isWithinFreeWindow(puzzleDate) : false;
 
   // Track mounted state to prevent state updates after unmount
   const isMountedRef = useRef(true);
@@ -259,6 +262,8 @@ export function UnlockChoiceModal({
           <Text style={styles.subtitle}>
             {state === 'ad_success'
               ? 'This puzzle is now unlocked forever.'
+              : isOlderPuzzle
+              ? 'The last 3 days of puzzles are free \u2014 this one\u2019s a bit older.'
               : 'Choose how you want to access this puzzle'}
           </Text>
 
@@ -274,7 +279,6 @@ export function UnlockChoiceModal({
             <IdleContent
               onGoPremium={handleGoPremium}
               onWatchAd={handleWatchAd}
-              isAdReady={isRewardedAdReady}
               testID={testID}
             />
           )}
@@ -311,12 +315,10 @@ export function UnlockChoiceModal({
 function IdleContent({
   onGoPremium,
   onWatchAd,
-  isAdReady,
   testID,
 }: {
   onGoPremium: () => void;
   onWatchAd: () => void;
-  isAdReady: boolean;
   testID?: string;
 }) {
   return (
@@ -358,12 +360,11 @@ function IdleContent({
           </View>
         </View>
         <ElevatedButton
-          title={isAdReady ? 'Watch' : 'Loading...'}
+          title="Watch"
           onPress={onWatchAd}
           size="small"
-          topColor={isAdReady ? colors.pitchGreen : colors.glassBackground}
-          shadowColor={isAdReady ? colors.grassShadow : colors.glassBorder}
-          disabled={!isAdReady}
+          topColor={colors.pitchGreen}
+          shadowColor={colors.grassShadow}
           testID={`${testID}-watch-ad-button`}
         />
       </View>

@@ -59,7 +59,9 @@ export function LeaderboardEmptyState({
   const message =
     type === 'daily'
       ? "No rankings yet today. Be the first to play!"
-      : "No rankings yet. Complete puzzles to appear on the leaderboard!";
+      : type === 'yearly'
+        ? `No rankings yet this year. Complete puzzles to climb the ${new Date().getFullYear()} leaderboard!`
+        : "No rankings yet. Complete puzzles to appear on the all-time leaderboard!";
 
   return (
     <View style={styles.container} testID={`${testID}-empty`}>

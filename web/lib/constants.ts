@@ -48,8 +48,8 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   timeline: "TL",
 };
 
-// Premium-only modes
-export const PREMIUM_MODES: GameMode[] = ["career_path_pro", "top_tens"];
+// Premium-only modes — temporarily disabled for outreach
+export const PREMIUM_MODES: GameMode[] = []; // Temporarily disabled — all modes free for outreach
 
 // Design tokens (matching mobile app)
 export const COLORS = {

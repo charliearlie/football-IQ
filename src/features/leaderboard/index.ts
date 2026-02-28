@@ -1,7 +1,7 @@
 /**
  * Leaderboard Feature
  *
- * Real-time leaderboard ranking users by daily score and global IQ.
+ * Real-time leaderboard ranking users by daily score, yearly score, and all-time IQ.
  */
 
 // Types
@@ -14,6 +14,7 @@ export { useStickyMe } from './hooks/useStickyMe';
 // Services
 export {
   getDailyLeaderboard,
+  getYearlyLeaderboard,
   getGlobalIQLeaderboard,
   getUserRank,
   getLeaderboardWithUserRank,

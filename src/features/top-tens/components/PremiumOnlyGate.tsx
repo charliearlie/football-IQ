@@ -128,9 +128,9 @@ export function PremiumOnlyGate({
     ? (adUnlocks?.some((u) => u.puzzle_id === puzzleId) ?? false)
     : false;
 
-  // User has access if premium, ad-unlocked, OR special event puzzle
-  const hasAccess = isPremium || isAdUnlocked || isSpecialEvent === true;
-  const isLoading = authLoading || !areAdUnlocksLoaded || isSpecialEvent === null;
+  // Temporarily grant access to all users — premium gating disabled for outreach
+  const hasAccess = true;
+  const isLoading = authLoading; // Skip DB checks while gating is disabled
 
   // Redirect non-premium users to archive with unlock context
   useEffect(() => {

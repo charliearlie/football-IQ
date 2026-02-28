@@ -2,12 +2,21 @@
  * LeaderboardList Component
  *
  * FlatList wrapper for displaying leaderboard entries with pull-to-refresh.
+ * Renders a flat, dense table surface with hairline separators and a
+ * "STANDINGS" divider between the podium (top 3) and the rest of the field.
  */
 
 import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, View, ViewToken } from 'react-native';
-import { colors, spacing } from '@/theme';
-import { LeaderboardEntry as EntryType } from '../types/leaderboard.types';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  View,
+  Text,
+  ViewToken,
+} from 'react-native';
+import { colors, fonts, fontWeights, spacing } from '@/theme';
+import { LeaderboardEntry as EntryType, LeaderboardType } from '../types/leaderboard.types';
 import { LeaderboardEntry } from './LeaderboardEntry';
 import { LeaderboardEmptyState } from './LeaderboardEmptyState';
 
@@ -22,10 +31,10 @@ interface LeaderboardListProps {
   onRefresh: () => void;
   /** Current user's ID (for highlighting) */
   currentUserId?: string;
-  /** Whether to show games played (daily mode) */
+  /** Whether to show games played (daily/yearly mode) */
   showGamesPlayed?: boolean;
-  /** Leaderboard type for empty state message */
-  type?: 'daily' | 'global';
+  /** Leaderboard type for empty state message and score formatting */
+  type?: LeaderboardType;
   /** Error if any */
   error?: Error | null;
   /** Callback for visible items change (for sticky bar) */
@@ -42,6 +51,28 @@ interface LeaderboardListProps {
 }
 
 /**
+ * Thin hairline separator between rows.
+ */
+function ItemSeparator() {
+  return <View style={styles.separator} />;
+}
+
+/**
+ * Divider rendered above rank 4 to separate the podium from the standings.
+ *
+ *   ——  STANDINGS  ——
+ */
+function StandingsDivider() {
+  return (
+    <View style={styles.dividerRow}>
+      <View style={styles.dividerLine} />
+      <Text style={styles.dividerLabel}>STANDINGS</Text>
+      <View style={styles.dividerLine} />
+    </View>
+  );
+}
+
+/**
  * Leaderboard list with pull-to-refresh support.
  *
  * Features:
@@ -49,6 +80,7 @@ interface LeaderboardListProps {
  * - Loading and empty states
  * - Highlights current user
  * - Tracks visible items for sticky bar
+ * - Podium divider between rank 3 and rank 4
  */
 export function LeaderboardList({
   entries,
@@ -85,13 +117,18 @@ export function LeaderboardList({
       data={entries}
       keyExtractor={(item) => item.userId}
       renderItem={({ item }) => (
-        <LeaderboardEntry
-          entry={item}
-          isCurrentUser={item.userId === currentUserId}
-          showGamesPlayed={showGamesPlayed}
-          testID={`${testID}-entry-${item.rank}`}
-        />
+        <>
+          {item.rank === 4 && <StandingsDivider />}
+          <LeaderboardEntry
+            entry={item}
+            isCurrentUser={item.userId === currentUserId}
+            showGamesPlayed={showGamesPlayed}
+            leaderboardType={type}
+            testID={`${testID}-entry-${item.rank}`}
+          />
+        </>
       )}
+      ItemSeparatorComponent={ItemSeparator}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
@@ -114,11 +151,34 @@ export function LeaderboardList({
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
   },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    marginHorizontal: spacing.lg,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(248, 250, 252, 0.12)',
+  },
+  dividerLabel: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
+    fontSize: 10,
+    letterSpacing: 2,
+    color: 'rgba(248, 250, 252, 0.30)',
+    textTransform: 'uppercase',
+    marginHorizontal: spacing.sm,
+  },
   footer: {
-    // Extra space at bottom for sticky bar
     height: 100,
   },
 });

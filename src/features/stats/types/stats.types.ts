@@ -57,6 +57,29 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
 };
 
 /**
+ * Detailed stats for a single game mode.
+ * Used in the MODE BREAKDOWN section of the Scout Report.
+ */
+export interface DetailedModeStats {
+  /** The game mode identifier */
+  gameMode: GameMode;
+  /** User-facing mode name (e.g., "Career Path") */
+  displayName: string;
+  /** Skill name (e.g., "Deduction") */
+  skillName: string;
+  /** Total games played in this mode */
+  gamesPlayed: number;
+  /** Average normalized accuracy (0-100) */
+  accuracyPercent: number;
+  /** Highest raw score achieved */
+  bestScore: number;
+  /** Sum of all raw scores from this mode */
+  totalPoints: number;
+  /** Count of perfect scores */
+  perfectScores: number;
+}
+
+/**
  * Proficiency data for a single game mode.
  */
 export interface GameProficiency {
@@ -175,6 +198,8 @@ export interface PerformanceStats {
   badges: Badge[];
   /** Field Experience: per-mode completion counts */
   fieldExperience: FieldExperience;
+  /** Detailed per-mode statistics for MODE BREAKDOWN section */
+  detailedModeStats: DetailedModeStats[];
 }
 
 /**

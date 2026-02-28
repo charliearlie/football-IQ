@@ -24,6 +24,8 @@ export { useArchivePuzzles } from './hooks/useArchivePuzzles';
 export { useGatedNavigation } from './hooks/useGatedNavigation';
 export { useAccordionState } from './hooks/useAccordionState';
 export { useRandomPlay } from './hooks/useRandomPlay';
+export { useModeStats } from './hooks/useModeStats';
+export type { ModeStats } from './hooks/useModeStats';
 
 // Components - New Match Calendar
 export { ArchiveCalendar } from './components/ArchiveCalendar';
@@ -33,6 +35,12 @@ export { MiniGameCard } from './components/MiniGameCard';
 export { AtAGlanceBar } from './components/AtAGlanceBar';
 export { AdvancedFilterBar } from './components/AdvancedFilterBar';
 export { ArchiveCalendarSkeleton } from './components/ArchiveCalendarSkeleton';
+export { ArchiveTabBar } from './components/ArchiveTabBar';
+export { ModeDetailSheet } from './components/ModeDetailSheet';
+export type { ArchiveTabBarProps } from './components/ArchiveTabBar';
+export { SmartRecommendation } from './components/SmartRecommendation';
+export { ModeGrid } from './components/ModeGrid';
+export { ModeGridCard } from './components/ModeGridCard';
 
 // Components - Legacy (kept for backward compatibility)
 export { ArchiveList } from './components/ArchiveList';

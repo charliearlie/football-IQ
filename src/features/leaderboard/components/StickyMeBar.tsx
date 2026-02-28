@@ -1,7 +1,10 @@
 /**
  * StickyMeBar Component
  *
- * Fixed bottom bar showing current user's rank when scrolled out of view.
+ * Fixed bottom bar showing the current user's rank when their row has
+ * scrolled out of view. Styled to look like a pinned leaderboard row
+ * rather than a floating pill — near-solid navy background, flush edges,
+ * and layout that mirrors LeaderboardEntry column widths.
  */
 
 import React from 'react';
@@ -11,9 +14,8 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
-import { User } from 'lucide-react-native';
-import { colors, textStyles, spacing, borderRadius } from '@/theme';
-import { UserRank } from '../types/leaderboard.types';
+import { colors, fonts, fontWeights, spacing } from '@/theme';
+import { LeaderboardType, UserRank } from '../types/leaderboard.types';
 
 interface StickyMeBarProps {
   /** Current user's rank info */
@@ -22,8 +24,25 @@ interface StickyMeBarProps {
   displayName: string;
   /** Whether to show the bar */
   shouldShow: boolean;
+  /** Leaderboard type for score formatting */
+  leaderboardType?: LeaderboardType;
+  /**
+   * Point gap between the user and the next rank above them.
+   * null means the user is already rank 1 (or gap unknown).
+   */
+  gapToNext?: number | null;
   /** Test ID for testing */
   testID?: string;
+}
+
+/**
+ * Format score for display based on leaderboard type.
+ */
+function formatScore(score: number, leaderboardType: LeaderboardType): string {
+  if (leaderboardType === 'global') {
+    return score.toLocaleString();
+  }
+  return String(score);
 }
 
 /**
@@ -33,17 +52,21 @@ interface StickyMeBarProps {
  * in the leaderboard is scrolled out of view.
  *
  * Shows:
- * - "You" label
- * - Rank position
- * - Score
+ * - "YOU" badge
+ * - Display name
+ * - Rank number (#N) right-aligned in pitchGreen
+ * - Score below rank
+ * - Optional "N pts behind #M" gap text
  */
 export function StickyMeBar({
   userRank,
   displayName,
   shouldShow,
+  leaderboardType = 'daily',
+  gapToNext,
   testID,
 }: StickyMeBarProps) {
-  // Animation for show/hide
+  // Animation for show/hide — always render so the spring can animate out
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -58,40 +81,44 @@ export function StickyMeBar({
     };
   }, [shouldShow]);
 
-  // Don't render if no rank data
-  if (!userRank) {
+  // Don't render at all if there's no rank data or the bar shouldn't show
+  if (!userRank || !shouldShow) {
     return null;
   }
 
-  // Don't render if shouldn't show (but keep for animation)
-  if (!shouldShow) {
-    return null;
-  }
+  const scoreText = formatScore(userRank.score, leaderboardType);
+  const scoreLabel = leaderboardType === 'global' ? 'IQ' : 'pts';
+  const nextRank = userRank.rank - 1;
+  const showGap = typeof gapToNext === 'number' && gapToNext > 0 && nextRank >= 1;
 
   return (
     <Animated.View
       style={[styles.container, animatedStyle]}
       testID={`${testID}-container`}
     >
-      <View style={styles.content}>
-        {/* Left: "You" label and avatar */}
-        <View style={styles.leftSection}>
-          <View style={styles.avatar}>
-            <User size={20} color={colors.stadiumNavy} />
-          </View>
-          <View style={styles.nameSection}>
-            <Text style={styles.youLabel}>You</Text>
-            <Text style={styles.totalUsers} numberOfLines={1}>
-              of {userRank.totalUsers} players
-            </Text>
-          </View>
-        </View>
+      {/* Left accent bar matching current-user row style */}
+      <View style={styles.accentBar} />
 
-        {/* Right: Rank and Score */}
-        <View style={styles.rightSection}>
-          <Text style={styles.rank}>#{userRank.rank}</Text>
-          <Text style={styles.score}>{userRank.score}</Text>
+      {/* Name / YOU badge section */}
+      <View style={styles.leftSection}>
+        <View style={styles.youBadge}>
+          <Text style={styles.youBadgeText}>YOU</Text>
         </View>
+        <Text style={styles.displayName} numberOfLines={1}>
+          {displayName}
+        </Text>
+      </View>
+
+      {/* Rank + score section */}
+      <View style={styles.rightSection}>
+        <Text style={styles.rank}>#{userRank.rank}</Text>
+        <Text style={styles.score}>{scoreText}</Text>
+        <Text style={styles.scoreLabel}>{scoreLabel}</Text>
+        {showGap && (
+          <Text style={styles.gapText}>
+            {gapToNext} pts behind #{nextRank}
+          </Text>
+        )}
       </View>
     </Animated.View>
   );
@@ -103,58 +130,73 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.pitchGreen,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl, // Extra padding for safe area
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  content: {
+    backgroundColor: 'rgba(15, 23, 42, 0.97)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.12)',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingBottom: spacing.xl, // Safe area clearance
+  },
+  accentBar: {
+    width: 3,
+    alignSelf: 'stretch',
+    backgroundColor: colors.pitchGreen,
   },
   leftSection: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: spacing.lg,
+    marginRight: spacing.sm,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.floodlightWhite,
-    alignItems: 'center',
-    justifyContent: 'center',
+  youBadge: {
+    backgroundColor: colors.pitchGreen,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: spacing.sm,
   },
-  nameSection: {
-    marginLeft: spacing.md,
-  },
-  youLabel: {
-    ...textStyles.body,
+  youBadgeText: {
+    fontFamily: fonts.headline,
+    fontSize: 11,
     color: colors.stadiumNavy,
-    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  totalUsers: {
-    ...textStyles.caption,
-    color: colors.stadiumNavy,
-    opacity: 0.7,
+  displayName: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.semiBold,
+    fontSize: 15,
+    color: colors.pitchGreen,
+    flexShrink: 1,
   },
   rightSection: {
     alignItems: 'flex-end',
+    marginRight: spacing.lg,
   },
   rank: {
-    ...textStyles.h2,
-    color: colors.stadiumNavy,
+    fontFamily: fonts.headline,
+    fontSize: 22,
+    color: colors.pitchGreen,
+    lineHeight: 24,
   },
   score: {
-    ...textStyles.body,
-    color: colors.stadiumNavy,
-    opacity: 0.8,
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  scoreLabel: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
+    fontSize: 11,
+    color: 'rgba(248, 250, 252, 0.40)',
+  },
+  gapText: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
 });

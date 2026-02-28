@@ -1,8 +1,8 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { colors } from '@/theme';
 import {
   useArchivePuzzles,
@@ -12,10 +12,16 @@ import {
   ArchiveDateGroup,
   GAME_MODE_ROUTES,
   GameMode,
+  useModeStats,
+  ModeStats,
 } from '@/features/archive';
 import { ArchiveCalendar } from '@/features/archive/components/ArchiveCalendar';
 import { ArchiveHeader } from '@/features/archive/components/ArchiveHeader';
 import { AdvancedFilterBar } from '@/features/archive/components/AdvancedFilterBar';
+import { ArchiveTabBar } from '@/features/archive/components/ArchiveTabBar';
+import { SmartRecommendation } from '@/features/archive/components/SmartRecommendation';
+import { ModeGrid } from '@/features/archive/components/ModeGrid';
+import { ModeDetailSheet } from '@/features/archive/components/ModeDetailSheet';
 import { useRandomPlay } from '@/features/archive/hooks/useRandomPlay';
 import { applyFilters, groupByDate } from '@/features/archive/utils/calendarTransformers';
 import { TabScreenWrapper } from '@/components/TabScreenWrapper';
@@ -39,14 +45,13 @@ const DEFAULT_FILTERS: ArchiveFilterState = {
 };
 
 /**
- * Archive Screen - Match Calendar
+ * Archive Screen - Mode-First Browsing
  *
- * High-density accordion-style archive browser with:
- * - Date-grouped accordion rows (MatchdayCard)
- * - At-a-glance completion icons
- * - Advanced filtering (Status, Game Mode)
- * - Premium ghosting (grayscale + lock instead of blur)
- * - Pull-to-refresh and pagination
+ * Redesigned archive with two tabs:
+ * - BY GAME (default): Smart recommendation + 2-col mode grid
+ * - BY DATE: Original chronological accordion (MatchdayCard)
+ *
+ * Shares a single useArchivePuzzles data source across both views.
  */
 export default function ArchiveScreen() {
   const router = useRouter();
@@ -59,8 +64,16 @@ export default function ArchiveScreen() {
       unlockGameMode?: string;
     }>();
 
-  // Filter state for advanced filtering
+  // Tab state: "byGame" (mode grid, default) or "byDate" (calendar)
+  const [activeTab, setActiveTab] = useState<'byGame' | 'byDate'>('byGame');
+
+  // Filter state for date-view advanced filtering
   const [filters, setFilters] = useState<ArchiveFilterState>(DEFAULT_FILTERS);
+
+  // Mode detail sheet
+  const [selectedMode, setSelectedMode] = useState<ModeStats | null>(null);
+
+  // Modal state
   const [lockedPuzzle, setLockedPuzzle] = useState<ArchivePuzzle | null>(null);
   const [completedPuzzle, setCompletedPuzzle] = useState<ArchivePuzzle | null>(null);
 
@@ -75,6 +88,7 @@ export default function ArchiveScreen() {
   const { playRandom, isLoading: isRandomLoading } = useRandomPlay();
 
   // Load archive data with 'all' filter (we filter client-side for more flexibility)
+  // loadAllPages() inside the hook loads every page in one pass — no flash
   const {
     dateGroups: rawDateGroups,
     totalCount,
@@ -86,21 +100,31 @@ export default function ArchiveScreen() {
     refresh,
   } = useArchivePuzzles('all');
 
-  // Apply client-side filtering to the date groups
+  // Flatten all puzzles for mode stats computation
+  const allPuzzles = useMemo(
+    () => rawDateGroups.flatMap((group) => group.puzzles),
+    [rawDateGroups]
+  );
+
+  // Per-mode aggregated stats for the "By Game" tab
+  const modeStats = useModeStats(allPuzzles);
+
+  // Apply client-side filtering to the date groups (for "By Date" tab)
   const filteredDateGroups = useMemo((): ArchiveDateGroup[] => {
-    // Flatten all puzzles from date groups
-    const allPuzzles = rawDateGroups.flatMap((group) => group.puzzles);
-
-    // Apply filters
     const filteredPuzzles = applyFilters(allPuzzles, filters);
-
-    // Re-group by date
     return groupByDate(filteredPuzzles);
-  }, [rawDateGroups, filters]);
+  }, [allPuzzles, filters]);
 
-  // Removed duplicate useFocusEffect — the useArchivePuzzles hook has its own
-  // useFocusEffect that handles re-focus reloading with a guard to skip the
-  // initial focus event, preventing a double-fetch race condition.
+  // Close the mode detail sheet when navigating away from the archive.
+  // This handles the case where a user taps a free puzzle from the sheet
+  // (navigates to the game) — the sheet is closed when they return.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setSelectedMode(null);
+      };
+    }, [])
+  );
 
   // Handle unlock params from deep-link gate redirects
   useEffect(() => {
@@ -187,62 +211,93 @@ export default function ArchiveScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         {/* Header with Stats */}
         <ArchiveHeader
-        completedCount={completedCount}
-        totalCount={totalCount}
-        isLoading={isLoading}
-      />
-
-      {/* Match Calendar with Advanced Filter */}
-      <ArchiveCalendar
-        dateGroups={filteredDateGroups}
-        onPuzzlePress={handlePuzzlePress}
-        onEndReached={loadMore}
-        onRefresh={refresh}
-        refreshing={isRefreshing}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        isPremium={isPremium}
-        ListHeaderComponent={
-          <AdvancedFilterBar
-            filters={filters}
-            onFiltersChange={setFilters}
-            onRandomPlay={playRandom}
-            isRandomLoading={isRandomLoading}
-            testID="archive-filter"
-          />
-        }
-        testID="archive-calendar"
-      />
-
-      {/* Unlock Choice Modal */}
-      <UnlockChoiceModal
-        visible={!!lockedPuzzle}
-        onClose={handleCloseModal}
-        puzzleId={lockedPuzzle?.id ?? ''}
-        puzzleDate={lockedPuzzle?.puzzleDate ?? ''}
-        gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
-        onUnlockSuccess={refresh}
-        testID="unlock-choice-modal"
-      />
-
-      {/* Completed Game Modal */}
-      {completedPuzzle && completedPuzzle.attempt && (
-        <CompletedGameModal
-          visible={true}
-          gameMode={completedPuzzle.gameMode}
-          attempt={completedPuzzle.attempt}
-          onClose={handleCloseCompletedModal}
-          onReview={() => {
-            const route = GAME_MODE_ROUTES[completedPuzzle.gameMode];
-            setCompletedPuzzle(null);
-            router.push({
-              pathname: `/${route}/[puzzleId]`,
-              params: { puzzleId: completedPuzzle.id, review: 'true' },
-            } as never);
-          }}
-          testID="archive-completed-modal"
+          completedCount={completedCount}
+          totalCount={totalCount}
+          isLoading={isLoading}
         />
-      )}
+
+        {/* Tab Bar */}
+        <ArchiveTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* Tab Content */}
+        {activeTab === 'byGame' ? (
+          // ── BY GAME: Smart recommendation + mode grid ──
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <SmartRecommendation
+              modeStats={modeStats}
+              dateGroups={rawDateGroups}
+              onPuzzlePress={handlePuzzlePress}
+            />
+            <ModeGrid
+              modeStats={modeStats}
+              onModePress={setSelectedMode}
+            />
+          </ScrollView>
+        ) : (
+          // ── BY DATE: Original calendar accordion ──
+          <ArchiveCalendar
+            dateGroups={filteredDateGroups}
+            onPuzzlePress={handlePuzzlePress}
+            onEndReached={loadMore}
+            onRefresh={refresh}
+            refreshing={isRefreshing}
+            isLoading={isLoading}
+            hasMore={hasMore}
+            isPremium={isPremium}
+            ListHeaderComponent={
+              <AdvancedFilterBar
+                filters={filters}
+                onFiltersChange={setFilters}
+                onRandomPlay={playRandom}
+                isRandomLoading={isRandomLoading}
+                testID="archive-filter"
+              />
+            }
+            testID="archive-calendar"
+          />
+        )}
+
+        {/* Mode Detail Sheet */}
+        <ModeDetailSheet
+          mode={selectedMode}
+          visible={!!selectedMode}
+          onClose={() => setSelectedMode(null)}
+          onPuzzlePress={handlePuzzlePress}
+        />
+
+        {/* Unlock Choice Modal */}
+        <UnlockChoiceModal
+          visible={!!lockedPuzzle}
+          onClose={handleCloseModal}
+          puzzleId={lockedPuzzle?.id ?? ''}
+          puzzleDate={lockedPuzzle?.puzzleDate ?? ''}
+          gameMode={lockedPuzzle?.gameMode ?? 'career_path'}
+          onUnlockSuccess={refresh}
+          testID="unlock-choice-modal"
+        />
+
+        {/* Completed Game Modal */}
+        {completedPuzzle && completedPuzzle.attempt && (
+          <CompletedGameModal
+            visible={true}
+            gameMode={completedPuzzle.gameMode}
+            attempt={completedPuzzle.attempt}
+            onClose={handleCloseCompletedModal}
+            onReview={() => {
+              const route = GAME_MODE_ROUTES[completedPuzzle.gameMode];
+              setCompletedPuzzle(null);
+              router.push({
+                pathname: `/${route}/[puzzleId]`,
+                params: { puzzleId: completedPuzzle.id, review: 'true' },
+              } as never);
+            }}
+            testID="archive-completed-modal"
+          />
+        )}
       </SafeAreaView>
     </TabScreenWrapper>
   );
@@ -252,5 +307,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.stadiumNavy,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 8,
   },
 });

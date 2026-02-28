@@ -1,63 +1,99 @@
-Football IQ Design System: "The Digital Pitch"
+Football IQ Design System v2: "The Premium Pitch"
 
 1. Visual Philosophy
 
-The app should feel like a high-end sports game mixed with the playfulness of Duolingo. We avoid "flat" design in favor of "pressable" elements that feel tactile.
+The app abandons flat, corporate utility design in favor of a premium, modern sports gaming aesthetic (inspired by EA Sports FC, Sorare, and high-end broadcast graphics). The design relies on deep, near-OLED dark themes paired with vibrant neon accents and highly tactile, physical "squish" mechanics for all interactive elements.
 
 2. Color Palette
 
-Pitch Green (Primary): #58CC02 (Vibrant, action-oriented)
+Base Theme (Ultra Premium Dark):
 
-Grass Shadow: #46A302 (For button elevation and depth)
+Pitch Black (App Background): #05050A (Deeper than navy, near OLED black)
 
-Stadium Navy (Background): #0F172A (Deep, high-contrast background)
+Surface Panel (Elevated Cards): #0E121A
 
-Floodlight White: #F8FAFC (Text and primary surface color)
+Glass Border (Subtle Structure): rgba(255, 255, 255, 0.08)
 
-Card Yellow: #FACC15 (For alerts, Career Path clues, and highlights)
+Glass Panel (Frosted Elements): rgba(255, 255, 255, 0.03) with backdrop-filter blur.
 
-Red Card: #EF4444 (For errors and incorrect guesses)
+Text Colors:
 
-3. Typography
+Pure White (Primary): #FFFFFF
 
-Headlines: Bebas Neue (Strong, athletic, condensed)
+Muted Slate (Secondary): #A0ABC0
 
-Sub-headings: Inter Bold (Clean, modern)
+Action & Accent Colors (Neon & Gold):
 
-Body: Inter Regular (High legibility)
+Neon Green (Primary Action/Correct): #2EFC5D
 
-4. UI Components & "Elevated" Style
+Shadow/3D Base: #1A9E38
 
-The "Action Button" (The pressable feel)
+Glow: rgba(46, 252, 93, 0.3)
 
-Style: Neubrutalist 3D.
+Gold (Premium/Unlock/Reveal): #FFD700
 
-Construction: \* Top Layer: Pitch Green.
+Shadow/3D Base: #B39700
 
-Bottom Layer (Shadow): Grass Shadow (Offset by 4px-6px).
+Danger Red (Errors/Give Up): #FF3366
 
-Interaction: On pressIn, the top layer translates Y by 4px to meet the shadow, creating a physical "click" sensation.
+Accent Blue (Secondary Highlights): #00E5FF
 
-Border: 2px Solid Stadium Navy.
+3. Typography: The "Triple-Type" System
 
-Corner Radius: 16px (Friendly, not sharp).
+We use three specific fonts to separate hierarchy and inject sports personality.
 
-The "Glass Card"
+Bebas Neue (The Broadcaster):
 
-Style: Blurred transparency for game containers.
+Usage: Top-level page titles (e.g., "CAREER PATH PRO"), primary button text ("SUBMIT"), large numbers on grid cards.
 
-Properties: background: rgba(255, 255, 255, 0.05), backdrop-filter: blur(10px), border: 1px solid rgba(255, 255, 255, 0.1).
+Styling: Always uppercase. Letter-spacing 1px to 2px.
 
-5. Animation Guidelines
+Outfit (The Modern UI):
 
-Reveals: Use a "Spring" animation (stiffness: 100, damping: 10) for clue entries.
+Usage: All standard UI, body text, subheadings, and input fields.
 
-Feedback: Haptic feedback on every successful guess or button press.
+Weights: 400 (Body), 600 (Sub-labels), 700/800 (Pills/Tags).
 
-Transitions: Layout animations when a clue is revealed to push other content down smoothly.
+Space Grotesk (The Data Display):
 
-6. Icons
+Usage: Specific for stats, scores, timers, and game progression numbers (e.g., "3 of 5", "15:30:00").
 
-Source: Lucide React (clean, consistent).
+4. UI Components & "Tactile" Mechanics
 
-Weight: 2px stroke width for a "bold" look.
+We rely entirely on CSS box-shadow to create physical depth, moving away from heavy thick borders.
+
+The Universal "Squish" Button/Card
+
+Concept: Interactive elements look like physical, elevated keys that compress flat into the UI when pressed.
+
+Default State:
+
+Shape is clean with a hard drop-shadow. Example: box-shadow: 0 4px 0 rgba(0,0,0,0.5) for dark buttons, or 0 6px 0 #1A9E38 for green primary buttons.
+
+Active State (:active / onPressIn):
+
+Element moves down to eat the shadow: transform: translateY(4px).
+
+Shadow disappears: box-shadow: 0 0 0 transparent.
+
+Transition: 0.1s cubic-bezier(0.4, 0, 0.2, 1) for a snappy recoil.
+
+Grid Cards (Connections Mode)
+
+Square ratio, slight linear gradient background (rgba(255,255,255,0.08) to 0.02).
+
+Unselected: Grey elevation (box-shadow: 0 6px 0 rgba(0,0,0,0.6)).
+
+Selected: Depressed state (transform applied), border turns Neon Green, text turns Neon Green, subtle background tint (rgba(46, 252, 93, 0.15)).
+
+Glassmorphism & Glows
+
+Locked game states or inactive panels use translucent backgrounds with slight borders to look like frosted glass.
+
+Active/Current states (like the current clue in Career Path) use box-shadow: 0 0 20px rgba(46, 252, 93, 0.1) to emit an ambient glow.
+
+5. Icons
+
+Library: Lucide React
+
+Styling: Stroke width generally 2px or 2.5px. Scale appropriately (e.g., 14px for small tags, 24px for headers).

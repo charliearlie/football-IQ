@@ -233,6 +233,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     "BebasNeue-Regular": require("../assets/fonts/BebasNeue-Regular.ttf"),
     Montserrat: require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
+    Inter: require("../assets/fonts/Inter-VariableFont.ttf"),
   });
   const [dbReady, setDbReady] = useState(false);
   const [initTimedOut, setInitTimedOut] = useState(false);

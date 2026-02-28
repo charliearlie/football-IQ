@@ -43,6 +43,7 @@ import { DailyStackCardSkeleton } from "@/components/ui/Skeletons";
 import { useAuth } from "@/features/auth";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { HOME_COLORS } from "@/theme/home-design";
+import { getUserRank } from "@/features/leaderboard";
 
 /**
  * Get today's date in YYYY-MM-DD format.
@@ -132,6 +133,25 @@ export default function HomeScreen() {
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
   const isFirstTimeOffline =
     !user && cards.length === 0 && isConnected === false;
+
+  // State for user rank (home screen display)
+  const [userRank, setUserRank] = useState<{ rank: number; totalUsers: number } | null>(null);
+
+  // Fetch user's global rank for display on DailyGoalCard
+  useEffect(() => {
+    async function fetchRank() {
+      if (!user?.id) return;
+      try {
+        const result = await getUserRank(user.id, 'global');
+        if (result) {
+          setUserRank({ rank: result.rank, totalUsers: result.totalUsers });
+        }
+      } catch (error) {
+        console.error('Error fetching user rank:', error);
+      }
+    }
+    fetchRank();
+  }, [user?.id]);
 
   // State for completed game modal
   const [completedModal, setCompletedModal] = useState<{
@@ -278,6 +298,9 @@ export default function HomeScreen() {
           iqTierColor={iqTierColor}
           onPressGames={() => router.push("/archive")}
           onPressIQ={() => router.push("/stats")}
+          userRank={userRank?.rank ?? null}
+          totalUsers={userRank?.totalUsers ?? null}
+          onPressRank={() => router.push("/leaderboard")}
         />
 
         {/* 4. Archive Discovery Banner */}

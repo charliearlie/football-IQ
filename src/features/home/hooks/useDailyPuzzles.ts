@@ -73,7 +73,8 @@ const GAME_MODE_ORDER: GameMode[] = [
  * but pre-sync rows default to 0, so this prevents briefly showing premium modes as free.
  * TODO: Remove once all users have synced (safe to drop after ~1 week post-release).
  */
-const PREMIUM_ONLY_MODES_FALLBACK: Set<GameMode> = new Set(['career_path_pro', 'top_tens', 'the_grid', 'timeline']);
+// Temporarily disabled — all modes free for outreach
+const PREMIUM_ONLY_MODES_FALLBACK: Set<GameMode> = new Set([]);
 
 /**
  * Hook to get today's puzzles with their completion status.
@@ -152,7 +153,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           scoreDisplay: attempt?.score_display ?? undefined,
           difficulty: puzzle.difficulty,
           attempt: attempt ?? undefined,
-          isPremiumOnly: puzzle.is_premium === 1 || PREMIUM_ONLY_MODES_FALLBACK.has(gameMode),
+          isPremiumOnly: false, // Temporarily disabled — all modes free for outreach
           isAdUnlocked: currentAdUnlocks.some((u) => u.puzzle_id === puzzle.id),
         };
       });
@@ -173,7 +174,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           gameMode: 'career_path_pro',
           status: 'play', // Will be handled specially in the component
           difficulty: null,
-          isPremiumOnly: true,
+          isPremiumOnly: false, // Temporarily disabled — all modes free for outreach
         };
         // Insert at correct position
         validCards.splice(proIndex, 0, placeholderCard);
