@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: HOME_FONTS.heading,
     fontSize: 24,
-    color: '#fff',
+    color: HOME_COLORS.textMain,
     letterSpacing: 0.5,
   },
   timerBadge: {
@@ -63,8 +63,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timerText: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '700',
+    fontFamily: HOME_FONTS.stats,
     fontSize: 18,
   }
 });

@@ -84,7 +84,7 @@ export function TheThreadPreview({ content }: TheThreadPreviewProps) {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-[#58CC02] w-6">
+                  <span className="text-sm font-bold text-[#2EFC5D] w-6">
                     {index + 1}.
                   </span>
                   <div className="flex-1">
@@ -133,8 +133,8 @@ export function TheThreadPreview({ content }: TheThreadPreviewProps) {
       {data.correct_club_name && (
         <div className="border-t border-white/10 pt-4">
           <p className="text-xs text-gray-400 text-center mb-2">Answer</p>
-          <div className="bg-[#58CC02]/20 border border-[#58CC02] rounded-lg p-3 text-center">
-            <span className="text-lg font-bold text-[#58CC02]">
+          <div className="bg-[#2EFC5D]/20 border border-[#2EFC5D] rounded-lg p-3 text-center">
+            <span className="text-lg font-bold text-[#2EFC5D]">
               {data.correct_club_name}
             </span>
             {data.correct_club_id && (
@@ -165,7 +165,7 @@ export function TheThreadPreview({ content }: TheThreadPreviewProps) {
         <p className="text-xs text-gray-400 text-center mb-2">Scoring (hint-based)</p>
         <div className="grid grid-cols-4 gap-2 text-center text-xs">
           <div className="bg-white/5 rounded p-2">
-            <div className="text-[#58CC02] font-bold">10</div>
+            <div className="text-[#2EFC5D] font-bold">10</div>
             <div className="text-gray-500">0 hints</div>
           </div>
           <div className="bg-white/5 rounded p-2">

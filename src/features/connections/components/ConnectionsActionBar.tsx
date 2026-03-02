@@ -10,7 +10,7 @@ import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Shuffle, X, Flag } from 'lucide-react-native';
 import { ElevatedButton } from '@/components';
-import { colors, fonts, spacing, borderRadius } from '@/theme';
+import { colors, fonts, spacing, borderRadius, depthColors } from '@/theme';
 
 export interface ConnectionsActionBarProps {
   canSubmit: boolean;
@@ -86,19 +86,21 @@ export function ConnectionsActionBar({
             onPress={onGiveUp}
             testID={`${testID}-giveup`}
           >
-            <Flag size={14} color={colors.redCard} strokeWidth={2} />
+            <Flag size={14} color={colors.dangerRed} strokeWidth={2} />
             <Text style={[styles.utilityButtonText, styles.giveUpText]}>GIVE UP</Text>
           </Pressable>
         </View>
 
         {/* Submit button */}
         <ElevatedButton
-          title="Submit"
+          title="SUBMIT"
           onPress={onSubmit}
           disabled={!canSubmit || disabled}
           fullWidth
-          size="medium"
+          size="large"
           borderRadius={borderRadius.lg}
+          shadowColor={depthColors.pitchGreen}
+          textStyle={styles.submitButtonText}
           testID={`${testID}-submit`}
         />
       </View>
@@ -111,9 +113,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: colors.glassBorder,
     overflow: 'hidden',
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: colors.glassBackground,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.6,
@@ -137,10 +139,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 12,
-    borderRadius: borderRadius.lg,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: colors.glassBorder,
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   utilityButtonPressed: {
     opacity: 0.6,
@@ -149,9 +156,8 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   utilityButtonText: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.bodyBold,
     fontSize: 11,
-    fontWeight: '700',
     letterSpacing: 2,
     textTransform: 'uppercase',
     color: colors.textSecondary,
@@ -160,6 +166,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   giveUpText: {
-    color: colors.redCard,
+    color: colors.dangerRed,
+  },
+  submitButtonText: {
+    fontFamily: fonts.headline,
+    fontSize: 24,
+    letterSpacing: 1,
+    color: colors.stadiumNavy,
   },
 });

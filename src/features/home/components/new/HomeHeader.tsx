@@ -79,7 +79,7 @@ export function HomeHeader({
         ) : isAtRisk ? (
           // At-risk state
           <Animated.View style={[styles.streakPill, styles.atRiskPill, animatedStyle]}>
-            <Flame size={16} color="#EF4444" fill="#EF4444" />
+            <Flame size={16} color={HOME_COLORS.redCard} fill={HOME_COLORS.redCard} />
             <Text style={styles.atRiskText}>
               {streak} day streak at risk! {hoursLeft}h left
             </Text>
@@ -143,8 +143,7 @@ const styles = StyleSheet.create({
     borderBottomColor: HOME_COLORS.cardYellowShadow,
   },
   proText: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '800',
+    fontFamily: 'Outfit-ExtraBold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     color: HOME_COLORS.stadiumNavy,
@@ -162,28 +161,25 @@ const styles = StyleSheet.create({
     borderColor: HOME_COLORS.border,
   },
   streakCount: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '700',
+    fontFamily: HOME_FONTS.stats,
     color: HOME_COLORS.textMain,
     fontSize: 15,
   },
   atRiskPill: {
     backgroundColor: 'rgba(239, 68, 68, 0.2)',
-    borderColor: '#EF4444',
+    borderColor: HOME_COLORS.redCard,
   },
   atRiskText: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '700',
-    color: '#EF4444',
+    fontFamily: 'Outfit-Bold',
+    color: HOME_COLORS.redCard,
     fontSize: 14,
   },
   protectedPill: {
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    backgroundColor: 'rgba(46, 252, 93, 0.15)',
     borderColor: HOME_COLORS.pitchGreen,
   },
   protectedText: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '700',
+    fontFamily: 'Outfit-Bold',
     color: HOME_COLORS.pitchGreen,
     fontSize: 14,
   },

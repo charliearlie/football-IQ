@@ -115,21 +115,21 @@ describe('StatsGrid', () => {
   it('displays all stats correctly', () => {
     render(
       <StatsGrid
-        puzzlesSolved={42}
-        perfectScores={7}
-        totalPoints={1250}
-        currentStreak={5}
+        matchesPlayed={42}
+        accuracyPercent={77}
+        bestScore={9}
+        perfectGames={7}
       />
     );
 
     expect(screen.getByText('42')).toBeTruthy();
+    expect(screen.getByText('77%')).toBeTruthy();
+    expect(screen.getByText('9')).toBeTruthy();
     expect(screen.getByText('7')).toBeTruthy();
-    expect(screen.getByText('1,250')).toBeTruthy();
-    expect(screen.getByText('5')).toBeTruthy();
 
-    expect(screen.getByText('Puzzles Solved')).toBeTruthy();
-    expect(screen.getByText('Perfect Scores')).toBeTruthy();
-    expect(screen.getByText('Total Points')).toBeTruthy();
-    expect(screen.getByText('Current Streak')).toBeTruthy();
+    expect(screen.getByText('MATCHES PLAYED')).toBeTruthy();
+    expect(screen.getByText('ACCURACY')).toBeTruthy();
+    expect(screen.getByText('BEST SCORE')).toBeTruthy();
+    expect(screen.getByText('PERFECT GAMES')).toBeTruthy();
   });
 });

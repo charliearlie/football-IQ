@@ -121,13 +121,13 @@ describe("LaundryLine", () => {
       );
 
       const header = screen.getByTestId("laundry-line-header");
-      // pitchGreen = #58CC02
+      // pitchGreen = #2EFC5D
       // Style is an array, so we check if it contains the color
       const styles = Array.isArray(header.props.style)
         ? header.props.style
         : [header.props.style];
       const hasGreenColor = styles.some(
-        (style: Record<string, unknown>) => style?.color === "#58CC02"
+        (style: Record<string, unknown>) => style?.color === "#2EFC5D"
       );
       expect(hasGreenColor).toBe(true);
     });

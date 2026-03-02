@@ -244,10 +244,10 @@ export function CareerPathGame({
               {isLatest ? (
                 <>
                   <div className="absolute -left-[26px] top-[16px] w-4 h-4 rounded-full bg-pitch-green/30 animate-ping z-0" />
-                  <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-pitch-green border-2 border-white rounded-full z-20 shadow-[0_0_12px_#58CC02]" />
+                  <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-pitch-green border-2 border-white rounded-full z-20 shadow-[0_0_12px_#2EFC5D]" />
                 </>
               ) : (
-                <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadium-navy border-2 border-pitch-green rounded-full z-10 shadow-[0_0_8px_#58CC02]" />
+                <div className="absolute -left-[24px] top-[18px] w-3 h-3 bg-stadium-navy border-2 border-pitch-green rounded-full z-10 shadow-[0_0_8px_#2EFC5D]" />
               )}
 
               {/* Card */}

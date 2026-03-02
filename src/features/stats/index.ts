@@ -89,6 +89,14 @@ export {
   ALL_GAME_MODES,
 } from './utils/fieldExperience';
 
+// Deep Dive components
+export { BestDayCard } from './components/BestDayCard';
+export type { BestDayCardProps } from './components/BestDayCard';
+export { WeakSpotCTA } from './components/WeakSpotCTA';
+export type { WeakSpotCTAProps } from './components/WeakSpotCTA';
+export { PercentileTag } from './components/PercentileTag';
+export type { PercentileTagProps } from './components/PercentileTag';
+
 // Scouting Report
 export { FieldExperienceSection } from './components/FieldExperienceSection';
 export type { FieldExperienceSectionProps } from './components/FieldExperienceSection';
@@ -105,6 +113,20 @@ export {
   generateShareText,
 } from './utils/shareScoutingReport';
 export type { ShareResult } from './utils/shareScoutingReport';
+
+// Scout Report Upgrade Components
+export { FormGuideStrip } from './components/FormGuideStrip';
+export type { FormGuideStripProps } from './components/FormGuideStrip';
+export { ScoutingVerdictCard } from './components/ScoutingVerdictCard';
+export type { ScoutingVerdictCardProps } from './components/ScoutingVerdictCard';
+export { SignatureStrengthCard } from './components/SignatureStrengthCard';
+export type { SignatureStrengthCardProps } from './components/SignatureStrengthCard';
+export { MonthReportCard } from './components/MonthReportCard';
+export type { MonthReportCardProps } from './components/MonthReportCard';
+export { FormationLabel } from './components/FormationLabel';
+export type { FormationLabelProps } from './components/FormationLabel';
+export { NextMilestoneTicker } from './components/NextMilestoneTicker';
+export type { NextMilestoneTickerProps } from './components/NextMilestoneTicker';
 
 // Score Distribution
 export { ScoreDistributionContainer } from './components/ScoreDistributionContainer';

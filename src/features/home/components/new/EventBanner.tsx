@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Zap } from 'lucide-react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { HOME_FONTS } from '@/theme/home-design';
+import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { SpecialEvent } from '../../config/events';
 
 const THEME_COLORS = {
   blue: {
-    gradient: ['#1e293b', '#172554'] as [string, string],
+    gradient: ['#05050A', '#0A1628'] as [string, string],
     accent: '#3b82f6',
     glow: '#60A5FA',
     border: 'rgba(59, 130, 246, 0.3)',
@@ -16,7 +16,7 @@ const THEME_COLORS = {
     shadow: '#1d4ed8',
   },
   red: {
-    gradient: ['#1e293b', '#4a1525'] as [string, string],
+    gradient: ['#05050A', '#1A0810'] as [string, string],
     accent: '#ef4444',
     glow: '#f87171',
     border: 'rgba(239, 68, 68, 0.3)',
@@ -24,7 +24,7 @@ const THEME_COLORS = {
     shadow: '#b91c1c',
   },
   gold: {
-    gradient: ['#1e293b', '#422006'] as [string, string],
+    gradient: ['#05050A', '#1A0F00'] as [string, string],
     accent: '#f59e0b',
     glow: '#fbbf24',
     border: 'rgba(245, 158, 11, 0.3)',
@@ -120,9 +120,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tagText: {
-    fontFamily: HOME_FONTS.body,
+    fontFamily: 'Outfit-Bold',
     fontSize: 10,
-    fontWeight: '700',
     textTransform: 'uppercase',
   },
   contentRow: {
@@ -144,7 +143,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: HOME_FONTS.body,
     fontSize: 12,
-    color: '#94a3b8',
+    color: HOME_COLORS.textSecondary,
   },
   button: {
     paddingHorizontal: 16,
@@ -156,9 +155,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonText: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '800',
-    color: '#fff',
+    fontFamily: 'Outfit-ExtraBold',
+    color: HOME_COLORS.textMain,
     fontSize: 14,
     textTransform: 'uppercase',
     letterSpacing: 0.5,

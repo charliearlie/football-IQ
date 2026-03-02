@@ -33,7 +33,7 @@ jest.mock('@/features/ads', () => ({
     const { View, Text, Pressable } = require('react-native');
     return (
       <View testID={testID}>
-        <Text>UNLOCK PUZZLE</Text>
+        <Text>UNLOCK GAME</Text>
         <Pressable testID={`${testID}-premium-button`} onPress={() => {}}>
           <Text>Go Premium</Text>
         </Pressable>

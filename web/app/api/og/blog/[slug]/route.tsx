@@ -95,7 +95,7 @@ export async function GET(
       <GameOGCard
         gameTitle="Daily Digest"
         tagline="Football news and match analysis"
-        accentColor="#58CC02"
+        accentColor="#2EFC5D"
       />
     ),
     { width: WIDTH, height: HEIGHT, fonts }

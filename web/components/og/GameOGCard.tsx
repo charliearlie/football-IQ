@@ -19,7 +19,7 @@ const COLORS = OG_COLORS;
 export interface GameOGCardProps {
   gameTitle: string;   // e.g. "Career Path"
   tagline: string;     // e.g. "Guess the player from their career"
-  accentColor: string; // e.g. "#58CC02"
+  accentColor: string; // e.g. "#2EFC5D"
 }
 
 /**

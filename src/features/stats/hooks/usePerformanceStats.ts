@@ -29,6 +29,17 @@ import {
   calculateBadges,
 } from '../utils/iqCalculation';
 import { calculateFieldExperience } from '../utils/fieldExperience';
+import { calculateFormGuide } from '../utils/formGuide';
+import { analyzeStrengthWeakness } from '../utils/strengthWeakness';
+import { calculateMonthReport } from '../utils/monthReport';
+import { classifyFormation } from '../utils/formationClassifier';
+import { calculateNextMilestone } from '../utils/nextMilestone';
+import { calculateBestDay } from '../utils/bestDay';
+import { findWeakSpot } from '../utils/weakSpot';
+import { generateScoutingVerdict, generateShortVerdict } from '../utils/scoutingVerdict';
+import { getTierForPoints } from '../utils/tierProgression';
+import { StreakCategory, Trajectory } from '../types/scoutReport.types';
+import { normalizeScore } from '../utils/iqCalculation';
 
 /**
  * All game modes in display order.
@@ -67,6 +78,42 @@ function groupAttemptsByMode(
   }
 
   return grouped;
+}
+
+/**
+ * Calculate trajectory by comparing this month's average score to last month's.
+ */
+function calculateTrajectory(attempts: AttemptWithGameMode[]): Trajectory {
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+  const thisMonthScores: number[] = [];
+  const lastMonthScores: number[] = [];
+
+  for (const attempt of attempts) {
+    const date = new Date(attempt.puzzle_date);
+    const score = normalizeScore(attempt.game_mode as GameMode, attempt.metadata);
+    if (date.getFullYear() === thisYear && date.getMonth() === thisMonth) {
+      thisMonthScores.push(score);
+    } else if (date.getFullYear() === lastMonthYear && date.getMonth() === lastMonth) {
+      lastMonthScores.push(score);
+    }
+  }
+
+  // Need at least 5 games in each month for a meaningful comparison
+  if (thisMonthScores.length < 5 || lastMonthScores.length < 5) {
+    return 'stable';
+  }
+
+  const thisAvg = thisMonthScores.reduce((a, b) => a + b, 0) / thisMonthScores.length;
+  const lastAvg = lastMonthScores.reduce((a, b) => a + b, 0) / lastMonthScores.length;
+
+  if (thisAvg >= lastAvg + 5) return 'improving';
+  if (thisAvg <= lastAvg - 5) return 'declining';
+  return 'stable';
 }
 
 /**
@@ -177,6 +224,50 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
         })
         .sort((a, b) => b.gamesPlayed - a.gamesPlayed); // Most played first
 
+      // ─── Scout Report Upgrade Calculations ─────────────────
+      const formGuide = calculateFormGuide(attempts);
+      const strengthWeakness = analyzeStrengthWeakness(detailedModeStats);
+      const thisMonthReport = calculateMonthReport(attempts);
+      const formationClassification = classifyFormation(proficiencies);
+      const nextMilestone = calculateNextMilestone(
+        totalPuzzlesSolved,
+        totalPerfectScores,
+        currentStreak
+      );
+      const bestDay = calculateBestDay(attempts);
+      const weakSpotMode = findWeakSpot(detailedModeStats);
+      const trajectory = calculateTrajectory(attempts);
+
+      // Build verdict input
+      const tier = getTierForPoints(totalPoints);
+      const dominantMode = fieldExperience.dominantMode;
+      const sortedByAccuracy = [...detailedModeStats].sort(
+        (a, b) => b.accuracyPercent - a.accuracyPercent
+      );
+      const secondMode = sortedByAccuracy.length >= 2
+        ? sortedByAccuracy[1].gameMode
+        : null;
+      const streakCategory: StreakCategory =
+        currentStreak >= 7 ? 'high' : currentStreak >= 3 ? 'medium' : 'low';
+      const perfectRate = totalPuzzlesSolved > 0
+        ? Math.round((totalPerfectScores / totalPuzzlesSolved) * 100)
+        : 0;
+
+      const verdictInput = {
+        tier,
+        dominantMode,
+        secondMode,
+        formationLabel: formationClassification.label,
+        streakCategory,
+        trajectory,
+        perfectRate,
+        totalGames: totalPuzzlesSolved,
+        strengthMode: strengthWeakness?.strength.mode ?? null,
+        weaknessMode: strengthWeakness?.weakness.mode ?? null,
+      };
+      const scoutingVerdict = generateScoutingVerdict(verdictInput);
+      const shortVerdict = generateShortVerdict(verdictInput);
+
       setStats({
         globalIQ,
         proficiencies,
@@ -188,6 +279,15 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
         badges,
         fieldExperience,
         detailedModeStats,
+        formGuide,
+        strengthWeakness,
+        scoutingVerdict,
+        shortVerdict,
+        thisMonthReport,
+        formationClassification,
+        nextMilestone,
+        bestDay,
+        weakSpotMode,
       });
       setError(null);
       lastLoadTime.current = Date.now();

@@ -150,7 +150,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={styles.loadingText}>Loading puzzle...</Text>
+        <Text style={styles.loadingText}>Loading game...</Text>
       </View>
     );
   }
@@ -159,7 +159,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
   if (!puzzle || !gridContent) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.noPuzzleText}>No puzzle available today</Text>
+        <Text style={styles.noPuzzleText}>No game available today</Text>
         <Text style={styles.noPuzzleSubtext}>Check back later!</Text>
       </View>
     );

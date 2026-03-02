@@ -91,10 +91,10 @@ export function TheChainPreview({ content }: TheChainPreviewProps) {
         </p>
         <div className="text-center text-xs text-gray-500 space-y-1">
           <p>
-            <span className="text-[#58CC02]">🦅 Eagle</span> ({par - 2} steps): {par + 2} pts
+            <span className="text-[#2EFC5D]">🦅 Eagle</span> ({par - 2} steps): {par + 2} pts
           </p>
           <p>
-            <span className="text-[#58CC02]">🐦 Birdie</span> ({par - 1} steps): {par + 1} pts
+            <span className="text-[#2EFC5D]">🐦 Birdie</span> ({par - 1} steps): {par + 1} pts
           </p>
           <p>
             <span className="text-white">⛳ Par</span> ({par} steps): {par} pts
@@ -125,12 +125,12 @@ interface PlayerCardProps {
 function PlayerCard({ player, label, variant }: PlayerCardProps) {
   const bgClass =
     variant === "start"
-      ? "bg-[#58CC02]/20 border-[#58CC02]/50"
+      ? "bg-[#2EFC5D]/20 border-[#2EFC5D]/50"
       : "bg-[#EF4444]/20 border-[#EF4444]/50";
 
   const labelClass =
     variant === "start"
-      ? "bg-[#58CC02]/20 text-[#58CC02] border-[#58CC02]/30"
+      ? "bg-[#2EFC5D]/20 text-[#2EFC5D] border-[#2EFC5D]/30"
       : "bg-[#EF4444]/20 text-[#EF4444] border-[#EF4444]/30";
 
   return (

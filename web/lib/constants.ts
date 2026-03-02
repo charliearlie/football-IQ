@@ -53,10 +53,10 @@ export const PREMIUM_MODES: GameMode[] = []; // Temporarily disabled — all mod
 
 // Design tokens (matching mobile app)
 export const COLORS = {
-  pitchGreen: "#58CC02",
-  grassShadow: "#46A302",
-  stadiumNavy: "#0F172A",
-  floodlight: "#F8FAFC",
+  pitchGreen: "#2EFC5D",
+  grassShadow: "#1A9E38",
+  stadiumNavy: "#05050A",
+  floodlight: "#FFFFFF",
   cardYellow: "#FACC15",
   redCard: "#EF4444",
   warningOrange: "#FF4D00",

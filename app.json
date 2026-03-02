@@ -8,9 +8,9 @@
     "scheme": "footballiq",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/images/footballiq-icon.png",
+      "image": "./assets/images/footballiq-icon2.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0F172A"
+      "backgroundColor": "#05050A"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/footballiq-icon.png",
-        "backgroundColor": "#0F172A"
+        "backgroundColor": "#05050A"
       },
       "package": "com.charliearlie.footballiq.app",
       "permissions": [

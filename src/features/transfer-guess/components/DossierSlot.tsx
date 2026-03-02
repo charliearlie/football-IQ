@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.8)',
+    borderColor: 'rgba(5, 5, 10, 0.8)',
   },
   topLayer: {
     position: 'absolute',

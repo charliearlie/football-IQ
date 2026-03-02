@@ -99,7 +99,7 @@ export function PublishGridModal({
             <div className="text-4xl mb-3">&#9917;</div>
             <p className="text-slate-300">
               Grid scheduled for{" "}
-              <span className="font-semibold text-[#58CC02]">
+              <span className="font-semibold text-[#2EFC5D]">
                 {formatDate(selectedDate)}
               </span>
             </p>
@@ -138,7 +138,7 @@ export function PublishGridModal({
                   disabled={day.hasGrid}
                   className={`flex flex-col items-center py-2 px-1 rounded-md text-xs transition-colors ${
                     selectedDate === day.date
-                      ? "bg-[#58CC02]/20 border border-[#58CC02]/50 text-[#58CC02]"
+                      ? "bg-[#2EFC5D]/20 border border-[#2EFC5D]/50 text-[#2EFC5D]"
                       : day.hasGrid
                         ? "bg-slate-800/50 text-slate-600 cursor-not-allowed"
                         : "bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer"
@@ -155,7 +155,7 @@ export function PublishGridModal({
                   </span>
                   <span
                     className={`text-[9px] mt-1 font-medium ${
-                      day.hasGrid ? "text-red-400" : "text-[#58CC02]"
+                      day.hasGrid ? "text-red-400" : "text-[#2EFC5D]"
                     }`}
                   >
                     {day.hasGrid ? "TAKEN" : "OPEN"}
@@ -220,7 +220,7 @@ export function PublishGridModal({
           <button
             onClick={handlePublish}
             disabled={!selectedDate || !allCellsSolvable || isPending}
-            className="px-4 py-2 bg-[#58CC02] hover:bg-[#46A302] text-[#0F172A] font-bold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-[#2EFC5D] hover:bg-[#1A9E38] text-[#05050A] font-bold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? "Publishing..." : "Publish"}
           </button>

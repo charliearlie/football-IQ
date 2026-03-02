@@ -6,17 +6,17 @@
  */
 
 export const OG_COLORS = {
-  stadiumNavy: '#0F172A',
-  pitchGreen: '#58CC02',
-  floodlightWhite: '#F8FAFC',
-  textSecondary: '#94A3B8',
-  glassBorder: 'rgba(255, 255, 255, 0.1)',
-  cardBackground: '#1a2744',
+  stadiumNavy: '#05050A',
+  pitchGreen: '#2EFC5D',
+  floodlightWhite: '#FFFFFF',
+  textSecondary: '#A0ABC0',
+  glassBorder: 'rgba(255, 255, 255, 0.08)',
+  cardBackground: '#0E121A',
 };
 
 /** Per-game accent colors (used for card borders and highlights). */
 export const GAME_ACCENT_COLORS = {
-  careerPath: '#58CC02',
+  careerPath: '#2EFC5D',
   transferGuess: '#FACC15',
   connections: '#3B82F6',
   topicalQuiz: '#FF6B6B',

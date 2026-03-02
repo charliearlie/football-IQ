@@ -149,9 +149,8 @@ const styles = StyleSheet.create({
     marginBottom: -4, // Adjustment for Bebas line height
   },
   subtext: {
-    fontFamily: "Inter",
+    fontFamily: "Outfit-SemiBold",
     fontSize: 12,
-    fontWeight: "600",
     color: colors.stadiumNavy,
     opacity: 0.9,
   },

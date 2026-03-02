@@ -121,7 +121,7 @@ export function GridSandbox() {
           <button
             onClick={handleGenerate}
             disabled={isPending}
-            className="px-6 py-2.5 bg-[#58CC02] hover:bg-[#46A302] text-[#0F172A] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 bg-[#2EFC5D] hover:bg-[#1A9E38] text-[#05050A] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? "Generating..." : "Generate New Grid"}
           </button>
@@ -164,7 +164,7 @@ export function GridSandbox() {
             <button
               onClick={() => setPublishOpen(true)}
               disabled={!isPublishable}
-              className="px-5 py-2 bg-[#58CC02] hover:bg-[#46A302] text-[#0F172A] font-bold rounded-lg text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 bg-[#2EFC5D] hover:bg-[#1A9E38] text-[#05050A] font-bold rounded-lg text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Publish Grid
             </button>

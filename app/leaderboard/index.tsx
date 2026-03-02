@@ -56,9 +56,9 @@ export default function LeaderboardScreen() {
   const initialType: LeaderboardType =
     params.type === 'global'
       ? 'global'
-      : params.type === 'yearly'
-        ? 'yearly'
-        : 'daily';
+      : params.type === 'daily'
+        ? 'daily'
+        : 'yearly';
   const [selectedType, setSelectedType] = useState<LeaderboardType>(initialType);
 
   // Fetch leaderboard data

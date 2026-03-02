@@ -69,7 +69,7 @@ function PerfectDayCard({
 
   return (
     <LinearGradient
-      colors={["#1e293b", "#14332a"]}
+      colors={["#0A0A12", "#0A120D"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.shareCard}
@@ -102,7 +102,7 @@ function PerfectDayCard({
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{puzzleCount}</Text>
-          <Text style={styles.statLabel}>puzzles</Text>
+          <Text style={styles.statLabel}>games</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>

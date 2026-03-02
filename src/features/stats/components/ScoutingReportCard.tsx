@@ -83,6 +83,8 @@ export interface ScoutingReportData {
   currentStreak: number;
   /** User ID for deep link generation (optional) */
   userId?: string;
+  /** Short scouting verdict for the share card */
+  verdict?: string;
 }
 
 export interface ScoutingReportCardProps {
@@ -188,6 +190,13 @@ export function ScoutingReportCard({ data, testID }: ScoutingReportCardProps) {
         )}
       </View>
 
+      {/* Verdict */}
+      {data.verdict && (
+        <View style={styles.verdictSection}>
+          <Text style={styles.verdictText}>{data.verdict}</Text>
+        </View>
+      )}
+
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>football-iq.app</Text>
@@ -281,6 +290,19 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semiBold,
     fontSize: 14,
     color: colors.floodlightWhite,
+  },
+  verdictSection: {
+    marginBottom: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  verdictText: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.regular,
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    lineHeight: 18,
+    textAlign: 'center',
   },
   footer: {
     alignItems: 'center',

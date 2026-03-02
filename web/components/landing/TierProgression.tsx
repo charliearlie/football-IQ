@@ -16,7 +16,7 @@ export function TierProgression() {
 
         <div className="max-w-lg mx-auto relative">
           {/* Vertical gradient line */}
-          <div className="absolute left-[18px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-slate-600 via-[#58CC02] to-[#FFD700]" />
+          <div className="absolute left-[18px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-slate-600 via-[#2EFC5D] to-[#FFD700]" />
 
           <div className="space-y-2">
             {IQ_TIERS.map((tier) => {

@@ -112,7 +112,7 @@ export function GlassGameCard({
               style={[styles.actionButton, styles.adButton]}
             >
               <Animated.View style={[styles.actionButtonInner, adAnimatedStyle]}>
-                <Video size={16} color="#F8FAFC" />
+                <Video size={16} color={HOME_COLORS.textMain} />
                 <Text style={styles.adButtonText}>WATCH AD</Text>
               </Animated.View>
             </Pressable>
@@ -173,8 +173,8 @@ export function GlassGameCard({
           ) : (
             <Play
               size={20}
-              color={status === 'resume' ? HOME_COLORS.cardYellow : '#0F172A'}
-              fill={status === 'resume' ? HOME_COLORS.cardYellow : '#0F172A'}
+              color={status === 'resume' ? HOME_COLORS.cardYellow : HOME_COLORS.stadiumNavy}
+              fill={status === 'resume' ? HOME_COLORS.cardYellow : HOME_COLORS.stadiumNavy}
               style={{ marginLeft: 2 }}
             />
           )}
@@ -242,22 +242,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   adButtonText: {
-    fontFamily: HOME_FONTS.body,
+    fontFamily: 'Outfit-Bold',
     fontSize: 16,
-    fontWeight: '700',
-    color: '#F8FAFC',
+    color: HOME_COLORS.textMain,
   },
   proButton: {
     backgroundColor: HOME_COLORS.cardYellow,
     borderBottomWidth: 3,
-    borderBottomColor: '#cda412',
+    borderBottomColor: HOME_COLORS.cardYellowShadow,
     borderRadius: 8,
     overflow: 'hidden',
   },
   proButtonText: {
-    fontFamily: HOME_FONTS.body,
+    fontFamily: 'Outfit-ExtraBold',
     fontSize: 16,
-    fontWeight: '800',
     color: HOME_COLORS.stadiumNavy,
   },
 
@@ -266,11 +264,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: HOME_COLORS.glassBg,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: HOME_COLORS.glassBorder,
     marginRight: 16,
   },
   checkBadge: {
@@ -328,9 +326,8 @@ const styles = StyleSheet.create({
     height: 44,
   },
   resultText: {
-    fontFamily: HOME_FONTS.body,
+    fontFamily: 'Outfit-Bold',
     fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
+    color: HOME_COLORS.textMain,
   },
 });

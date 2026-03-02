@@ -201,16 +201,16 @@ export function GridCell({
                 <LinearGradient id="pitchStripe" x1="0" y1="0" x2="1" y2="0">
                   <Stop offset="0" stopColor="#4CB302" />
                   <Stop offset="0.16" stopColor="#4CB302" />
-                  <Stop offset="0.16" stopColor="#58CC02" />
-                  <Stop offset="0.33" stopColor="#58CC02" />
+                  <Stop offset="0.16" stopColor={colors.pitchGreen} />
+                  <Stop offset="0.33" stopColor={colors.pitchGreen} />
                   <Stop offset="0.33" stopColor="#4CB302" />
                   <Stop offset="0.5" stopColor="#4CB302" />
-                  <Stop offset="0.5" stopColor="#58CC02" />
-                  <Stop offset="0.66" stopColor="#58CC02" />
+                  <Stop offset="0.5" stopColor={colors.pitchGreen} />
+                  <Stop offset="0.66" stopColor={colors.pitchGreen} />
                   <Stop offset="0.66" stopColor="#4CB302" />
                   <Stop offset="0.83" stopColor="#4CB302" />
-                  <Stop offset="0.83" stopColor="#58CC02" />
-                  <Stop offset="1" stopColor="#58CC02" />
+                  <Stop offset="0.83" stopColor={colors.pitchGreen} />
+                  <Stop offset="1" stopColor={colors.pitchGreen} />
                 </LinearGradient>
               </Defs>
               <Rect x="0" y="0" width="100%" height="100%" fill="url(#pitchStripe)" />

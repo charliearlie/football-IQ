@@ -127,7 +127,7 @@ export function TheChainForm() {
       {/* Start Player */}
       <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-4">
         <h3 className="text-sm font-medium text-white flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-[#58CC02] flex items-center justify-center text-xs text-black font-bold">
+          <span className="w-6 h-6 rounded-full bg-[#2EFC5D] flex items-center justify-center text-xs text-black font-bold">
             A
           </span>
           Start Player
@@ -218,7 +218,7 @@ export function TheChainForm() {
             className={cn(
               "p-4 rounded-lg space-y-3",
               parResult.found
-                ? "bg-[#58CC02]/10 border border-[#58CC02]/30"
+                ? "bg-[#2EFC5D]/10 border border-[#2EFC5D]/30"
                 : "bg-[#EF4444]/10 border border-[#EF4444]/30"
             )}
           >
@@ -227,12 +227,12 @@ export function TheChainForm() {
                 {/* Header with optimal and suggested PAR */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-[#58CC02]" />
-                    <span className="text-sm text-[#58CC02] font-medium">
+                    <CheckCircle className="h-4 w-4 text-[#2EFC5D]" />
+                    <span className="text-sm text-[#2EFC5D] font-medium">
                       Optimal path: {parResult.optimalLength} steps
                     </span>
                   </div>
-                  <Badge className="bg-[#58CC02]/20 text-[#58CC02] border-[#58CC02]/30">
+                  <Badge className="bg-[#2EFC5D]/20 text-[#2EFC5D] border-[#2EFC5D]/30">
                     Suggested PAR: {parResult.suggestedPar}
                   </Badge>
                 </div>
@@ -444,7 +444,7 @@ function PlayerSelector({
 
       {/* Dropdown */}
       {showDropdown && results.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-auto rounded-md border border-white/10 bg-[#1e293b] shadow-lg">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-auto rounded-md border border-white/10 bg-[#0E121A] shadow-lg">
           {results.map((player) => (
             <button
               key={player.id}

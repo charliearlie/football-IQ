@@ -68,7 +68,7 @@ export function ExpandedDateContent({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(15, 23, 42, 0.5)', // Slightly darker than stadiumNavy
+    backgroundColor: 'rgba(5, 5, 10, 0.5)',
     paddingVertical: spacing.md,
     paddingHorizontal: CONTAINER_PADDING,
     borderBottomWidth: 1,

@@ -60,7 +60,7 @@ export function PlayerAutocomplete({ onSelect }: PlayerAutocompleteProps) {
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setShowDropdown(true)}
           placeholder="Search player (zero-spoiler)..."
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#58CC02] focus:ring-1 focus:ring-[#58CC02]/30"
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#2EFC5D] focus:ring-1 focus:ring-[#2EFC5D]/30"
         />
         {isSearching && (
           <div className="absolute right-3 top-2.5 text-xs text-slate-500">

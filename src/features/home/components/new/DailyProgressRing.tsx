@@ -43,7 +43,7 @@ export function DailyProgressRing({ percent, countString, isComplete, size = 140
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#1E293B" 
+          stroke={HOME_COLORS.surface}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -84,17 +84,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '600',
+    fontFamily: 'Outfit-SemiBold',
     fontSize: 11,
-    color: 'rgba(248, 250, 252, 0.7)',
+    color: HOME_COLORS.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 0,
   },
   count: {
-    fontFamily: HOME_FONTS.heading,
+    fontFamily: HOME_FONTS.stats,
     fontSize: 42,
-    color: '#fff', // Fixed: White color for visibility
+    color: HOME_COLORS.textMain,
     lineHeight: 46,
   },
 });

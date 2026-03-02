@@ -164,8 +164,8 @@ export function PremiumUpsellContent({
                   fy="0"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <Stop offset="0" stopColor="#58CC02" stopOpacity="0.22" />
-                  <Stop offset="1" stopColor="#58CC02" stopOpacity="0" />
+                  <Stop offset="0" stopColor={colors.pitchGreen} stopOpacity="0.22" />
+                  <Stop offset="1" stopColor={colors.pitchGreen} stopOpacity="0" />
                 </RadialGradient>
                 <RadialGradient
                   id="yellowGlow"
@@ -229,7 +229,7 @@ export function PremiumUpsellContent({
             <BenefitRow
                 icon={Zap}
                 title="UNLIMITED ARCHIVE ACCESS"
-                subtitle="Play every puzzle ever made, not just today's"
+                subtitle="Play every game ever made, not just today's"
             />
             <BenefitRow
                 icon={Ban}
@@ -307,7 +307,7 @@ export function PremiumUpsellContent({
                 fullWidth
                 testID={`${testID}-subscribe-button`}
                 topColor={colors.pitchGreen}
-                shadowColor="#46A302"
+                shadowColor={colors.grassShadow}
               />
          )}
          {state === 'purchasing' && (

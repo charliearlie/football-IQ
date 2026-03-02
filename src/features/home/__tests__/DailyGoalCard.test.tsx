@@ -39,20 +39,25 @@ jest.mock('../components/new/DailyProgressRing', () => ({
   DailyProgressRing: () => null,
 }));
 
+jest.mock('lucide-react-native', () => ({
+  Flame: () => null,
+}));
+
 // home-design theme uses @/theme/typography which is already mocked globally;
 // also mock @/theme/home-design so fonts resolve to plain strings.
 jest.mock('@/theme/home-design', () => ({
   HOME_COLORS: {
     glassBg: 'rgba(255, 255, 255, 0.05)',
     glassBorder: 'rgba(255, 255, 255, 0.1)',
-    pitchGreen: '#58CC02',
+    pitchGreen: '#2EFC5D',
     cardYellow: '#FACC15',
-    textMain: '#F8FAFC',
+    textMain: '#FFFFFF',
     textSecondary: 'rgba(248, 250, 252, 0.7)',
   },
   HOME_FONTS: {
     heading: 'System',
     body: 'System',
+    stats: 'System',
   },
 }));
 
@@ -74,6 +79,7 @@ function buildProps(overrides: Partial<React.ComponentProps<typeof DailyGoalCard
     totalUsers: null,
     onPressGames: jest.fn(),
     onPressIQ: jest.fn(),
+    currentStreak: 5,
     onPressRank: jest.fn(),
     ...overrides,
   };
@@ -262,6 +268,31 @@ describe('DailyGoalCard', () => {
       fireEvent.press(getByText('IQ LEVEL'));
 
       expect(onPressIQ).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Streak display', () => {
+    it('renders the streak count when provided', () => {
+      const { getByText } = render(
+        <DailyGoalCard {...buildProps({ currentStreak: 12 })} />
+      );
+      expect(getByText('12')).toBeTruthy();
+      expect(getByText('day streak')).toBeTruthy();
+    });
+
+    it('renders zero streak', () => {
+      const { getByText } = render(
+        <DailyGoalCard {...buildProps({ currentStreak: 0 })} />
+      );
+      expect(getByText('0')).toBeTruthy();
+      expect(getByText('day streak')).toBeTruthy();
+    });
+
+    it('does not render streak row when currentStreak is undefined', () => {
+      const { queryByText } = render(
+        <DailyGoalCard {...buildProps({ currentStreak: undefined })} />
+      );
+      expect(queryByText('day streak')).toBeNull();
     });
   });
 });

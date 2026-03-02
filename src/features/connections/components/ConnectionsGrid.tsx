@@ -23,10 +23,14 @@ function buildDisplayNames(allPlayerNames: string[]): Record<string, string> {
     const parts = full.trim().split(/\s+/);
     if (parts.length <= 1) {
       map[full] = full;
+    } else if (parts.length === 2) {
+      map[full] = `${parts[0]}\n${parts[1]}`;
     } else {
-      const lastName = parts[parts.length - 1];
-      const firstName = parts.slice(0, -1).join(' ');
-      map[full] = `${firstName}\n${lastName}`;
+      // 3+ word names: split into roughly equal halves
+      const mid = Math.ceil(parts.length / 2);
+      const firstLine = parts.slice(0, mid).join(' ');
+      const secondLine = parts.slice(mid).join(' ');
+      map[full] = `${firstLine}\n${secondLine}`;
     }
   }
   return map;
@@ -98,7 +102,7 @@ const styles = StyleSheet.create({
   playersGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: 10,
     marginTop: spacing.sm,
     alignSelf: 'center',
     width: '100%',

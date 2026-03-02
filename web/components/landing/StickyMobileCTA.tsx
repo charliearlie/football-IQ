@@ -27,7 +27,7 @@ export function StickyMobileCTA() {
         </div>
         <Link
           href="#games"
-          className="px-6 py-2 bg-pitch-green text-stadium-navy font-bebas text-lg tracking-wider rounded-lg shadow-[0_2px_0_0_#46A302]"
+          className="px-6 py-2 bg-pitch-green text-stadium-navy font-bebas text-lg tracking-wider rounded-lg shadow-[0_2px_0_0_#1A9E38]"
         >
           PLAY TODAY&apos;S GAMES
         </Link>

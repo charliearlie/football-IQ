@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   axisColumn: {
-    width: 40, 
+    width: 40,
     alignItems: 'center',
     position: 'relative',
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 2,
     backgroundColor: colors.pitchGreen,
-    left: 19, 
+    left: 19,
     opacity: 0.3,
   },
   lineTop: {
@@ -218,45 +218,45 @@ const styles = StyleSheet.create({
   },
   dotContainer: {
     position: 'absolute',
-    top: 24, 
-    left: 13, // Adjusted for slightly larger dot size (14px) -> Center 20 - 7 = 13
+    top: 18, // vertically centre the 24px node within the row
+    left: 8, // (axisColumn 40 / 2) - (24 / 2) = 8
     zIndex: 2,
   },
   dotBase: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     backgroundColor: colors.stadiumNavy,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dotLockedBase: {
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.stadiumNavy,
   },
   dotRevealedBase: {
-    borderColor: colors.pitchGreen, // Green Outline
-    backgroundColor: colors.stadiumNavy, // Dark center
+    borderColor: colors.pitchGreen,
+    backgroundColor: colors.stadiumNavy,
   },
   dotActiveBase: {
     borderColor: colors.pitchGreen,
+    backgroundColor: colors.grassShadow, // #1A9E38 filled for active node
     shadowColor: colors.pitchGreen,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 6,
   },
   dotFill: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: colors.pitchGreen,
     // Animated scale applies here
   },
   dotPastFill: {
-    // Optional: could be empty for ring, or small dot. 
-    // Reference left image suggests empty ring for past.
-    // Let's leave it empty (transparent) or very subtle.
+    // Empty ring for past revealed steps
     width: 0,
     height: 0,
   },

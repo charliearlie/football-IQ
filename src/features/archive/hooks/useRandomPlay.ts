@@ -112,7 +112,7 @@ export function useRandomPlay(): UseRandomPlayResult {
       }
     } catch (error) {
       console.error('[useRandomPlay] Error:', error);
-      Alert.alert('Error', 'Failed to find a random puzzle. Please try again.');
+      Alert.alert('Error', 'Failed to find a random game. Please try again.');
     } finally {
       setIsLoading(false);
     }

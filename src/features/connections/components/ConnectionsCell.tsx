@@ -106,14 +106,13 @@ export function ConnectionsCell({
   }));
 
   // Determine colors based on state
-  const topColor = isSelected ? colors.pitchGreen : colors.glassBackground;
-  const shadowColor = isSelected ? depthColors.pitchGreen : '#0A1628';
-  const borderColor = isSelected ? colors.grassShadow : colors.glassBorder;
-  const textColor = isSelected ? colors.stadiumNavy : colors.floodlightWhite;
+  const topColor = isSelected ? 'rgba(46, 252, 93, 0.25)' : colors.glassBackground;
+  const shadowColor = isSelected ? '#0D5A1E' : depthColors.stadiumNavy;
+  const borderColor = isSelected ? colors.pitchGreen : 'rgba(255, 255, 255, 0.1)';
+  const textColor = isSelected ? '#FFFFFF' : colors.floodlightWhite;
 
   // Glow shadow for iOS when selected
-  const selectedGlowStyle =
-    Platform.OS === 'ios' && isSelected ? glows.green : undefined;
+  const selectedGlowStyle = undefined;
 
   return (
     <Animated.View style={[styles.outerContainer, shakeStyle]}>
@@ -148,9 +147,9 @@ export function ConnectionsCell({
         >
           <Text
             style={[styles.playerName, { color: textColor }]}
-            numberOfLines={2}
+            numberOfLines={3}
             adjustsFontSizeToFit
-            minimumFontScale={0.65}
+            minimumFontScale={0.55}
           >
             {displayName}
           </Text>
@@ -171,8 +170,8 @@ const styles = StyleSheet.create({
   },
   layer: {
     flex: 1,
-    borderRadius: borderRadius.md,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xs,
@@ -193,7 +192,7 @@ const styles = StyleSheet.create({
   },
   playerName: {
     fontFamily: fonts.headline,
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 1,

@@ -44,6 +44,7 @@ import { useAds } from '../context/AdContext';
 import { formatPuzzleDate, isWithinFreeWindow } from '@/features/archive/utils/dateGrouping';
 import { GAME_MODE_ROUTES } from '@/features/archive/constants/routes';
 import { UnlockChoiceModalProps, UnlockChoiceState } from '../types/ads.types';
+import { fetchAndSavePuzzle } from '@/features/puzzles/services/puzzleSyncService';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
@@ -174,6 +175,13 @@ export function UnlockChoiceModal({
         // Grant the unlock
         await grantAdUnlock(puzzleId);
 
+        // Pre-fetch puzzle data so it's available locally when user navigates.
+        // Free users only have the last 3 days synced — older puzzles need
+        // an on-demand fetch to avoid "loading puzzle forever" on the game screen.
+        fetchAndSavePuzzle(puzzleId).catch((err) => {
+          console.warn('[UnlockChoiceModal] Pre-fetch puzzle failed:', err);
+        });
+
         try {
           posthog?.capture('ad_unlock_completed', {
             game_mode: gameMode,
@@ -255,16 +263,16 @@ export function UnlockChoiceModal({
 
           {/* Title */}
           <Text style={styles.title}>
-            {state === 'ad_success' ? 'PUZZLE UNLOCKED!' : 'UNLOCK PUZZLE'}
+            {state === 'ad_success' ? 'GAME UNLOCKED!' : 'UNLOCK GAME'}
           </Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
             {state === 'ad_success'
-              ? 'This puzzle is now unlocked forever.'
+              ? 'This game is now unlocked forever.'
               : isOlderPuzzle
-              ? 'The last 3 days of puzzles are free \u2014 this one\u2019s a bit older.'
-              : 'Choose how you want to access this puzzle'}
+              ? 'The last 3 days of games are free \u2014 this one\u2019s a bit older.'
+              : 'Choose how you want to access this game'}
           </Text>
 
           {/* Puzzle Date */}
@@ -329,7 +337,7 @@ function IdleContent({
           <View style={styles.optionInfo}>
             <Text style={styles.optionTitle}>Go Pro</Text>
             <Text style={styles.optionSubtitle}>
-              Unlimited access to all puzzles
+              Unlimited access to all games
             </Text>
           </View>
         </View>

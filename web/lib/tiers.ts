@@ -24,12 +24,12 @@ export const IQ_TIERS: IQTier[] = [
 ];
 
 export const TIER_COLORS: Record<number, string> = {
-  1: "#94A3B8", // Intern - muted gray
+  1: "#A0ABC0", // Intern - muted gray
   2: "#6B7280", // Match Analyst - gray
   3: "#3B82F6", // Scout - blue
   4: "#22C55E", // Tactical Analyst - green
-  5: "#58CC02", // Chief Scout - pitch green
-  6: "#58CC02", // Head of Analysis - pitch green
+  5: "#2EFC5D", // Chief Scout - pitch green
+  6: "#2EFC5D", // Head of Analysis - pitch green
   7: "#FACC15", // Head of Recruitment - yellow
   8: "#F59E0B", // Technical Director - amber
   9: "#F97316", // Director of Football - orange

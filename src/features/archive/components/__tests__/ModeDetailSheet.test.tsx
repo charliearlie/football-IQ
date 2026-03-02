@@ -62,10 +62,10 @@ jest.mock('react-native-safe-area-context', () => ({
 // ─── Mock: @/theme/home-design ────────────────────────────────────────────────
 jest.mock('@/theme/home-design', () => ({
   HOME_COLORS: {
-    pitchGreen: '#58CC02',
-    grassShadow: '#46A302',
-    textMain: '#F8FAFC',
-    stadiumNavy: '#0F172A',
+    pitchGreen: '#2EFC5D',
+    grassShadow: '#1A9E38',
+    textMain: '#FFFFFF',
+    stadiumNavy: '#05050A',
     cardYellow: '#FACC15',
   },
   HOME_FONTS: {

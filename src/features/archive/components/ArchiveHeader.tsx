@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
+import { fonts } from '@/theme/typography';
 import { SkeletonBox } from '@/components/ui/Skeletons';
 
 interface ArchiveHeaderProps {
@@ -44,8 +45,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start', // Align top to handle multiline text if needed
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   title: {
     fontFamily: HOME_FONTS.heading,
@@ -57,7 +56,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: HOME_FONTS.body,
     fontSize: 12,
-    color: 'rgba(248, 250, 252, 0.7)', // textSecondary
+    color: HOME_COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -67,7 +66,7 @@ const styles = StyleSheet.create({
   statsLabel: {
     fontFamily: HOME_FONTS.body,
     fontSize: 10,
-    color: 'rgba(248, 250, 252, 0.5)',
+    color: HOME_COLORS.textSecondary,
     marginBottom: 0,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -77,12 +76,12 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   activeScore: {
-    fontFamily: HOME_FONTS.heading,
+    fontFamily: fonts.stats,
     fontSize: 24,
     color: HOME_COLORS.pitchGreen,
   },
   totalScore: {
-    fontFamily: HOME_FONTS.heading,
+    fontFamily: fonts.stats,
     fontSize: 18,
     color: '#fff',
   }

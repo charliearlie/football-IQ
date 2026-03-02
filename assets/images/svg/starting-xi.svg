@@ -2,7 +2,7 @@
   <!-- Shadow Layer (1px bottom offset, fill only) -->
   <rect x="5" y="5" width="14" height="16" rx="2" fill="#46A302" />
   <!-- Pitch Base -->
-  <rect x="5" y="4" width="14" height="16" rx="2" fill="#58CC02" stroke="#0F172A" stroke-width="2" />
+  <rect x="5" y="4" width="14" height="16" rx="2" fill="#58CC02" stroke="#FFFFFF" stroke-width="2" />
   <!-- Field Markings -->
   <g stroke="#F8FAFC" stroke-width="1" fill="none">
     <line x1="5" y1="12" x2="19" y2="12" />

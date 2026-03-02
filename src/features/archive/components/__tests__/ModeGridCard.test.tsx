@@ -36,11 +36,11 @@ jest.mock('@/components', () => ({
 // Mock @/theme/home-design so font/color constants resolve to plain strings
 jest.mock('@/theme/home-design', () => ({
   HOME_COLORS: {
-    stadiumNavy: '#0F172A',
-    surface: '#1E293B',
+    stadiumNavy: '#05050A',
+    surface: '#0E121A',
     surfaceShadow: 'rgba(0, 0, 0, 0.4)',
     border: 'rgba(255, 255, 255, 0.08)',
-    textSecondary: '#94A3B8',
+    textSecondary: '#A0ABC0',
   },
   HOME_FONTS: {
     heading: 'System',
@@ -144,24 +144,24 @@ describe('ModeGridCard', () => {
       expect(getByText('10 of 10 played')).toBeTruthy();
     });
 
-    it('shows "Y puzzles" when playedCount is zero', () => {
+    it('shows "Y games" when playedCount is zero', () => {
       const { getByText } = render(
         <ModeGridCard
           {...buildProps({ playedCount: 0, totalCount: 7, hasUnplayed: true, lockedCount: 0 })}
         />
       );
 
-      expect(getByText('7 puzzles')).toBeTruthy();
+      expect(getByText('7 games')).toBeTruthy();
     });
 
-    it('shows "Y puzzles" when playedCount is zero and all puzzles are locked', () => {
+    it('shows "Y games" when playedCount is zero and all games are locked', () => {
       const { getByText } = render(
         <ModeGridCard
           {...buildProps({ playedCount: 0, totalCount: 5, hasUnplayed: false, lockedCount: 5 })}
         />
       );
 
-      expect(getByText('5 puzzles')).toBeTruthy();
+      expect(getByText('5 games')).toBeTruthy();
     });
 
     it('does not show the old "X played · Y with PRO" format', () => {

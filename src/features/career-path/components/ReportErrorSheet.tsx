@@ -136,7 +136,7 @@ export function ReportErrorSheet({
         <AlertTriangle size={20} color={colors.cardYellow} />
         <Text style={styles.title}>Report an Error</Text>
       </View>
-      <Text style={styles.subtitle}>What's wrong with this puzzle?</Text>
+      <Text style={styles.subtitle}>What's wrong with this game?</Text>
 
       {/* Report Type Chips */}
       <View style={styles.chipsContainer}>

@@ -225,7 +225,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
               style={{
                 backgroundColor: content.from_club_color
                   ? `${content.from_club_color}15`
-                  : "#1E293B",
+                  : "#0E121A",
                 borderColor:
                   content.from_club_color || "rgba(255,255,255,0.1)",
                 color:
@@ -254,7 +254,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
               style={{
                 backgroundColor: content.to_club_color
                   ? `${content.to_club_color}15`
-                  : "#1E293B",
+                  : "#0E121A",
                 borderColor:
                   content.to_club_color || "rgba(255,255,255,0.1)",
                 color:
@@ -283,7 +283,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
               className={cn(
                 "w-3 h-3 rounded-full transition-all duration-300",
                 i < guessesLeft
-                  ? "bg-pitch-green shadow-[0_0_5px_#58CC02]"
+                  ? "bg-pitch-green shadow-[0_0_5px_#2EFC5D]"
                   : "bg-transparent border border-white/20 scale-75"
               )}
             />

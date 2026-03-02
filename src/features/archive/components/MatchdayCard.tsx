@@ -178,9 +178,9 @@ function PuzzleRow({ puzzle, onPress }: { puzzle: ArchivePuzzle; onPress: () => 
         buttonProps = {
             title: 'Result',
             variant: 'secondary',
-            topColor: '#1E293B',
+            topColor: colors.surface,
             shadowColor: '#0A1628',
-            borderColor: '#1E293B',
+            borderColor: colors.surface,
             icon: undefined,
         };
     } else if (isResume) {

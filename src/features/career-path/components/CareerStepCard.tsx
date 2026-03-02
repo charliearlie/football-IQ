@@ -144,7 +144,8 @@ export function CareerStepCard({
      if (isLoan) return 'transparent'; // Handled by wrapper or just transparent
      if (isCurrentClub) return 'transparent';
      if (isWinningStep) return colors.pitchGreen;
-     if (isMissedStep) return colors.redCard;
+     if (isMissedStep) return colors.dangerRed;
+     if (isLatest) return 'rgba(46, 252, 93, 0.4)'; // Neon green tinted border for active clue
      return 'transparent'; // Default for standard cards!
   };
 
@@ -268,13 +269,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   clubName: {
-    fontFamily: fonts.body,
-    fontWeight: '700',
-    fontSize: 14,
+    fontFamily: fonts.headline, // Bebas Neue per V2 spec
+    fontSize: 24,
     color: colors.floodlightWhite,
     flex: 1,
     marginRight: spacing.sm,
-    paddingTop: 2, 
+    paddingTop: 2,
   },
   yearContainer: {
     flexDirection: 'row',
@@ -282,8 +282,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   yearText: {
-    fontFamily: fonts.headline, 
-    fontSize: 14,
+    fontFamily: fonts.stats, // Space Grotesk for numbers/stats
+    fontSize: 13,
     color: colors.textSecondary,
     opacity: 0.9,
     letterSpacing: 0.5,
@@ -320,22 +320,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // V2 glass stat badge background
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
   statText: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.stats, // Space Grotesk for stat numbers
     fontSize: 10,
     color: colors.textSecondary,
-    fontWeight: '500',
   },
   missedBadge: {
     position: 'absolute',
     top: -6,
     right: -6,
-    backgroundColor: colors.redCard,
+    backgroundColor: colors.dangerRed,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
@@ -343,9 +342,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   missedBadgeText: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.bodyBold,
     color: colors.floodlightWhite,
-    fontWeight: '800',
     fontSize: 10,
   },
   reviewIconContainer: {

@@ -18,9 +18,9 @@ const mockOnBack = jest.fn();
 // Mock theme
 jest.mock('@/theme', () => ({
   colors: {
-    pitchGreen: '#58CC02',
-    stadiumNavy: '#0F172A',
-    floodlightWhite: '#F8FAFC',
+    pitchGreen: '#2EFC5D',
+    stadiumNavy: '#05050A',
+    floodlightWhite: '#FFFFFF',
     glassBackground: 'rgba(255, 255, 255, 0.05)',
     glassBorder: 'rgba(255, 255, 255, 0.1)',
   },
@@ -156,7 +156,7 @@ describe('GameHeader', () => {
         ? Object.assign({}, ...style.filter(Boolean))
         : style || {};
 
-      expect(flatStyle.color).toBe('#F8FAFC');
+      expect(flatStyle.color).toBe('#FFFFFF');
     });
 
     it('uses row layout with space-between alignment', () => {

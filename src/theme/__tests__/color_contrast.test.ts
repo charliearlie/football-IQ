@@ -115,8 +115,8 @@ describe('Color Contrast (WCAG 2.1)', () => {
 
 describe('Color utility functions', () => {
   it('hexToRgb parses standard hex colors', () => {
-    expect(hexToRgb('#58CC02')).toEqual({ r: 88, g: 204, b: 2 });
-    expect(hexToRgb('#0F172A')).toEqual({ r: 15, g: 23, b: 42 });
+    expect(hexToRgb('#2EFC5D')).toEqual({ r: 46, g: 252, b: 93 });
+    expect(hexToRgb('#05050A')).toEqual({ r: 5, g: 5, b: 10 });
     expect(hexToRgb('#FFFFFF')).toEqual({ r: 255, g: 255, b: 255 });
   });
 
@@ -126,7 +126,7 @@ describe('Color utility functions', () => {
   });
 
   it('hexToRgb handles hex without #', () => {
-    expect(hexToRgb('58CC02')).toEqual({ r: 88, g: 204, b: 2 });
+    expect(hexToRgb('2EFC5D')).toEqual({ r: 46, g: 252, b: 93 });
   });
 
   it('getLuminance returns 0 for black', () => {

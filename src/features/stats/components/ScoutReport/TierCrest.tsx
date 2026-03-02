@@ -25,6 +25,8 @@ export interface TierCrestProps {
   tierColor: string;
   /** Tier level 1-10, used for glow intensity */
   tierLevel: number;
+  /** 'filled' = colored bg + dark text (default), 'dark' = dark bg + white text + tier border */
+  variant?: 'filled' | 'dark';
   testID?: string;
 }
 
@@ -40,8 +42,10 @@ export function TierCrest({
   tierName,
   tierColor,
   tierLevel,
+  variant = 'filled',
   testID,
 }: TierCrestProps) {
+  const isDark = variant === 'dark';
   const hasGlow = shouldGlow(tierLevel);
   const glowIntensity = Math.min((tierLevel - 4) / 6, 1);
   const glowOpacity = useSharedValue(0.3);
@@ -79,10 +83,20 @@ export function TierCrest({
   return (
     <Animated.View
       entering={FadeIn.duration(400)}
-      style={[styles.badge, { backgroundColor: tierColor }, glowStyle]}
+      style={[
+        styles.badge,
+        isDark
+          ? [styles.badgeDark, { borderColor: tierColor }]
+          : { backgroundColor: tierColor },
+        glowStyle,
+      ]}
       testID={testID}
     >
-      <Text style={styles.tierName} numberOfLines={1} adjustsFontSizeToFit>
+      <Text
+        style={[styles.tierName, isDark && styles.tierNameDark]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {tierName}
       </Text>
     </Animated.View>
@@ -105,5 +119,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
+  },
+  badgeDark: {
+    backgroundColor: 'rgba(5, 5, 10, 0.8)',
+    borderWidth: 1,
+  },
+  tierNameDark: {
+    color: colors.floodlightWhite,
   },
 });

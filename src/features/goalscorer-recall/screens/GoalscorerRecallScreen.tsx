@@ -248,7 +248,7 @@ export function GoalscorerRecallScreen({
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
           <Text style={[textStyles.body, styles.loadingText]}>
-            Loading puzzle...
+            Loading game...
           </Text>
         </View>
       </GameContainer>
@@ -265,7 +265,7 @@ export function GoalscorerRecallScreen({
         testID="goalscorer-recall-screen"
       >
         <View style={styles.centered}>
-          <Text style={textStyles.h2}>No Puzzle Today</Text>
+          <Text style={textStyles.h2}>No Game Today</Text>
           <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
             Check back later for today's Goalscorer Recall challenge
           </Text>

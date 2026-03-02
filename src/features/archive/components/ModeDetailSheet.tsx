@@ -91,8 +91,8 @@ function PuzzleDetailRow({ puzzle, onPress }: PuzzleDetailRowProps) {
           title=""
           onPress={onPress}
           icon={<Play size={18} color={colors.stadiumNavy} fill={colors.stadiumNavy} />}
-          topColor="#58CC02"
-          shadowColor="#46A302"
+          topColor={colors.pitchGreen}
+          shadowColor={colors.grassShadow}
           size="small"
           paddingHorizontal={13}
           paddingVertical={9}
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.stadiumNavy,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: SHEET_MAX_HEIGHT,

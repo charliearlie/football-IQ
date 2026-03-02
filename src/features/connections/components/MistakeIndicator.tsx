@@ -62,10 +62,10 @@ const styles = StyleSheet.create({
     borderColor: colors.pitchGreen,
     backgroundColor: colors.pitchGreen,
     ...(Platform.OS === 'ios' && {
-      shadowColor: '#58CC02',
+      shadowColor: colors.pitchGreen,
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.6,
-      shadowRadius: 3,
+      shadowOpacity: 0.5,
+      shadowRadius: 8,
     }),
   },
 });

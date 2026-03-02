@@ -142,6 +142,6 @@ export function useModeStats(puzzles: ArchivePuzzle[]): ModeStats[] {
     // --- 3. Filter to only modes in MODE_ORDER, then sort by canonical order ---
     return stats
       .filter((s) => MODE_ORDER.includes(s.gameMode))
-      .sort((a, b) => MODE_ORDER.indexOf(a.gameMode) - MODE_ORDER.indexOf(b.gameMode));
+      .sort((a, b) => b.totalCount - a.totalCount);
   }, [puzzles]);
 }

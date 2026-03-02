@@ -7,7 +7,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -94,10 +94,10 @@ export function TimelineCard({
   let cardBorder: string = colors.glassBorder;
 
   if (isLocked) {
-    cardBg = 'rgba(88, 204, 2, 0.1)';
+    cardBg = 'rgba(46, 252, 93, 0.1)';
     cardBorder = colors.pitchGreen;
   } else if (isRevealing && isCorrect === true) {
-    cardBg = 'rgba(88, 204, 2, 0.15)';
+    cardBg = 'rgba(46, 252, 93, 0.15)';
     cardBorder = colors.pitchGreen;
   } else if (isRevealing && isCorrect === false) {
     cardBg = 'rgba(239, 68, 68, 0.15)';
@@ -119,41 +119,46 @@ export function TimelineCard({
       ]}
       testID={testID}
     >
-      {/* Left handle — only shown when draggable */}
-      <View style={styles.leftSection}>
-        {!isLocked && drag ? (
-          <View onStartShouldSetResponder={() => true} onResponderGrant={handleDragStart}>
-            <GripVertical size={18} color={colors.textSecondary} strokeWidth={2} />
-          </View>
-        ) : null}
-      </View>
-
-      {/* Event content */}
-      <View style={styles.content}>
-        <Text style={styles.eventText} numberOfLines={2}>
-          {event.text}
-        </Text>
-      </View>
-
-      {/* Year + month — only shown after reveal/lock */}
-      {showYear && (
-        <View style={styles.yearSection}>
-          {event.month && (
-            <Text style={[styles.monthText, { color: yearColor }]}>
-              {MONTH_ABBR[event.month - 1]}
-            </Text>
-          )}
-          <Text style={[styles.yearText, { color: yearColor }]}>{event.year}</Text>
+      <Pressable
+        onLongPress={!isLocked && drag ? handleDragStart : undefined}
+        delayLongPress={150}
+        disabled={isLocked || !drag}
+        style={styles.pressableContent}
+      >
+        {/* Left handle — instant drag via grip icon */}
+        <View style={styles.leftSection}>
+          {!isLocked && drag ? (
+            <View onStartShouldSetResponder={() => true} onResponderGrant={handleDragStart}>
+              <GripVertical size={18} color={colors.textSecondary} strokeWidth={2} />
+            </View>
+          ) : null}
         </View>
-      )}
+
+        {/* Event content */}
+        <View style={styles.content}>
+          <Text style={styles.eventText} numberOfLines={2}>
+            {event.text}
+          </Text>
+        </View>
+
+        {/* Year + month — only shown after reveal/lock */}
+        {showYear && (
+          <View style={styles.yearSection}>
+            {event.month && (
+              <Text style={[styles.monthText, { color: yearColor }]}>
+                {MONTH_ABBR[event.month - 1]}
+              </Text>
+            )}
+            <Text style={[styles.yearText, { color: yearColor }]}>{event.year}</Text>
+          </View>
+        )}
+      </Pressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
     minHeight: 64,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -164,6 +169,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
     elevation: 4,
+  },
+  pressableContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   leftSection: {
     width: 24,

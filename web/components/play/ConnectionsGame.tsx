@@ -405,7 +405,7 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
                 className={cn(
                   "w-3 h-3 rounded-full transition-all duration-300",
                   i < 4 - state.mistakes
-                    ? "bg-pitch-green shadow-[0_0_6px_#58CC02]"
+                    ? "bg-pitch-green shadow-[0_0_6px_#2EFC5D]"
                     : "border border-white/20 bg-transparent scale-75"
                 )}
               />
@@ -536,7 +536,7 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
               className={cn(
                 "relative w-full h-14 rounded-xl font-bebas text-2xl tracking-[0.15em] transition-all transform overflow-hidden flex items-center justify-center gap-2",
                 state.selectedPlayers.length === 4
-                  ? "bg-pitch-green text-stadium-navy shadow-[0_6px_0_#3a8501] active:translate-y-[6px] active:shadow-[0_0_0_#3a8501]"
+                  ? "bg-pitch-green text-stadium-navy shadow-[0_6px_0_#1A9E38] active:translate-y-[6px] active:shadow-[0_0_0_#1A9E38]"
                   : "bg-white/10 text-white/30 opacity-40 cursor-not-allowed"
               )}
             >

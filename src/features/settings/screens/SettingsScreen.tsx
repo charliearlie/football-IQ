@@ -35,7 +35,7 @@ import * as StoreReview from "expo-store-review";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
-import { colors, textStyles, spacing } from "@/theme";
+import { colors, fonts, textStyles, spacing } from "@/theme";
 import { deleteAttemptsByGameMode, clearAllLocalData } from "@/lib/database";
 import { useAuth, useSubscriptionSync } from "@/features/auth";
 import { useProfile } from "@/features/auth/hooks/useProfile";
@@ -368,7 +368,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <LinearGradient
-            colors={["rgba(88, 204, 2, 0.2)", "rgba(88, 204, 2, 0.05)"]}
+            colors={["rgba(46, 252, 93, 0.2)", "rgba(46, 252, 93, 0.05)"]}
             style={styles.avatarContainer}
           >
             {/* Placeholder Avatar */}
@@ -619,19 +619,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   badgeContainer: {
-    backgroundColor: "rgba(88, 204, 2, 0.2)",
+    backgroundColor: "rgba(46, 252, 93, 0.12)",
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "rgba(88, 204, 2, 0.3)",
+    borderColor: "rgba(46, 252, 93, 0.25)",
     alignSelf: "flex-start",
   },
   badgeText: {
     color: colors.pitchGreen,
     fontSize: 12,
-    fontFamily: "Inter",
-    fontWeight: "700",
+    fontFamily: fonts.bodyBold,
     textTransform: "uppercase",
   },
   toggleRow: {
@@ -661,13 +660,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   versionText: {
-    fontFamily: "Inter",
+    fontFamily: fonts.body,
     fontSize: 12,
     color: colors.textSecondary,
     marginBottom: 4,
   },
   copyrightText: {
-    fontFamily: "Inter",
+    fontFamily: fonts.body,
     fontSize: 10,
     color: colors.textSecondary,
     opacity: 0.6,

@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.97)',
+    backgroundColor: 'rgba(5, 5, 10, 0.97)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.12)',
     flexDirection: 'row',

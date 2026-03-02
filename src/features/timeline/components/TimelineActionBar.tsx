@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
     overflow: 'hidden',
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(5, 5, 10, 0.6)',
   },
   glassOverlay: {
     paddingHorizontal: spacing.lg,

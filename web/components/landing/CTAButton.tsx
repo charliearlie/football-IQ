@@ -19,8 +19,8 @@ export const CTAButton = forwardRef<HTMLButtonElement, CTAButtonProps>(
           // 3D effect with border-bottom trick
           variant === "primary" && [
             "bg-pitch-green text-stadium-navy",
-            "shadow-[0_4px_0_0_#46A302]", // grass-shadow color
-            "hover:shadow-[0_6px_0_0_#46A302] hover:-translate-y-[2px]",
+            "shadow-[0_4px_0_0_#1A9E38]", // grass-shadow color
+            "hover:shadow-[0_6px_0_0_#1A9E38] hover:-translate-y-[2px]",
             // Glint animation container
             "overflow-hidden",
           ],

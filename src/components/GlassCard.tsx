@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   fallback: {
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: 'rgba(17, 17, 22, 0.8)',
     borderWidth: 1,
     borderColor: colors.glassBorder,
     // Padding moved to inner content wrapper for consistency if needed, 

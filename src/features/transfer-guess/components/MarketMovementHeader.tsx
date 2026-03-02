@@ -81,8 +81,8 @@ export function MarketMovementHeader({
 
   const fromBorderColor = fromClubColor || colors.glassBorder;
   const toBorderColor = toClubColor || colors.glassBorder;
-  const fromBg = fromClubColor ? `${fromClubColor}1A` : 'rgba(30, 41, 59, 1)';
-  const toBg = toClubColor ? `${toClubColor}1A` : 'rgba(30, 41, 59, 1)';
+  const fromBg = fromClubColor ? `${fromClubColor}1A` : colors.surface;
+  const toBg = toClubColor ? `${toClubColor}1A` : colors.surface;
   const fromTextColor = fromClubColor || colors.textSecondary;
   const toTextColor = toClubColor || colors.textSecondary;
 
@@ -101,8 +101,8 @@ export function MarketMovementHeader({
             fy="50%"
             gradientUnits="userSpaceOnUse"
           >
-            <Stop offset="0" stopColor="#58CC02" stopOpacity="0.1" />
-            <Stop offset="1" stopColor="#58CC02" stopOpacity="0" />
+            <Stop offset="0" stopColor={colors.pitchGreen} stopOpacity="0.1" />
+            <Stop offset="1" stopColor={colors.pitchGreen} stopOpacity="0" />
           </SvgRadialGradient>
         </Defs>
         <Rect x="0" y="0" width="300" height="300" fill="url(#shineGradient)" />

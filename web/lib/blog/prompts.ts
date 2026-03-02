@@ -282,7 +282,7 @@ CRITICAL RULES:
  * This prefix is prepended to every image generation prompt to enforce
  * a consistent editorial illustration style and prevent AI slop.
  */
-const IMAGE_STYLE_DIRECTIVE = `Flat vector editorial illustration for a football news article. Style: geometric shapes, clean lines, limited palette (deep navy #0F172A, electric green #58CC02, warm amber highlights, cool slate greys). Abstract and atmospheric — NOT photorealistic. Silhouetted or faceless figures only. NEVER include any text, words, letters, numbers, logos, crests, or scoreboards in the image.`;
+const IMAGE_STYLE_DIRECTIVE = `Flat vector editorial illustration for a football news article. Style: geometric shapes, clean lines, limited palette (deep navy #05050A, electric green #2EFC5D, warm amber highlights, cool slate greys). Abstract and atmospheric — NOT photorealistic. Silhouetted or faceless figures only. NEVER include any text, words, letters, numbers, logos, crests, or scoreboards in the image.`;
 
 /**
  * Builds the prompt sent to GPT-4o to craft a specific image scene description.
