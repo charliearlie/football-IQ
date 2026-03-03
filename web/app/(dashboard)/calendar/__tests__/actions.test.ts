@@ -124,7 +124,7 @@ describe("createPuzzle", () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual(newPuzzle);
-    expect(revalidatePath).toHaveBeenCalledWith("/dashboard/calendar");
+    expect(revalidatePath).toHaveBeenCalledWith("/calendar");
   });
 
   it("returns error on Supabase insert failure", async () => {
@@ -181,7 +181,7 @@ describe("updatePuzzle", () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual(updatedPuzzle);
-    expect(revalidatePath).toHaveBeenCalledWith("/dashboard/calendar");
+    expect(revalidatePath).toHaveBeenCalledWith("/calendar");
   });
 
   it("handles partial updates", async () => {
@@ -228,7 +228,7 @@ describe("deletePuzzle", () => {
     expect(mockSupabaseClient.from).toHaveBeenCalledWith("daily_puzzles");
     expect(mockQueryBuilder.delete).toHaveBeenCalled();
     expect(mockQueryBuilder.eq).toHaveBeenCalledWith("id", "test-id");
-    expect(revalidatePath).toHaveBeenCalledWith("/dashboard/calendar");
+    expect(revalidatePath).toHaveBeenCalledWith("/calendar");
   });
 
   it("returns error on Supabase delete failure", async () => {
@@ -348,7 +348,7 @@ describe("upsertPuzzle", () => {
 
     await upsertPuzzle(validCreateInput);
 
-    expect(revalidatePath).toHaveBeenCalledWith("/dashboard/calendar");
+    expect(revalidatePath).toHaveBeenCalledWith("/calendar");
   });
 
   it("returns error on Supabase failure", async () => {

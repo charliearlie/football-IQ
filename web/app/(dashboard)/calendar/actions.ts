@@ -118,7 +118,7 @@ export async function createPuzzle(
     }
 
     // Revalidate the calendar page
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data };
   } catch (err) {
@@ -178,7 +178,7 @@ export async function updatePuzzle(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data };
   } catch (err) {
@@ -208,7 +208,7 @@ export async function deletePuzzle(id: string): Promise<ActionResult> {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true };
   } catch (err) {
@@ -238,7 +238,7 @@ export async function publishPuzzle(id: string): Promise<ActionResult> {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true };
   } catch (err) {
@@ -434,7 +434,7 @@ export async function upsertPuzzle(
       return { success: false, error: result.error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data: result.data };
   } catch (err) {
@@ -790,7 +790,7 @@ export async function assignPuzzleDate(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data };
   } catch (err) {
@@ -978,7 +978,7 @@ export async function initializeWeek(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return {
       success: true,
@@ -1026,7 +1026,7 @@ export async function toggleBonusPuzzle(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data };
   } catch (err) {
@@ -1229,7 +1229,7 @@ export async function displacePuzzle(
       return { success: false, error: finalMoveError.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     // Include the original move in the result
     const allMoves: DisplacementMove[] = [
@@ -1343,7 +1343,7 @@ export async function swapPuzzleDates(
       return { success: false, error: step3Error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true };
   } catch (err) {
@@ -1417,7 +1417,7 @@ export async function assignPuzzleDateWithConflictHandling(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data: {} };
   } catch (err) {
@@ -1548,7 +1548,7 @@ export async function oracleScoutAndSave(input: {
  * Called by OracleModal when batch processing finishes.
  */
 export async function revalidateCalendar(): Promise<void> {
-  revalidatePath("/dashboard/calendar");
+  revalidatePath("/calendar");
 }
 
 /**
@@ -1641,7 +1641,7 @@ export async function oracleFillGaps(input: {
       }
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return {
       success: true,
@@ -1767,7 +1767,7 @@ export async function resolveReport(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/calendar");
+    revalidatePath("/calendar");
 
     return { success: true, data };
   } catch (err) {

@@ -100,8 +100,8 @@ export async function bulkImportTransfers(
       return { success: false, error: insertError.message };
     }
 
-    revalidatePath("/dashboard/calendar");
-    revalidatePath("/dashboard/admin/guess-the-transfer");
+    revalidatePath("/calendar");
+    revalidatePath("/admin/guess-the-transfer");
 
     return {
       success: true,

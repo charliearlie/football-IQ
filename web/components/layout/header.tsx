@@ -5,9 +5,8 @@ import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Overview",
-  "/dashboard/calendar": "Master Calendar",
-  "/dashboard/settings": "Settings",
+  "/calendar": "Master Calendar",
+  "/settings": "Settings",
   "/admin/career-path": "Career Path Admin",
   "/admin/guess-the-transfer": "Transfer Guess Admin",
   "/admin/starting-xi": "Starting XI Admin",
