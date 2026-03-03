@@ -301,6 +301,7 @@ export default function HomeScreen() {
           userRank={userRank?.rank ?? null}
           totalUsers={userRank?.totalUsers ?? null}
           onPressRank={() => router.push("/leaderboard")}
+          currentStreak={stats.currentStreak}
         />
 
         {/* 4. Archive Discovery Banner */}
@@ -350,7 +351,7 @@ export default function HomeScreen() {
           </View>
         ) : cards.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No puzzles today.</Text>
+            <Text style={styles.emptyText}>No games today.</Text>
           </View>
         ) : (
           <>

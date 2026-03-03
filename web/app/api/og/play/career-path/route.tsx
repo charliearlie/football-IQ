@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     <GameOGCard
       gameTitle="Career Path"
       tagline="Guess the player from their career"
-      accentColor="#58CC02"
+      accentColor="#2EFC5D"
     />,
     { width: WIDTH, height: HEIGHT, fonts },
   );

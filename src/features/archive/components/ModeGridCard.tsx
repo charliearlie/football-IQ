@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
+import { colors } from '@/theme';
 import { GameModeIcon } from '@/components';
 import { triggerLight } from '@/lib/haptics';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -68,20 +69,17 @@ function ModeGridCardComponent({
   const hasActiveUnplayed = hasUnplayed && lockedCount < totalCount;
 
   const borderColor = isCompleted
-    ? 'rgba(88,204,2,0.5)'
+    ? 'rgba(46,252,93,0.5)'
     : hasActiveUnplayed
-    ? 'rgba(88,204,2,0.3)'
+    ? 'rgba(46,252,93,0.3)'
     : isFullyLocked
     ? 'rgba(250,204,21,0.2)'
     : HOME_COLORS.border;
 
-  // Progress bar fill width as a 0–100 number (used via flex / explicit width calculation)
-  const progressFraction = totalCount > 0 ? playedCount / totalCount : 0;
-
   const subtitleText =
     playedCount > 0
       ? `${playedCount} of ${totalCount} played`
-      : `${totalCount} puzzles`;
+      : `${totalCount} games`;
 
   return (
     <Pressable
@@ -106,12 +104,12 @@ function ModeGridCardComponent({
         <View style={styles.topRow}>
           {/* Icon container */}
           <View style={styles.iconContainer}>
-            <GameModeIcon gameMode={gameMode} size={22} />
+            <GameModeIcon gameMode={gameMode} size={26} />
 
             {/* Completion badge */}
             {isCompleted && (
               <View style={styles.completeBadge}>
-                <Check size={12} color="#58CC02" strokeWidth={3} />
+                <Check size={12} color={colors.pitchGreen} strokeWidth={3} />
               </View>
             )}
           </View>
@@ -125,16 +123,6 @@ function ModeGridCardComponent({
           <Text style={styles.subtitle}>
             {subtitleText}
           </Text>
-        </View>
-
-        {/* Progress bar — sits at bottom of fixed-height card */}
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${progressFraction * 100}%` as `${number}%` },
-            ]}
-          />
         </View>
       </Animated.View>
     </Pressable>
@@ -157,7 +145,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   card: {
-    height: 130,
+    height: 140,
     backgroundColor: HOME_COLORS.surface,
     borderRadius: 16,
     borderWidth: 1,
@@ -170,10 +158,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -198,7 +188,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: HOME_FONTS.heading,
     fontSize: 17,
-    color: '#F8FAFC',
+    color: colors.floodlightWhite,
     letterSpacing: 0.5,
   },
   subtitle: {
@@ -206,17 +196,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: HOME_COLORS.textSecondary,
     marginTop: 2,
-  },
-  progressBarContainer: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#58CC02',
   },
 });
 

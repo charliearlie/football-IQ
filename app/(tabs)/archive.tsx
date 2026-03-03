@@ -172,6 +172,9 @@ export default function ArchiveScreen() {
    */
   const handlePuzzlePress = useCallback(
     (puzzle: ArchivePuzzle) => {
+      // Always close ModeDetailSheet first to prevent overlapping modals
+      setSelectedMode(null);
+
       // Show results modal for completed games
       if (puzzle.status === 'done' && puzzle.attempt) {
         setCompletedPuzzle(puzzle);
@@ -313,5 +316,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 8,
+    paddingBottom: 100,
   },
 });

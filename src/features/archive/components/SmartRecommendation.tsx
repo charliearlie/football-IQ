@@ -7,7 +7,7 @@ import { GameModeIcon } from '@/components';
 import { getGameModeConfig } from '@/features/puzzles/utils/gameModeConfig';
 import { ArchiveDateGroup, ArchivePuzzle } from '../types/archive.types';
 import { ModeStats } from '../hooks/useModeStats';
-import { borderRadius } from '@/theme';
+import { borderRadius, colors } from '@/theme';
 
 // ============================================================================
 // Types
@@ -31,8 +31,8 @@ type Recommendation = {
 // Constants
 // ============================================================================
 
-const BORDER_COLOR_RESUME = 'rgba(250,204,21,0.3)';
-const BORDER_COLOR_GREEN = 'rgba(88,204,2,0.3)';
+const BORDER_COLOR_RESUME = 'rgba(46,252,93,0.3)';
+const BORDER_COLOR_GREEN = 'rgba(46,252,93,0.3)';
 const CARD_DEPTH = 6;
 
 // ============================================================================
@@ -116,9 +116,9 @@ export function SmartRecommendation({
     return null;
   }
 
-  const buttonTopColor = recommendation.isResume ? '#FACC15' : '#58CC02';
-  const buttonShadowColor = recommendation.isResume ? '#D4A500' : '#46A302';
-  const iconColor = recommendation.isResume ? HOME_COLORS.stadiumNavy : '#0F172A';
+  const buttonTopColor = colors.pitchGreen;
+  const buttonShadowColor = colors.grassShadow;
+  const iconColor = '#000000';
 
   return (
     <View>
@@ -136,7 +136,7 @@ export function SmartRecommendation({
         >
           {/* Game Mode Icon */}
           <View style={styles.iconContainer}>
-            <GameModeIcon gameMode={recommendation.puzzle.gameMode} size={24} />
+            <GameModeIcon gameMode={recommendation.puzzle.gameMode} size={26} />
           </View>
 
           {/* Text */}
@@ -175,9 +175,9 @@ export function SmartRecommendation({
 const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: HOME_FONTS.heading,
-    fontSize: 13,
+    fontSize: 20,
     color: HOME_COLORS.pitchGreen,
-    letterSpacing: 2,
+    letterSpacing: 1,
     paddingHorizontal: 20,
     marginBottom: 8,
   },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   card: {
-    height: 72,
+    height: 76,
     borderRadius: 20,
     backgroundColor: HOME_COLORS.surface,
     borderWidth: 1,
@@ -204,10 +204,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -224,12 +226,14 @@ const styles = StyleSheet.create({
   sublabel: {
     fontFamily: HOME_FONTS.heading,
     fontSize: 16,
-    color: '#F8FAFC',
+    color: colors.floodlightWhite,
     letterSpacing: 0.5,
     marginTop: 2,
   },
   playButton: {
-    minWidth: 44,
+    width: 44,
     height: 44,
+    minWidth: 0,
+    alignSelf: 'center',
   },
 });

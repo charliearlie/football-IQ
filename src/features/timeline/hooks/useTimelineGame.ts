@@ -5,7 +5,7 @@
  * Uses reducer pattern with shared persistence hook.
  */
 
-import { useReducer, useMemo, useCallback } from 'react';
+import { useReducer, useMemo, useCallback, useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import {
   TimelineState,
@@ -321,6 +321,21 @@ export function useTimelineGame(puzzle: ParsedLocalPuzzle | null) {
     onAttemptSaved: syncAttempts,
     onLocalAttemptSaved: refreshLocalIQ,
   });
+
+  // Re-initialize when content arrives after async load
+  // (e.g., ad-unlocked archive puzzle fetched after mount).
+  // Guards: only fire when reducer was initialized with empty events
+  // and persistence hasn't restored a prior attempt.
+  useEffect(() => {
+    if (
+      content &&
+      state.eventOrder.length === 0 &&
+      state.attemptCount === 0 &&
+      state.gameStatus === 'playing'
+    ) {
+      dispatch({ type: 'RESET_GAME' });
+    }
+  }, [content, state.eventOrder.length, state.attemptCount, state.gameStatus]);
 
   // Actions
   const reorderEvents = useCallback(

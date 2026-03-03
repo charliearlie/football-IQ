@@ -68,8 +68,8 @@ describe('Ad Unlock Feature', () => {
     });
 
     it('skips migration if already at current version', async () => {
-      // Arrange - version 13 is current
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      // Arrange - version 15 is current
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
 
       // Act
       await initDatabase();
@@ -81,7 +81,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('saveAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
       await initDatabase();
     });
 
@@ -137,7 +137,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('isAdUnlocked', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
       await initDatabase();
     });
 
@@ -185,7 +185,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('getValidAdUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
       await initDatabase();
     });
 
@@ -236,7 +236,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('clearExpiredUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
       await initDatabase();
     });
 
@@ -254,7 +254,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('removeAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
       await initDatabase();
     });
 
@@ -272,7 +272,7 @@ describe('Ad Unlock Feature', () => {
 
   describe('clearAllAdUnlocks', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 14 });
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
       await initDatabase();
     });
 

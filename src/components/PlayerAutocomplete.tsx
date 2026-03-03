@@ -336,10 +336,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     marginBottom: spacing.sm,
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    backgroundColor: 'rgba(14, 18, 26, 0.95)',
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     maxHeight: 260,
     zIndex: 1000,
     overflow: 'hidden',
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   resultItemPressed: {
-    backgroundColor: 'rgba(88, 204, 2, 0.12)',
+    backgroundColor: 'rgba(46, 252, 93, 0.12)',
   },
   resultContent: {
     flexDirection: 'row',

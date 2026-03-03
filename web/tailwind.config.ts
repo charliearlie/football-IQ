@@ -9,15 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Football IQ Primary Palette
-        "stadium-navy": "#0F172A",
-        "pitch-green": "#58CC02",
-        "grass-shadow": "#46A302",
-        "floodlight": "#F8FAFC",
+        // Football IQ V2 Primary Palette
+        "stadium-navy": "#05050A",
+        "pitch-green": "#2EFC5D",
+        "grass-shadow": "#1A9E38",
+        "floodlight": "#FFFFFF",
         "card-yellow": "#FACC15",
         "red-card": "#EF4444",
         "warning-orange": "#FF4D00",
         "amber": "#F59E0B",
+        "gold-primary": "#FFD700",
+        "gold-shadow": "#B8960F",
+        "accent-blue": "#00E5FF",
+        "danger-red": "#FF3366",
 
         // Fun trivia accent colors
         "coral": "#FF6B6B",
@@ -26,43 +30,44 @@ const config: Config = {
         "sky-blue": "#3B82F6",
 
         // Semantic color mapping for shadcn/ui
-        background: "#0D1722",
-        foreground: "#F8FAFC",
+        background: "#05050A",
+        foreground: "#FFFFFF",
         card: {
-          DEFAULT: "rgba(255, 255, 255, 0.05)",
-          foreground: "#F8FAFC",
+          DEFAULT: "rgba(255, 255, 255, 0.03)",
+          foreground: "#FFFFFF",
         },
         popover: {
-          DEFAULT: "#1E293B",
-          foreground: "#F8FAFC",
+          DEFAULT: "#0E121A",
+          foreground: "#FFFFFF",
         },
         primary: {
-          DEFAULT: "#58CC02",
-          foreground: "#0F172A",
+          DEFAULT: "#2EFC5D",
+          foreground: "#05050A",
         },
         secondary: {
-          DEFAULT: "#1E293B",
-          foreground: "#F8FAFC",
+          DEFAULT: "#0E121A",
+          foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#1E293B",
-          foreground: "rgba(248, 250, 252, 0.6)",
+          DEFAULT: "#0E121A",
+          foreground: "rgba(255, 255, 255, 0.6)",
         },
         accent: {
           DEFAULT: "#FACC15",
-          foreground: "#0F172A",
+          foreground: "#05050A",
         },
         destructive: {
           DEFAULT: "#EF4444",
-          foreground: "#F8FAFC",
+          foreground: "#FFFFFF",
         },
-        border: "rgba(255, 255, 255, 0.1)",
-        input: "rgba(255, 255, 255, 0.1)",
-        ring: "#58CC02",
+        border: "rgba(255, 255, 255, 0.08)",
+        input: "rgba(255, 255, 255, 0.08)",
+        ring: "#2EFC5D",
       },
       fontFamily: {
         bebas: ["var(--font-bebas)", "Bebas Neue", "sans-serif"],
-        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-outfit)", "Outfit", "system-ui", "sans-serif"],
+        mono: ["var(--font-space-grotesk)", "Space Grotesk", "monospace"],
       },
       borderRadius: {
         lg: "12px",
@@ -73,13 +78,13 @@ const config: Config = {
         glass: "10px",
       },
       boxShadow: {
-        glow: "0 0 15px rgba(88, 204, 2, 0.3)",
-        "glow-strong": "0 0 20px rgba(88, 204, 2, 0.15)",
+        glow: "0 0 15px rgba(46, 252, 93, 0.3)",
+        "glow-strong": "0 0 20px rgba(46, 252, 93, 0.15)",
         "card-depth": "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
-        "3d-tile": "0 6px 0 #0f172a",
-        "3d-tile-pressed": "0 0 0 #0f172a",
-        "3d-green": "0 6px 0 #3a8501",
-        "3d-green-pressed": "0 0 0 #3a8501",
+        "3d-tile": "0 6px 0 #05050A",
+        "3d-tile-pressed": "0 0 0 #05050A",
+        "3d-green": "0 6px 0 #1A9E38",
+        "3d-green-pressed": "0 0 0 #1A9E38",
       },
       keyframes: {
         "accordion-down": {
@@ -129,9 +134,9 @@ const config: Config = {
           "100%": { transform: "scale(1)", opacity: "1" },
         },
         "pulse-ring": {
-          "0%": { boxShadow: "0 0 0 0 rgba(88, 204, 2, 0.7)" },
-          "70%": { boxShadow: "0 0 0 10px rgba(88, 204, 2, 0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(88, 204, 2, 0)" },
+          "0%": { boxShadow: "0 0 0 0 rgba(46, 252, 93, 0.7)" },
+          "70%": { boxShadow: "0 0 0 10px rgba(46, 252, 93, 0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(46, 252, 93, 0)" },
         },
         shimmer: {
           "0%": { transform: "translateX(-100%)" },

@@ -1,8 +1,6 @@
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, StyleSheet } from 'react-native';
 import { Lock } from 'lucide-react-native';
-import { GlassCard } from '@/components';
-import { colors, spacing, textStyles, borderRadius } from '@/theme';
+import { borderRadius } from '@/theme';
 
 export interface LockedCardProps {
   /** The step number to display */
@@ -12,39 +10,17 @@ export interface LockedCardProps {
 }
 
 /**
- * LockedCard - A blurred, locked career step card.
+ * LockedCard - A minimal dashed-border locked card (V2).
  *
- * Shows the step number but hides the content behind a blur overlay
- * with a lock icon, indicating the step hasn't been revealed yet.
+ * Renders a near-invisible placeholder with a faint lock icon,
+ * indicating the step hasn't been revealed yet.
+ * stepNumber is kept in props for API compatibility.
  */
-export function LockedCard({ stepNumber, testID }: LockedCardProps) {
+export function LockedCard({ testID }: LockedCardProps) {
   return (
     <View style={styles.container} testID={testID}>
-      <GlassCard style={styles.card} contentStyle={{ paddingHorizontal: 12, paddingVertical: 8 }}>
-        <View style={styles.content}>
-          <View style={styles.stepBadge}>
-            <Text style={styles.stepNumber}>{stepNumber}</Text>
-          </View>
-          <Text style={styles.lockedText}>???</Text>
-        </View>
-      </GlassCard>
-
-      {/* Blur overlay */}
-      {Platform.OS !== 'web' ? (
-        <BlurView
-          style={StyleSheet.absoluteFill}
-          intensity={20}
-          tint="dark"
-        />
-      ) : (
-        <View style={[StyleSheet.absoluteFill, styles.webOverlay]} />
-      )}
-
-      {/* Lock icon centered */}
       <View style={styles.lockOverlay}>
-        <View style={styles.lockCircle}>
-          <Lock size={16} color={colors.textSecondary} strokeWidth={2} />
-        </View>
+        <Lock size={16} color="rgba(255, 255, 255, 0.2)" strokeWidth={2} />
       </View>
     </View>
   );
@@ -52,52 +28,17 @@ export function LockedCard({ stepNumber, testID }: LockedCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
+    minHeight: 80,
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-  },
-  card: {
-    opacity: 0.6,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  stepBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.glassBorder,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  stepNumber: {
-    ...textStyles.subtitle,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  lockedText: {
-    ...textStyles.body,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  webOverlay: {
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
   },
   lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  lockCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
   },
 });

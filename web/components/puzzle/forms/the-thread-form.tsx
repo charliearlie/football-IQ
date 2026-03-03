@@ -61,7 +61,7 @@ export function TheThreadForm() {
       {/* Thread Type Toggle */}
       <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
         <h3 className="text-sm font-medium text-white flex items-center gap-2">
-          <Shirt className="h-4 w-4 text-[#58CC02]" />
+          <Shirt className="h-4 w-4 text-[#2EFC5D]" />
           Thread Type
         </h3>
         <FormField
@@ -78,7 +78,7 @@ export function TheThreadForm() {
                     className={cn(
                       "flex-1",
                       field.value === "sponsor"
-                        ? "bg-[#58CC02] hover:bg-[#46A302] text-black"
+                        ? "bg-[#2EFC5D] hover:bg-[#1A9E38] text-black"
                         : "border-white/10 hover:bg-white/5"
                     )}
                   >
@@ -92,7 +92,7 @@ export function TheThreadForm() {
                     className={cn(
                       "flex-1",
                       field.value === "supplier"
-                        ? "bg-[#58CC02] hover:bg-[#46A302] text-black"
+                        ? "bg-[#2EFC5D] hover:bg-[#1A9E38] text-black"
                         : "border-white/10 hover:bg-white/5"
                     )}
                   >
@@ -115,7 +115,7 @@ export function TheThreadForm() {
       {/* Club Selector */}
       <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-4">
         <h3 className="text-sm font-medium text-white flex items-center gap-2">
-          <Search className="h-4 w-4 text-[#58CC02]" />
+          <Search className="h-4 w-4 text-[#2EFC5D]" />
           Answer Club
         </h3>
         <ClubSelector
@@ -138,7 +138,7 @@ export function TheThreadForm() {
               className={cn(
                 "text-xs flex items-center gap-1",
                 hiddenCount === 3
-                  ? "border-[#58CC02]/50 text-[#58CC02]"
+                  ? "border-[#2EFC5D]/50 text-[#2EFC5D]"
                   : hiddenCount === 0
                     ? "border-white/20 text-gray-400"
                     : "border-[#EF4444]/50 text-[#EF4444]"
@@ -242,7 +242,7 @@ function BrandEntry({ control, index, isFirst, canDelete, onDelete }: BrandEntry
         className={cn(
           "absolute left-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold -translate-x-1/2",
           isFirst
-            ? "bg-[#58CC02] text-black"
+            ? "bg-[#2EFC5D] text-black"
             : "bg-white/10 text-white/60 border border-white/20"
         )}
         style={{ left: "-20px" }}
@@ -461,7 +461,7 @@ function ClubSelector({
 
       {/* Dropdown */}
       {showDropdown && results.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-auto rounded-md border border-white/10 bg-[#1e293b] shadow-lg">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-auto rounded-md border border-white/10 bg-[#0E121A] shadow-lg">
           {results.map((club) => (
             <button
               key={club.id}
@@ -480,7 +480,7 @@ function ClubSelector({
 
       {/* No results message */}
       {showDropdown && results.length === 0 && !isSearching && query.length >= 2 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 p-3 rounded-md border border-white/10 bg-[#1e293b] text-sm text-gray-400 text-center">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 p-3 rounded-md border border-white/10 bg-[#0E121A] text-sm text-gray-400 text-center">
           No clubs found for &quot;{query}&quot;
         </div>
       )}

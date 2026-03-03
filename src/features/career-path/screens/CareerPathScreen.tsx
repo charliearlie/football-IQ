@@ -258,7 +258,7 @@ export function CareerPathScreen({
   const handleOpenReportSheet = useCallback(() => {
     if (puzzle?.id) {
       router.push({
-        pathname: '/report-error-sheet',
+        pathname: "/report-error-sheet",
         params: { puzzleId: puzzle.id },
       });
     }
@@ -345,7 +345,7 @@ export function CareerPathScreen({
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
           <Text style={[textStyles.body, styles.loadingText]}>
-            Loading puzzle...
+            Loading game...
           </Text>
         </View>
       </GameContainer>
@@ -357,7 +357,7 @@ export function CareerPathScreen({
     return (
       <GameContainer title={screenTitle} testID="career-path-screen">
         <View style={styles.centered}>
-          <Text style={textStyles.h2}>No Puzzle Today</Text>
+          <Text style={textStyles.h2}>No Game Today</Text>
           <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
             Check back later for today's challenge
           </Text>
@@ -480,7 +480,7 @@ export function CareerPathScreen({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-{/* Timeline Container - holds axis line and career steps */}
+        {/* Timeline Container - holds axis line and career steps */}
         <View style={styles.timelineContainer}>
           {/* Continuous Timeline Axis - handled by individual TimelineStepRow components now */}
 
@@ -551,7 +551,6 @@ export function CareerPathScreen({
             {!keyboardVisible && <AdBanner testID="career-path-ad-banner" />}
           </View>
         )}
-
 
         {/* Help Modal */}
         <GameIntroModal

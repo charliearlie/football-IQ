@@ -4,33 +4,33 @@
 
 @layer base {
   :root {
-    --background: 222 47% 9%;
-    --foreground: 210 40% 98%;
+    --background: 240 33% 2%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100% / 0.05;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100% / 0.03;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 30% 8%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 99 98% 40%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 137 97% 58%;
+    --primary-foreground: 240 33% 2%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 30% 8%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 210 40% 98% / 0.6;
+    --muted: 220 30% 8%;
+    --muted-foreground: 0 0% 100% / 0.6;
 
     --accent: 48 96% 53%;
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: 240 33% 2%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 100% / 0.1;
-    --input: 0 0% 100% / 0.1;
-    --ring: 99 98% 40%;
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.08;
+    --ring: 137 97% 58%;
 
     --radius: 8px;
   }
@@ -41,7 +41,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: var(--font-outfit), "Outfit", system-ui, sans-serif;
   }
 
   /* Scrollbar styling for dark theme */
@@ -67,7 +67,7 @@
 @layer components {
   /* Glass card effect matching mobile app */
   .glass-card {
-    @apply bg-white/5 backdrop-blur-[10px] border border-white/10 rounded-xl;
+    @apply bg-white/[0.03] backdrop-blur-[10px] border border-white/[0.08] rounded-xl;
   }
 
   /* Dense data table styling */
@@ -81,7 +81,7 @@
   }
 
   .status-dot-success {
-    @apply bg-pitch-green shadow-[0_0_6px_rgba(88,204,2,0.5)];
+    @apply bg-pitch-green shadow-[0_0_6px_rgba(46,252,93,0.5)];
   }
 
   .status-dot-empty {
@@ -99,9 +99,9 @@
     top: 24px;
     bottom: 60px;
     width: 2px;
-    background: linear-gradient(to bottom, #58CC02 0%, #58CC02 85%, rgba(88, 204, 2, 0.1) 100%);
+    background: linear-gradient(to bottom, #2EFC5D 0%, #2EFC5D 85%, rgba(46, 252, 93, 0.1) 100%);
     z-index: 0;
-    box-shadow: 0 0 8px rgba(88, 204, 2, 0.4);
+    box-shadow: 0 0 8px rgba(46, 252, 93, 0.4);
   }
 
   /* Shimmer overlay for solved Connections cards */
@@ -131,9 +131,9 @@
 
   .game-tile-default {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 6px 0 #0f172a, inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    color: #F8FAFC;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 0 #05050A, inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
   }
 
   .game-tile-default:hover {
@@ -141,18 +141,18 @@
   }
 
   .game-tile-selected {
-    background: #58CC02;
-    border: 1px solid #46A302;
-    color: #0F172A;
+    background: #2EFC5D;
+    border: 1px solid #1A9E38;
+    color: #05050A;
     transform: translateY(6px);
-    box-shadow: 0 0 0 #0f172a, inset 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 15px rgba(88, 204, 2, 0.3);
+    box-shadow: 0 0 0 #05050A, inset 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 15px rgba(46, 252, 93, 0.3);
   }
 
   .game-tile-error {
     background: #EF4444 !important;
     border-color: #991b1b !important;
     color: white !important;
-    box-shadow: 0 0 0 #0f172a !important;
+    box-shadow: 0 0 0 #05050A !important;
     transform: translateY(6px);
   }
 }
@@ -165,7 +165,7 @@
 
   /* Glow effect for primary elements */
   .glow-green {
-    box-shadow: 0 0 20px rgba(88, 204, 2, 0.3);
+    box-shadow: 0 0 20px rgba(46, 252, 93, 0.3);
   }
 
   /* Focus ring styling */
@@ -175,19 +175,19 @@
 
   /* Fun text shadow for playful headings */
   .text-shadow-fun {
-    text-shadow: 2px 2px 0px rgba(88, 204, 2, 0.3);
+    text-shadow: 2px 2px 0px rgba(46, 252, 93, 0.3);
   }
 
   /* Rainbow gradient border for special elements */
   .border-gradient-fun {
     border: 2px solid transparent;
-    background: linear-gradient(#0F172A, #0F172A) padding-box,
-                linear-gradient(135deg, #58CC02, #FACC15, #FF6B6B, #9B59B6, #4ECDC4) border-box;
+    background: linear-gradient(#05050A, #05050A) padding-box,
+                linear-gradient(135deg, #2EFC5D, #FACC15, #FF6B6B, #9B59B6, #4ECDC4) border-box;
   }
 
   /* Color-coded game mode card glows */
   .card-glow-green {
-    box-shadow: 0 0 40px rgba(88, 204, 2, 0.15), inset 0 1px 0 rgba(88, 204, 2, 0.1);
+    box-shadow: 0 0 40px rgba(46, 252, 93, 0.15), inset 0 1px 0 rgba(46, 252, 93, 0.1);
   }
 
   .card-glow-yellow {
@@ -217,7 +217,7 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(88, 204, 2, 0.1) 0%, rgba(0, 0, 0, 0) 60%);
+    background: radial-gradient(circle, rgba(46, 252, 93, 0.1) 0%, rgba(0, 0, 0, 0) 60%);
     z-index: 0;
     pointer-events: none;
   }
@@ -226,7 +226,7 @@
   .transfer-connector {
     flex-grow: 1;
     height: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     position: relative;
   }
 

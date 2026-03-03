@@ -32,11 +32,11 @@ const VARIANT_COLORS: Record<ButtonVariant, VariantColorConfig> = {
   primary: {
     backgroundColor: colors.pitchGreen,
     shadowColor: colors.grassShadow,
-    textColor: colors.stadiumNavy,
+    textColor: '#000000',
   },
   secondary: {
-    backgroundColor: colors.stadiumNavy,
-    shadowColor: '#0A1628',
+    backgroundColor: colors.surface,
+    shadowColor: '#050508',
     textColor: colors.floodlightWhite,
   },
   danger: {
@@ -45,9 +45,9 @@ const VARIANT_COLORS: Record<ButtonVariant, VariantColorConfig> = {
     textColor: colors.floodlightWhite,
   },
   outline: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    shadowColor: 'rgba(255, 255, 255, 0.15)',
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    shadowColor: 'rgba(0, 0, 0, 0.5)',
+    borderColor: colors.glassBorder,
     textColor: colors.floodlightWhite,
   },
 };

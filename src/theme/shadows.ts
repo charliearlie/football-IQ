@@ -78,8 +78,8 @@ export const shadows = {
  * Uses colored shadows to create a glow effect.
  */
 export const glows = {
-  /** Green glow for success/active states */
-  green: createShadow('#58CC02', 0, 0.5, 12, 0),
+  /** Neon green glow for success/active states */
+  green: createShadow('#2EFC5D', 0, 0.5, 12, 0),
 
   /** Yellow glow for warnings/highlights */
   yellow: createShadow('#FACC15', 0, 0.5, 12, 0),
@@ -89,6 +89,9 @@ export const glows = {
 
   /** Amber glow for attention states */
   amber: createShadow('#F59E0B', 0, 0.5, 12, 0),
+
+  /** Gold glow for premium states */
+  gold: createShadow('#FFD700', 0, 0.5, 12, 0),
 } as const;
 
 /**

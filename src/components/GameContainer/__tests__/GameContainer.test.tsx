@@ -22,9 +22,9 @@ const mockTriggerLight = jest.fn();
 // Mock theme
 jest.mock('@/theme', () => ({
   colors: {
-    pitchGreen: '#58CC02',
-    stadiumNavy: '#0F172A',
-    floodlightWhite: '#F8FAFC',
+    pitchGreen: '#2EFC5D',
+    stadiumNavy: '#05050A',
+    floodlightWhite: '#FFFFFF',
     glassBackground: 'rgba(255, 255, 255, 0.05)',
     glassBorder: 'rgba(255, 255, 255, 0.1)',
   },

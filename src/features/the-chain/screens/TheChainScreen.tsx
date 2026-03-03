@@ -206,7 +206,7 @@ export function TheChainScreen({
     return (
       <GameContainer title="The Chain" testID="the-chain-screen">
         <View style={styles.loadingContainer}>
-          <Text style={styles.errorText}>Puzzle not available</Text>
+          <Text style={styles.errorText}>Game not available</Text>
           <ElevatedButton title="Go Back" onPress={() => router.back()} />
         </View>
       </GameContainer>

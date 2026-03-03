@@ -174,7 +174,7 @@ describe('StreakHeader', () => {
     );
 
     expect(getByText('2/5')).toBeTruthy();
-    expect(getByText('Puzzles Today')).toBeTruthy();
+    expect(getByText('Games Today')).toBeTruthy();
   });
 
   it('displays full completion', () => {

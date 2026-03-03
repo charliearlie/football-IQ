@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Inter, Bebas_Neue } from "next/font/google";
+import { Outfit, Space_Grotesk, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import { JsonLd } from "@/components/JsonLd";
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-outfit",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
 });
 
 const bebasNeue = Bebas_Neue({
@@ -69,7 +74,7 @@ export default function RootLayout({
       <head>
         <meta name="google-adsense-account" content="ca-pub-9426782115883407" />
       </head>
-      <body className={`${inter.variable} ${bebasNeue.variable} font-sans`}>
+      <body className={`${outfit.variable} ${spaceGrotesk.variable} ${bebasNeue.variable} font-sans`}>
         <PostHogProvider>
           {children}
         </PostHogProvider>

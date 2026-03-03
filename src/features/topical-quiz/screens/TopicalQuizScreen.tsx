@@ -348,7 +348,7 @@ export function TopicalQuizScreen({
         <View style={styles.optionsContainer}>
           {currentQuestion.options.map((option, index) => (
             <QuizOptionButton
-              key={`option-${index}`}
+              key={`q${state.currentQuestionIndex}-option-${index}`}
               label={option}
               index={index}
               state={optionStates[index]}

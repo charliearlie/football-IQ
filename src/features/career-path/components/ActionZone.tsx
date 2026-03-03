@@ -73,7 +73,7 @@ export function ActionZone({
             ]}
             testID={`${testID}-reveal`}
           >
-            <ChevronRight size={18} color={colors.amber} />
+            <ChevronRight size={18} color={colors.goldPrimary} />
             <Text style={styles.revealText}>Reveal next step</Text>
           </Pressable>
         )}
@@ -98,7 +98,7 @@ export function ActionZone({
 
 const styles = StyleSheet.create({
   wrapper: {
-    backgroundColor: 'rgba(15, 23, 42, 0.8)', // Semi-transparent stadiumNavy
+    backgroundColor: colors.surface, // V2 surface token (#0E121A)
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
   },
@@ -118,13 +118,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   revealText: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    color: colors.amber,
+    color: colors.goldPrimary, // Gold text for "Reveal next step" per V2 spec
   },
   giveUpText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.redCard,
+    color: colors.dangerRed,
   },
 });

@@ -16,7 +16,7 @@ export function CareerStepCard({
     <div
       className={cn(
         "glass-card p-4 transition-all",
-        isLatest && "border-pitch-green shadow-[0_0_20px_rgba(88,204,2,0.3)]"
+        isLatest && "border-pitch-green shadow-[0_0_20px_rgba(46,252,93,0.3)]"
       )}
     >
       <div className="flex items-center gap-4">

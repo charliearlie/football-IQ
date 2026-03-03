@@ -5,11 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 
 interface AdminStatus {
   isAdmin: boolean;
+  isReadonly: boolean;
   isLoading: boolean;
 }
 
 export function useAdminStatus(): AdminStatus {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isReadonly, setIsReadonly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,24 +24,25 @@ export function useAdminStatus(): AdminStatus {
         if (isStale) return;
         if (!user) {
           setIsAdmin(false);
+          setIsReadonly(false);
           setIsLoading(false);
           return;
         }
 
-        // Note: is_admin column added via migration 027_add_admin_role.sql
-        // Cast needed until Supabase types are regenerated after migration
         const { data: profile } = await supabase
           .from("profiles")
-          .select("is_admin")
+          .select("is_admin, is_readonly")
           .eq("id", user.id)
-          .single() as { data: { is_admin?: boolean } | null };
+          .single() as { data: { is_admin?: boolean; is_readonly?: boolean } | null };
 
         if (!isStale) {
           setIsAdmin(profile?.is_admin ?? false);
+          setIsReadonly(profile?.is_readonly ?? false);
         }
       } catch {
         if (!isStale) {
           setIsAdmin(false);
+          setIsReadonly(false);
         }
       } finally {
         if (!isStale) {
@@ -55,5 +58,5 @@ export function useAdminStatus(): AdminStatus {
     };
   }, []);
 
-  return { isAdmin, isLoading };
+  return { isAdmin, isReadonly, isLoading };
 }

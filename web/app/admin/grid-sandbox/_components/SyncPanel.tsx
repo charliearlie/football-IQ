@@ -132,7 +132,7 @@ export function SyncPanel({ player, grid, selectedCell }: SyncPanelProps) {
             <div className="mt-2 p-2 bg-slate-800 rounded text-xs space-y-1">
               <div className="flex items-center gap-2">
                 <span
-                  className={`font-bold ${cellResult.isValid ? "text-[#58CC02]" : "text-red-400"}`}
+                  className={`font-bold ${cellResult.isValid ? "text-[#2EFC5D]" : "text-red-400"}`}
                 >
                   {cellResult.isValid ? "VALID" : "INVALID"}
                 </span>

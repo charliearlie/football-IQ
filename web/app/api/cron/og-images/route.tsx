@@ -72,7 +72,7 @@ function buildGameConfigs(date: string): GameConfig[] {
       daily: true,
       fallbackTitle: 'Career Path',
       fallbackTagline: 'Guess the player from their career',
-      fallbackAccent: '#58CC02',
+      fallbackAccent: '#2EFC5D',
       renderCard: (content, fonts) => {
         const parsed = careerPathContentSchema.safeParse(content);
         if (!parsed.success || parsed.data.career_steps.length === 0) return null;

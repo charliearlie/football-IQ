@@ -29,7 +29,7 @@ interface ArchiveCalendarProps {
 function EmptyState() {
   return (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No Puzzles Found</Text>
+      <Text style={styles.emptyTitle}>No Games Found</Text>
       <Text style={styles.emptyText}>
         Try adjusting your filters or check back later!
       </Text>

@@ -23,7 +23,7 @@ export async function GET() {
     <GameOGCard
       gameTitle="Play Free"
       tagline="4 Daily Football Puzzles"
-      accentColor="#58CC02"
+      accentColor="#2EFC5D"
     />,
     { width: WIDTH, height: HEIGHT, fonts },
   );

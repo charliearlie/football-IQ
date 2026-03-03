@@ -228,7 +228,7 @@ export function AnimatedSplash({
         {/* App icon */}
         <Animated.View style={iconAnimatedStyle}>
           <Image
-            source={require('../../assets/images/footballiq-icon.png')}
+            source={require('../../assets/images/footballiq-icon2.png')}
             style={styles.icon}
             resizeMode="contain"
           />

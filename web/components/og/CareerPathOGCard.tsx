@@ -47,7 +47,7 @@ export function CareerPathOGCard({ firstStep, totalSteps }: CareerPathOGCardProp
             gap: 16,
             padding: '14px 20px',
             borderRadius: 12,
-            backgroundColor: 'rgba(88, 204, 2, 0.08)',
+            backgroundColor: 'rgba(46, 252, 93, 0.08)',
             border: `2px solid ${GAME_ACCENT_COLORS.careerPath}`,
           }}
         >

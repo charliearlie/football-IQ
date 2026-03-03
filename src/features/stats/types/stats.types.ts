@@ -7,6 +7,15 @@
 
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { FieldExperience } from './fieldExperience.types';
+import {
+  FormGuideEntry,
+  StrengthWeaknessAnalysis,
+  MonthReport,
+  FormationClassificationResult,
+  MilestoneInfo,
+  BestDayInfo,
+  WeakSpotInfo,
+} from './scoutReport.types';
 
 // Re-export existing score types for metadata parsing
 export { GameScore } from '@/features/career-path/utils/scoring';
@@ -200,6 +209,27 @@ export interface PerformanceStats {
   fieldExperience: FieldExperience;
   /** Detailed per-mode statistics for MODE BREAKDOWN section */
   detailedModeStats: DetailedModeStats[];
+
+  // ─── Scout Report Upgrade Fields ─────────────────────────────
+
+  /** Last 10 completed attempts as form guide (W-D-L style) */
+  formGuide: FormGuideEntry[];
+  /** Signature strength and achilles heel analysis */
+  strengthWeakness: StrengthWeaknessAnalysis | null;
+  /** Generated scouting verdict text (4 sentences, displayed on screen) */
+  scoutingVerdict: string;
+  /** Short scouting verdict (2 sentences, for share card) */
+  shortVerdict: string;
+  /** Current calendar month summary */
+  thisMonthReport: MonthReport;
+  /** Knowledge map formation classification */
+  formationClassification: FormationClassificationResult;
+  /** Next closest milestone to unlock */
+  nextMilestone: MilestoneInfo | null;
+  /** Best single-day performance record */
+  bestDay: BestDayInfo | null;
+  /** Weakest game mode for CTA */
+  weakSpotMode: WeakSpotInfo | null;
 }
 
 /**

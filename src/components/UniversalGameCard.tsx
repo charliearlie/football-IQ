@@ -128,9 +128,9 @@ function getButtonProps(status: CardStatus): ButtonProps {
       return {
         title: 'Result',
         variant: 'secondary',
-        topColor: '#1E293B',      // Slightly lighter than stadiumNavy
+        topColor: colors.surface,      // Slightly lighter than stadiumNavy
         shadowColor: '#0A1628',   // Dark navy depth
-        borderColor: '#1E293B',   // Match background to hide border
+        borderColor: colors.surface,   // Match background to hide border
       };
     case 'resume':
       return {

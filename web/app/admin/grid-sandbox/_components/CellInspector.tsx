@@ -135,7 +135,7 @@ export function CellInspector({
                     <span
                       className={
                         p.rarityScore >= 80
-                          ? "text-[#58CC02]"
+                          ? "text-[#2EFC5D]"
                           : p.rarityScore >= 50
                             ? "text-[#FACC15]"
                             : "text-slate-400"

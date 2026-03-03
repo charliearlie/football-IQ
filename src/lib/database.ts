@@ -16,7 +16,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 14;
+const SCHEMA_VERSION = 15;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -402,6 +402,24 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 
     await database.execAsync('PRAGMA user_version = 14');
     console.log('[Database] Migration v14 complete');
+  }
+
+  // Migration v15: Add tier_history table for Career Timeline feature
+  // Tracks when users reach each tier in the IQ progression system
+  if (currentVersion < 15) {
+    console.log('[Database] Running migration v15: tier_history table');
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS tier_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tier_number INTEGER NOT NULL,
+        tier_name TEXT NOT NULL,
+        reached_at TEXT NOT NULL DEFAULT (datetime('now')),
+        total_iq_at_transition INTEGER NOT NULL
+      );
+    `);
+
+    await database.execAsync('PRAGMA user_version = 15');
+    console.log('[Database] Migration v15 complete');
   }
 }
 
@@ -1964,6 +1982,42 @@ export async function searchClubColors(
       $limit: limit,
     }
   );
+}
+
+/**
+ * Insert a tier history entry when the user reaches a new tier.
+ */
+export async function insertTierHistory(
+  tierNumber: number,
+  tierName: string,
+  totalIQ: number
+): Promise<void> {
+  if (!db) return;
+  await db.runAsync(
+    'INSERT INTO tier_history (tier_number, tier_name, total_iq_at_transition) VALUES (?, ?, ?)',
+    [tierNumber, tierName, totalIQ]
+  );
+}
+
+/**
+ * Get all tier history entries ordered by reached_at ascending.
+ */
+export async function getTierHistory(): Promise<Array<{
+  id: number;
+  tier_number: number;
+  tier_name: string;
+  reached_at: string;
+  total_iq_at_transition: number;
+}>> {
+  if (!db) return [];
+  const rows = await db.getAllAsync<{
+    id: number;
+    tier_number: number;
+    tier_name: string;
+    reached_at: string;
+    total_iq_at_transition: number;
+  }>('SELECT * FROM tier_history ORDER BY reached_at ASC');
+  return rows;
 }
 
 /**

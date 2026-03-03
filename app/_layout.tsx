@@ -232,8 +232,12 @@ const AuthGate = React.memo(function AuthGate({ children }: { children: React.Re
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     "BebasNeue-Regular": require("../assets/fonts/BebasNeue-Regular.ttf"),
-    Montserrat: require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
-    Inter: require("../assets/fonts/Inter-VariableFont.ttf"),
+    "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
+    "Outfit-Medium": require("../assets/fonts/Outfit-Medium.ttf"),
+    "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
+    "Outfit-Bold": require("../assets/fonts/Outfit-Bold.ttf"),
+    "Outfit-ExtraBold": require("../assets/fonts/Outfit-ExtraBold.ttf"),
+    "SpaceGrotesk-Bold": require("../assets/fonts/SpaceGrotesk-Bold.ttf"),
   });
   const [dbReady, setDbReady] = useState(false);
   const [initTimedOut, setInitTimedOut] = useState(false);

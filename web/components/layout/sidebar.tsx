@@ -24,6 +24,7 @@ import {
   HeartPulse,
   History,
   FileText,
+  ImageIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,7 @@ const navigation: NavSection[] = [
       { name: "Club Merge", href: "/admin/club-merge", icon: GitMerge },
       { name: "Player Review", href: "/admin/player-review", icon: UserCheck },
       { name: "Content Integrity", href: "/admin/content-integrity", icon: ShieldCheck },
+      { name: "Screenshots", href: "/admin/screenshots", icon: ImageIcon },
     ],
   },
 ];

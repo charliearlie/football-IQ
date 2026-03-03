@@ -6,6 +6,7 @@ import Animated, {
   withDelay,
   withSpring,
 } from 'react-native-reanimated';
+import { Flame } from 'lucide-react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { SquishCard } from '@/components/SquishCard';
 import { DailyProgressRing } from './DailyProgressRing';
@@ -26,6 +27,8 @@ interface DailyGoalCardProps {
   // Rank props
   userRank?: number | null;
   totalUsers?: number | null;
+  // Streak
+  currentStreak?: number;
   // Navigation
   onPressGames?: () => void;
   onPressIQ?: () => void;
@@ -43,6 +46,7 @@ export function DailyGoalCard({
   iqPointsToNext,
   iqNextTierName,
   iqTierColor,
+  currentStreak,
   userRank,
   totalUsers,
   onPressGames,
@@ -84,6 +88,17 @@ export function DailyGoalCard({
             isComplete={isComplete}
             size={110}
           />
+          {currentStreak != null && (
+            <View style={styles.streakRow}>
+              <Flame
+                size={16}
+                color={HOME_COLORS.cardYellow}
+                fill={currentStreak > 0 ? HOME_COLORS.cardYellow : 'transparent'}
+              />
+              <Text style={styles.streakNumber}>{currentStreak}</Text>
+              <Text style={styles.streakLabel}>day streak</Text>
+            </View>
+          )}
         </View>
 
         {/* Right: Stats Column */}
@@ -172,21 +187,21 @@ const styles = StyleSheet.create({
   },
   ringContainer: {
     marginRight: 16,
+    alignItems: 'center',
   },
   statsColumn: {
     flex: 1,
     justifyContent: 'center',
   },
   label: {
-    fontFamily: HOME_FONTS.body,
+    fontFamily: 'Outfit-SemiBold',
     fontSize: 10,
     color: HOME_COLORS.textSecondary,
-    fontWeight: '600',
     textTransform: 'uppercase',
     marginBottom: 2,
   },
   gamesValue: {
-    fontFamily: HOME_FONTS.heading,
+    fontFamily: HOME_FONTS.stats,
     fontSize: 22,
     color: HOME_COLORS.textMain,
   },
@@ -241,13 +256,29 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rankValue: {
-    fontFamily: HOME_FONTS.heading,
+    fontFamily: HOME_FONTS.stats,
     fontSize: 22,
-    color: HOME_COLORS.cardYellow,
+    color: HOME_COLORS.goldPrimary,
   },
   rankContext: {
     fontFamily: HOME_FONTS.body,
     fontSize: 11,
+    color: HOME_COLORS.textSecondary,
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  streakNumber: {
+    fontFamily: HOME_FONTS.stats,
+    fontSize: 16,
+    color: HOME_COLORS.textMain,
+  },
+  streakLabel: {
+    fontFamily: HOME_FONTS.body,
+    fontSize: 12,
     color: HOME_COLORS.textSecondary,
   },
 });

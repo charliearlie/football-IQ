@@ -50,6 +50,7 @@ import {
 import { getMorningMessage, getStreakSaverMessage } from '../utils/messageRotation';
 import type { NotificationContextValue, PermissionStatus } from '../types';
 import { didTierChange, type IQTier } from '@/features/stats/utils/tierProgression';
+import { insertTierHistory } from '@/lib/database';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -446,6 +447,8 @@ export function NotificationProvider({
           AsyncStorage.setItem(storageKey, 'true');
         }
       });
+      // Record tier transition in local history (fire-and-forget)
+      insertTierHistory(result.newTier.tier, result.newTier.name, totalIQ).catch(() => {});
     } else {
       // Demotion: clear guards for tiers above new tier so re-promotion triggers celebration
       const newTierNum = result.newTier.tier;

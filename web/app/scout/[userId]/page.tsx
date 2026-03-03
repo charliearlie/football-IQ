@@ -115,11 +115,11 @@ export default async function ScoutReportPage({ params }: PageProps) {
   const tier = getTierForPoints(totalIQ);
 
   return (
-    <main className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
         {/* Logo/Header */}
         <div className="mb-8">
-          <h1 className="text-[#58CC02] text-3xl font-bold tracking-wider mb-2">
+          <h1 className="text-[#2EFC5D] text-3xl font-bold tracking-wider mb-2">
             FOOTBALL IQ
           </h1>
           <p className="text-slate-400 text-sm tracking-widest uppercase">
@@ -128,13 +128,13 @@ export default async function ScoutReportPage({ params }: PageProps) {
         </div>
 
         {/* User Card */}
-        <div className="bg-[#1a2744] rounded-2xl p-8 border-2 border-[#58CC02] mb-8">
+        <div className="bg-[#0E121A] rounded-2xl p-8 border-2 border-[#2EFC5D] mb-8">
           <div className="mb-4">
             <span
               className="inline-block px-4 py-1 rounded-full text-sm font-semibold"
               style={{
                 backgroundColor: getTierColor(tier.tier),
-                color: '#0F172A',
+                color: '#05050A',
               }}
             >
               {tier.name}
@@ -161,7 +161,7 @@ export default async function ScoutReportPage({ params }: PageProps) {
 
           <Link
             href="/"
-            className="inline-block w-full bg-[#58CC02] text-[#0F172A] font-bold py-4 px-8 rounded-xl text-lg hover:bg-[#4db300] transition-colors"
+            className="inline-block w-full bg-[#2EFC5D] text-[#05050A] font-bold py-4 px-8 rounded-xl text-lg hover:bg-[#1A9E38] transition-colors"
           >
             Get Started
           </Link>
@@ -183,12 +183,12 @@ export default async function ScoutReportPage({ params }: PageProps) {
 // Tier color helper
 function getTierColor(tier: number): string {
   const colors: Record<number, string> = {
-    1: '#94A3B8',
+    1: '#A0ABC0',
     2: '#6B7280',
     3: '#3B82F6',
     4: '#22C55E',
-    5: '#58CC02',
-    6: '#58CC02',
+    5: '#2EFC5D',
+    6: '#2EFC5D',
     7: '#FACC15',
     8: '#F59E0B',
     9: '#F97316',

@@ -53,7 +53,7 @@ export interface FirstWinCelebrationProps {
 function FirstWinCard() {
   return (
     <LinearGradient
-      colors={["#1e293b", "#14332a"]}
+      colors={["#0A0A12", "#0A120D"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.shareCard}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
-import Animated, { SlideInRight } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { GlassCard } from '@/components';
 import { colors, textStyles, spacing, fonts } from '@/theme';
 
@@ -40,7 +40,7 @@ export function QuizQuestionCard({
   return (
     <Animated.View
       key={animationKey}
-      entering={SlideInRight.springify().damping(15)}
+      entering={FadeIn.duration(200)}
       testID={testID}
     >
       <GlassCard style={styles.card}>

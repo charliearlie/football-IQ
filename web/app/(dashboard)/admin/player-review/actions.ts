@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient, ensureAdmin } from "@/lib/supabase/server";
+import { createAdminClient, ensureAdmin, ensureAdminWrite } from "@/lib/supabase/server";
 import type { ActionResult } from "../actions";
 import {
   resolveOnePlayer,
@@ -401,7 +401,7 @@ export async function savePlayerCareer(
   }>
 ): Promise<ActionResult<{ saved: number }>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const supabase = await createAdminClient();
 
     // Upsert clubs so FK constraint is satisfied
@@ -488,7 +488,7 @@ export async function skipPlayer(
   playerQid: string
 ): Promise<ActionResult> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const supabase = await createAdminClient();
 
     const { error } = await supabase

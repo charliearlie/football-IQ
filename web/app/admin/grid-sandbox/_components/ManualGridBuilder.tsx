@@ -258,7 +258,7 @@ export function ManualGridBuilder({ onGridValidated }: ManualGridBuilderProps) {
         <button
           onClick={handleValidate}
           disabled={!allFilled || isPending}
-          className="px-5 py-2 bg-[#58CC02] hover:bg-[#46A302] text-[#0F172A] font-bold text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-5 py-2 bg-[#2EFC5D] hover:bg-[#1A9E38] text-[#05050A] font-bold text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? "Validating..." : "Validate Grid"}
         </button>

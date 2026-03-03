@@ -1,49 +1,53 @@
 
 /**
- * Design Tokens specifically for the Home Screen
- * Premium Sports Game aesthetic
+ * Design System V2 - Home Screen Tokens
+ * AAA Sports Game aesthetic
  */
 
 import { fonts } from './typography';
-import { colors } from './colors';
 
 export const HOME_COLORS = {
-  // Primary
-  pitchGreen: "#58CC02",
-  grassShadow: "#46A302",
+  // Primary — Neon Green
+  pitchGreen: "#2EFC5D",
+  grassShadow: "#1A9E38",
+  neonGreenGlow: "rgba(46, 252, 93, 0.3)",
 
-  // Backgrounds
-  stadiumNavy: "#0F172A",
-  deepNight: "#020617",
+  // Backgrounds — Pitch Black
+  stadiumNavy: "#05050A",
+  deepNight: "#020205",
 
-  // Card/Surface (solid, replaces glassmorphism)
-  surface: "#1E293B",
-  surfaceShadow: "rgba(0, 0, 0, 0.4)",
+  // Card/Surface — elevated dark
+  surface: "#111116",
+  surfaceShadow: "rgba(0, 0, 0, 0.6)",
 
   // Accents
   cardYellow: "#FACC15",
   cardYellowShadow: "#CA8A04",
+  goldPrimary: "#FFD700",
+  goldShadow: "#B8960F",
+  accentBlue: "#00E5FF",
 
   // Functional
   redCard: "#EF4444",
+  dangerRed: "#FF3366",
 
-  // Borders (subtle)
+  // Borders (glass effect)
   border: "rgba(255, 255, 255, 0.08)",
 
-  // Legacy glass aliases (for backward compat)
-  glassBg: "rgba(255, 255, 255, 0.05)",
+  // Glass
+  glassBg: "rgba(255, 255, 255, 0.03)",
   glassBorder: "rgba(255, 255, 255, 0.08)",
 
   // Text
-  textMain: "#F8FAFC",
-  textSecondary: "#94A3B8",
+  textMain: "#FFFFFF",
+  textSecondary: "#A0ABC0",
 };
 
 /** @deprecated Use solid HOME_COLORS.surface instead of gradients */
 export const HOME_GRADIENTS = {
-  primary: ["#58CC02", "#16a34a"],
-  bonus: ["rgba(255,255,255,0.05)", "rgba(88, 204, 2, 0.05)"],
-  event: ["#1e293b", "#172554"],
+  primary: ["#2EFC5D", "#1A9E38"],
+  bonus: ["rgba(255,255,255,0.03)", "rgba(46, 252, 93, 0.05)"],
+  event: ["rgba(178, 0, 255, 0.2)", "rgba(14, 18, 26, 0.8)"],
 };
 
 export const HOME_DIMENSIONS = {
@@ -55,22 +59,7 @@ export const HOME_DIMENSIONS = {
 };
 
 export const HOME_FONTS = {
-  heading: fonts.headline,  // Bebas Neue (page headers, game titles, scores)
-  body: fonts.body,         // Inter (buttons, labels, descriptions, stats)
-};
-
-// Helper for NativeWind/Tailwind config extension if needed
-export const tailwindExtension = {
-  colors: {
-    "pitch-green": HOME_COLORS.pitchGreen,
-    "grass-shadow": HOME_COLORS.grassShadow,
-    "stadium-navy": HOME_COLORS.stadiumNavy,
-    "card-yellow": HOME_COLORS.cardYellow,
-    "surface": HOME_COLORS.surface,
-  },
-  boxShadow: {
-    "3d-green": `0px 4px 0px ${HOME_COLORS.grassShadow}`,
-    "3d-yellow": `0px 4px 0px ${HOME_COLORS.cardYellowShadow}`,
-    "3d-dark": `0px 4px 0px ${HOME_COLORS.surfaceShadow}`,
-  }
+  heading: fonts.headline,    // Bebas Neue (page headers, game titles, scores)
+  body: fonts.body,           // Outfit (buttons, labels, descriptions)
+  stats: fonts.stats,         // Space Grotesk (numbers, timers, counters)
 };

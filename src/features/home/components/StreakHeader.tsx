@@ -90,7 +90,7 @@ export function StreakHeader({
       {/* Progress Section */}
       <View style={styles.progressContainer}>
         <Text style={styles.progressText}>
-          Puzzles Today
+          Games Today
         </Text>
         <Text style={styles.progressCount}>
           {completedCount}/{totalCount}

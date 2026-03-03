@@ -1,23 +1,22 @@
 /**
- * Digital Pitch Design System - Color Palette
+ * Design System V2 - Color Palette
  *
- * These colors define the visual identity of Football IQ.
- * Stadium Navy provides the high-contrast dark background,
- * while Pitch Green delivers the vibrant, action-oriented feel.
+ * AAA-quality sports game aesthetic.
+ * Pitch Black backgrounds with Neon Green accents.
  */
 
 export const colors = {
-  // Primary action color
-  pitchGreen: '#58CC02',
+  // Primary action color — Neon Green
+  pitchGreen: '#2EFC5D',
 
   // Shadow/depth for 3D button effects
-  grassShadow: '#46A302',
+  grassShadow: '#1A9E38',
 
-  // Main background color
-  stadiumNavy: '#0F172A',
+  // Main background color — Pitch Black
+  stadiumNavy: '#05050A',
 
-  // Primary text color
-  floodlightWhite: '#F8FAFC',
+  // Primary text color — Pure White
+  floodlightWhite: '#FFFFFF',
 
   // Highlights, alerts, career path clues
   cardYellow: '#FACC15',
@@ -33,28 +32,41 @@ export const colors = {
   amber: '#F59E0B',
   amberShadow: '#D97706',
 
-  // Card/Surface background
-  surface: '#1E293B',
+  // Card/Surface background — elevated surface
+  surface: '#111116',
 
-  // Glass card effects (legacy — prefer surface for new components)
-  glassBackground: 'rgba(255, 255, 255, 0.05)',
+  // Glass card effects
+  glassBackground: 'rgba(255, 255, 255, 0.03)',
   glassBorder: 'rgba(255, 255, 255, 0.08)',
 
   // Generic dark shadow for card/element squish
-  shadowDark: 'rgba(0, 0, 0, 0.4)',
+  shadowDark: 'rgba(0, 0, 0, 0.6)',
 
   // Card Yellow shadow for 3D effects
   cardYellowShadow: '#CA8A04',
 
+  // Premium/secondary accent — Gold
+  goldPrimary: '#FFD700',
+  goldShadow: '#B8960F',
+
+  // Tertiary accent — Cyan Blue (Timeline mode)
+  accentBlue: '#00E5FF',
+
+  // Glow effects
+  neonGreenGlow: 'rgba(46, 252, 93, 0.3)',
+
+  // Danger red
+  dangerRed: '#FF3366',
+
   // Semantic aliases
-  primary: '#58CC02',
-  primaryShadow: '#46A302',
-  background: '#0F172A',
-  text: '#F8FAFC',
-  textSecondary: '#94A3B8',
+  primary: '#2EFC5D',
+  primaryShadow: '#1A9E38',
+  background: '#05050A',
+  text: '#FFFFFF',
+  textSecondary: '#A0ABC0',
   warning: '#FACC15',
   error: '#EF4444',
-  success: '#58CC02',
+  success: '#2EFC5D',
 } as const;
 
 export type ColorName = keyof typeof colors;
@@ -65,14 +77,15 @@ export type ColorName = keyof typeof colors;
  * Each color is ~20% darker than its base color.
  */
 export const depthColors = {
-  pitchGreen: '#46A302',    // Same as grassShadow
-  stadiumNavy: '#0A1628',
+  pitchGreen: '#1A9E38',    // Same as grassShadow
+  stadiumNavy: '#020205',
   redCard: '#B91C1C',
   cardYellow: '#D4A500',
   warningOrange: '#CC3D00', // Same as warningOrangeShadow
   amber: '#D97706',         // Same as amberShadow
-  glass: 'rgba(255, 255, 255, 0.02)',
-  surface: '#151E2E',       // ~20% darker than #1E293B
+  glass: 'rgba(255, 255, 255, 0.01)',
+  surface: '#0A0A0E',       // ~20% darker than #111116
+  gold: '#B8960F',
 } as const;
 
 /**

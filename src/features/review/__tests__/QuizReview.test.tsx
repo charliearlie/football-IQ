@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   optionCorrect: {
     backgroundColor: 'rgba(88, 204, 2, 0.15)', // pitchGreen at 15%
-    borderColor: '#58CC02', // pitchGreen
+    borderColor: '#2EFC5D', // pitchGreen
     borderWidth: 1,
   },
   optionWrong: {
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   optionText: {
-    color: '#F8FAFC', // floodlightWhite
+    color: '#FFFFFF', // floodlightWhite
     fontSize: 16,
   },
 });

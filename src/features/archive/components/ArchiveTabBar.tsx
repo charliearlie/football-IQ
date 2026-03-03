@@ -1,10 +1,3 @@
-/**
- * ArchiveTabBar Component
- *
- * Two-pill segmented control for switching between archive views.
- * "BY GAME" toggles the per-mode grid; "BY DATE" toggles the calendar.
- */
-
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, {
@@ -12,179 +5,141 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
+import { HOME_COLORS } from '@/theme/home-design';
+import { fonts } from '@/theme';
 import { triggerLight } from '@/lib/haptics';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface ArchiveTabBarProps {
   activeTab: 'byGame' | 'byDate';
   onTabChange: (tab: 'byGame' | 'byDate') => void;
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
+const SPRING = { damping: 15, stiffness: 300, mass: 0.5 };
+const DEPTH = 3;
 
-const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };
-const PILL_DEPTH = 3;
+function ActivePill({ label, onPress }: { label: string; onPress: () => void }) {
+  const ty = useSharedValue(0);
 
-const TABS: { key: 'byGame' | 'byDate'; label: string }[] = [
-  { key: 'byGame', label: 'BY GAME' },
-  { key: 'byDate', label: 'BY DATE' },
-];
-
-// ============================================================================
-// TabPill — individual animated pill inside the segmented control
-// ============================================================================
-
-interface TabPillProps {
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-}
-
-function TabPill({ label, isActive, onPress }: TabPillProps) {
-  const translateY = useSharedValue(0);
-
-  const handlePressIn = () => {
-    if (isActive) {
-      translateY.value = withSpring(PILL_DEPTH, SPRING_CONFIG);
-    }
-  };
-
-  const handlePressOut = () => {
-    if (isActive) {
-      translateY.value = withSpring(0, SPRING_CONFIG);
-    }
-  };
-
-  const handlePress = () => {
-    triggerLight();
-    onPress();
-  };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
+  const anim = useAnimatedStyle(() => ({
+    transform: [{ translateY: ty.value }],
   }));
 
-  if (isActive) {
-    return (
-      <View style={[styles.pillWrapper, { paddingBottom: PILL_DEPTH }]}>
-        {/* Green shadow layer behind active pill */}
-        <View style={styles.pillShadow} />
-        <Animated.View style={animatedStyle}>
-          <Pressable
-            style={[styles.pill, styles.pillActive]}
-            onPress={handlePress}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: true }}
-            accessibilityLabel={label}
-          >
-            <Text style={[styles.pillText, styles.pillTextActive]}>
-              {label}
-            </Text>
-          </Pressable>
-        </Animated.View>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.pillWrapper}>
+    <View style={styles.pillSlot}>
+      {/* Shadow / depth layer */}
+      <View style={styles.shadow} />
+
+      {/* Face layer — zIndex ensures it paints above the shadow */}
+      <Animated.View style={[styles.face, anim]}>
+        <Pressable
+          style={styles.activePill}
+          onPress={() => { triggerLight(); onPress(); }}
+          onPressIn={() => { ty.value = withSpring(DEPTH, SPRING); }}
+          onPressOut={() => { ty.value = withSpring(0, SPRING); }}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: true }}
+          accessibilityLabel={label}
+        >
+          <Text style={styles.activeText}>{label}</Text>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+}
+
+function InactivePill({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <View style={styles.pillSlot}>
       <Pressable
-        style={styles.pill}
-        onPress={handlePress}
+        style={styles.inactivePill}
+        onPress={() => { triggerLight(); onPress(); }}
         accessibilityRole="tab"
         accessibilityState={{ selected: false }}
         accessibilityLabel={label}
       >
-        <Text style={styles.pillText}>{label}</Text>
+        <Text style={styles.inactiveText}>{label}</Text>
       </Pressable>
     </View>
   );
 }
 
-// ============================================================================
-// ArchiveTabBar
-// ============================================================================
-
-/**
- * Segmented tab bar for the Archive redesign.
- *
- * Renders two pills inside a recessed dark container.
- * The active pill is filled with pitch-green (#58CC02) with a green
- * shadow layer; inactive pills are transparent with muted text.
- */
 export function ArchiveTabBar({ activeTab, onTabChange }: ArchiveTabBarProps) {
+  const tabs: { key: 'byGame' | 'byDate'; label: string }[] = [
+    { key: 'byGame', label: 'BY GAME' },
+    { key: 'byDate', label: 'BY DATE' },
+  ];
+
   return (
     <View style={styles.container}>
       <View style={styles.track}>
-        {TABS.map((tab) => (
-          <TabPill
-            key={tab.key}
-            label={tab.label}
-            isActive={activeTab === tab.key}
-            onPress={() => onTabChange(tab.key)}
-          />
-        ))}
+        {tabs.map((t) =>
+          activeTab === t.key ? (
+            <ActivePill key={t.key} label={t.label} onPress={() => onTabChange(t.key)} />
+          ) : (
+            <InactivePill key={t.key} label={t.label} onPress={() => onTabChange(t.key)} />
+          ),
+        )}
       </View>
     </View>
   );
 }
 
-// ============================================================================
-// Styles
-// ============================================================================
-
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingVertical: 8,
   },
   track: {
-    height: 45,
+    height: 48,
     borderRadius: 12,
-    backgroundColor: '#0B1120',
+    backgroundColor: HOME_COLORS.surface,
     borderWidth: 1,
     borderColor: HOME_COLORS.border,
-    padding: 3,
+    padding: 4,
     flexDirection: 'row',
   },
-  pillWrapper: {
+  pillSlot: {
     flex: 1,
+    paddingBottom: DEPTH,
   },
-  pill: {
-    flex: 1,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 9,
-  },
-  pillActive: {
-    backgroundColor: HOME_COLORS.pitchGreen,
-  },
-  pillShadow: {
+  shadow: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    top: PILL_DEPTH,
+    bottom: 0,
+    top: DEPTH,
     backgroundColor: HOME_COLORS.grassShadow,
     borderRadius: 9,
   },
-  pillText: {
-    fontFamily: HOME_FONTS.heading,
-    fontSize: 14,
-    letterSpacing: 1,
-    color: 'rgba(248,250,252,0.5)',
+  face: {
+    flex: 1,
+    zIndex: 1,
+    elevation: 1,
   },
-  pillTextActive: {
-    color: '#0F172A',
+  activePill: {
+    flex: 1,
+    backgroundColor: '#2EFC5D',
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inactivePill: {
+    flex: 1,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeText: {
+    fontFamily: fonts.bodyExtraBold,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: '#000000',
+  },
+  inactiveText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.6)',
   },
 });

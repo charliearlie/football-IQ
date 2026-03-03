@@ -73,7 +73,7 @@ describe('UnlockChoiceModal', () => {
   it('renders correctly in idle state', () => {
     const { getByText, getByTestId } = render(<UnlockChoiceModal {...defaultProps} />);
 
-    expect(getByText('UNLOCK PUZZLE')).toBeTruthy();
+    expect(getByText('UNLOCK GAME')).toBeTruthy();
     expect(getByText('See Plans')).toBeTruthy(); // Premium option button
     expect(getByText('Watch Ad')).toBeTruthy(); // Watch ad option title
     expect(getByTestId('unlock-modal-watch-ad-button')).not.toBeDisabled();
@@ -109,8 +109,8 @@ describe('UnlockChoiceModal', () => {
       expect(mockShowRewardedAd).toHaveBeenCalled();
     });
 
-    // 3. Verify Success State (PUZZLE UNLOCKED!)
-    const successTitle = await findByText('PUZZLE UNLOCKED!');
+    // 3. Verify Success State (GAME UNLOCKED!)
+    const successTitle = await findByText('GAME UNLOCKED!');
     expect(successTitle).toBeTruthy();
 
     // 4. Verify "Play Now" button is present
@@ -158,7 +158,7 @@ describe('UnlockChoiceModal', () => {
 
     // Watch ad -> Success
     fireEvent.press(getByTestId('unlock-modal-watch-ad-button'));
-    await findByText('PUZZLE UNLOCKED!');
+    await findByText('GAME UNLOCKED!');
 
     // Press "Back to Archive"
     const closeButton = getByTestId('unlock-modal-success-close-button');

@@ -8,26 +8,31 @@
  * No ScrollView wrapping — DraggableFlatList handles its own scroll.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors, fonts, spacing } from '@/theme';
-import { ElevatedButton } from '@/components';
-import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
-import { GameContainer } from '@/components/GameContainer';
-import { ConfirmationModal } from '@/components/ConfirmationModal';
-import { AdBanner } from '@/features/ads';
-import { useTimelineGame } from '../hooks/useTimelineGame';
-import { TimelineList } from '../components/TimelineList';
-import { TimelineActionBar } from '../components/TimelineActionBar';
-import { TimelineResultModal } from '../components/TimelineResultModal';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, fonts, spacing } from "@/theme";
+import { ElevatedButton } from "@/components";
+import {
+  usePuzzle,
+  useOnboarding,
+  GameIntroScreen,
+  GameIntroModal,
+} from "@/features/puzzles";
+import { GameContainer } from "@/components/GameContainer";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { AdBanner } from "@/features/ads";
+import { useTimelineGame } from "../hooks/useTimelineGame";
+import { TimelineList } from "../components/TimelineList";
+import { TimelineActionBar } from "../components/TimelineActionBar";
+import { TimelineResultModal } from "../components/TimelineResultModal";
 
 export interface TimelineScreenProps {
   /** Puzzle ID to play (optional - uses today's puzzle if not provided) */
@@ -37,15 +42,21 @@ export interface TimelineScreenProps {
 /**
  * TimelineScreen - Main game screen for Timeline.
  */
-export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) {
+export function TimelineScreen({
+  puzzleId: propPuzzleId,
+}: TimelineScreenProps) {
   const router = useRouter();
 
   // Onboarding state - show intro for first-time users
-  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('timeline');
+  const {
+    shouldShowIntro,
+    isReady: isOnboardingReady,
+    completeIntro,
+  } = useOnboarding("timeline");
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Get puzzle - either by ID or today's puzzle
-  const { puzzle, isLoading } = usePuzzle(propPuzzleId || 'timeline');
+  const { puzzle, isLoading } = usePuzzle(propPuzzleId || "timeline");
 
   // Game state
   const {
@@ -80,7 +91,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
 
   // Simultaneous reveal — all cards flash for 800ms, then reset
   useEffect(() => {
-    if (state.revealPhase === 'revealing') {
+    if (state.revealPhase === "revealing") {
       const timer = setTimeout(() => revealComplete(), 800);
       return () => clearTimeout(timer);
     }
@@ -102,7 +113,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
   // Handle share
   const handleShare = async () => {
     const result = await shareResult();
-    if (result.success && result.method === 'clipboard') {
+    if (result.success && result.method === "clipboard") {
       // Could show a toast here
     }
     return result;
@@ -135,7 +146,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={styles.loadingText}>Loading puzzle...</Text>
+        <Text style={styles.loadingText}>Loading game...</Text>
       </View>
     );
   }
@@ -144,14 +155,17 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
   if (!puzzle || !content) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.noPuzzleText}>No puzzle available today</Text>
+        <Text style={styles.noPuzzleText}>No game available today</Text>
         <Text style={styles.noPuzzleSubtext}>Check back later!</Text>
       </View>
     );
   }
 
-  const isPlaying = state.gameStatus === 'playing';
-  const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'gave_up' || state.gameStatus === 'lost';
+  const isPlaying = state.gameStatus === "playing";
+  const isGameOver =
+    state.gameStatus === "won" ||
+    state.gameStatus === "gave_up" ||
+    state.gameStatus === "lost";
 
   return (
     <GameContainer
@@ -160,7 +174,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
       testID="timeline-screen"
     >
       <LinearGradient
-        colors={[colors.stadiumNavy, '#1E293B', colors.stadiumNavy]}
+        colors={[colors.stadiumNavy, colors.surface, colors.stadiumNavy]}
         locations={[0, 0.3, 1]}
         style={styles.container}
       >
@@ -168,12 +182,16 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
         {(content.title || content.subject) && (
           <View style={styles.subjectBar}>
             {content.title ? (
-              <Text style={styles.subjectName}>{content.title.toUpperCase()}</Text>
+              <Text style={styles.subjectName}>
+                {content.title.toUpperCase()}
+              </Text>
             ) : (
               <>
                 <Text style={styles.subjectLabel}>CAREER OF</Text>
                 <Text style={styles.subjectDot}> · </Text>
-                <Text style={styles.subjectName}>{content.subject!.toUpperCase()}</Text>
+                <Text style={styles.subjectName}>
+                  {content.subject!.toUpperCase()}
+                </Text>
               </>
             )}
           </View>
@@ -193,7 +211,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
           lastAttemptResults={state.lastAttemptResults}
           revealPhase={state.revealPhase}
           onReorder={reorderEvents}
-          disabled={!isPlaying || state.revealPhase !== 'idle'}
+          disabled={!isPlaying || state.revealPhase !== "idle"}
           gameOver={isGameOver}
           testID="timeline-list"
         />
@@ -201,7 +219,7 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
         {/* Action Bar (while playing) */}
         {isPlaying && (
           <TimelineActionBar
-            canSubmit={state.revealPhase === 'idle'}
+            canSubmit={state.revealPhase === "idle"}
             onSubmit={submitOrder}
             onGiveUp={handleGiveUpPress}
             attemptCount={state.attemptCount}
@@ -212,9 +230,9 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
         {/* Game Over Zone - Show button for all finished states */}
         {isGameOver && (
           <View style={styles.gameOverZone}>
-            {state.gameStatus === 'won' && (
+            {state.gameStatus === "won" && (
               <Text style={styles.winText}>
-                {state.attemptCount === 1 ? 'PERFECT!' : 'TIMELINE COMPLETE!'}
+                {state.attemptCount === 1 ? "PERFECT!" : "TIMELINE COMPLETE!"}
               </Text>
             )}
             <ElevatedButton
@@ -238,8 +256,8 @@ export function TimelineScreen({ puzzleId: propPuzzleId }: TimelineScreenProps) 
             puzzleDate={puzzle.puzzle_date}
             onClose={handleClose}
             onShare={handleShare}
-            gaveUp={state.gameStatus === 'gave_up'}
-            outOfGuesses={state.gameStatus === 'lost'}
+            gaveUp={state.gameStatus === "gave_up"}
+            outOfGuesses={state.gameStatus === "lost"}
             testID="result-modal"
           />
         )}
@@ -277,8 +295,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.stadiumNavy,
   },
   loadingText: {
@@ -291,7 +309,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 24,
     color: colors.floodlightWhite,
-    textAlign: 'center',
+    textAlign: "center",
   },
   noPuzzleSubtext: {
     fontFamily: fonts.body,
@@ -300,18 +318,18 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   subjectBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
   },
   subjectLabel: {
     fontFamily: fonts.body,
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
     letterSpacing: 2,
     color: colors.textSecondary,
   },
@@ -330,12 +348,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: spacing.sm,
   },
   gameOverZone: {
     padding: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    paddingBottom: Platform.OS === "ios" ? spacing.xl : spacing.lg,
     backgroundColor: colors.stadiumNavy,
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
@@ -344,7 +362,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 20,
     color: colors.pitchGreen,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
     letterSpacing: 1,
   },

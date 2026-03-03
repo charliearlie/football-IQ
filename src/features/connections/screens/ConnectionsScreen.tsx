@@ -5,7 +5,7 @@
  * Players identify 4 groups of 4 related footballers from a 4x4 grid.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -13,28 +13,33 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors, fonts, spacing } from '@/theme';
-import { ElevatedButton } from '@/components';
-import { usePuzzle, useOnboarding, GameIntroScreen, GameIntroModal } from '@/features/puzzles';
-import { GameContainer } from '@/components/GameContainer';
-import { ConfirmationModal } from '@/components/ConfirmationModal';
-import { ReviewModeBanner } from '@/components/ReviewMode/ReviewModeBanner';
-import { ReviewModeActionZone } from '@/components/ReviewMode/ReviewModeActionZone';
-import { useReviewMode } from '@/hooks/useReviewMode';
-import { AdBanner } from '@/features/ads';
-import { useConnectionsGame } from '../hooks/useConnectionsGame';
-import { ConnectionsGrid } from '../components/ConnectionsGrid';
-import { ConnectionsActionBar } from '../components/ConnectionsActionBar';
-import { MistakeIndicator } from '../components/MistakeIndicator';
-import { ConnectionsResultModal } from '../components/ConnectionsResultModal';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, fonts, spacing } from "@/theme";
+import { ElevatedButton } from "@/components";
+import {
+  usePuzzle,
+  useOnboarding,
+  GameIntroScreen,
+  GameIntroModal,
+} from "@/features/puzzles";
+import { GameContainer } from "@/components/GameContainer";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { ReviewModeBanner } from "@/components/ReviewMode/ReviewModeBanner";
+import { ReviewModeActionZone } from "@/components/ReviewMode/ReviewModeActionZone";
+import { useReviewMode } from "@/hooks/useReviewMode";
+import { AdBanner } from "@/features/ads";
+import { useConnectionsGame } from "../hooks/useConnectionsGame";
+import { ConnectionsGrid } from "../components/ConnectionsGrid";
+import { ConnectionsActionBar } from "../components/ConnectionsActionBar";
+import { MistakeIndicator } from "../components/MistakeIndicator";
+import { ConnectionsResultModal } from "../components/ConnectionsResultModal";
 import {
   ConnectionsAttemptMetadata,
   ConnectionsGroup,
   parseConnectionsContent,
-} from '../types/connections.types';
+} from "../types/connections.types";
 
 export interface ConnectionsScreenProps {
   /** Puzzle ID to play (optional - uses today's puzzle if not provided) */
@@ -46,15 +51,22 @@ export interface ConnectionsScreenProps {
 /**
  * ConnectionsScreen - Main game screen for Connections.
  */
-export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false }: ConnectionsScreenProps) {
+export function ConnectionsScreen({
+  puzzleId: propPuzzleId,
+  isReviewMode = false,
+}: ConnectionsScreenProps) {
   const router = useRouter();
 
   // Onboarding state - show intro for first-time users
-  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('connections');
+  const {
+    shouldShowIntro,
+    isReady: isOnboardingReady,
+    completeIntro,
+  } = useOnboarding("connections");
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Get puzzle - either by ID or today's puzzle
-  const { puzzle, isLoading } = usePuzzle(propPuzzleId || 'connections');
+  const { puzzle, isLoading } = usePuzzle(propPuzzleId || "connections");
 
   // Review mode: fetch completed attempt data
   const { metadata: reviewMetadata, isLoading: isReviewLoading } =
@@ -117,7 +129,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
 
   // Consolidate modal visibility logic
   useEffect(() => {
-    if (state.gameStatus === 'playing') {
+    if (state.gameStatus === "playing") {
       // Reset when playing
       setShowResultModal(false);
     } else {
@@ -137,7 +149,10 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
 
   // Trigger shake on incorrect guess
   useEffect(() => {
-    if (state.lastGuessResult === 'incorrect' || state.lastGuessResult === 'close') {
+    if (
+      state.lastGuessResult === "incorrect" ||
+      state.lastGuessResult === "close"
+    ) {
       // Shake the previously selected players
       if (state.guesses.length > 0) {
         const lastGuess = state.guesses[state.guesses.length - 1];
@@ -151,13 +166,13 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.lastGuessResult, state.guesses.length]);
 
   // Handle share
   const handleShare = async () => {
     const result = await shareResult();
-    if (result.success && result.method === 'clipboard') {
+    if (result.success && result.method === "clipboard") {
       // Could show a toast here
     }
     return result;
@@ -190,7 +205,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.pitchGreen} />
-        <Text style={styles.loadingText}>Loading puzzle...</Text>
+        <Text style={styles.loadingText}>Loading game...</Text>
       </View>
     );
   }
@@ -199,7 +214,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
   if (!puzzle || !content) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.noPuzzleText}>No puzzle available today</Text>
+        <Text style={styles.noPuzzleText}>No game available today</Text>
         <Text style={styles.noPuzzleSubtext}>Check back later!</Text>
       </View>
     );
@@ -221,7 +236,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
     return (
       <GameContainer title="Connections - Review" testID="connections-review">
         <LinearGradient
-          colors={[colors.stadiumNavy, '#1E293B', colors.stadiumNavy]}
+          colors={[colors.stadiumNavy, colors.surface, colors.stadiumNavy]}
           locations={[0, 0.3, 1]}
           style={styles.container}
         >
@@ -252,8 +267,11 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
     );
   }
 
-  const isPlaying = state.gameStatus === 'playing';
-  const isGameOver = state.gameStatus === 'won' || state.gameStatus === 'lost' || state.gameStatus === 'gave_up';
+  const isPlaying = state.gameStatus === "playing";
+  const isGameOver =
+    state.gameStatus === "won" ||
+    state.gameStatus === "lost" ||
+    state.gameStatus === "gave_up";
 
   return (
     <GameContainer
@@ -262,7 +280,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
       testID="connections-screen"
     >
       <LinearGradient
-        colors={[colors.stadiumNavy, '#1E293B', colors.stadiumNavy]}
+        colors={[colors.stadiumNavy, colors.surface, colors.stadiumNavy]}
         locations={[0, 0.3, 1]}
         style={styles.container}
       >
@@ -279,7 +297,10 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
               </View>
               <View style={styles.statusRight}>
                 <Text style={styles.statusLabel}>MISTAKES LEFT</Text>
-                <MistakeIndicator mistakes={state.mistakes} testID="mistake-indicator" />
+                <MistakeIndicator
+                  mistakes={state.mistakes}
+                  testID="mistake-indicator"
+                />
               </View>
             </View>
           )}
@@ -298,11 +319,13 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
           </View>
 
           {/* Feedback messages (only while playing) */}
-          {isPlaying && state.lastGuessResult === 'close' && (
+          {isPlaying && state.lastGuessResult === "close" && (
             <Text style={styles.feedbackClose}>One away! Try again.</Text>
           )}
-          {isPlaying && state.lastGuessResult === 'incorrect' && (
-            <Text style={styles.feedbackIncorrect}>Not quite. Keep trying!</Text>
+          {isPlaying && state.lastGuessResult === "incorrect" && (
+            <Text style={styles.feedbackIncorrect}>
+              Not quite. Keep trying!
+            </Text>
           )}
         </ScrollView>
 
@@ -322,9 +345,9 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
         {/* Game Over Zone - Show button for all finished states */}
         {isGameOver && (
           <View style={styles.gameOverZone}>
-            {state.gameStatus === 'won' && (
+            {state.gameStatus === "won" && (
               <Text style={styles.winText}>
-                {state.mistakes === 0 ? 'PERFECT!' : 'GROUPS COMPLETED!'}
+                {state.mistakes === 0 ? "PERFECT!" : "GROUPS COMPLETED!"}
               </Text>
             )}
             <ElevatedButton
@@ -348,7 +371,7 @@ export function ConnectionsScreen({ puzzleId: propPuzzleId, isReviewMode = false
             puzzleDate={puzzle.puzzle_date}
             onClose={handleClose}
             onShare={handleShare}
-            gaveUp={state.gameStatus === 'gave_up'}
+            gaveUp={state.gameStatus === "gave_up"}
             testID="result-modal"
           />
         )}
@@ -393,8 +416,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.stadiumNavy,
   },
   loadingText: {
@@ -407,7 +430,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 24,
     color: colors.floodlightWhite,
-    textAlign: 'center',
+    textAlign: "center",
   },
   noPuzzleSubtext: {
     fontFamily: fonts.body,
@@ -416,25 +439,25 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
   },
   statusLeft: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   statusRight: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   statusLabelGreen: {
     fontFamily: fonts.body,
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
     letterSpacing: 2,
     color: colors.pitchGreen,
     marginBottom: 4,
@@ -442,8 +465,8 @@ const styles = StyleSheet.create({
   statusLabel: {
     fontFamily: fonts.body,
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
     letterSpacing: 2,
     color: colors.textSecondary,
     marginBottom: 6,
@@ -451,8 +474,8 @@ const styles = StyleSheet.create({
   statusValue: {
     fontFamily: fonts.body,
     fontSize: 14,
-    fontWeight: '500',
-    color: 'rgba(248, 250, 252, 0.9)',
+    fontWeight: "500",
+    color: colors.floodlightWhite,
   },
   gridContainer: {
     paddingHorizontal: spacing.lg,
@@ -461,19 +484,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.cardYellow,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.md,
   },
   feedbackIncorrect: {
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.redCard,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.md,
   },
   gameOverZone: {
     padding: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
+    paddingBottom: Platform.OS === "ios" ? spacing["2xl"] : spacing.lg,
     backgroundColor: colors.stadiumNavy,
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
@@ -482,7 +505,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headline,
     fontSize: 20,
     color: colors.pitchGreen,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.md,
     letterSpacing: 1,
   },

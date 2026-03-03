@@ -72,9 +72,9 @@ export const depthOffset = {
   /** Minimal depth for sunk/recessed elements (empty grid cells) */
   sunk: 1,
   /** Cards and containers */
-  card: 3,
+  card: 4,
   /** Grid cells (filled state) */
-  cell: 3,
+  cell: 4,
   /** Tic-tac-toe cells */
   tictacCell: 4,
   /** Tiny buttons (for compact cards) */
@@ -82,9 +82,9 @@ export const depthOffset = {
   /** Small buttons */
   buttonSmall: 3,
   /** Standard buttons */
-  button: 4,
+  button: 5,
   /** Large buttons */
-  buttonLarge: 5,
+  buttonLarge: 6,
 } as const;
 
 export type DepthLevel = keyof typeof depthOffset;

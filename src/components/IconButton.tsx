@@ -34,7 +34,7 @@ const VARIANT_COLORS: Record<IconButtonVariant, VariantColorConfig> = {
   },
   secondary: {
     backgroundColor: colors.stadiumNavy,
-    shadowColor: '#0A1628',
+    shadowColor: '#0A0A0E',
     iconColor: colors.floodlightWhite,
   },
   outline: {

@@ -84,12 +84,12 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontFamily: HOME_FONTS.heading,
-    fontSize: 13,
-    color: 'rgba(248,250,252,0.5)',
-    letterSpacing: 2,
+    fontSize: 20,
+    color: '#FFFFFF',
+    letterSpacing: 1,
     paddingHorizontal: 20,
     marginBottom: 12,
-    marginTop: 8,
+    marginTop: 20,
   },
   grid: {
     paddingHorizontal: 20,

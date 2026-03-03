@@ -3,8 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { CheckCircle } from 'lucide-react-native';
 import { GlassGameCard } from './GlassGameCard';
 import { DailyPuzzleCard } from '@/features/home/hooks/useDailyPuzzles';
-import { colors } from '@/theme/colors';
-import { fonts } from '@/theme/typography';
+import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 
 // Map game modes to display titles/subtitles
 // This duplicates some logic from UniversalGameCard but allows for redesign specific text
@@ -45,19 +44,19 @@ function DailyCompleteCard() {
 
   return (
     <View style={completeStyles.container}>
-      <CheckCircle size={48} color={colors.pitchGreen} />
+      <CheckCircle size={48} color={HOME_COLORS.pitchGreen} />
       <Text style={completeStyles.title}>ALL DONE FOR TODAY</Text>
       <Text style={completeStyles.subtitle}>Your streak is safe</Text>
-      <Text style={completeStyles.countdown}>Next puzzles in {countdown}</Text>
+      <Text style={completeStyles.countdown}>Next games in {countdown}</Text>
     </View>
   );
 }
 
 const completeStyles = StyleSheet.create({
   container: {
-    backgroundColor: '#1E293B',
+    backgroundColor: HOME_COLORS.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: HOME_COLORS.glassBorder,
     borderRadius: 16,
     alignItems: 'center',
     paddingVertical: 24,
@@ -66,22 +65,22 @@ const completeStyles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontFamily: fonts.headline,
+    fontFamily: HOME_FONTS.heading,
     fontSize: 24,
-    color: colors.pitchGreen,
+    color: HOME_COLORS.pitchGreen,
     marginTop: 12,
     letterSpacing: 1,
   },
   subtitle: {
-    fontFamily: fonts.body,
+    fontFamily: HOME_FONTS.body,
     fontSize: 14,
-    color: colors.textSecondary,
+    color: HOME_COLORS.textSecondary,
     marginTop: 4,
   },
   countdown: {
-    fontFamily: fonts.body,
+    fontFamily: HOME_FONTS.stats,
     fontSize: 13,
-    color: colors.textSecondary,
+    color: HOME_COLORS.textSecondary,
     marginTop: 8,
   },
 });

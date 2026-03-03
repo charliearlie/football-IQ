@@ -11,6 +11,7 @@
 import React from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, Line, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { colors } from '@/theme';
 
 // Very subtle pattern colors
 const LINE_COLOR = 'rgba(255, 255, 255, 0.04)';
@@ -145,9 +146,9 @@ export function BriefingBackground() {
       <Svg width={width} height={height}>
         <Defs>
           <LinearGradient id="fadeGradient" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#0F172A" stopOpacity="0" />
-            <Stop offset="0.3" stopColor="#0F172A" stopOpacity="0" />
-            <Stop offset="1" stopColor="#0F172A" stopOpacity="0.8" />
+            <Stop offset="0" stopColor={colors.stadiumNavy} stopOpacity="0" />
+            <Stop offset="0.3" stopColor={colors.stadiumNavy} stopOpacity="0" />
+            <Stop offset="1" stopColor={colors.stadiumNavy} stopOpacity="0.8" />
           </LinearGradient>
         </Defs>
 

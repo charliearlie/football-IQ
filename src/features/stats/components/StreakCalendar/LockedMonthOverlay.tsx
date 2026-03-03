@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     // Web fallback
     ...(Platform.OS === 'web' && {
-      backgroundColor: 'rgba(15, 23, 42, 0.85)',
+      backgroundColor: 'rgba(5, 5, 10, 0.85)',
     }),
   },
   content: {

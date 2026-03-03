@@ -68,9 +68,9 @@ const renderItem: SectionListRenderItem<ArchivePuzzle, ArchiveSection> = ({
 function EmptyState() {
   return (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No Puzzles Yet</Text>
+      <Text style={styles.emptyTitle}>No Games Yet</Text>
       <Text style={styles.emptyText}>
-        Check back later for more puzzles to play!
+        Check back later for more games to play!
       </Text>
     </View>
   );

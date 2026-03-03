@@ -71,7 +71,7 @@ export function GridMatrix({ grid, selectedCell, onCellClick }: GridMatrixProps)
                   `}
                 >
                   <span
-                    className={`text-2xl font-bold ${count > 0 ? "text-[#58CC02]" : "text-red-400"}`}
+                    className={`text-2xl font-bold ${count > 0 ? "text-[#2EFC5D]" : "text-red-400"}`}
                   >
                     {count}
                   </span>

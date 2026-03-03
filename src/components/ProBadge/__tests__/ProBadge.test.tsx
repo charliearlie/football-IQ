@@ -62,7 +62,7 @@ describe('ProBadge', () => {
 
   it('uses solid fill when color prop is provided', () => {
     const { UNSAFE_queryAllByType } = render(
-      <ProBadge color="#0F172A" testID="pro-badge" />
+      <ProBadge color="#05050A" testID="pro-badge" />
     );
     // When color is provided, no LinearGradient should render
     const gradients = UNSAFE_queryAllByType('LinearGradient' as any);

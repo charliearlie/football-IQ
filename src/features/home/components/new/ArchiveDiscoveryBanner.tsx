@@ -185,10 +185,9 @@ const styles = StyleSheet.create({
     marginBottom: -2, // Adjustment for Bebas line height
   },
   bodyText: {
-    fontFamily: HOME_FONTS.body,
+    fontFamily: 'Outfit-SemiBold',
     fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    color: HOME_COLORS.textMain,
     opacity: 0.9,
   },
   ctaButton: {
@@ -200,10 +199,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaText: {
-    fontFamily: HOME_FONTS.body,
-    fontWeight: '700',
+    fontFamily: 'Outfit-Bold',
     fontSize: 14,
-    color: '#FFFFFF',
+    color: HOME_COLORS.textMain,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
