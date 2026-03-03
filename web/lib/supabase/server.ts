@@ -50,6 +50,26 @@ export async function ensureAdmin(): Promise<void> {
   if (!profile?.is_admin) throw new Error("Unauthorized: admin access required");
 }
 
+/**
+ * Verify the current session user is an admin AND not read-only.
+ * Use this for mutation actions (create, update, delete).
+ * Read-only viewers pass ensureAdmin() but fail this check.
+ */
+export async function ensureAdminWrite(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized: not authenticated");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin, is_readonly")
+    .eq("id", user.id)
+    .single() as { data: { is_admin?: boolean; is_readonly?: boolean } | null };
+
+  if (!profile?.is_admin) throw new Error("Unauthorized: admin access required");
+  if (profile.is_readonly) throw new Error("Unauthorized: read-only access");
+}
+
 // Admin client with service role key for bypassing RLS
 // Uses the standard Supabase client (not SSR) to ensure RLS is bypassed
 export async function createAdminClient() {

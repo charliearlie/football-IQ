@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient, ensureAdmin } from "@/lib/supabase/server";
+import { createAdminClient, ensureAdmin, ensureAdminWrite } from "@/lib/supabase/server";
 import type { GameMode } from "@/lib/constants";
 import { GAME_MODES } from "@/lib/constants";
 import { extractAnswer } from "@/lib/admin-utils";
@@ -337,7 +337,7 @@ export async function updatePuzzleAnswerQid(
   qid: string
 ): Promise<ActionResult> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const supabase = await createAdminClient();
 
     // Fetch current content
@@ -540,7 +540,7 @@ export async function resyncPlayerFromWikidata(
   playerQid: string
 ): Promise<ActionResult<ResyncResult>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     // Import the player-scout actions dynamically to avoid circular deps
     const {
       fetchPlayerCareer,
@@ -674,7 +674,7 @@ export async function runApiFootballMapping(
   options: { limit?: number; dryRun?: boolean }
 ): Promise<ActionResult<MappingRunResult & { savedCount: number }>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const apiKey = process.env.API_FOOTBALL_KEY;
     if (!apiKey) {
       return { success: false, error: "API_FOOTBALL_KEY not configured in environment" };
@@ -763,7 +763,7 @@ export async function acceptFlaggedMapping(
   apiFootballId: number
 ): Promise<ActionResult> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const supabase = await createAdminClient();
 
     const { error } = await supabase
@@ -975,7 +975,7 @@ export async function backfillWikidataCareers(
   options: { limit?: number }
 ): Promise<ActionResult<BackfillResult>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
 
     const {
       fetchPlayerCareer,
@@ -1095,7 +1095,7 @@ export async function runCareerValidation(
   options: { limit?: number; dryRun?: boolean }
 ): Promise<ActionResult<CareerValidationResult & { clubMappingsSaved: number; clubDuplicates: string[] }>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const apiKey = process.env.API_FOOTBALL_KEY;
     if (!apiKey) {
       return { success: false, error: "API_FOOTBALL_KEY not configured in environment" };

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
-import { ensureAdmin } from '@/lib/supabase/server';
+import { ensureAdminWrite } from '@/lib/supabase/server';
 import { postProcessScreenshot } from '@/lib/screenshots/post-process';
 import { buildPrompt } from '@/lib/screenshots/prompts';
 import type { GenerateResponse } from '@/lib/screenshots/types';
@@ -25,7 +25,7 @@ const ai = process.env.GEMINI_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
 
     if (!ai) {
       return NextResponse.json(

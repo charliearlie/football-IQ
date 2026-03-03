@@ -275,7 +275,7 @@ export function ScreenshotGenerator() {
           </div>
 
           <Button
-            onClick={handleGenerate}
+            onClick={() => handleGenerate()}
             disabled={!canGenerate}
             className="w-full bg-pitch-green text-stadium-navy font-bold hover:bg-pitch-green/90"
           >

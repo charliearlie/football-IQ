@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient, ensureAdmin } from "@/lib/supabase/server";
+import { createAdminClient, ensureAdmin, ensureAdminWrite } from "@/lib/supabase/server";
 import type { ActionResult } from "../actions";
 
 // ============================================================================
@@ -165,7 +165,7 @@ export async function mergeClubGroup(
   displayName?: string
 ): Promise<ActionResult<MergeResult>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const supabase = await createAdminClient();
 
     let totalAppearancesReassigned = 0;
@@ -265,7 +265,7 @@ export async function bulkMergeGroups(
   groups: Array<{ canonicalId: string; duplicateIds: string[]; displayName?: string }>
 ): Promise<ActionResult<BulkMergeResult>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
 
     let totalGroupsMerged = 0;
     let totalClubsMerged = 0;

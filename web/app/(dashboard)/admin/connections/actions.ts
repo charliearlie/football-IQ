@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient, ensureAdmin } from "@/lib/supabase/server";
+import { createAdminClient, ensureAdminWrite } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/app/(dashboard)/admin/actions";
 import type { Json } from "@/types/supabase";
@@ -21,7 +21,7 @@ export async function createConnectionsPuzzle(
   input: CreateConnectionsPuzzleInput
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
     const supabase = await createAdminClient();
 
     const { puzzleDate, status, groups } = input;

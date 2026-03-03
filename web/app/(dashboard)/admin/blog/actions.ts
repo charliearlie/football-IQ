@@ -1,9 +1,9 @@
 "use server";
 
-import { createAdminClient, ensureAdmin } from "@/lib/supabase/server";
+import { createAdminClient, ensureAdminWrite } from "@/lib/supabase/server";
 
 export async function approveArticle(articleId: string): Promise<void> {
-  await ensureAdmin();
+  await ensureAdminWrite();
   const supabase = await createAdminClient();
   await supabase
     .from("blog_articles")
@@ -20,7 +20,7 @@ export async function approveArticle(articleId: string): Promise<void> {
 }
 
 export async function rejectArticle(articleId: string): Promise<void> {
-  await ensureAdmin();
+  await ensureAdminWrite();
   const supabase = await createAdminClient();
   await supabase
     .from("blog_articles")
@@ -35,7 +35,7 @@ export async function updateArticleContent(
   articleId: string,
   content: string
 ): Promise<void> {
-  await ensureAdmin();
+  await ensureAdminWrite();
   const supabase = await createAdminClient();
   await supabase
     .from("blog_articles")
@@ -50,7 +50,7 @@ export async function triggerGeneration(
   date: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await ensureAdmin();
+    await ensureAdminWrite();
 
     const cronSecret = process.env.CRON_SECRET;
     if (!cronSecret) return { success: false, error: "CRON_SECRET is not configured" };
@@ -83,7 +83,7 @@ export async function triggerGeneration(
 }
 
 export async function regenerateArticle(articleId: string): Promise<void> {
-  await ensureAdmin();
+  await ensureAdminWrite();
   const supabase = await createAdminClient();
 
   const { data: article } = await supabase
