@@ -1,6 +1,6 @@
 # Football IQ - Growth, Engagement & SEO Roadmap
 
-> Last updated: February 2026
+> Last updated: March 2026
 
 ---
 
@@ -153,6 +153,38 @@ Reconciled all `profiles.total_iq` values with actual `puzzle_attempts` scores. 
 
 ---
 
+## Sprint 1: March 2026 - Quick Wins & Monetisation Fixes ✅
+
+_Completed March 2026. Code changes on branch `main`._
+
+### ~~Gate Premium Upsell Behind Experience~~ ✅
+
+Result modal upsell no longer fires on first game completions. Gated behind `oldIQ >= 15` (~2-3 games played) so users experience the product before seeing conversion prompts.
+
+- **File:** `src/components/GameResultModal/BaseResultModal.tsx`
+
+### ~~Re-enable Premium Gating for Top Tens & Career Path Pro~~ ✅
+
+Premium gating was temporarily disabled across the app ("all modes free for outreach"). Re-enabled `isPremiumOnly` for `top_tens` and `career_path_pro` on home screen, archive list, and mini game cards. Restored real access check in `PremiumOnlyGate` (`isPremium || isAdUnlocked || isSpecialEvent`).
+
+- **Files:** `src/features/home/hooks/useDailyPuzzles.ts`, `src/features/top-tens/components/PremiumOnlyGate.tsx`, `src/features/archive/components/ArchiveList.tsx`, `src/features/archive/components/MiniGameCard.tsx`
+
+### ~~Fix Web SEO Quick Wins~~ ✅
+
+- Fixed `SocialProofStrip` "7-DAY ARCHIVE" → "3-DAY ARCHIVE" (was inaccurate after free window change)
+- Removed "AI-generated" from blog page meta descriptions and visible text
+- Standardised `BreadcrumbList` on all 5 game pages to include `/play` as intermediate step (Home → Play → Game)
+
+- **Files:** `web/components/landing/SocialProofStrip.tsx`, `web/app/blog/page.tsx`, `web/app/play/*/page.tsx`
+
+### BlogAdSlot Empty Ad Slot ⏳
+
+`web/components/blog/BlogAdSlot.tsx` has `data-ad-slot=""` — ads cannot serve. Requires manual AdSense dashboard action to create an in-article ad unit and paste the slot ID.
+
+- **Status:** Manual action required — not a code change.
+
+---
+
 ## Tier 4: Month 1-2 - Archive Redesign & Content Packs
 
 _The archive is currently a flat list sorted by date. This makes it useful only for users who know what they're looking for. Redesigning it around game modes and introducing purchasable packs creates a genuine content catalogue._
@@ -205,11 +237,12 @@ Target keyword: "football trivia questions and answers" — high volume, relativ
 - **New file:** `web/app/football-trivia-questions/page.tsx`
 - **Update:** `web/app/sitemap.ts`
 
-### 22. Fix SoftwareApplication Schema
+### 22. Fix SoftwareApplication Schema ⏳
 
-The current schema is missing `operatingSystem: "iOS, Android"` and `aggregateRating`. Add real App Store and Google Play ratings once sufficient review volume exists. An aggregate rating in the schema can unlock star rating display in search results.
+The current schema is missing `aggregateRating`. Add real App Store and Google Play ratings once sufficient review volume exists. An aggregate rating in the schema can unlock star rating display in search results. `operatingSystem: "iOS"` is already present.
 
 - **File:** `web/app/page.tsx`
+- **Status:** Awaiting sufficient App Store review volume for aggregateRating data.
 
 ### 23. ASO Optimisation
 
@@ -225,11 +258,11 @@ These changes require an App Store submission but no code changes.
 
 _Retention mechanics that create habitual daily behaviour. These are only worth building once activation is fixed — a leaky bucket doesn't benefit from a better retention pump._
 
-### 24. Deep-Link Notifications to First Unplayed Game
+### 24. ~~Deep-Link Notifications to First Unplayed Game~~ ✅
 
-Push notifications currently deep-link to `/(tabs)` (the home tab). Change the deep link to include the puzzle ID of the first unplayed game for that day. On launch from a notification, auto-navigate directly to the puzzle rather than requiring the user to find it on the home screen.
+Local notifications (morning kick-off and streak saver) now include `data: { gameMode: 'career_path' }`. The existing deep-link handler in `NotificationContext` validates `gameMode` against `GAME_MODE_ROUTES` and navigates directly to the game. Also added `data` field support to `notificationService.ts`.
 
-- **Files:** `src/features/notifications/`
+- **Files:** `src/features/notifications/context/NotificationContext.tsx`, `src/features/notifications/services/notificationService.ts`
 
 ### 25. Animated At-Risk Streak Indicator
 
