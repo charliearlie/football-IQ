@@ -6,6 +6,7 @@ import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { TimelineGame } from "@/components/play/TimelineGame";
 import { NoPuzzleToday } from "@/components/play/NoPuzzleToday";
 import { JsonLd } from "@/components/JsonLd";
+import { HowToPlay } from "@/components/play/HowToPlay";
 
 export const revalidate = 3600;
 
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Sort 6 football events into the correct chronological order. A daily football timeline puzzle. Free to play.",
     alternates: {
-      canonical: "https://football-iq.app/play/timeline",
+      canonical: "https://www.football-iq.app/play/timeline",
     },
     robots: {
       index: true,
@@ -30,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Football Timeline Puzzle | Football IQ",
       description:
         "Sort 6 football events into the correct chronological order. Free to play.",
-      url: "https://football-iq.app/play/timeline",
+      url: "https://www.football-iq.app/play/timeline",
       type: "website",
       images: [
         {
@@ -102,12 +103,12 @@ export default async function TimelinePage({ searchParams }: PageProps) {
               name: "Football Timeline - Sort Events Chronologically",
               description:
                 "Sort 6 football events into the correct chronological order. A daily football timeline puzzle.",
-              url: "https://football-iq.app/play/timeline",
+              url: "https://www.football-iq.app/play/timeline",
               isAccessibleForFree: true,
               provider: {
                 "@type": "Organization",
                 name: "Football IQ",
-                url: "https://football-iq.app",
+                url: "https://www.football-iq.app",
               },
               typicalAgeRange: "13-",
               inLanguage: "en",
@@ -119,19 +120,19 @@ export default async function TimelinePage({ searchParams }: PageProps) {
                   "@type": "ListItem",
                   position: 1,
                   name: "Football IQ",
-                  item: "https://football-iq.app",
+                  item: "https://www.football-iq.app",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Play",
-                  item: "https://football-iq.app/play",
+                  item: "https://www.football-iq.app/play",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Timeline",
-                  item: "https://football-iq.app/play/timeline",
+                  item: "https://www.football-iq.app/play/timeline",
                 },
               ],
             },
@@ -172,6 +173,22 @@ export default async function TimelinePage({ searchParams }: PageProps) {
           <TimelineGame content={content} puzzleDate={puzzleDate} />
         </PlayedTodayGate>
       </GamePageShell>
+      <HowToPlay
+        title="Timeline"
+        rules={[
+          "You are given 6 football events from a player's career in random order.",
+          "Drag and drop (or tap) to arrange them in the correct chronological order.",
+          "Submit when you think the order is right.",
+          "Each wrong attempt reduces your maximum possible score.",
+          "Getting the perfect order on the first try earns maximum points.",
+        ]}
+        tips={[
+          "Youth and academy moves usually come first — start there.",
+          "Trophy wins and international milestones can help anchor the timeline.",
+          "If two events seem close in time, focus on the ones you're certain about first.",
+        ]}
+        keywords="Timeline is a daily football quiz where you sort career events into chronological order. Test your knowledge of football history by arranging transfers, trophies, and milestones."
+      />
     </>
   );
 }

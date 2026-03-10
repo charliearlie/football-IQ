@@ -6,6 +6,7 @@ import { GamePageShell } from "@/components/play/GamePageShell";
 import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { CareerPathGame } from "@/components/play/CareerPathGame";
 import { JsonLd } from "@/components/JsonLd";
+import { HowToPlay } from "@/components/play/HowToPlay";
 
 export const revalidate = 3600;
 
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Can you name the player from their career moves? A new career path puzzle every day. Free to play in your browser. No app download needed.",
     alternates: {
-      canonical: "https://football-iq.app/play/career-path",
+      canonical: "https://www.football-iq.app/play/career-path",
     },
     robots: {
       index: true,
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Guess the Footballer from Career History | Football IQ",
       description:
         "Can you name the player from their career moves? A new career path puzzle daily. Play free in your browser.",
-      url: "https://football-iq.app/play/career-path",
+      url: "https://www.football-iq.app/play/career-path",
       type: "website",
       images: [
         {
@@ -78,12 +79,12 @@ export default async function CareerPathPage({ searchParams }: PageProps) {
               name: "Career Path - Guess the Footballer",
               description:
                 "Guess the footballer from their career history. A new puzzle every day.",
-              url: "https://football-iq.app/play/career-path",
+              url: "https://www.football-iq.app/play/career-path",
               isAccessibleForFree: true,
               provider: {
                 "@type": "Organization",
                 name: "Football IQ",
-                url: "https://football-iq.app",
+                url: "https://www.football-iq.app",
               },
               typicalAgeRange: "13-",
               inLanguage: "en",
@@ -95,19 +96,19 @@ export default async function CareerPathPage({ searchParams }: PageProps) {
                   "@type": "ListItem",
                   position: 1,
                   name: "Football IQ",
-                  item: "https://football-iq.app",
+                  item: "https://www.football-iq.app",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Play",
-                  item: "https://football-iq.app/play",
+                  item: "https://www.football-iq.app/play",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Career Path",
-                  item: "https://football-iq.app/play/career-path",
+                  item: "https://www.football-iq.app/play/career-path",
                 },
               ],
             },
@@ -152,6 +153,22 @@ export default async function CareerPathPage({ searchParams }: PageProps) {
           />
         </PlayedTodayGate>
       </GamePageShell>
+      <HowToPlay
+        title="Career Path"
+        rules={[
+          "A mystery footballer's career history is shown with the player's name hidden.",
+          "Each step reveals a club and the years the player was there.",
+          "Type your guess into the search bar at any time.",
+          "Wrong guesses unlock the next career step as a hint.",
+          "The fewer clues you need, the higher your score.",
+        ]}
+        tips={[
+          "Look at the era and league — a player at Serie A clubs in the 1990s narrows options fast.",
+          "Loan spells and youth clubs are strong clues for modern players.",
+          "If you're stuck, guess early — eliminating a wrong answer still reveals a new hint.",
+        ]}
+        keywords="Career Path is a daily footballer guessing game. Guess the player from their career moves and transfer history. A new career path puzzle every day, free to play in your browser."
+      />
     </>
   );
 }

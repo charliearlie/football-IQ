@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="py-8 px-4 border-t border-white/5">
       <div className="max-w-2xl mx-auto">
-        <div className="grid grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-3 gap-8 mb-8">
           <div>
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
               Explore
@@ -14,6 +14,10 @@ export function Footer() {
             <div className="space-y-2">
               {[
                 { href: "/blog", label: "Daily Digest" },
+                {
+                  href: "/football-trivia-questions",
+                  label: "Trivia Questions",
+                },
                 { href: "/play/career-path", label: "Career Path" },
                 { href: "/play/transfer-guess", label: "Transfer Guess" },
                 { href: "/play/connections", label: "Connections" },
@@ -53,6 +57,21 @@ export function Footer() {
               >
                 Support
               </Link>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
+              Follow
+            </p>
+            <div className="space-y-2">
+              <a
+                href="https://twitter.com/FootballIQApp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm text-slate-400 hover:text-floodlight transition-colors"
+              >
+                Twitter / X
+              </a>
             </div>
           </div>
         </div>

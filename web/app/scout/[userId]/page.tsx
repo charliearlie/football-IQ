@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = `${tier.name} with ${totalIQ.toLocaleString()} IQ points. Test your football knowledge at Football IQ!`;
 
   // Use production URL for OG image
-  const ogImageUrl = `https://football-iq.app/api/og/scout?userId=${userId}`;
+  const ogImageUrl = `https://www.football-iq.app/api/og/scout?userId=${userId}`;
 
   return {
     title,

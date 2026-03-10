@@ -51,10 +51,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = article.meta_title ?? article.title;
   const description =
     article.meta_description ?? article.excerpt ?? undefined;
-  const url = `https://football-iq.app/blog/${article.slug}`;
+  const url = `https://www.football-iq.app/blog/${article.slug}`;
   const ogImageUrl =
     article.og_image_url ??
-    `https://football-iq.app/api/og/blog/${article.slug}`;
+    `https://www.football-iq.app/api/og/blog/${article.slug}`;
 
   return {
     title,
@@ -111,7 +111,7 @@ export default async function ArticlePage({ params }: PageProps) {
         headline: article.title,
         image: [
           article.og_image_url ??
-            `https://football-iq.app/api/og/blog/${article.slug}`,
+            `https://www.football-iq.app/api/og/blog/${article.slug}`,
         ],
         datePublished: article.published_at,
         dateModified: article.published_at,
@@ -124,10 +124,10 @@ export default async function ArticlePage({ params }: PageProps) {
           name: "Football IQ",
           logo: {
             "@type": "ImageObject",
-            url: "https://football-iq.app/images/favicon.png",
+            url: "https://www.football-iq.app/images/favicon.png",
           },
         },
-        mainEntityOfPage: `https://football-iq.app/blog/${article.slug}`,
+        mainEntityOfPage: `https://www.football-iq.app/blog/${article.slug}`,
         description:
           article.meta_description ?? article.excerpt ?? article.title,
       },
@@ -138,19 +138,19 @@ export default async function ArticlePage({ params }: PageProps) {
             "@type": "ListItem",
             position: 1,
             name: "Football IQ",
-            item: "https://football-iq.app",
+            item: "https://www.football-iq.app",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Daily Digest",
-            item: "https://football-iq.app/blog",
+            item: "https://www.football-iq.app/blog",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: article.title,
-            item: `https://football-iq.app/blog/${article.slug}`,
+            item: `https://www.football-iq.app/blog/${article.slug}`,
           },
         ],
       },

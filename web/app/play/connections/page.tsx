@@ -6,6 +6,7 @@ import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { ConnectionsGame } from "@/components/play/ConnectionsGame";
 import { NoPuzzleToday } from "@/components/play/NoPuzzleToday";
 import { JsonLd } from "@/components/JsonLd";
+import { HowToPlay } from "@/components/play/HowToPlay";
 
 export const revalidate = 3600;
 
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Group 16 footballers into 4 hidden categories. A daily football connections puzzle. Like NYT Connections but for football fans. Free to play.",
     alternates: {
-      canonical: "https://football-iq.app/play/connections",
+      canonical: "https://www.football-iq.app/play/connections",
     },
     robots: {
       index: true,
@@ -31,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Football Connections Puzzle | Football IQ",
       description:
         "Group 16 footballers into 4 hidden categories. A daily football connections puzzle. Free to play.",
-      url: "https://football-iq.app/play/connections",
+      url: "https://www.football-iq.app/play/connections",
       type: "website",
       images: [
         {
@@ -103,12 +104,12 @@ export default async function ConnectionsPage({ searchParams }: PageProps) {
               name: "Football Connections - Group Players by Category",
               description:
                 "Group 16 footballers into 4 hidden categories. A daily football connections puzzle.",
-              url: "https://football-iq.app/play/connections",
+              url: "https://www.football-iq.app/play/connections",
               isAccessibleForFree: true,
               provider: {
                 "@type": "Organization",
                 name: "Football IQ",
-                url: "https://football-iq.app",
+                url: "https://www.football-iq.app",
               },
               typicalAgeRange: "13-",
               inLanguage: "en",
@@ -120,19 +121,19 @@ export default async function ConnectionsPage({ searchParams }: PageProps) {
                   "@type": "ListItem",
                   position: 1,
                   name: "Football IQ",
-                  item: "https://football-iq.app",
+                  item: "https://www.football-iq.app",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Play",
-                  item: "https://football-iq.app/play",
+                  item: "https://www.football-iq.app/play",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Connections",
-                  item: "https://football-iq.app/play/connections",
+                  item: "https://www.football-iq.app/play/connections",
                 },
               ],
             },
@@ -173,6 +174,22 @@ export default async function ConnectionsPage({ searchParams }: PageProps) {
           <ConnectionsGame content={content} puzzleDate={puzzleDate} />
         </PlayedTodayGate>
       </GamePageShell>
+      <HowToPlay
+        title="Connections"
+        rules={[
+          "A grid of 16 footballers is displayed. Find the 4 groups of 4 that share a hidden connection.",
+          "Select 4 players and submit your guess. Correct groups are revealed with a colour.",
+          "Categories are colour-coded from easy (yellow) to very hard (purple).",
+          "You have 4 lives — each wrong guess costs one life.",
+          "The game ends when all groups are found or you run out of lives.",
+        ]}
+        tips={[
+          "Start with the group you're most confident about to avoid wasting lives.",
+          "Connections can be anything: same club, same nationality, same shirt number, same award.",
+          "If 3 players obviously fit, look carefully at which 4th player completes the group.",
+        ]}
+        keywords="Football Connections is a daily puzzle game inspired by NYT Connections. Group 16 footballers into 4 hidden categories. A new football connections puzzle every day."
+      />
     </>
   );
 }

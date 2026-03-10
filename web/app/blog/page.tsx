@@ -12,13 +12,13 @@ export const metadata: Metadata = {
   description:
     "Daily football match analysis, transfer news, and tactical breakdowns. Updated every night.",
   alternates: {
-    canonical: "https://football-iq.app/blog",
+    canonical: "https://www.football-iq.app/blog",
   },
   openGraph: {
     title: "Daily Football Digest | Football IQ",
     description:
       "Daily football match analysis, transfer news, and tactical breakdowns. Updated every night.",
-    url: "https://football-iq.app/blog",
+    url: "https://www.football-iq.app/blog",
     type: "website",
   },
   twitter: {

@@ -6,6 +6,7 @@ import { GamePageShell } from "@/components/play/GamePageShell";
 import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { TransferGuessGame } from "@/components/play/TransferGuessGame";
 import { JsonLd } from "@/components/JsonLd";
+import { HowToPlay } from "@/components/play/HowToPlay";
 
 export const revalidate = 3600;
 
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Name the player from a single transfer. New transfer puzzle every day. Test your football transfer knowledge. Free to play, no download required.",
     alternates: {
-      canonical: "https://football-iq.app/play/transfer-guess",
+      canonical: "https://www.football-iq.app/play/transfer-guess",
     },
     robots: {
       index: true,
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Guess the Football Transfer | Football IQ",
       description:
         "Name the player from a single transfer. New transfer puzzle every day. Test your transfer knowledge.",
-      url: "https://football-iq.app/play/transfer-guess",
+      url: "https://www.football-iq.app/play/transfer-guess",
       type: "website",
       images: [
         {
@@ -78,12 +79,12 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
               name: "Transfer Guess - Name the Football Transfer",
               description:
                 "Name the player from a single transfer. A new puzzle every day.",
-              url: "https://football-iq.app/play/transfer-guess",
+              url: "https://www.football-iq.app/play/transfer-guess",
               isAccessibleForFree: true,
               provider: {
                 "@type": "Organization",
                 name: "Football IQ",
-                url: "https://football-iq.app",
+                url: "https://www.football-iq.app",
               },
               typicalAgeRange: "13-",
               inLanguage: "en",
@@ -95,19 +96,19 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
                   "@type": "ListItem",
                   position: 1,
                   name: "Football IQ",
-                  item: "https://football-iq.app",
+                  item: "https://www.football-iq.app",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Play",
-                  item: "https://football-iq.app/play",
+                  item: "https://www.football-iq.app/play",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Transfer Guess",
-                  item: "https://football-iq.app/play/transfer-guess",
+                  item: "https://www.football-iq.app/play/transfer-guess",
                 },
               ],
             },
@@ -148,6 +149,22 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
           <TransferGuessGame content={content} puzzleDate={puzzleDate} />
         </PlayedTodayGate>
       </GamePageShell>
+      <HowToPlay
+        title="Transfer Guess"
+        rules={[
+          "You are shown a real football transfer — the player, selling club, and buying club.",
+          "Guess the transfer fee by sliding or typing a value.",
+          "After each guess you get hot/cold feedback showing how close you are.",
+          "You have 5 attempts to land within the target range.",
+          "The closer your guess, the higher your score.",
+        ]}
+        tips={[
+          "Consider the era — a GBP30m fee in 2010 would be GBP80m+ today.",
+          "Big-name players moving between top clubs command the highest fees.",
+          "Free transfers and loan moves are in the mix too — don't always guess high.",
+        ]}
+        keywords="Transfer Guess is a daily football transfer quiz. Guess how much the transfer fee was for real player moves. Test your knowledge of the football transfer market."
+      />
     </>
   );
 }

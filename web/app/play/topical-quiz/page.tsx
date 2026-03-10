@@ -6,6 +6,7 @@ import { GamePageShell } from "@/components/play/GamePageShell";
 import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
 import { TopicalQuizGame } from "@/components/play/TopicalQuizGame";
 import { JsonLd } from "@/components/JsonLd";
+import { HowToPlay } from "@/components/play/HowToPlay";
 
 export const revalidate = 3600;
 
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "5 questions on recent football news, results, and events. How closely do you follow the beautiful game? Free to play in your browser, no sign-up needed.",
     alternates: {
-      canonical: "https://football-iq.app/play/topical-quiz",
+      canonical: "https://www.football-iq.app/play/topical-quiz",
     },
     robots: {
       index: true,
@@ -31,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Football Topical Quiz | Football IQ",
       description:
         "5 questions on recent football news, results, and events. How closely do you follow the beautiful game?",
-      url: "https://football-iq.app/play/topical-quiz",
+      url: "https://www.football-iq.app/play/topical-quiz",
       type: "website",
       images: [
         {
@@ -76,12 +77,12 @@ export default async function TopicalQuizPage({ searchParams }: PageProps) {
               name: "Football Topical Quiz - Test Your Knowledge",
               description:
                 "5 questions on recent football news, results, and events.",
-              url: "https://football-iq.app/play/topical-quiz",
+              url: "https://www.football-iq.app/play/topical-quiz",
               isAccessibleForFree: true,
               provider: {
                 "@type": "Organization",
                 name: "Football IQ",
-                url: "https://football-iq.app",
+                url: "https://www.football-iq.app",
               },
               typicalAgeRange: "13-",
               inLanguage: "en",
@@ -93,19 +94,19 @@ export default async function TopicalQuizPage({ searchParams }: PageProps) {
                   "@type": "ListItem",
                   position: 1,
                   name: "Football IQ",
-                  item: "https://football-iq.app",
+                  item: "https://www.football-iq.app",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Play",
-                  item: "https://football-iq.app/play",
+                  item: "https://www.football-iq.app/play",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Topical Quiz",
-                  item: "https://football-iq.app/play/topical-quiz",
+                  item: "https://www.football-iq.app/play/topical-quiz",
                 },
               ],
             },
@@ -146,6 +147,22 @@ export default async function TopicalQuizPage({ searchParams }: PageProps) {
           <TopicalQuizGame content={content} puzzleDate={puzzleDate} />
         </PlayedTodayGate>
       </GamePageShell>
+      <HowToPlay
+        title="Topical Quiz"
+        rules={[
+          "Answer 5 multiple-choice questions about recent football events.",
+          "Each question has 4 options — pick the one you think is correct.",
+          "You score 2 points for each correct answer, for a maximum of 10.",
+          "The quiz auto-advances after each answer.",
+          "Questions cover recent matches, transfers, managerial changes, and football news.",
+        ]}
+        tips={[
+          "Stay up to date with weekend results and midweek European matches.",
+          "Transfer rumours and confirmed deals feature regularly.",
+          "Don't overthink it — your first instinct on current events is usually right.",
+        ]}
+        keywords="The Topical Quiz is a weekly football quiz on current events. Test your knowledge of recent football news, results, and transfers with multiple-choice questions."
+      />
     </>
   );
 }
