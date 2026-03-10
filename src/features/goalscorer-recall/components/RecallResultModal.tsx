@@ -32,6 +32,7 @@ interface RecallResultModalProps {
   puzzleDate: string;
   puzzleId: string;
   onContinue: () => void;
+  showNextPuzzle?: boolean;
 }
 
 export function RecallResultModal({
@@ -42,6 +43,7 @@ export function RecallResultModal({
   puzzleDate,
   puzzleId,
   onContinue,
+  showNextPuzzle,
 }: RecallResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -104,6 +106,7 @@ export function RecallResultModal({
       onClose={onContinue}
       closeLabel="Continue"
       showConfetti={score.won}
+      showNextPuzzle={showNextPuzzle}
     >
       {/* Distribution graph - highlights user's score position */}
       <ScoreDistributionContainer

@@ -337,6 +337,7 @@ export function TicTacToeScreen({
           cells={state.cells}
           onShare={shareResult}
           onClose={handleClose}
+          showNextPuzzle={!isReviewMode}
         />
       )}
 

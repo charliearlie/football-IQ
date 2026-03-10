@@ -41,6 +41,8 @@ export interface StartingXIResultModalProps {
   onClose: () => void;
   /** Optional test ID */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -79,6 +81,7 @@ export function StartingXIResultModal({
   onShare,
   onClose,
   testID,
+  showNextPuzzle,
 }: StartingXIResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -140,6 +143,7 @@ export function StartingXIResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <ScoreDisplay

@@ -100,6 +100,12 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
                 {
                   "@type": "ListItem",
                   position: 2,
+                  name: "Play",
+                  item: "https://football-iq.app/play",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
                   name: "Transfer Guess",
                   item: "https://football-iq.app/play/transfer-guess",
                 },

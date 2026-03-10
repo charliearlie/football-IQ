@@ -312,6 +312,7 @@ export function TransferGuessScreen({
           puzzleDate={puzzle?.puzzle_date ?? ""}
           onShare={shareResult}
           onClose={() => router.back()}
+          showNextPuzzle={!isReviewMode}
           testID="transfer-result-modal"
         />
       )}

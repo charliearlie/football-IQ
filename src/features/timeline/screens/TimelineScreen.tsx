@@ -258,6 +258,7 @@ export function TimelineScreen({
             onShare={handleShare}
             gaveUp={state.gameStatus === "gave_up"}
             outOfGuesses={state.gameStatus === "lost"}
+            showNextPuzzle={true}
             testID="result-modal"
           />
         )}

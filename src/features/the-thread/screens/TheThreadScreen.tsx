@@ -280,6 +280,7 @@ export function TheThreadScreen({
           puzzleDate={puzzle.puzzle_date}
           onShare={shareResult}
           onClose={handleCloseModal}
+          showNextPuzzle={!isReviewMode}
           testID="result-modal"
         />
       )}

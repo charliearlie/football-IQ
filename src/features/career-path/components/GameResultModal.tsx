@@ -50,6 +50,8 @@ interface GameResultModalProps {
   onClose: () => void;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -67,6 +69,7 @@ export function GameResultModal({
   onShare,
   onClose,
   testID,
+  showNextPuzzle,
 }: GameResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -122,6 +125,7 @@ export function GameResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       {/* Answer reveal for loss */}

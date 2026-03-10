@@ -300,6 +300,7 @@ export function NotificationProvider({
             title,
             body,
             triggerDate: morningTrigger,
+            data: { gameMode: 'career_path' },
           });
         }
       }
@@ -318,6 +319,7 @@ export function NotificationProvider({
             body,
             triggerDate: eveningTrigger,
             priority: 'high',
+            data: { gameMode: 'career_path' },
           });
         }
       }

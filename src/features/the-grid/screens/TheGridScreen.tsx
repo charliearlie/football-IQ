@@ -251,6 +251,7 @@ export function TheGridScreen({ puzzleId: propPuzzleId, attempt }: TheGridScreen
           }}
           onShare={handleShare}
           gaveUp={state.gameStatus === 'gave_up'}
+          showNextPuzzle={!isReviewMode}
           testID="result-modal"
         />
 

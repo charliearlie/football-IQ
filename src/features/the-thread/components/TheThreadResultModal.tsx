@@ -54,6 +54,8 @@ interface TheThreadResultModalProps {
   onClose: () => void;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -71,6 +73,7 @@ export function TheThreadResultModal({
   onShare,
   onClose,
   testID,
+  showNextPuzzle,
 }: TheThreadResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -132,6 +135,7 @@ export function TheThreadResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       {/* Answer reveal for loss */}

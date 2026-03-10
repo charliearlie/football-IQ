@@ -153,7 +153,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           scoreDisplay: attempt?.score_display ?? undefined,
           difficulty: puzzle.difficulty,
           attempt: attempt ?? undefined,
-          isPremiumOnly: false, // Temporarily disabled — all modes free for outreach
+          isPremiumOnly: gameMode === 'top_tens' || gameMode === 'career_path_pro',
           isAdUnlocked: currentAdUnlocks.some((u) => u.puzzle_id === puzzle.id),
         };
       });
@@ -174,7 +174,7 @@ export function useDailyPuzzles(): UseDailyPuzzlesResult {
           gameMode: 'career_path_pro',
           status: 'play', // Will be handled specially in the component
           difficulty: null,
-          isPremiumOnly: false, // Temporarily disabled — all modes free for outreach
+          isPremiumOnly: true,
         };
         // Insert at correct position
         validCards.splice(proIndex, 0, placeholderCard);

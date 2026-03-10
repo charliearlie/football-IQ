@@ -8,8 +8,8 @@ const PROOF_POINTS = [
   },
   {
     icon: Clock,
-    value: "7-DAY ARCHIVE",
-    label: "Miss one? Play the last week free",
+    value: "3-DAY ARCHIVE",
+    label: "Miss one? Catch up for free",
   },
   {
     icon: Calendar,

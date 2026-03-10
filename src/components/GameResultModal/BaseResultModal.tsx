@@ -34,6 +34,7 @@ import { usePostHog } from 'posthog-react-native';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
 import { useShareStatus, ShareResult } from './useShareStatus';
+import { useNextPuzzle } from '@/hooks/useNextPuzzle';
 import {
   ResultShareData,
   captureResultCard,
@@ -85,6 +86,8 @@ export interface BaseResultModalProps {
   hideDefaultButtons?: boolean;
   /** Hide the close X button (when using custom Home button) */
   hideCloseButton?: boolean;
+  /** Show the "Next Puzzle" session-chaining button below the action buttons */
+  showNextPuzzle?: boolean;
   /** Test ID for testing */
   testID?: string;
 
@@ -298,6 +301,7 @@ export function BaseResultModal({
   showConfetti,
   hideDefaultButtons = false,
   hideCloseButton = false,
+  showNextPuzzle = false,
   testID,
   iqEarned,
   oldIQ,
@@ -324,6 +328,9 @@ export function BaseResultModal({
   const effectiveIsPremium = isPremium ?? (profile?.is_premium ?? false);
   const effectiveOldIQ = oldIQ ?? (showRetention ? authTotalIQ - iqEarned : undefined);
   const effectiveNewIQ = newIQ ?? (showRetention ? authTotalIQ : undefined);
+
+  // Session chaining — finds next unplayed daily puzzle
+  const nextPuzzle = useNextPuzzle(showNextPuzzle);
 
   // ViewShot ref for image capture
   const viewShotRef = useRef<ViewShot>(null!);
@@ -465,8 +472,8 @@ export function BaseResultModal({
             <TierProgressBar oldIQ={effectiveOldIQ} newIQ={effectiveNewIQ} />
           )}
 
-          {/* Context-sensitive premium upsell — shown to ALL free users */}
-          {!effectiveIsPremium && showRetention && (
+          {/* Context-sensitive premium upsell — shown after user has some experience */}
+          {!effectiveIsPremium && showRetention && effectiveOldIQ !== undefined && effectiveOldIQ >= 15 && (
             <Pressable
               onPress={() => router.push('/premium-modal')}
               style={styles.upsellContainer}
@@ -518,6 +525,30 @@ export function BaseResultModal({
                   testID="close-button"
                 />
               )}
+            </View>
+          )}
+
+          {/* Next Puzzle / Session Chaining */}
+          {showNextPuzzle && (
+            <View style={styles.nextPuzzleContainer}>
+              {nextPuzzle.allDone ? (
+                <View style={styles.allDoneContainer}>
+                  <Text style={styles.allDoneText}>All Done!</Text>
+                  <Text style={styles.allDoneSubtext}>
+                    You've completed all {nextPuzzle.totalCount} puzzles today
+                  </Text>
+                </View>
+              ) : nextPuzzle.hasNext ? (
+                <ElevatedButton
+                  title={nextPuzzle.buttonLabel!}
+                  onPress={nextPuzzle.goToNext}
+                  size="small"
+                  style={styles.buttonFull}
+                  topColor={colors.pitchGreen}
+                  shadowColor="#1B7A3D"
+                  testID="next-puzzle-button"
+                />
+              ) : null}
             </View>
           )}
         </Animated.View>
@@ -678,5 +709,24 @@ const styles = StyleSheet.create({
   },
   upsellLink: {
     textDecorationLine: 'underline',
+  },
+  nextPuzzleContainer: {
+    width: '100%',
+    marginTop: spacing.sm,
+  },
+  allDoneContainer: {
+    alignItems: 'center' as const,
+    paddingVertical: spacing.sm,
+  },
+  allDoneText: {
+    fontFamily: fonts.headline,
+    fontSize: 20,
+    color: colors.pitchGreen,
+    marginBottom: 4,
+  },
+  allDoneSubtext: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
   },
 });

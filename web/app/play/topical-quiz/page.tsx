@@ -98,6 +98,12 @@ export default async function TopicalQuizPage({ searchParams }: PageProps) {
                 {
                   "@type": "ListItem",
                   position: 2,
+                  name: "Play",
+                  item: "https://football-iq.app/play",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
                   name: "Topical Quiz",
                   item: "https://football-iq.app/play/topical-quiz",
                 },

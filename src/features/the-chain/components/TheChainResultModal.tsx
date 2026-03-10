@@ -41,6 +41,8 @@ export interface TheChainResultModalProps {
   onShare: () => Promise<ShareResult>;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -136,6 +138,7 @@ export function TheChainResultModal({
   onClose,
   onShare,
   testID,
+  showNextPuzzle,
 }: TheChainResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -201,6 +204,7 @@ export function TheChainResultModal({
       shareData={shareData}
       onClose={onClose}
       showConfetti={false}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <View style={styles.content}>

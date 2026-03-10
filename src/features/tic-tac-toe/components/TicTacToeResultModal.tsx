@@ -30,6 +30,8 @@ export interface TicTacToeResultModalProps {
   onClose?: () => void;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -71,6 +73,7 @@ export function TicTacToeResultModal({
   onReview,
   onClose,
   testID,
+  showNextPuzzle,
 }: TicTacToeResultModalProps) {
   const resultMessage = getResultMessage(score.result);
 
@@ -85,6 +88,7 @@ export function TicTacToeResultModal({
       onReview={onReview}
       onClose={onClose}
       showConfetti={score.result === 'win'}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       {/* Score Display */}

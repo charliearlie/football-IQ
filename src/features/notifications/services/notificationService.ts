@@ -133,8 +133,9 @@ export async function scheduleNotification(options: {
   body: string;
   triggerDate: Date;
   priority?: 'default' | 'high';
+  data?: Record<string, unknown>;
 }): Promise<string | null> {
-  const { id, title, body, triggerDate, priority = 'default' } = options;
+  const { id, title, body, triggerDate, priority = 'default', data } = options;
 
   // Don't schedule in the past
   if (triggerDate.getTime() <= Date.now()) {
@@ -157,6 +158,7 @@ export async function scheduleNotification(options: {
             ? Notifications.AndroidNotificationPriority.HIGH
             : Notifications.AndroidNotificationPriority.DEFAULT,
         ...(Platform.OS === 'android' && { channelId: CHANNEL_ID }),
+        ...(data !== undefined && { data }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,

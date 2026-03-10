@@ -285,6 +285,7 @@ export function StartingXIScreen({
           router.back();
         }}
         onShare={handleShare}
+        showNextPuzzle={!isReviewMode}
         testID="result-modal"
       />
 

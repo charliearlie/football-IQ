@@ -42,6 +42,8 @@ interface TransferResultModalProps {
   onClose: () => void;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -78,6 +80,7 @@ export function TransferResultModal({
   onReview,
   onClose,
   testID,
+  showNextPuzzle,
 }: TransferResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -130,6 +133,7 @@ export function TransferResultModal({
       shareData={shareData}
       onReview={onReview}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       {won ? (

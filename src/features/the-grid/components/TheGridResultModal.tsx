@@ -31,6 +31,7 @@ export interface TheGridResultModalProps {
   /** Whether the player gave up (affects title/icon) */
   gaveUp?: boolean;
   testID?: string;
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -46,6 +47,7 @@ export function TheGridResultModal({
   onShare,
   gaveUp = false,
   testID,
+  showNextPuzzle,
 }: TheGridResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -106,6 +108,7 @@ export function TheGridResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <ScoreDisplay value={`${score.cellsFilled}/9`} />

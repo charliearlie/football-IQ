@@ -30,6 +30,7 @@ export interface TimelineResultModalProps {
   gaveUp?: boolean;
   outOfGuesses?: boolean;
   testID?: string;
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -47,6 +48,7 @@ export function TimelineResultModal({
   gaveUp = false,
   outOfGuesses = false,
   testID,
+  showNextPuzzle,
 }: TimelineResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -113,6 +115,7 @@ export function TimelineResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <ScoreDisplay label="Attempts" value={`${score.totalAttempts}/5`} />

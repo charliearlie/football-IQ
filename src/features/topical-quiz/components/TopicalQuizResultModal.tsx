@@ -41,6 +41,8 @@ interface TopicalQuizResultModalProps {
   onClose: () => void;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -76,6 +78,7 @@ export function TopicalQuizResultModal({
   onReview,
   onClose,
   testID,
+  showNextPuzzle,
 }: TopicalQuizResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -141,6 +144,7 @@ export function TopicalQuizResultModal({
       onReview={onReview}
       onClose={onClose}
       showConfetti={isGood}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <View style={styles.scoreContainer}>

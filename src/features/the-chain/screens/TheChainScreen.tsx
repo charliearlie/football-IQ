@@ -343,6 +343,7 @@ export function TheChainScreen({
         gaveUp={state.gameStatus === "gave_up"}
         onClose={handleCloseResult}
         onShare={handleShare}
+        showNextPuzzle={!isReviewMode}
         testID="result-modal"
       />
 

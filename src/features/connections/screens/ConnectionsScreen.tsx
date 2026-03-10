@@ -372,6 +372,7 @@ export function ConnectionsScreen({
             onClose={handleClose}
             onShare={handleShare}
             gaveUp={state.gameStatus === "gave_up"}
+            showNextPuzzle={!isReviewMode}
             testID="result-modal"
           />
         )}

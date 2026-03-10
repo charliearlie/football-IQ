@@ -468,6 +468,7 @@ export function GoalscorerRecallScreen({
         puzzleDate={puzzle.puzzle_date}
         puzzleId={puzzle.id}
         onContinue={() => router.back()}
+        showNextPuzzle={!isReviewMode}
       />
 
       {/* Banner Ad (non-premium only) */}

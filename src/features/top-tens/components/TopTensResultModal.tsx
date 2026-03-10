@@ -38,6 +38,8 @@ interface TopTensResultModalProps {
   onClose: () => void;
   /** Test ID for testing */
   testID?: string;
+  /** Show the "Next Puzzle" session-chaining button */
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -56,6 +58,7 @@ export function TopTensResultModal({
   onShare,
   onClose,
   testID,
+  showNextPuzzle,
 }: TopTensResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -111,6 +114,7 @@ export function TopTensResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <ScoreDisplay value={`${score.foundCount}/10`} />

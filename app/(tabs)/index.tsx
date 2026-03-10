@@ -26,10 +26,12 @@ import {
   HomeGameList,
   SectionHeader,
   ArchiveDiscoveryBanner,
+  WelcomeBackBanner,
 } from "@/features/home/components/new";
 import { useDailyProgress } from "@/features/home/hooks/useDailyProgress";
 import { useSpecialEvent } from "@/features/home/hooks/useSpecialEvent";
 import { useArchiveDiscoveryBanner } from "@/features/home/hooks/useArchiveDiscoveryBanner";
+import { useWelcomeBackBanner } from "@/features/home/hooks/useWelcomeBackBanner";
 import {
   getTierForPoints,
   getProgressToNextTier,
@@ -37,7 +39,7 @@ import {
   getNextTier,
   getTierColor,
 } from "@/features/stats/utils/tierProgression";
-import { GameMode } from "@/features/puzzles/types/puzzle.types";
+import { GAME_MODE_ROUTE_MAP } from "@/lib/gameRoutes";
 import { PremiumUpsellBanner, UnlockChoiceModal } from "@/features/ads";
 import { DailyStackCardSkeleton } from "@/components/ui/Skeletons";
 import { useAuth } from "@/features/auth";
@@ -51,24 +53,6 @@ import { getUserRank } from "@/features/leaderboard";
 function getTodayDate(): string {
   return new Date().toISOString().split("T")[0];
 }
-
-/**
- * Route map for each game mode.
- */
-const ROUTE_MAP: Record<GameMode, string> = {
-  career_path: "career-path",
-  career_path_pro: "career-path-pro",
-  guess_the_transfer: "transfer-guess",
-  guess_the_goalscorers: "goalscorer-recall",
-  the_grid: "the-grid",
-  the_chain: "the-chain",
-  the_thread: "the-thread",
-  topical_quiz: "topical-quiz",
-  top_tens: "top-tens",
-  starting_xi: "starting-xi",
-  connections: "connections",
-  timeline: "timeline",
-};
 
 /**
  * DEV ONLY: Bypass premium gate for testing on simulator.
@@ -128,6 +112,17 @@ export default function HomeScreen() {
     completedCount,
     totalCards: cards.length,
     currentStreak: stats.currentStreak,
+  });
+
+  // Welcome-back banner (streak milestones + streak-lost)
+  const {
+    isVisible: showWelcomeBanner,
+    data: welcomeBannerData,
+    dismiss: dismissWelcomeBanner,
+  } = useWelcomeBackBanner({
+    currentStreak: stats.currentStreak,
+    lastPlayedDate: stats.lastPlayedDate,
+    gamesPlayedToday: stats.gamesPlayedToday,
   });
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
@@ -251,7 +246,7 @@ export default function HomeScreen() {
       }
 
       // Navigate to game for play/resume
-      const route = ROUTE_MAP[card.gameMode];
+      const route = GAME_MODE_ROUTE_MAP[card.gameMode];
       if (route) {
         router.push(`/${route}/${card.puzzleId}` as any);
       }
@@ -303,6 +298,15 @@ export default function HomeScreen() {
           onPressRank={() => router.push("/leaderboard")}
           currentStreak={stats.currentStreak}
         />
+
+        {/* 3. Welcome Back Banner */}
+        {showWelcomeBanner && welcomeBannerData && (
+          <WelcomeBackBanner
+            data={welcomeBannerData}
+            onDismiss={dismissWelcomeBanner}
+            testID="welcome-back-banner"
+          />
+        )}
 
         {/* 4. Archive Discovery Banner */}
         {showArchiveBanner && (
@@ -378,7 +382,7 @@ export default function HomeScreen() {
           attempt={completedModal.card.attempt!}
           onClose={() => setCompletedModal(null)}
           onReview={() => {
-            const route = ROUTE_MAP[completedModal.card.gameMode];
+            const route = GAME_MODE_ROUTE_MAP[completedModal.card.gameMode];
             setCompletedModal(null);
             router.push({
               pathname: `/${route}/[puzzleId]`,

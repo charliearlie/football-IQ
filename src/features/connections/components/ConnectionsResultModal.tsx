@@ -30,6 +30,7 @@ export interface ConnectionsResultModalProps {
   onShare: () => Promise<ShareResult>;
   gaveUp?: boolean;
   testID?: string;
+  showNextPuzzle?: boolean;
 }
 
 /**
@@ -46,6 +47,7 @@ export function ConnectionsResultModal({
   onShare,
   gaveUp = false,
   testID,
+  showNextPuzzle,
 }: ConnectionsResultModalProps) {
   const { profile, totalIQ } = useAuth();
 
@@ -105,6 +107,7 @@ export function ConnectionsResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
+      showNextPuzzle={showNextPuzzle}
       testID={testID}
     >
       <ScoreDisplay label="Groups Found" value={`${score.solvedCount}/4`} />
