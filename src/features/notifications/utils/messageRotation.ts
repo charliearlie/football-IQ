@@ -35,6 +35,27 @@ const MORNING_MESSAGES: MorningMessage[] = [
 ];
 
 /**
+ * Streak-aware morning messages.
+ * Returns messages that incorporate the user's current streak count.
+ */
+function getStreakMessages(streakCount: number): MorningMessage[] {
+  return [
+    {
+      title: `Day ${streakCount}!`,
+      body: 'Keep your streak alive — new games are ready.',
+    },
+    {
+      title: `${streakCount} days strong!`,
+      body: "Today's games are waiting. Don't break the chain!",
+    },
+    {
+      title: `Streak: ${streakCount} days`,
+      body: 'Your daily challenges are ready. Keep it going!',
+    },
+  ];
+}
+
+/**
  * Get the day-of-year (1-366) for a given date.
  */
 function getDayOfYear(date: Date): number {
@@ -47,9 +68,23 @@ function getDayOfYear(date: Date): number {
 /**
  * Get the morning notification message for today.
  * Selection is deterministic based on day-of-year.
+ *
+ * When the user has a streak of 3+ days, alternates between
+ * streak-aware messages and regular messages (50/50 based on day-of-year).
  */
-export function getMorningMessage(): MorningMessage {
+export function getMorningMessage(streakCount?: number): MorningMessage {
   const dayOfYear = getDayOfYear(new Date());
+
+  // For streaks of 3+, alternate between streak and regular messages
+  if (streakCount !== undefined && streakCount >= 3) {
+    const useStreakMessage = dayOfYear % 2 === 0;
+    if (useStreakMessage) {
+      const streakMessages = getStreakMessages(streakCount);
+      const index = dayOfYear % streakMessages.length;
+      return streakMessages[index];
+    }
+  }
+
   const index = dayOfYear % MORNING_MESSAGES.length;
   return MORNING_MESSAGES[index];
 }

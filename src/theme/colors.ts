@@ -33,11 +33,11 @@ export const colors = {
   amberShadow: '#D97706',
 
   // Card/Surface background — elevated surface
-  surface: '#111116',
+  surface: '#1A1A1F',
 
   // Glass card effects
-  glassBackground: 'rgba(255, 255, 255, 0.03)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
+  glassBackground: 'rgba(255, 255, 255, 0.06)',
+  glassBorder: 'rgba(255, 255, 255, 0.10)',
 
   // Generic dark shadow for card/element squish
   shadowDark: 'rgba(0, 0, 0, 0.6)',
@@ -84,7 +84,7 @@ export const depthColors = {
   warningOrange: '#CC3D00', // Same as warningOrangeShadow
   amber: '#D97706',         // Same as amberShadow
   glass: 'rgba(255, 255, 255, 0.01)',
-  surface: '#0A0A0E',       // ~20% darker than #111116
+  surface: '#111116',       // ~20% darker than #1A1A1F
   gold: '#B8960F',
 } as const;
 

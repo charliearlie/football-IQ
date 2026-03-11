@@ -323,9 +323,11 @@ export default function HomeScreen() {
           <EventBanner event={specialEvent} onPress={handleEventPress} />
         )}
 
-        {/* Premium Upsell (if free) - Maybe move this or keep it as banner? */}
-        {/* Spec didn't explicitly remove it, but mostly covered by "Go Pro" buttons */}
-        {/* {!isPremium && <View style={{ marginTop: 24 }}><PremiumUpsellBanner testID="home-premium-upsell" /></View>} */}
+        {!isPremium && stats.totalGamesPlayed >= 10 && (
+          <View style={{ marginTop: 24 }}>
+            <PremiumUpsellBanner testID="home-premium-upsell" dismissible />
+          </View>
+        )}
 
         {/* Offline banner */}
         {isConnected === false && cards.length > 0 && (

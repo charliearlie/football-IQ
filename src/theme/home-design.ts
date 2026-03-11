@@ -17,7 +17,7 @@ export const HOME_COLORS = {
   deepNight: "#020205",
 
   // Card/Surface — elevated dark
-  surface: "#111116",
+  surface: "#1A1A1F",
   surfaceShadow: "rgba(0, 0, 0, 0.6)",
 
   // Accents
@@ -32,11 +32,11 @@ export const HOME_COLORS = {
   dangerRed: "#FF3366",
 
   // Borders (glass effect)
-  border: "rgba(255, 255, 255, 0.08)",
+  border: "rgba(255, 255, 255, 0.10)",
 
   // Glass
-  glassBg: "rgba(255, 255, 255, 0.03)",
-  glassBorder: "rgba(255, 255, 255, 0.08)",
+  glassBg: "rgba(255, 255, 255, 0.06)",
+  glassBorder: "rgba(255, 255, 255, 0.10)",
 
   // Text
   textMain: "#FFFFFF",

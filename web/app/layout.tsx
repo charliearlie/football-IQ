@@ -21,7 +21,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://football-iq.app"),
+  metadataBase: new URL("https://www.football-iq.app"),
   title: {
     default: "Football IQ - Daily Football Quizzes & Trivia Games",
     template: "%s | Football IQ",
@@ -49,15 +49,24 @@ export const metadata: Metadata = {
     siteName: "Football IQ",
     type: "website",
     locale: "en_GB",
+    images: [
+      {
+        url: "/api/og/play",
+        width: 1200,
+        height: 630,
+        alt: "Football IQ - Daily Football Quizzes & Trivia Games",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Football IQ - Daily Football Quizzes & Trivia Games",
     description:
       "Free daily football quizzes you can play in your browser. Guess players, test your knowledge, climb the tiers.",
+    images: ["/api/og/play"],
   },
   alternates: {
-    canonical: "https://football-iq.app",
+    canonical: "https://www.football-iq.app",
   },
   other: {
     "apple-itunes-app": "app-id=6757344691",
@@ -82,12 +91,13 @@ export default function RootLayout({
           data={{
             "@context": "https://schema.org",
             "@type": "Organization",
-            "@id": "https://football-iq.app/#organization",
+            "@id": "https://www.football-iq.app/#organization",
             name: "Football IQ",
-            url: "https://football-iq.app",
-            logo: "https://football-iq.app/images/favicon.png",
+            url: "https://www.football-iq.app",
+            logo: "https://www.football-iq.app/images/favicon.png",
             sameAs: [
               "https://apps.apple.com/us/app/football-iq-football-trivia/id6757344691",
+              "https://twitter.com/FootballIQApp",
             ],
           }}
         />

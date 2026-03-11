@@ -294,7 +294,7 @@ export function NotificationProvider({
       if (!isPastMorningTime()) {
         const morningTrigger = getMorningTriggerTime();
         if (morningTrigger) {
-          const { title, body } = getMorningMessage();
+          const { title, body } = getMorningMessage(streak);
           await scheduleNotification({
             id: NOTIFICATION_IDS.DAILY_KICKOFF,
             title,

@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import type { BlogArticleSitemapEntry } from "@/lib/blog/types";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://football-iq.app";
+  const baseUrl = "https://www.football-iq.app";
 
   // Fetch published blog articles
   const supabase = await createClient();
@@ -50,6 +50,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/play/timeline`,
       changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/football-trivia-questions`,
+      changeFrequency: "monthly",
       priority: 0.9,
     },
     {

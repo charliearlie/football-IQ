@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description:
     "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more. New puzzles every day. Test your football knowledge now.",
   alternates: {
-    canonical: "https://football-iq.app",
+    canonical: "https://www.football-iq.app",
   },
   robots: {
     index: true,
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     title: "Football IQ - Daily Football Quizzes & Trivia Games",
     description:
       "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more. New puzzles every day.",
-    url: "https://football-iq.app",
+    url: "https://www.football-iq.app",
     type: "website",
     images: [
       {
@@ -95,21 +95,21 @@ export default async function HomePage() {
           "@graph": [
             {
               "@type": "WebSite",
-              "@id": "https://football-iq.app/#website",
-              url: "https://football-iq.app",
+              "@id": "https://www.football-iq.app/#website",
+              url: "https://www.football-iq.app",
               name: "Football IQ",
               description:
                 "Daily football quizzes and trivia games. Guess players from careers, transfers, and more.",
               publisher: {
                 "@type": "Organization",
                 name: "Football IQ",
-                url: "https://football-iq.app",
+                url: "https://www.football-iq.app",
               },
-              hasPart: { "@id": "https://football-iq.app/blog/#blog" },
+              hasPart: { "@id": "https://www.football-iq.app/blog/#blog" },
             },
             {
               "@type": "SoftwareApplication",
-              "@id": "https://football-iq.app/#app",
+              "@id": "https://www.football-iq.app/#app",
               name: "Football IQ - Football Trivia",
               operatingSystem: "iOS",
               applicationCategory: "GameApplication",
@@ -131,25 +131,25 @@ export default async function HomePage() {
                   "@type": "ListItem",
                   position: 1,
                   name: "Career Path",
-                  url: "https://football-iq.app/play/career-path",
+                  url: "https://www.football-iq.app/play/career-path",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Transfer Guess",
-                  url: "https://football-iq.app/play/transfer-guess",
+                  url: "https://www.football-iq.app/play/transfer-guess",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Connections",
-                  url: "https://football-iq.app/play/connections",
+                  url: "https://www.football-iq.app/play/connections",
                 },
                 {
                   "@type": "ListItem",
                   position: 4,
                   name: "Topical Quiz",
-                  url: "https://football-iq.app/play/topical-quiz",
+                  url: "https://www.football-iq.app/play/topical-quiz",
                 },
               ],
             },
@@ -157,18 +157,18 @@ export default async function HomePage() {
               ? [
                   {
                     "@type": "Blog",
-                    "@id": "https://football-iq.app/blog/#blog",
+                    "@id": "https://www.football-iq.app/blog/#blog",
                     name: "Daily Football Digest",
                     description:
                       "Daily football news, match analysis and transfer coverage.",
-                    url: "https://football-iq.app/blog",
+                    url: "https://www.football-iq.app/blog",
                     isPartOf: {
-                      "@id": "https://football-iq.app/#website",
+                      "@id": "https://www.football-iq.app/#website",
                     },
                     blogPost: latestArticles.map((a) => ({
                       "@type": "BlogPosting",
                       headline: a.title,
-                      url: `https://football-iq.app/blog/${a.slug}`,
+                      url: `https://www.football-iq.app/blog/${a.slug}`,
                       datePublished: a.published_at ?? a.article_date,
                     })),
                   },
