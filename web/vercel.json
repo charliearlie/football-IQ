@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/facebook-ad",
-      "schedule": "0 9 * * *"
+      "schedule": "0 10 * * *"
     }
   ]
 }

@@ -33,7 +33,8 @@ export async function postPhotoToPage(
   }
 
   const formData = new FormData();
-  const blob = new Blob([imageBuffer], { type: mimeType });
+  const uint8 = new Uint8Array(imageBuffer);
+  const blob = new Blob([uint8], { type: mimeType });
   formData.append("source", blob, "ad-image.png");
   formData.append("message", caption);
   formData.append("access_token", accessToken);
