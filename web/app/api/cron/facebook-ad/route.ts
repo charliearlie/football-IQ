@@ -89,7 +89,7 @@ async function generateAdImage(prompt: string): Promise<Buffer> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-3.1-flash-image-preview",
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     config: {
       responseModalities: ["TEXT", "IMAGE"],

@@ -1,0 +1,28 @@
+name: Daily Facebook Ad
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # 10am UTC daily
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  post-ad:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger Facebook Ad Cron
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/cron/facebook-ad")
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Cron failed with status $http_code"
+            exit 1
+          fi
