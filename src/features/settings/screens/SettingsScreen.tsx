@@ -159,7 +159,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "3.0.0";
+  const appVersion = Constants.expoConfig?.version ?? "3.1.0";
 
   const handleVersionTap = useCallback(() => {
     const now = Date.now();

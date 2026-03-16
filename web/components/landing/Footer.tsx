@@ -14,6 +14,7 @@ export function Footer() {
             <div className="space-y-2">
               {[
                 { href: "/blog", label: "Daily Digest" },
+                { href: "/news", label: "News" },
                 {
                   href: "/football-trivia-questions",
                   label: "Trivia Questions",

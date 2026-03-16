@@ -8,11 +8,12 @@ on:
 jobs:
   post-ad:
     runs-on: ubuntu-latest
+    environment: Production
     timeout-minutes: 5
     steps:
       - name: Trigger Facebook Ad Cron
         run: |
-          response=$(curl -s -w "\n%{http_code}" \
+          response=$(curl -s -L -w "\n%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.SITE_URL }}/api/cron/facebook-ad")
 

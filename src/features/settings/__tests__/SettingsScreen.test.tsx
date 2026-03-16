@@ -187,7 +187,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "3.0.0",
+      version: "3.1.0",
     },
   },
 }));
@@ -236,7 +236,9 @@ const mockLinking = {
   canOpenURL: jest.fn().mockResolvedValue(true),
   openSettings: jest.fn(),
 };
-jest.spyOn(require("react-native"), "Linking", "get").mockReturnValue(mockLinking);
+jest
+  .spyOn(require("react-native"), "Linking", "get")
+  .mockReturnValue(mockLinking);
 
 // Mock expo-linear-gradient
 jest.mock("expo-linear-gradient", () => {

@@ -46,6 +46,13 @@ export { getSyncPeriod, getSyncIntervalMs } from '@/services/sync/SyncScheduler'
  */
 export async function syncEliteIndex(): Promise<SyncResult> {
   try {
+    // Ensure we have an authenticated session before calling RPC
+    // (anon role can no longer call get_elite_index_delta)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { success: true, updatedCount: 0, serverVersion: 0 };
+    }
+
     // Throttle: skip if checked recently (calendar-aware frequency)
     const due = await isSyncCheckDue();
     if (!due) {

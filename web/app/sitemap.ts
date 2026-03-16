@@ -104,5 +104,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   );
 
-  return [...staticPages, ...blogPages, ...articlePages];
+  // News pages
+  const newsPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/news`,
+      lastModified: new Date("2026-03-15"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/news/football-iq-now-available-worldwide`,
+      lastModified: new Date("2026-03-15"),
+      changeFrequency: "never",
+      priority: 0.5,
+    },
+  ];
+
+  return [...staticPages, ...blogPages, ...articlePages, ...newsPages];
 }
