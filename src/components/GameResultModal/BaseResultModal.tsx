@@ -489,9 +489,33 @@ export function BaseResultModal({
             </Pressable>
           )}
 
+          {/* Next Puzzle / Session Chaining — shown above action buttons as primary CTA */}
+          {showNextPuzzle && (
+            <View style={styles.nextPuzzleContainer}>
+              {nextPuzzle.allDone ? (
+                <View style={styles.allDoneContainer}>
+                  <Text style={styles.allDoneText}>All Done!</Text>
+                  <Text style={styles.allDoneSubtext}>
+                    You've completed all {nextPuzzle.totalCount} puzzles today
+                  </Text>
+                </View>
+              ) : nextPuzzle.hasNext ? (
+                <ElevatedButton
+                  title={nextPuzzle.buttonLabel!}
+                  onPress={nextPuzzle.goToNext}
+                  size="small"
+                  style={styles.buttonFull}
+                  topColor={colors.pitchGreen}
+                  shadowColor="#1B7A3D"
+                  testID="next-puzzle-button"
+                />
+              ) : null}
+            </View>
+          )}
+
           {/* Action Buttons (unless custom layout in children) */}
           {!hideDefaultButtons && (
-            <View style={styles.buttonContainer}>
+            <View style={[styles.buttonContainer, showNextPuzzle && nextPuzzle.hasNext && styles.buttonContainerWithNext]}>
               {effectiveOnShare && (
                 <ElevatedButton
                   title={finalButtonTitle}
@@ -515,40 +539,27 @@ export function BaseResultModal({
                   testID="review-button"
                 />
               ) : onClose && (
-                <ElevatedButton
-                  title={closeLabel}
-                  onPress={onClose}
-                  size="small"
-                  style={effectiveOnShare ? styles.buttonHalf : styles.buttonFull}
-                  topColor={colors.textSecondary}
-                  shadowColor={colors.stadiumNavy}
-                  testID="close-button"
-                />
+                showNextPuzzle && nextPuzzle.hasNext ? (
+                  <Pressable
+                    onPress={onClose}
+                    style={styles.closeLinkContainer}
+                    hitSlop={8}
+                    testID="close-button"
+                  >
+                    <Text style={styles.closeLinkText}>{closeLabel}</Text>
+                  </Pressable>
+                ) : (
+                  <ElevatedButton
+                    title={closeLabel}
+                    onPress={onClose}
+                    size="small"
+                    style={effectiveOnShare ? styles.buttonHalf : styles.buttonFull}
+                    topColor={colors.textSecondary}
+                    shadowColor={colors.stadiumNavy}
+                    testID="close-button"
+                  />
+                )
               )}
-            </View>
-          )}
-
-          {/* Next Puzzle / Session Chaining */}
-          {showNextPuzzle && (
-            <View style={styles.nextPuzzleContainer}>
-              {nextPuzzle.allDone ? (
-                <View style={styles.allDoneContainer}>
-                  <Text style={styles.allDoneText}>All Done!</Text>
-                  <Text style={styles.allDoneSubtext}>
-                    You've completed all {nextPuzzle.totalCount} puzzles today
-                  </Text>
-                </View>
-              ) : nextPuzzle.hasNext ? (
-                <ElevatedButton
-                  title={nextPuzzle.buttonLabel!}
-                  onPress={nextPuzzle.goToNext}
-                  size="small"
-                  style={styles.buttonFull}
-                  topColor={colors.pitchGreen}
-                  shadowColor="#1B7A3D"
-                  testID="next-puzzle-button"
-                />
-              ) : null}
             </View>
           )}
         </Animated.View>
@@ -678,6 +689,22 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  buttonContainerWithNext: {
+    marginTop: spacing.xs,
+    justifyContent: 'center',
+  },
+  closeLinkContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+  },
+  closeLinkText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textDecorationLine: 'underline',
   },
   buttonHalf: {
     flex: 1,

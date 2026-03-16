@@ -77,6 +77,7 @@ export default function HomeScreen() {
     stats,
     isLoading: statsLoading,
     refresh: refreshStats,
+    freezeConsumedToday,
   } = useUserStats();
   const {
     cards,
@@ -123,6 +124,8 @@ export default function HomeScreen() {
     currentStreak: stats.currentStreak,
     lastPlayedDate: stats.lastPlayedDate,
     gamesPlayedToday: stats.gamesPlayedToday,
+    freezeConsumedToday,
+    availableFreezes: stats.availableFreezes,
   });
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
@@ -323,7 +326,7 @@ export default function HomeScreen() {
           <EventBanner event={specialEvent} onPress={handleEventPress} />
         )}
 
-        {!isPremium && stats.totalGamesPlayed >= 10 && (
+        {!isPremium && stats.totalGamesPlayed >= 3 && (
           <View style={{ marginTop: 24 }}>
             <PremiumUpsellBanner testID="home-premium-upsell" dismissible />
           </View>

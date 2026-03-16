@@ -9,7 +9,7 @@ import type { IQTier } from "@/features/stats/utils/tierProgression";
 /**
  * Types of notifications the app can send
  */
-export type NotificationType = '101' | '102' | '103';
+export type NotificationType = '101' | '102' | '103' | '104';
 
 /**
  * Permission status for notifications

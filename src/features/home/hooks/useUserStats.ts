@@ -9,6 +9,7 @@ import {
   grantInitialFreeze,
   consumeFreeze,
   checkAndAwardMilestoneFreeze,
+  setLastFreezeConsumedDate,
 } from '@/features/streaks/services/streakFreezeService';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { onStatsChanged } from '@/lib/statsEvents';
@@ -33,6 +34,7 @@ export interface UseUserStatsResult {
   stats: UserStats;
   isLoading: boolean;
   refresh: () => Promise<void>;
+  freezeConsumedToday: boolean;
 }
 
 /**
@@ -210,6 +212,7 @@ export function useUserStats(): UseUserStatsResult {
     availableFreezes: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [freezeConsumedToday, setFreezeConsumedToday] = useState(false);
   const lastCheckedDate = useRef<string>(getTodayDate());
   const { profile } = useAuth();
   const { capture } = useAnalytics();
@@ -302,6 +305,10 @@ export function useUserStats(): UseUserStatsResult {
             streak_length: current,
             freeze_source: result.source,
           });
+
+          // Record the consumed date so WelcomeBackBanner can show "Streak saved!"
+          await setLastFreezeConsumedDate(yesterday);
+          setFreezeConsumedToday(true);
 
           // Recalculate streak with new freeze date
           const updatedFreezeDates = await getUsedFreezeDates();
@@ -401,5 +408,5 @@ export function useUserStats(): UseUserStatsResult {
     return () => subscription.remove();
   }, [refresh]);
 
-  return { stats, isLoading, refresh };
+  return { stats, isLoading, refresh, freezeConsumedToday };
 }

@@ -46,6 +46,7 @@ import {
   getEveningTriggerTime,
   isPastMorningTime,
   isPastEveningTime,
+  getWeeklyRecapTriggerTime,
 } from '../utils/scheduleCalculator';
 import { getMorningMessage, getStreakSaverMessage } from '../utils/messageRotation';
 import type { NotificationContextValue, PermissionStatus } from '../types';
@@ -237,14 +238,14 @@ export function NotificationProvider({
     init();
   }, [isSupported, currentStreak, gamesPlayedToday, handleNotificationNavigation]);
 
-  // Show permission modal only after onboarding completes, user has played at least one game,
-  // AND no celebration modal is currently visible.
-  // (prevents dual-Modal stacking which corrupts the UIKit presentation stack and freezes touches,
-  // and ensures user has experienced the app before being asked for permissions)
+  // Show permission modal only after onboarding completes AND no celebration modal is visible.
+  // (prevents dual-Modal stacking which corrupts the UIKit presentation stack and freezes touches)
+  // Note: Users who enable notifications during the onboarding opt-in step will have already
+  // granted/denied permissions, so hasAskedPermission will be true and this effect won't fire.
+  // This serves as a fallback for users who skipped the onboarding opt-in but haven't been asked yet.
   useEffect(() => {
     if (!isSupported || !pendingPermissionPrompt.current) return;
     if (isOnboardingActive) return;
-    if (totalGamesPlayed === 0) return;
     // Wait until all celebration modals are dismissed before showing permission prompt
     if (isFirstWinCelebrating || isTierUpCelebrating || isPerfectDayCelebrating) return;
 
@@ -254,7 +255,7 @@ export function NotificationProvider({
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isSupported, isOnboardingActive, totalGamesPlayed, isFirstWinCelebrating, isTierUpCelebrating, isPerfectDayCelebrating]);
+  }, [isSupported, isOnboardingActive, isFirstWinCelebrating, isTierUpCelebrating, isPerfectDayCelebrating]);
 
   // Process pending cold-start deep link once the navigation tree is mounted
   useEffect(() => {
@@ -322,6 +323,18 @@ export function NotificationProvider({
             data: { gameMode: 'career_path' },
           });
         }
+      }
+
+      // Schedule weekly recap notification (Sunday 18:00)
+      const weeklyTrigger = getWeeklyRecapTriggerTime();
+      if (weeklyTrigger) {
+        await scheduleNotification({
+          id: NOTIFICATION_IDS.WEEKLY_RECAP,
+          title: 'YOUR WEEK IN REVIEW',
+          body: 'See how your Football IQ grew this week. Open to check your progress!',
+          triggerDate: weeklyTrigger,
+          data: { screen: 'stats' },
+        });
       }
 
       lastScheduledDate.current = today;

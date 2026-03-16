@@ -15,13 +15,15 @@ const STREAK_MILESTONES = [
 export interface WelcomeBackBannerData {
   heading: string;
   body: string;
-  type: 'milestone' | 'streak-lost';
+  type: 'milestone' | 'streak-lost' | 'streak-saved';
 }
 
 interface UseWelcomeBackBannerParams {
   currentStreak: number;
   lastPlayedDate: string | null;
   gamesPlayedToday: number;
+  freezeConsumedToday: boolean;
+  availableFreezes: number;
 }
 
 interface UseWelcomeBackBannerReturn {
@@ -52,7 +54,25 @@ function getDaysDifference(date1: string, date2: string): number {
 function getBannerData(
   currentStreak: number,
   lastPlayedDate: string | null,
+  freezeConsumedToday: boolean,
+  availableFreezes: number,
 ): WelcomeBackBannerData | null {
+  // Highest priority: streak was saved by a freeze this session
+  if (freezeConsumedToday) {
+    const body =
+      availableFreezes === Infinity
+        ? 'Your freeze kicked in! Unlimited freezes with Pro.'
+        : (() => {
+            const freezeWord = availableFreezes === 1 ? 'freeze' : 'freezes';
+            return `Your freeze kicked in! ${availableFreezes} ${freezeWord} remaining.`;
+          })();
+    return {
+      heading: 'STREAK SAVED',
+      body,
+      type: 'streak-saved',
+    };
+  }
+
   // Check streak-lost: streak is 0, user has played before, and last play was more than 1 day ago
   if (currentStreak === 0 && lastPlayedDate !== null) {
     const today = getTodayString();
@@ -84,13 +104,15 @@ export function useWelcomeBackBanner({
   currentStreak,
   lastPlayedDate,
   gamesPlayedToday,
+  freezeConsumedToday,
+  availableFreezes,
 }: UseWelcomeBackBannerParams): UseWelcomeBackBannerReturn {
   const [isVisible, setIsVisible] = useState(false);
   const [data, setData] = useState<WelcomeBackBannerData | null>(null);
 
   useEffect(() => {
     async function checkVisibility() {
-      const bannerData = getBannerData(currentStreak, lastPlayedDate);
+      const bannerData = getBannerData(currentStreak, lastPlayedDate, freezeConsumedToday, availableFreezes);
 
       // Nothing to show
       if (bannerData === null) {
@@ -125,7 +147,7 @@ export function useWelcomeBackBanner({
     }
 
     checkVisibility();
-  }, [currentStreak, lastPlayedDate, gamesPlayedToday]);
+  }, [currentStreak, lastPlayedDate, gamesPlayedToday, freezeConsumedToday, availableFreezes]);
 
   // Subscribe to stats changes — auto-dismiss when a game is completed
   useEffect(() => {

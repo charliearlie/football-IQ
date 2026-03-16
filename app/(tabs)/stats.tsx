@@ -36,6 +36,8 @@ import { getUserRank } from "@/features/leaderboard";
 import { FullStatsSkeleton } from "@/components/ui/Skeletons";
 import { ElevatedButton } from "@/components/ElevatedButton";
 import { TabScreenWrapper } from "@/components/TabScreenWrapper";
+import { FloatingPlayCTA } from "@/components/FloatingPlayCTA";
+import { useDailyPuzzles } from "@/features/home/hooks/useDailyPuzzles";
 
 /**
  * Scout Report Screen
@@ -55,6 +57,12 @@ import { TabScreenWrapper } from "@/components/TabScreenWrapper";
 export default function ScoutReportScreen() {
   const router = useRouter();
   const { stats, isLoading, refresh } = usePerformanceStats();
+  const { cards: dailyCards } = useDailyPuzzles();
+  const unplayedCount = dailyCards.filter((c) => c.status === "play" || c.status === "resume").length;
+
+  const handlePlayTodayPress = useCallback(() => {
+    router.push("/(tabs)");
+  }, [router]);
   const { profile, user, updateDisplayName, totalIQ } = useAuth();
   const { history: tierHistory, refresh: refreshTimeline } =
     useCareerTimeline();
@@ -453,6 +461,12 @@ export default function ScoutReportScreen() {
             data={scoutingReportData}
           />
         )}
+
+        {/* Floating CTA to play today's puzzles */}
+        <FloatingPlayCTA
+          unplayedCount={unplayedCount}
+          onPress={handlePlayTodayPress}
+        />
       </SafeAreaView>
     </TabScreenWrapper>
   );

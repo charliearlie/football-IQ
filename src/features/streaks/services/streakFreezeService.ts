@@ -16,6 +16,7 @@ const FREEZE_KEYS = {
   USED_DATES: '@streak_freeze_used_dates',
   LAST_MILESTONE: '@streak_freeze_last_milestone',
   INITIAL_GRANTED: '@streak_freeze_initial_granted',
+  LAST_FREEZE_CONSUMED_DATE: '@streak_freeze_last_consumed_date',
 } as const;
 
 /**
@@ -200,6 +201,31 @@ export async function awardFreeze(milestone: number): Promise<void> {
     await setLastMilestone(milestone);
   } catch (error) {
     console.error('[StreakFreeze] Failed to award freeze:', error);
+  }
+}
+
+/**
+ * Record the date (YYYY-MM-DD) on which a freeze was most recently consumed.
+ * Used to show the "Streak saved!" banner on the next app open.
+ */
+export async function setLastFreezeConsumedDate(date: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(FREEZE_KEYS.LAST_FREEZE_CONSUMED_DATE, date);
+  } catch (error) {
+    console.error('[StreakFreeze] Failed to set last freeze consumed date:', error);
+  }
+}
+
+/**
+ * Get the date (YYYY-MM-DD) on which a freeze was most recently consumed,
+ * or null if no freeze has been consumed yet.
+ */
+export async function getLastFreezeConsumedDate(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(FREEZE_KEYS.LAST_FREEZE_CONSUMED_DATE);
+  } catch (error) {
+    console.error('[StreakFreeze] Failed to get last freeze consumed date:', error);
+    return null;
   }
 }
 

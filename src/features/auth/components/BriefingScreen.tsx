@@ -26,12 +26,17 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { colors, spacing, borderRadius, fonts, fontWeights } from '@/theme';
 import { BriefingBackground } from './BriefingBackground';
 import { WeeklyFixturesGrid } from './WeeklyFixturesGrid';
+import { NotificationOptInCard } from './NotificationOptInCard';
 
 export interface BriefingScreenProps {
   /** Callback when user submits their display name */
   onSubmit: (displayName: string) => Promise<void>;
   /** Callback fired after successful submission (for navigation) */
   onSubmitSuccess?: () => void;
+  /** Called when user taps "Enable Notifications" on the opt-in step */
+  onEnableNotifications?: () => Promise<void>;
+  /** Called when user taps "Maybe Later" on the opt-in step */
+  onSkipNotifications?: () => void;
   /** External error message (e.g., from parent when submission fails) */
   externalError?: string | null;
   /** Test ID for testing */
@@ -48,7 +53,15 @@ const MAX_NAME_LENGTH = 30;
  * Welcomes new users, shows the weekly schedule, and collects
  * their display name for the leaderboard.
  */
-export function BriefingScreen({ onSubmit, onSubmitSuccess, externalError, testID }: BriefingScreenProps) {
+export function BriefingScreen({
+  onSubmit,
+  onSubmitSuccess,
+  onEnableNotifications,
+  onSkipNotifications,
+  externalError,
+  testID,
+}: BriefingScreenProps) {
+  const [step, setStep] = useState<'name' | 'notifications'>('name');
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,8 +107,13 @@ export function BriefingScreen({ onSubmit, onSubmitSuccess, externalError, testI
     try {
       // Save display name to Supabase (AsyncStorage is handled by caller)
       await onSubmit(trimmedName);
-      // Call success callback for navigation (after onSubmit completes)
-      onSubmitSuccess?.();
+      // Advance to notification opt-in step (if a handler is provided),
+      // otherwise complete onboarding immediately.
+      if (onEnableNotifications || onSkipNotifications) {
+        setStep('notifications');
+      } else {
+        onSubmitSuccess?.();
+      }
     } catch (err) {
       setError('Something went wrong. Please try again.');
       triggerNotification('error');
@@ -103,6 +121,31 @@ export function BriefingScreen({ onSubmit, onSubmitSuccess, externalError, testI
       setIsSubmitting(false);
     }
   };
+
+  const handleEnableNotifications = async () => {
+    try {
+      await onEnableNotifications?.();
+    } finally {
+      onSubmitSuccess?.();
+    }
+  };
+
+  const handleSkipNotifications = () => {
+    onSkipNotifications?.();
+    onSubmitSuccess?.();
+  };
+
+  if (step === 'notifications') {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <BriefingBackground />
+        <NotificationOptInCard
+          onEnable={handleEnableNotifications}
+          onSkip={handleSkipNotifications}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>

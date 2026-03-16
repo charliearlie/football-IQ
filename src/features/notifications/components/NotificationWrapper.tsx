@@ -7,7 +7,7 @@
  * Must be placed inside PuzzleProvider to access puzzle data.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useUserStats } from '@/features/home/hooks/useUserStats';
 import { usePuzzleContext } from '@/features/puzzles';
 import { useAuth, useOnboarding } from '@/features/auth';
@@ -97,6 +97,25 @@ function NotificationModals() {
 }
 
 /**
+ * Bridges the notification permission requester into OnboardingContext.
+ *
+ * OnboardingProvider sits above NotificationWrapper in the tree, so it cannot
+ * call useNotifications() directly. This component runs inside NotificationProvider
+ * and injects requestNotificationPermission upward via setNotificationRequester.
+ */
+function NotificationOnboardingBridge() {
+  const { requestNotificationPermission } = useNotifications();
+  const { setNotificationRequester } = useOnboarding();
+
+  useEffect(() => {
+    setNotificationRequester(requestNotificationPermission);
+    return () => setNotificationRequester(undefined);
+  }, [requestNotificationPermission, setNotificationRequester]);
+
+  return null;
+}
+
+/**
  * Notification wrapper that provides context and renders modals.
  *
  * Usage:
@@ -139,6 +158,7 @@ export function NotificationWrapper({ children }: NotificationWrapperProps) {
       totalIQ={totalIQ}
       isStatsLoading={statsLoading}
     >
+      <NotificationOnboardingBridge />
       {children}
       <NotificationModals />
     </NotificationProvider>

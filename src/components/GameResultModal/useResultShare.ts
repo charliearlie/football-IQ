@@ -30,11 +30,28 @@ export interface ResultShareData {
 }
 
 /**
+ * Mapping from GameMode to web play URL slug.
+ * Modes not listed here are app-only and link to the landing page.
+ */
+const WEB_PLAY_SLUGS: Partial<Record<GameMode, string>> = {
+  career_path: 'career-path',
+  guess_the_transfer: 'transfer-guess',
+  connections: 'connections',
+  topical_quiz: 'topical-quiz',
+  timeline: 'timeline',
+};
+
+/**
  * Generate share text for the result.
  */
 export function generateResultShareText(data: ResultShareData): string {
   const gameModeName = GAME_MODE_DISPLAY[data.gameMode].displayName;
   const tier = getTierForPoints(data.totalIQ);
+
+  const slug = WEB_PLAY_SLUGS[data.gameMode];
+  const url = slug
+    ? `https://football-iq.app/play/${slug}`
+    : 'https://football-iq.app';
 
   const lines = [
     `Football IQ - ${gameModeName}`,
@@ -45,7 +62,7 @@ export function generateResultShareText(data: ResultShareData): string {
     '',
     `${tier.name} | ${data.totalIQ.toLocaleString()} IQ`,
     '',
-    'Test your football knowledge at https://football-iq.app',
+    `Play it yourself: ${url}`,
   ];
 
   return lines.join('\n');

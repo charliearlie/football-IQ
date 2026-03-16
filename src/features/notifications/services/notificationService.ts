@@ -19,6 +19,7 @@ export const NOTIFICATION_IDS = {
   DAILY_KICKOFF: '101',    // Daily morning reminder (08:30)
   STREAK_SAVER: '102',     // Streak at risk reminder (20:30)
   AD_HOC_CMS: '103',       // Reserved for CMS push notifications (future)
+  WEEKLY_RECAP: '104',     // Weekly recap reminder (Sunday 18:00)
 } as const;
 
 // Android notification channel

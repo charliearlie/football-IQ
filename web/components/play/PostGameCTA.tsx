@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Check, Copy } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
-import { APP_STORE_URL, WEB_PLAYABLE_GAMES } from "@/lib/constants";
+import { WEB_PLAYABLE_GAMES } from "@/lib/constants";
+import { AppDownloadCTA } from "@/components/play/AppDownloadCTA";
 import {
   copyToClipboard,
   markPlayed,
-  getDaysPlayed,
   hasPlayedToday,
   getConsecutiveStreak,
 } from "@/lib/playSession";
@@ -21,15 +20,6 @@ interface PostGameCTAProps {
   gameSlug: string;
 }
 
-function getCTACopy(daysPlayed: number): string {
-  if (daysPlayed >= 30) {
-    return `${daysPlayed} puzzles completed. The app would have tracked them all — with ranks, streaks, and achievements.`;
-  }
-  if (daysPlayed >= 7) {
-    return `You've played ${daysPlayed} days on the web. The app protects your streak and unlocks 7 more game modes.`;
-  }
-  return "The app makes your score permanent — track stats, earn IQ points, and climb from Intern to The Gaffer.";
-}
 
 export function PostGameCTA({
   won,
@@ -41,7 +31,6 @@ export function PostGameCTA({
   const gameMode =
     WEB_PLAYABLE_GAMES.find((g) => g.slug === gameSlug)?.dbMode ?? gameSlug;
   const [copied, setCopied] = useState(false);
-  const [daysPlayed, setDaysPlayed] = useState(0);
   const [streak, setStreak] = useState(0);
   const [allPlayed, setAllPlayed] = useState(false);
   const [unplayedGames, setUnplayedGames] = useState(
@@ -50,7 +39,6 @@ export function PostGameCTA({
 
   useEffect(() => {
     markPlayed(gameSlug, { won, shareText });
-    setDaysPlayed(getDaysPlayed());
     setStreak(getConsecutiveStreak());
 
     const otherGames = WEB_PLAYABLE_GAMES.filter((g) => g.slug !== gameSlug);
@@ -178,38 +166,7 @@ export function PostGameCTA({
       ) : null}
 
       {/* App download pitch */}
-      <div className="border-t border-white/10 pt-6 text-center">
-        <p className="text-slate-300 text-sm mb-4">{getCTACopy(daysPlayed)}</p>
-
-        <div className="flex flex-col items-center gap-3">
-          <Link
-            href={APP_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition-all hover:opacity-90 hover:scale-105"
-          >
-            <Image
-              src="/images/app-store.svg"
-              alt="Download on the App Store"
-              width={160}
-              height={48}
-              className="h-[48px] w-auto"
-            />
-          </Link>
-          <div className="relative">
-            <Image
-              src="/images/play-store.svg"
-              alt="Google Play — Coming Soon"
-              width={180}
-              height={48}
-              className="h-[48px] w-auto opacity-50"
-            />
-            <span className="absolute left-0 right-0 text-center text-xs text-slate-500 mt-1">
-              Coming Soon
-            </span>
-          </div>
-        </div>
-      </div>
+      <AppDownloadCTA />
     </div>
   );
 }

@@ -117,6 +117,34 @@ export function isPastEveningTime(): boolean {
 }
 
 /**
+ * Get the trigger time for the weekly "Weekly Recap" notification.
+ * Scheduled for the next Sunday at 18:00 local time.
+ * If today is Sunday and 18:00 has not yet passed, schedules for today.
+ * Otherwise schedules for the following Sunday.
+ */
+export function getWeeklyRecapTriggerTime(): Date | null {
+  // Returns next Sunday at 18:00
+  const now = new Date();
+  const trigger = new Date();
+  trigger.setHours(18, 0, 0, 0);
+
+  // Calculate days until Sunday (0=Sunday)
+  const currentDay = now.getDay();
+  const daysUntilSunday = currentDay === 0
+    ? (trigger.getTime() <= now.getTime() ? 7 : 0)
+    : 7 - currentDay;
+
+  trigger.setDate(trigger.getDate() + daysUntilSunday);
+
+  // Adjust for time drift like other schedulers
+  if (isTimeTampered()) return null;
+  const driftMs = getTimeDriftMs();
+  trigger.setTime(trigger.getTime() + driftMs);
+
+  return trigger;
+}
+
+/**
  * Get a debug-friendly trigger time for testing (5 seconds from now).
  * Only use during development.
  */

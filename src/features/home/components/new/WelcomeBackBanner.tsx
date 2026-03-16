@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Flame, RotateCcw, X } from 'lucide-react-native';
+import { Flame, RotateCcw, Snowflake, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { spacing } from '@/theme';
@@ -15,14 +15,24 @@ interface WelcomeBackBannerProps {
 
 const BANNER_DEPTH = 6;
 
+const BORDER_COLORS: Record<WelcomeBackBannerData['type'], string> = {
+  milestone: 'rgba(217, 119, 6, 0.3)',
+  'streak-lost': 'rgba(55, 65, 81, 0.5)',
+  'streak-saved': 'rgba(37, 99, 235, 0.3)',
+};
+
 const GRADIENT_COLORS: Record<WelcomeBackBannerData['type'], readonly [string, string]> = {
   milestone: ['#D97706', '#EA580C'],
   'streak-lost': ['#374151', '#1F2937'],
+  'streak-saved': ['#2563EB', '#1D4ED8'],
 };
 
 function BannerIcon({ type }: { type: WelcomeBackBannerData['type'] }) {
   if (type === 'milestone') {
     return <Flame size={24} color="#FACC15" />;
+  }
+  if (type === 'streak-saved') {
+    return <Snowflake size={24} color="#93C5FD" />;
   }
   return <RotateCcw size={24} color="#9CA3AF" />;
 }
@@ -33,6 +43,7 @@ export function WelcomeBackBanner({
   testID,
 }: WelcomeBackBannerProps) {
   const gradientColors = GRADIENT_COLORS[data.type];
+  const borderColor = BORDER_COLORS[data.type];
 
   return (
     <Animated.View
@@ -45,7 +56,7 @@ export function WelcomeBackBanner({
       <View style={styles.shadowLayer} />
 
       {/* Top/Face Layer */}
-      <View style={styles.container}>
+      <View style={[styles.container, { borderColor }]}>
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0, y: 0 }}
@@ -97,7 +108,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(217, 119, 6, 0.3)',
   },
   gradient: {
     padding: spacing.lg,

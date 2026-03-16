@@ -104,6 +104,22 @@ export function getStreakSaverMessage(streakCount: number): {
 }
 
 /**
+ * Get the weekly recap notification content.
+ * @param stats - Week stats including days played, total days, IQ gained, and tier name
+ */
+export function getWeeklyRecapMessage(stats: {
+  daysPlayed: number;
+  totalDays: number;
+  iqGained: number;
+  tierName: string;
+}): { title: string; body: string } {
+  return {
+    title: 'YOUR WEEK IN REVIEW',
+    body: `This week: ${stats.daysPlayed}/${stats.totalDays} days played, +${stats.iqGained} IQ. You're a ${stats.tierName}!`,
+  };
+}
+
+/**
  * Get a specific morning message by index (for testing/preview).
  */
 export function getMorningMessageByIndex(index: number): MorningMessage {

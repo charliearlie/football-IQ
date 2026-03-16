@@ -21,6 +21,8 @@ import {
   StickyMeBar,
   LeaderboardType,
 } from '@/features/leaderboard';
+import { FloatingPlayCTA } from '@/components/FloatingPlayCTA';
+import { useDailyPuzzles } from '@/features/home/hooks/useDailyPuzzles';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -51,6 +53,12 @@ export default function LeaderboardScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ type?: string }>();
   const { user, profile } = useAuth();
+  const { cards: dailyCards } = useDailyPuzzles();
+  const unplayedCount = dailyCards.filter((c) => c.status === 'play' || c.status === 'resume').length;
+
+  const handlePlayTodayPress = useCallback(() => {
+    router.push('/(tabs)');
+  }, [router]);
 
   // Determine initial type from URL params
   const initialType: LeaderboardType =
@@ -160,6 +168,12 @@ export default function LeaderboardScreen() {
         leaderboardType={selectedType}
         gapToNext={gapToNext}
         testID="sticky-me"
+      />
+
+      {/* Floating CTA to play today's puzzles */}
+      <FloatingPlayCTA
+        unplayedCount={unplayedCount}
+        onPress={handlePlayTodayPress}
       />
     </SafeAreaView>
     </>

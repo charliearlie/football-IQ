@@ -30,6 +30,10 @@ export interface FirstRunModalProps {
   onSubmit: (displayName: string) => Promise<void>;
   /** Callback fired after successful submission (for navigation) */
   onSubmitSuccess?: () => void;
+  /** Called when user taps "Enable Notifications" on the opt-in step */
+  onEnableNotifications?: () => Promise<void>;
+  /** Called when user taps "Maybe Later" on the opt-in step */
+  onSkipNotifications?: () => void;
   /** External error message to display (e.g., from failed submission) */
   error?: string | null;
   /** Test ID for testing */
@@ -246,7 +250,15 @@ class OnboardingErrorBoundary extends Component<
  *
  * Includes error boundary to prevent invisible modal blocking touches.
  */
-export function FirstRunModal({ visible, onSubmit, onSubmitSuccess, error, testID }: FirstRunModalProps) {
+export function FirstRunModal({
+  visible,
+  onSubmit,
+  onSubmitSuccess,
+  onEnableNotifications,
+  onSkipNotifications,
+  error,
+  testID,
+}: FirstRunModalProps) {
   return (
     <Modal
       visible={visible}
@@ -258,6 +270,8 @@ export function FirstRunModal({ visible, onSubmit, onSubmitSuccess, error, testI
         <BriefingScreen
           onSubmit={onSubmit}
           onSubmitSuccess={onSubmitSuccess}
+          onEnableNotifications={onEnableNotifications}
+          onSkipNotifications={onSkipNotifications}
           externalError={error}
           testID={testID ? `${testID}-content` : undefined}
         />

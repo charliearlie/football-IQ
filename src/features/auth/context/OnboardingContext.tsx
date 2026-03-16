@@ -26,6 +26,8 @@ interface OnboardingContextValue {
   isOnboardingActive: boolean;
   isTutorialComplete: boolean;
   completeTutorial: () => Promise<void>;
+  /** Inject the notification permission requester (called when user taps Enable in onboarding) */
+  setNotificationRequester: (fn: (() => Promise<void>) | undefined) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -42,6 +44,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const posthog = usePostHog();
   const router = useRouter();
   const { isInitialized, isLoading: isAuthLoading, profile, updateDisplayName, user } = useAuth();
+
+  // Injected by a child component that has access to NotificationContext
+  // (OnboardingProvider sits above NotificationWrapper in the tree)
+  const notificationRequesterRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  const setNotificationRequester = useCallback((fn: (() => Promise<void>) | undefined) => {
+    notificationRequesterRef.current = fn;
+  }, []);
 
   // The single source of truth for the onboarding flow
   const [currentState, setCurrentState] = useState<OnboardingState>('UNKNOWN');
@@ -156,8 +165,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Also save to SecureStore for reinstall recovery
       await setOnboardingCompleted();
 
-      // 3. Transition State -> COMPLETED
-      setCurrentState('COMPLETED');
+      // Note: We do NOT transition to COMPLETED here — the modal is still
+      // showing the notifications opt-in step. completeOnboarding() is called
+      // via onSubmitSuccess once the user handles the notifications step.
 
       try {
         posthog?.capture(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
@@ -170,6 +180,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       throw error;
     }
   }, [updateDisplayName, posthog]);
+
+  /** Transitions onboarding to COMPLETED and navigates. Called after the full flow (name + notifications). */
+  const completeOnboarding = useCallback(() => {
+    setCurrentState('COMPLETED');
+  }, []);
 
   const completeTutorial = useCallback(async () => {
     try {
@@ -186,16 +201,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, [posthog]);
 
   /**
-   * Navigate to today's Career Path puzzle after onboarding completion.
-   * Falls back to home screen if no Career Path puzzle exists.
+   * Called after the full onboarding flow (name + notification opt-in).
+   * Transitions to COMPLETED and navigates to Career Path for the tutorial.
    */
   const handlePostOnboardingNavigation = useCallback(() => {
-    // Import PuzzleContext dynamically to get today's Career Path puzzle
-    // For now, navigate to career-path route which auto-loads today's puzzle
-    // The Career Path screen will handle tutorial overlay if needed
+    // Mark onboarding as complete before navigating
+    completeOnboarding();
 
-    // We can't directly access PuzzleContext here due to provider hierarchy
-    // So we'll use a route param to signal tutorial mode
     console.log('[OnboardingProvider] Navigating to Career Path for tutorial');
 
     try {
@@ -206,7 +218,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       console.warn('[OnboardingProvider] Navigation failed, falling back to home', error);
       router.push('/' as Href);
     }
-  }, [router]);
+  }, [router, completeOnboarding]);
 
   // Load tutorial completion status from AsyncStorage on mount
   useEffect(() => {
@@ -218,18 +230,26 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
+  // Stable wrapper so FirstRunModal always calls the current ref value, even if
+  // NotificationOnboardingBridge hasn't mounted yet when the modal first renders.
+  const handleEnableNotifications = useCallback(async () => {
+    await notificationRequesterRef.current?.();
+  }, []);
+
   // Expose simplified state
   // isLoading is true if we haven't reached a final decision (Show or Complete)
   const isLoading = currentState === 'UNKNOWN' || currentState === 'CHECKING';
   const isOnboardingActive = currentState === 'SHOW_MODAL';
 
   return (
-    <OnboardingContext value={{ isLoading, isOnboardingActive, isTutorialComplete, completeTutorial }}>
+    <OnboardingContext value={{ isLoading, isOnboardingActive, isTutorialComplete, completeTutorial, setNotificationRequester }}>
       {children}
       <FirstRunModal
         visible={isOnboardingActive}
         onSubmit={handleOnboardingSubmit}
-        onSubmitSuccess={isTutorialComplete ? undefined : handlePostOnboardingNavigation}
+        onSubmitSuccess={isTutorialComplete ? completeOnboarding : handlePostOnboardingNavigation}
+        onEnableNotifications={handleEnableNotifications}
+        onSkipNotifications={undefined}
         error={submissionError}
         testID="first-run-modal-root"
       />
