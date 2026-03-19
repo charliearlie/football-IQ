@@ -72,7 +72,7 @@ export type PuzzleStatus = (typeof PUZZLE_STATUSES)[number];
 
 // App Store URLs
 export const ANDROID_PACKAGE = "com.footballiq.app";
-export const APP_STORE_URL = "https://apps.apple.com/us/app/football-iq-football-trivia/id6757344691";
+export const APP_STORE_URL = "https://apps.apple.com/app/football-iq-daily-quiz-game/id6757344691";
 export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
 // Web-playable game modes (available on /play)
