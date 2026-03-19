@@ -1225,6 +1225,86 @@ export async function deleteCatalogByIds(ids: string[]): Promise<number> {
   return result.changes;
 }
 
+// ============ PLAY-TO-UNLOCK OPERATIONS ============
+
+/**
+ * Get the number of completed puzzles for today (local date).
+ * Counts completed attempts for today's puzzles across all game modes.
+ * Used by the "Play 3, Unlock 1" mechanic.
+ *
+ * @returns Number of completed puzzles today
+ */
+export async function getTodayCompletedCount(): Promise<number> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(DISTINCT a.puzzle_id) as count
+     FROM attempts a
+     JOIN puzzles p ON a.puzzle_id = p.id
+     WHERE a.completed = 1
+       AND p.puzzle_date = date('now', 'localtime')`
+  );
+  return result?.count ?? 0;
+}
+
+/**
+ * Check if a play-to-unlock reward has already been granted today.
+ * Uses _metadata table to track the last grant date.
+ *
+ * @returns true if already granted today
+ */
+export async function hasPlayToUnlockGrantedToday(): Promise<boolean> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ value: string }>(
+    "SELECT value FROM _metadata WHERE key = 'play_to_unlock_last_grant'"
+  );
+  if (!result) return false;
+
+  const today = new Date().toISOString().split('T')[0];
+  return result.value === today;
+}
+
+/**
+ * Mark that a play-to-unlock reward was granted today.
+ * Stores today's date in _metadata to prevent double-granting.
+ */
+export async function markPlayToUnlockGranted(): Promise<void> {
+  const database = getDatabase();
+  const today = new Date().toISOString().split('T')[0];
+  await database.runAsync(
+    `INSERT OR REPLACE INTO _metadata (key, value, updated_at)
+     VALUES ('play_to_unlock_last_grant', $today, datetime('now'))`,
+    { $today: today }
+  );
+}
+
+/**
+ * Get a random locked archive puzzle for play-to-unlock reward.
+ * Returns a puzzle that is outside the 3-day free window,
+ * not already completed, and not already unlocked.
+ *
+ * @param freeWindowStartDate - Start of 3-day free window (YYYY-MM-DD)
+ * @returns Random locked puzzle ID, or null if none available
+ */
+export async function getRandomLockedPuzzleId(
+  freeWindowStartDate: string
+): Promise<string | null> {
+  const database = getDatabase();
+  const result = await database.getFirstAsync<{ id: string }>(
+    `SELECT pc.id FROM puzzle_catalog pc
+     LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
+     LEFT JOIN unlocked_puzzles up ON pc.id = up.puzzle_id
+     WHERE pc.puzzle_date <= date('now', 'localtime')
+       AND pc.puzzle_date < $freeWindowStart
+       AND pc.is_special = 0
+       AND a.id IS NULL
+       AND up.puzzle_id IS NULL
+     ORDER BY RANDOM()
+     LIMIT 1`,
+    { $freeWindowStart: freeWindowStartDate }
+  );
+  return result?.id ?? null;
+}
+
 // ============ AD UNLOCK OPERATIONS ============
 
 /**

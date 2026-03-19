@@ -27,6 +27,7 @@ import {
   SectionHeader,
   ArchiveDiscoveryBanner,
   WelcomeBackBanner,
+  PlayToUnlockBanner,
 } from "@/features/home/components/new";
 import { useDailyProgress } from "@/features/home/hooks/useDailyProgress";
 import { useSpecialEvent } from "@/features/home/hooks/useSpecialEvent";
@@ -44,8 +45,10 @@ import { PremiumUpsellBanner, UnlockChoiceModal } from "@/features/ads";
 import { DailyStackCardSkeleton } from "@/components/ui/Skeletons";
 import { useAuth } from "@/features/auth";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { usePlayToUnlock } from "@/hooks/usePlayToUnlock";
 import { HOME_COLORS } from "@/theme/home-design";
 import { getUserRank } from "@/features/leaderboard";
+import { OnThisDaySection } from "@/features/on-this-day";
 
 /**
  * Get today's date in YYYY-MM-DD format.
@@ -127,6 +130,9 @@ export default function HomeScreen() {
     freezeConsumedToday,
     availableFreezes: stats.availableFreezes,
   });
+
+  // Play 3, Unlock 1 mechanic (free users only)
+  const playToUnlock = usePlayToUnlock();
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
   const isFirstTimeOffline =
@@ -311,6 +317,21 @@ export default function HomeScreen() {
           />
         )}
 
+        {/* 3b. Play to Unlock Banner (free users only) */}
+        {!isPremium && !playToUnlock.isLoading && (
+          <PlayToUnlockBanner
+            completedToday={playToUnlock.completedToday}
+            remaining={playToUnlock.remaining}
+            unlockGranted={playToUnlock.unlockGranted}
+            justUnlocked={!!playToUnlock.justUnlockedPuzzleId}
+            onGoToArchive={() => {
+              playToUnlock.dismissUnlock();
+              router.push("/archive");
+            }}
+            testID="play-to-unlock-banner"
+          />
+        )}
+
         {/* 4. Archive Discovery Banner */}
         {showArchiveBanner && (
           <ArchiveDiscoveryBanner
@@ -377,6 +398,9 @@ export default function HomeScreen() {
             />
           </>
         )}
+
+        {/* 7. On This Day */}
+        <OnThisDaySection />
       </ScrollView>
 
       {/* Completed Game Modal */}

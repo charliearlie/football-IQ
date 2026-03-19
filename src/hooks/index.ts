@@ -8,3 +8,4 @@ export {
 } from './useFeedback';
 export { useNetworkStatus, type NetworkStatus } from './useNetworkStatus';
 export { useAnalytics, ANALYTICS_EVENTS } from './useAnalytics';
+export { usePlayToUnlock, type PlayToUnlockState } from './usePlayToUnlock';
