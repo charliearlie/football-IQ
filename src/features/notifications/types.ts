@@ -5,6 +5,7 @@
  */
 
 import type { IQTier } from "@/features/stats/utils/tierProgression";
+import type { StreakMilestone } from "@/features/streaks/types/streakMilestone.types";
 
 /**
  * Types of notifications the app can send
@@ -50,6 +51,12 @@ export interface NotificationContextValue {
   isFirstWinCelebrating: boolean;
   /** Dismiss the First Win celebration */
   dismissFirstWinCelebration: () => void;
+  /** Whether the Streak Milestone celebration is showing */
+  isStreakMilestoneCelebrating: boolean;
+  /** Streak milestone data */
+  streakMilestoneData: { milestone: StreakMilestone; currentStreak: number } | null;
+  /** Dismiss the Streak Milestone celebration */
+  dismissStreakMilestoneCelebration: () => void;
 }
 
 /**
@@ -80,6 +87,8 @@ export interface PerfectDayCelebrationProps {
   onDismiss: () => void;
   /** Called when user wants to share */
   onShare: () => Promise<void>;
+  /** User ID for Scout Report URL */
+  userId?: string | null;
   /** Test ID for testing */
   testID?: string;
 }
@@ -115,6 +124,8 @@ export interface TierLevelUpCelebrationProps {
   onDismiss: () => void;
   /** Called when user wants to share */
   onShare: () => Promise<void>;
+  /** User ID for Scout Report URL */
+  userId?: string | null;
   /** Test ID for testing */
   testID?: string;
 }
@@ -132,3 +143,8 @@ export interface FirstWinCelebrationProps {
   /** Test ID for testing */
   testID?: string;
 }
+
+/**
+ * Re-export StreakMilestone for convenience
+ */
+export type { StreakMilestone } from "@/features/streaks/types/streakMilestone.types";

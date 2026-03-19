@@ -21,6 +21,9 @@ export const ANALYTICS_EVENTS = {
   FIRST_WIN_CELEBRATED: 'first_win_celebrated',
   STREAK_FREEZE_USED: 'streak_freeze_used',
   STREAK_FREEZE_EARNED: 'streak_freeze_earned',
+  HINT_USED: 'hint_used',
+  STREAK_MILESTONE_REACHED: 'streak_milestone_reached',
+  STREAK_RECOVERED: 'streak_recovered',
 } as const;
 
 // Base type compatible with PostHog's event properties
@@ -80,6 +83,22 @@ interface StreakFreezeUsedProps extends EventProps {
 interface StreakFreezeEarnedProps extends EventProps {
   streak_milestone: number;
   total_freezes: number;
+}
+
+interface HintUsedProps extends EventProps {
+  game_mode: string;
+  hint_source: 'premium' | 'rewarded_ad';
+}
+
+interface StreakMilestoneReachedProps extends EventProps {
+  milestone_days: number;
+  reward_type: string;
+  current_streak: number;
+}
+
+interface StreakRecoveredProps extends EventProps {
+  previous_streak: number;
+  games_played: number;
 }
 
 export function useAnalytics() {
@@ -155,6 +174,22 @@ export function useAnalytics() {
     [capture]
   );
 
+  const trackHintUsed = useCallback(
+    (props: HintUsedProps) => capture(ANALYTICS_EVENTS.HINT_USED, props),
+    [capture]
+  );
+
+  const trackStreakMilestoneReached = useCallback(
+    (props: StreakMilestoneReachedProps) =>
+      capture(ANALYTICS_EVENTS.STREAK_MILESTONE_REACHED, props),
+    [capture]
+  );
+
+  const trackStreakRecovered = useCallback(
+    (props: StreakRecoveredProps) => capture(ANALYTICS_EVENTS.STREAK_RECOVERED, props),
+    [capture]
+  );
+
   return {
     capture,
     trackGameStarted,
@@ -168,5 +203,8 @@ export function useAnalytics() {
     trackFirstWinCelebrated,
     trackStreakFreezeUsed,
     trackStreakFreezeEarned,
+    trackHintUsed,
+    trackStreakMilestoneReached,
+    trackStreakRecovered,
   };
 }

@@ -17,6 +17,7 @@ import { NotificationPermissionModal } from './NotificationPermissionModal';
 import { PerfectDayCelebration } from './PerfectDayCelebration';
 import { TierLevelUpCelebration } from '@/features/stats/components/TierLevelUpCelebration';
 import { FirstWinCelebration } from './FirstWinCelebration';
+import { StreakMilestoneCelebration } from '@/features/streaks/components/StreakMilestoneCelebration';
 
 interface NotificationWrapperProps {
   children: React.ReactNode;
@@ -45,10 +46,14 @@ function NotificationModals() {
     dismissTierUpCelebration,
     isFirstWinCelebrating,
     dismissFirstWinCelebration,
+    isStreakMilestoneCelebrating,
+    streakMilestoneData,
+    dismissStreakMilestoneCelebration,
   } = useNotifications();
 
   // Get stats for Perfect Day card (streak count only)
   const { stats } = useUserStats();
+  const { user } = useAuth();
 
   // Never mount notification modals while the onboarding modal is visible —
   // concurrent RN Modals corrupt the UIKit presentation stack and freeze touches
@@ -70,6 +75,7 @@ function NotificationModals() {
         onShare={async () => {
           // Share callback - celebration handles the actual sharing
         }}
+        userId={user?.id}
         testID="perfect-day-celebration"
       />
       {tierUpData && (
@@ -81,6 +87,7 @@ function NotificationModals() {
           onShare={async () => {
             // Share callback - celebration handles the actual sharing
           }}
+          userId={user?.id}
           testID="tier-level-up-celebration"
         />
       )}
@@ -92,6 +99,19 @@ function NotificationModals() {
         }}
         testID="first-win-celebration"
       />
+      {streakMilestoneData && (
+        <StreakMilestoneCelebration
+          visible={isStreakMilestoneCelebrating}
+          milestone={streakMilestoneData.milestone}
+          currentStreak={streakMilestoneData.currentStreak}
+          onDismiss={dismissStreakMilestoneCelebration}
+          onShare={async () => {
+            // Share callback - celebration handles the actual sharing
+          }}
+          userId={user?.id}
+          testID="streak-milestone-celebration"
+        />
+      )}
     </>
   );
 }

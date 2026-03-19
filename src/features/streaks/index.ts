@@ -1,10 +1,10 @@
 /**
- * Streak Freeze Feature
+ * Streak Feature
  *
- * Provides streak protection mechanics to retain users through occasional missed days.
+ * Provides streak protection mechanics and milestone rewards.
  */
 
-// Types
+// Freeze Types
 export type {
   StreakFreezeState,
   FreezeSource,
@@ -12,7 +12,15 @@ export type {
   MilestoneAwardResult,
 } from './types/streakFreeze.types';
 
-// Services
+// Milestone Types
+export type {
+  StreakMilestone,
+  MilestoneReward,
+  MilestoneCheckResult,
+  StreakRecoveryState,
+} from './types/streakMilestone.types';
+
+// Freeze Services
 export {
   getAvailableFreezes,
   getUsedFreezeDates,
@@ -21,3 +29,16 @@ export {
   awardFreeze,
   checkAndAwardMilestoneFreeze,
 } from './services/streakFreezeService';
+
+// Milestone Services
+export {
+  STREAK_MILESTONES,
+  checkStreakMilestone,
+  getArchiveUnlocks,
+  grantArchiveUnlocks,
+  consumeArchiveUnlock,
+  getStreakRecoveryState,
+  startStreakRecovery,
+  recordRecoveryGame,
+  clearStreakRecovery,
+} from './services/streakMilestoneService';

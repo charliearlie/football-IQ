@@ -52,6 +52,8 @@ import { getMorningMessage, getStreakSaverMessage } from '../utils/messageRotati
 import type { NotificationContextValue, PermissionStatus } from '../types';
 import { didTierChange, type IQTier } from '@/features/stats/utils/tierProgression';
 import { insertTierHistory } from '@/lib/database';
+import { checkStreakMilestone } from '@/features/streaks/services/streakMilestoneService';
+import type { StreakMilestone } from '@/features/streaks/types/streakMilestone.types';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -60,6 +62,7 @@ const STORAGE_KEYS = {
   PERFECT_DAY_SHOWN: '@notifications_perfect_day_shown',
   TIER_UP_SHOWN_PREFIX: '@tier_up_shown_',
   FIRST_WIN_CELEBRATED: '@first_win_celebrated',
+  STREAK_MILESTONE_SHOWN_PREFIX: '@streak_milestone_shown_',
 } as const;
 
 // Create context with undefined default
@@ -118,6 +121,13 @@ export function NotificationProvider({
   // First Win state
   const [isFirstWinCelebrating, setIsFirstWinCelebrating] = useState(false);
 
+  // Streak Milestone state
+  const [isStreakMilestoneCelebrating, setIsStreakMilestoneCelebrating] = useState(false);
+  const [streakMilestoneData, setStreakMilestoneData] = useState<{
+    milestone: StreakMilestone;
+    currentStreak: number;
+  } | null>(null);
+
   // Refs for tracking state across renders
   const hasInitialized = useRef(false);
   const lastScheduledDate = useRef<string | null>(null);
@@ -127,10 +137,12 @@ export function NotificationProvider({
   const pendingDeepLink = useRef<Record<string, unknown> | null>(null);
   const pendingPermissionPrompt = useRef(false);
 
-  // Refs for tier-up and first-win detection
+  // Refs for tier-up, first-win, and streak milestone detection
   const prevTotalIQRef = useRef(totalIQ);
   const prevTotalGamesPlayedRef = useRef(totalGamesPlayed);
   const firstWinHydrated = useRef(false);
+  const prevStreakRef = useRef(currentStreak);
+  const streakMilestoneHydrated = useRef(false);
 
   // Skip on web
   const isSupported = Platform.OS !== 'web';
@@ -247,7 +259,7 @@ export function NotificationProvider({
     if (!isSupported || !pendingPermissionPrompt.current) return;
     if (isOnboardingActive) return;
     // Wait until all celebration modals are dismissed before showing permission prompt
-    if (isFirstWinCelebrating || isTierUpCelebrating || isPerfectDayCelebrating) return;
+    if (isFirstWinCelebrating || isTierUpCelebrating || isPerfectDayCelebrating || isStreakMilestoneCelebrating) return;
 
     const timer = setTimeout(() => {
       setShowPermissionModal(true);
@@ -255,7 +267,7 @@ export function NotificationProvider({
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isSupported, isOnboardingActive, isFirstWinCelebrating, isTierUpCelebrating, isPerfectDayCelebrating]);
+  }, [isSupported, isOnboardingActive, isFirstWinCelebrating, isTierUpCelebrating, isPerfectDayCelebrating, isStreakMilestoneCelebrating]);
 
   // Process pending cold-start deep link once the navigation tree is mounted
   useEffect(() => {
@@ -507,6 +519,44 @@ export function NotificationProvider({
   }, [isSupported, isStatsLoading, totalGamesPlayed, isPerfectDayCelebrating, isTierUpCelebrating]);
 
   // ============================================================================
+  // Streak Milestone Detection
+  // ============================================================================
+
+  useEffect(() => {
+    if (!isSupported) return;
+    if (isStatsLoading) return;
+
+    const prevStreak = prevStreakRef.current;
+    prevStreakRef.current = currentStreak;
+
+    // Skip initial hydration
+    if (!streakMilestoneHydrated.current) {
+      streakMilestoneHydrated.current = true;
+      return;
+    }
+
+    // Only trigger when streak increases
+    if (currentStreak <= prevStreak) return;
+
+    // Check for milestone
+    checkStreakMilestone(currentStreak).then((result) => {
+      if (
+        result.reached &&
+        result.milestone &&
+        !isPerfectDayCelebrating &&
+        !isTierUpCelebrating &&
+        !isFirstWinCelebrating
+      ) {
+        setStreakMilestoneData({
+          milestone: result.milestone,
+          currentStreak,
+        });
+        setIsStreakMilestoneCelebrating(true);
+      }
+    });
+  }, [isSupported, isStatsLoading, currentStreak, isPerfectDayCelebrating, isTierUpCelebrating, isFirstWinCelebrating]);
+
+  // ============================================================================
   // App State Monitoring (re-evaluate on foreground)
   // ============================================================================
 
@@ -603,6 +653,11 @@ export function NotificationProvider({
     setIsFirstWinCelebrating(false);
   }, []);
 
+  const dismissStreakMilestoneCelebration = useCallback(() => {
+    setIsStreakMilestoneCelebrating(false);
+    setStreakMilestoneData(null);
+  }, []);
+
   // ============================================================================
   // Context Value
   // ============================================================================
@@ -624,6 +679,9 @@ export function NotificationProvider({
       dismissTierUpCelebration,
       isFirstWinCelebrating,
       dismissFirstWinCelebration,
+      isStreakMilestoneCelebrating,
+      streakMilestoneData,
+      dismissStreakMilestoneCelebration,
     }),
     [
       permissionStatus,
@@ -641,6 +699,9 @@ export function NotificationProvider({
       dismissTierUpCelebration,
       isFirstWinCelebrating,
       dismissFirstWinCelebration,
+      isStreakMilestoneCelebrating,
+      streakMilestoneData,
+      dismissStreakMilestoneCelebration,
     ]
   );
 
