@@ -56,6 +56,10 @@ const MODE_FLAVOUR: Record<GameMode, { strengthText: string; weaknessText: strin
     strengthText: 'Has an innate sense of football chronology.',
     weaknessText: 'Timelines get tangled up.',
   },
+  who_am_i: {
+    strengthText: 'Identifies players from the smallest of clues.',
+    weaknessText: 'Mystery clues prove too cryptic.',
+  },
 };
 
 /**

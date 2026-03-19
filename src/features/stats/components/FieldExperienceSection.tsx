@@ -24,6 +24,7 @@ import {
   Newspaper,
   ListOrdered,
   Users,
+  HelpCircle,
   type LucideIcon,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
@@ -47,6 +48,7 @@ const GAME_MODE_ICONS: Record<GameMode, LucideIcon> = {
   starting_xi: Users,
   connections: Grid3X3,
   timeline: Clock,
+  who_am_i: HelpCircle,
 };
 
 export interface FieldExperienceSectionProps {

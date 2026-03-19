@@ -26,6 +26,7 @@ const GAME_MODES: GameMode[] = [
   'starting_xi',
   'connections',
   'timeline',
+  'who_am_i',
 ];
 
 /**

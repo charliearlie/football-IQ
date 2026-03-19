@@ -912,6 +912,17 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
       type: "transfer" as const,
     })),
   },
+  who_am_i: {
+    clues: [
+      { number: 1, text: "" },
+      { number: 2, text: "" },
+      { number: 3, text: "" },
+      { number: 4, text: "" },
+      { number: 5, text: "" },
+    ],
+    correct_player_name: "",
+    correct_player_id: "",
+  },
 };
 
 /**

@@ -38,6 +38,7 @@ export const EMPTY_FIELD_EXPERIENCE: FieldExperience = {
     starting_xi: 0,
     connections: 0,
     timeline: 0,
+    who_am_i: 0,
   },
   totalAppearances: 0,
   dominantMode: null,

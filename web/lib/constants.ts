@@ -12,6 +12,7 @@ export const GAME_MODES = [
   "starting_xi",
   "connections",
   "timeline",
+  "who_am_i",
 ] as const;
 
 export type GameMode = (typeof GAME_MODES)[number];
@@ -30,6 +31,7 @@ export const GAME_MODE_DISPLAY_NAMES: Record<GameMode, string> = {
   starting_xi: "Starting XI",
   connections: "Connections",
   timeline: "Timeline",
+  who_am_i: "Who Am I?",
 };
 
 // Short names for compact display
@@ -46,6 +48,7 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   starting_xi: "XI",
   connections: "CON",
   timeline: "TL",
+  who_am_i: "WAI",
 };
 
 // Premium-only modes — temporarily disabled for outreach
@@ -128,6 +131,7 @@ export const APP_ONLY_GAMES: { title: string; description: string }[] = [
   { title: "Threads", description: "Identify the club from kit history" },
   { title: "Goalscorer Recall", description: "Name every scorer from a classic match" },
   { title: "Starting XI", description: "Find the missing players in iconic lineups" },
+  { title: "Who Am I?", description: "Guess the footballer from 5 progressive clues" },
 ];
 
 // Fallback puzzle data for when no puzzle exists for today

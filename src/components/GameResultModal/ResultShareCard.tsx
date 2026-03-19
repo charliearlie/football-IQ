@@ -12,6 +12,7 @@
  * - Website URL for user acquisition
  */
 
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {
   Trophy,
@@ -29,6 +30,7 @@ import {
   Newspaper,
   ListOrdered,
   Users,
+  HelpCircle,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import { getTierForPoints, getTierColor } from '@/features/stats/utils/tierProgression';
@@ -51,6 +53,7 @@ const GAME_MODE_ICONS: Record<GameMode, LucideIcon> = {
   starting_xi: Users,
   connections: Grid3X3,
   timeline: Clock,
+  who_am_i: HelpCircle,
 };
 
 export type ResultShareType = 'perfect' | 'win' | 'complete' | 'loss';
@@ -74,6 +77,13 @@ export interface ResultShareCardProps {
   isTierAdvancement?: boolean;
   /** New streak count (if streak-worthy) */
   newStreakDays?: number;
+  /**
+   * Optional visual component to render instead of the scoreDisplay text block.
+   * Use mode-specific visuals from ShareVisuals/ (dots, grids, icons).
+   * When provided, scoreDisplay is still required for accessibility/fallback
+   * but will not be rendered visually.
+   */
+  visualContent?: React.ReactNode;
   /** Test ID */
   testID?: string;
 }
@@ -151,6 +161,7 @@ export function ResultShareCard({
   isPerfectScore,
   isTierAdvancement,
   newStreakDays,
+  visualContent,
   testID,
 }: ResultShareCardProps) {
   const tier = getTierForPoints(totalIQ);
@@ -201,9 +212,13 @@ export function ResultShareCard({
         )}
       </View>
 
-      {/* Score Display */}
+      {/* Score Display — visual when provided, text fallback otherwise */}
       <View style={styles.scoreSection}>
-        <Text style={styles.scoreDisplay}>{scoreDisplay}</Text>
+        {visualContent != null ? (
+          visualContent
+        ) : (
+          <Text style={styles.scoreDisplay}>{scoreDisplay}</Text>
+        )}
         <Text style={styles.dateText}>{formatDate(puzzleDate)}</Text>
       </View>
 

@@ -113,6 +113,10 @@ const STRENGTH_FRAGMENTS: Record<GameMode, string[]> = {
   timeline: [
     'Has an innate sense of when football history happened.',
   ],
+  who_am_i: [
+    'Identifies players from the smallest of clues.',
+    'Reads between the lines to uncover the mystery player.',
+  ],
 };
 
 /** Opportunity fragments may contain a `{weaknessDisplay}` placeholder. */

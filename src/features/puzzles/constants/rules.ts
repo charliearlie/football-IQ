@@ -343,6 +343,31 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     icon: undefined,
     accentColor: colors.cardYellow,
   },
+
+  who_am_i: {
+    gameMode: 'who_am_i',
+    displayTitle: 'Who Am I?',
+    goal: 'Guess the footballer from 5 progressive clues',
+    rules: [
+      { text: '5 clues revealed one at a time', highlight: 'one at a time' },
+      { text: 'Clues go from obscure to obvious' },
+      { text: 'Fewer clues = higher IQ!', highlight: 'higher IQ' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'IQ based on how few clues you needed',
+      potentialLabel: 'LEGENDARY',
+      tiers: [
+        { range: '1 clue', label: 'Legendary' },
+        { range: '2 clues', label: 'World Class' },
+        { range: '3 clues', label: 'Director of Football' },
+        { range: '4 clues', label: 'Chief Scout' },
+        { range: '5 clues', label: 'Scout' },
+      ],
+    },
+    icon: undefined,
+    accentColor: colors.cardYellow,
+  },
 };
 
 /**

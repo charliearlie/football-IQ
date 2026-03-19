@@ -43,7 +43,8 @@ export type GameMode =
   | 'top_tens'
   | 'starting_xi'
   | 'connections'
-  | 'timeline';
+  | 'timeline'
+  | 'who_am_i';
 
 /**
  * Result of a sync operation

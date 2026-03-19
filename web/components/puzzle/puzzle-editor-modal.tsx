@@ -128,6 +128,7 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   starting_xi: StartingXIForm,
   connections: ConnectionsPlaceholder,
   timeline: TimelineForm,
+  who_am_i: ConnectionsPlaceholder,
 };
 
 const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }>> = {
@@ -143,6 +144,7 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   starting_xi: StartingXIPreview,
   connections: ConnectionsPreviewPlaceholder,
   timeline: TimelinePreview,
+  who_am_i: ConnectionsPreviewPlaceholder,
 };
 
 // ============================================================================

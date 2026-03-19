@@ -308,6 +308,8 @@ const PROMPT_BUILDERS: Partial<
   starting_xi: startingXIPrompt,
   topical_quiz: topicalQuizPrompt,
   top_tens: topTensPrompt,
+  who_am_i: (_content, playUrl) =>
+    defaultPrompt("Who Am I?", playUrl),
 };
 
 export function buildAdContent(

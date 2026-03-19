@@ -23,6 +23,7 @@ export const GAME_MODE_ROUTE_MAP: Record<GameMode, string> = {
   starting_xi: 'starting-xi',
   connections: 'connections',
   timeline: 'timeline',
+  who_am_i: 'who-am-i',
 };
 
 /**

@@ -43,6 +43,7 @@ export const GAME_MODE_DISPLAY: Record<
   starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },
   connections: { displayName: 'Connections', skillName: 'Group Recognition' },
   timeline: { displayName: 'Timeline', skillName: 'Chronological Memory' },
+  who_am_i: { displayName: 'Who Am I?', skillName: 'Player Knowledge' },
 };
 
 /**
@@ -63,6 +64,7 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
   starting_xi: 0.08, // 8%
   connections: 0.02, // 2% - new mode, low weight initially
   timeline: 0.02, // 2% - new mode, low weight initially
+  who_am_i: 0.02, // 2% - new mode, low weight initially
 };
 
 /**

@@ -47,6 +47,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   starting_xi: 'Starting XI',
   connections: 'Connections',
   timeline: 'Timeline',
+  who_am_i: 'Who Am I?',
 };
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };

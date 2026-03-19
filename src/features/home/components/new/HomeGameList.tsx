@@ -20,6 +20,7 @@ const GAME_METADATA: Record<string, { title: string; subtitle: string }> = {
   the_thread: { title: 'THREADS', subtitle: 'Follow the thread' },
   connections: { title: 'CONNECTIONS', subtitle: 'Find the groups' },
   timeline: { title: 'TIMELINE', subtitle: 'Order the career' },
+  who_am_i: { title: 'WHO AM I?', subtitle: 'Guess the player' },
 };
 
 function getTimeToMidnight(): string {

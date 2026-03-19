@@ -20,6 +20,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   starting_xi: 'starting-xi',
   connections: 'connections',
   timeline: 'timeline',
+  who_am_i: 'who-am-i',
 };
 
 /**
@@ -38,6 +39,7 @@ const DEFAULT_TITLES: Record<GameMode, string> = {
   starting_xi: 'SPECIAL STARTING XI',
   connections: 'SPECIAL CONNECTIONS',
   timeline: 'SPECIAL TIMELINE',
+  who_am_i: 'SPECIAL WHO AM I?',
 };
 
 /**

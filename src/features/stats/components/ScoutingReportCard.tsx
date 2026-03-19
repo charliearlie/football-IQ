@@ -29,6 +29,7 @@ import {
   Newspaper,
   ListOrdered,
   Users,
+  HelpCircle,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import { getTierForPoints, getTierColor } from '../utils/tierProgression';
@@ -50,6 +51,7 @@ const ARCHETYPE_ICONS: Record<GameMode, LucideIcon> = {
   starting_xi: Users,
   connections: Grid3X3,
   timeline: Clock,
+  who_am_i: HelpCircle,
 };
 
 /**
@@ -68,6 +70,7 @@ const ARCHETYPE_NAMES: Record<GameMode, string> = {
   starting_xi: 'Tactical Mind',
   connections: 'Group Finder',
   timeline: 'Timekeeper',
+  who_am_i: 'The Identifier',
 };
 
 export interface ScoutingReportData {

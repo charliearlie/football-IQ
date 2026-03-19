@@ -29,6 +29,7 @@ import {
   Newspaper,
   ListOrdered,
   Users,
+  HelpCircle,
   type LucideIcon,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
@@ -104,6 +105,11 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     name: 'Timekeeper',
     icon: Clock,
     description: 'Knows the chronology of every career',
+  },
+  who_am_i: {
+    name: 'The Identifier',
+    icon: HelpCircle,
+    description: 'Recognises players from minimal clues',
   },
 };
 
