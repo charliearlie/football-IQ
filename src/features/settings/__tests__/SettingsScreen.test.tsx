@@ -187,7 +187,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "3.1.0",
+      version: "3.2.0",
     },
   },
 }));
@@ -330,6 +330,30 @@ jest.mock("@/features/ads/components/PremiumUpsellBanner", () => ({
     const { View } = require("react-native");
     return <View testID="premium-upsell" />;
   },
+}));
+
+// Mock Referral feature (added ReferralShareButton + ReferralStatsCard to SettingsScreen)
+jest.mock("@/features/referral", () => ({
+  ReferralShareButton: ({ testID }: { testID?: string }) => {
+    const { View, Text } = require("react-native");
+    return (
+      <View testID={testID || "referral-share-button"}>
+        <Text>Invite Friends</Text>
+      </View>
+    );
+  },
+  ReferralStatsCard: () => {
+    const { View, Text } = require("react-native");
+    return (
+      <View testID="referral-stats-card">
+        <Text>Invite Friends</Text>
+      </View>
+    );
+  },
+  useReferralCode: () => ({ code: null, loading: false, error: null, generateCode: jest.fn() }),
+  useReferralAttribution: () => ({}),
+  useReferralStats: () => ({ stats: null, loading: false, error: null, refresh: jest.fn() }),
+  ReferralRewardToast: () => null,
 }));
 
 describe("SettingsScreen", () => {

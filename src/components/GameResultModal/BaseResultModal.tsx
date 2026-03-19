@@ -21,6 +21,9 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withDelay,
+  withTiming,
+  withSequence,
+  Easing,
 } from 'react-native-reanimated';
 import ViewShot from 'react-native-view-shot';
 import { X, Flame } from 'lucide-react-native';
@@ -50,6 +53,10 @@ import {
 } from '@/features/stats/utils/tierProgression';
 import { useAuth } from '@/features/auth';
 import { useCurrentStreak } from '@/hooks/useCurrentStreak';
+import { ChallengeButton } from '@/features/challenges';
+import { useInterstitialAd } from '@/features/ads/hooks/useInterstitialAd';
+import { ReferralPrompt } from '@/features/referral/components/ReferralPrompt';
+import type { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 export type ResultType = 'win' | 'loss' | 'draw' | 'complete';
 
@@ -113,6 +120,11 @@ export interface BaseResultModalProps {
   shareCardContent?: React.ReactNode;
   /** Data for generating share text alongside the image */
   shareData?: ResultShareData;
+
+  /** Challenge button props — when all three are provided, renders ChallengeButton */
+  puzzleId?: string;
+  gameMode?: GameMode;
+  challengeScore?: number;
 }
 
 /**
@@ -177,7 +189,67 @@ const streakStyles = StyleSheet.create({
 });
 
 /**
+ * Floating "+N IQ" animation that rises and fades above the title area.
+ * Triggers once when the modal becomes visible, with a 500ms delay.
+ */
+function FloatingIQBadge({ iqEarned, visible }: { iqEarned: number; visible: boolean }) {
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (!visible) {
+      translateY.value = 0;
+      opacity.value = 0;
+      return;
+    }
+    // Fade in quickly, float upward, then fade out
+    opacity.value = withDelay(
+      500,
+      withSequence(
+        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
+        withDelay(400, withTiming(0, { duration: 600, easing: Easing.in(Easing.quad) }))
+      )
+    );
+    translateY.value = withDelay(
+      500,
+      withTiming(-48, { duration: 1200, easing: Easing.out(Easing.cubic) })
+    );
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.View style={[floatingIQStyles.container, animatedStyle]} pointerEvents="none">
+      <Text style={floatingIQStyles.text}>+{iqEarned} IQ</Text>
+    </Animated.View>
+  );
+}
+
+const floatingIQStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 80,
+    alignSelf: 'center',
+    zIndex: 10,
+  },
+  text: {
+    fontFamily: fonts.headline,
+    fontSize: 28,
+    color: colors.pitchGreen,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+});
+
+/**
  * Tier progress bar shown in result modals after IQ gain.
+ * When a tier change is detected, shows a "TIER UP!" celebration banner
+ * below the bar with the new tier name highlighted in the tier color.
  */
 function TierProgressBar({ oldIQ, newIQ }: { oldIQ: number; newIQ: number }) {
   const iqGained = newIQ - oldIQ;
@@ -191,16 +263,33 @@ function TierProgressBar({ oldIQ, newIQ }: { oldIQ: number; newIQ: number }) {
   const newProgress = tierChange.changed ? 100 : getProgressToNextTier(newIQ);
 
   const barWidth = useSharedValue(oldProgress);
+  const tierUpScale = useSharedValue(0.6);
+  const tierUpOpacity = useSharedValue(0);
 
   useEffect(() => {
     barWidth.value = withDelay(
       300,
       withSpring(newProgress, { damping: 15, stiffness: 80 })
     );
-  }, [newProgress]);
+    if (tierChange.changed) {
+      tierUpScale.value = withDelay(
+        800,
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
+      tierUpOpacity.value = withDelay(
+        800,
+        withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) })
+      );
+    }
+  }, [newProgress, tierChange.changed]);
 
   const barAnimatedStyle = useAnimatedStyle(() => ({
     width: `${barWidth.value}%`,
+  }));
+
+  const tierUpAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: tierUpScale.value }],
+    opacity: tierUpOpacity.value,
   }));
 
   return (
@@ -216,10 +305,19 @@ function TierProgressBar({ oldIQ, newIQ }: { oldIQ: number; newIQ: number }) {
           style={[tierBarStyles.fill, { backgroundColor: tierColor }, barAnimatedStyle]}
         />
       </View>
-      {nextTier && (
-        <Text style={tierBarStyles.nextTier}>
-          {pointsToNext} to {nextTier.name}
-        </Text>
+      {tierChange.changed ? (
+        <Animated.View style={[tierBarStyles.tierUpContainer, tierUpAnimatedStyle]}>
+          <Text style={tierBarStyles.tierUpLabel}>TIER UP!</Text>
+          <Text style={[tierBarStyles.tierUpName, { color: tierColor }]}>
+            {currentTier.name}
+          </Text>
+        </Animated.View>
+      ) : (
+        nextTier && (
+          <Text style={tierBarStyles.nextTier}>
+            {pointsToNext} to {nextTier.name}
+          </Text>
+        )
       )}
     </View>
   );
@@ -266,6 +364,133 @@ const tierBarStyles = StyleSheet.create({
     marginTop: spacing.xs,
     textAlign: 'center',
   },
+  tierUpContainer: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    gap: 2,
+  },
+  tierUpLabel: {
+    fontFamily: fonts.headline,
+    fontSize: 13,
+    color: colors.floodlightWhite,
+    letterSpacing: 3,
+  },
+  tierUpName: {
+    fontFamily: fonts.headline,
+    fontSize: 20,
+    letterSpacing: 1,
+  },
+});
+
+const STREAK_MILESTONES = [7, 14, 30] as const;
+
+interface UpsellBannerProps {
+  oldIQ: number;
+  newIQ: number | undefined;
+  streakDays: number | undefined;
+  percentile: number | undefined;
+  onPress: () => void;
+}
+
+/**
+ * Context-aware premium upsell shown inside the result modal.
+ *
+ * Priority order:
+ * 1. Tier-up at tier 5+ — celebratory Gaffer-level copy
+ * 2. Streak milestone (7/14/30 days) — freeze token pitch
+ * 3. Default — accuracy/stats upsell
+ */
+function UpsellBanner({ oldIQ, newIQ, streakDays, percentile, onPress }: UpsellBannerProps) {
+  const effectiveNewIQ = newIQ ?? oldIQ;
+  const tierChange = didTierChange(oldIQ, effectiveNewIQ);
+  const currentTier = getTierForPoints(effectiveNewIQ);
+  const tierColor = getTierColor(currentTier.tier);
+
+  const isHighTierUp = tierChange.changed && currentTier.tier >= 5;
+  const isStreakMilestone =
+    streakDays !== undefined &&
+    STREAK_MILESTONES.some((m) => streakDays === m);
+
+  if (isHighTierUp) {
+    return (
+      <Pressable onPress={onPress} style={upsellStyles.prominentContainer}>
+        <Text style={[upsellStyles.prominentTitle, { color: tierColor }]}>
+          You've reached {currentTier.name}.
+        </Text>
+        <Text style={upsellStyles.prominentBody}>
+          Gaffer-level players use Pro to get ahead.{' '}
+          <Text style={upsellStyles.link}>Unlock Pro</Text>
+        </Text>
+      </Pressable>
+    );
+  }
+
+  if (isStreakMilestone) {
+    return (
+      <Pressable onPress={onPress} style={upsellStyles.prominentContainer}>
+        <Text style={upsellStyles.prominentTitle}>
+          {streakDays}-day streak!
+        </Text>
+        <Text style={upsellStyles.prominentBody}>
+          Pro members protect their streak with freeze tokens.{' '}
+          <Text style={upsellStyles.link}>Get Pro</Text>
+        </Text>
+      </Pressable>
+    );
+  }
+
+  // Default upsell — slightly more prominent than the original small link
+  return (
+    <Pressable onPress={onPress} style={upsellStyles.defaultContainer}>
+      <Text style={upsellStyles.defaultText}>
+        {percentile !== undefined && percentile >= 75
+          ? `You're in the top ${100 - percentile}% today. `
+          : 'Track your accuracy across all modes. '}
+        <Text style={upsellStyles.link}>Unlock your full stats with Pro.</Text>
+      </Text>
+    </Pressable>
+  );
+}
+
+const upsellStyles = StyleSheet.create({
+  prominentContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+    gap: 4,
+  },
+  prominentTitle: {
+    fontFamily: fonts.headline,
+    fontSize: 16,
+    color: colors.floodlightWhite,
+    textAlign: 'center',
+  },
+  prominentBody: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  defaultContainer: {
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  defaultText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.cardYellow,
+    textAlign: 'center',
+  },
+  link: {
+    textDecorationLine: 'underline',
+    fontFamily: fonts.body,
+  },
 });
 
 /**
@@ -311,6 +536,9 @@ export function BaseResultModal({
   percentile,
   shareCardContent,
   shareData,
+  puzzleId,
+  gameMode,
+  challengeScore,
 }: BaseResultModalProps) {
   const router = useRouter();
   const posthog = usePostHog();
@@ -328,6 +556,9 @@ export function BaseResultModal({
   const effectiveIsPremium = isPremium ?? (profile?.is_premium ?? false);
   const effectiveOldIQ = oldIQ ?? (showRetention ? authTotalIQ - iqEarned : undefined);
   const effectiveNewIQ = newIQ ?? (showRetention ? authTotalIQ : undefined);
+
+  // Interstitial ad — records game completion and shows ad every 2nd game
+  useInterstitialAd(visible);
 
   // Session chaining — finds next unplayed daily puzzle
   const nextPuzzle = useNextPuzzle(showNextPuzzle);
@@ -367,7 +598,7 @@ export function BaseResultModal({
     }
 
     return result;
-  }, [shareData]);
+  }, [shareData, posthog]);
 
   // Determine which share handler to use
   const useImageSharing = !!(shareCardContent && shareData);
@@ -453,6 +684,11 @@ export function BaseResultModal({
             {icon}
           </View>
 
+          {/* Floating IQ animation — sits above the title, triggered on modal open */}
+          {showRetention && iqEarned !== undefined && iqEarned > 0 && (
+            <FloatingIQBadge iqEarned={iqEarned} visible={visible} />
+          )}
+
           {/* Title */}
           <Text style={[styles.title, { color: accentColor }]}>{title}</Text>
 
@@ -472,93 +708,121 @@ export function BaseResultModal({
             <TierProgressBar oldIQ={effectiveOldIQ} newIQ={effectiveNewIQ} />
           )}
 
-          {/* Context-sensitive premium upsell — shown after user has some experience */}
+          {/* Context-sensitive premium upsell */}
           {!effectiveIsPremium && showRetention && effectiveOldIQ !== undefined && effectiveOldIQ >= 15 && (
-            <Pressable
+            <UpsellBanner
+              oldIQ={effectiveOldIQ}
+              newIQ={effectiveNewIQ}
+              streakDays={effectiveStreakDays}
+              percentile={percentile}
               onPress={() => router.push('/premium-modal')}
-              style={styles.upsellContainer}
-            >
-              <Text style={styles.upsellText}>
-                {percentile !== undefined && percentile >= 75
-                  ? `You're in the top ${100 - percentile}% today. `
-                  : 'Track your accuracy across all modes. '}
-                <Text style={styles.upsellLink}>
-                  Unlock your full stats with Pro.
-                </Text>
-              </Text>
-            </Pressable>
+            />
           )}
 
-          {/* Next Puzzle / Session Chaining — shown above action buttons as primary CTA */}
-          {showNextPuzzle && (
+          {/* Referral prompt — shown after wins for non-premium users */}
+          {!effectiveIsPremium && showRetention && (resultType === 'win' || resultType === 'complete') && (
+            <ReferralPrompt userId={profile?.id ?? null} />
+          )}
+
+          {/* All Done message when all puzzles completed */}
+          {showNextPuzzle && nextPuzzle.allDone && (
             <View style={styles.nextPuzzleContainer}>
-              {nextPuzzle.allDone ? (
-                <View style={styles.allDoneContainer}>
-                  <Text style={styles.allDoneText}>All Done!</Text>
-                  <Text style={styles.allDoneSubtext}>
-                    You've completed all {nextPuzzle.totalCount} puzzles today
-                  </Text>
-                </View>
-              ) : nextPuzzle.hasNext ? (
-                <ElevatedButton
-                  title={nextPuzzle.buttonLabel!}
-                  onPress={nextPuzzle.goToNext}
-                  size="small"
-                  style={styles.buttonFull}
-                  topColor={colors.pitchGreen}
-                  shadowColor="#1B7A3D"
-                  testID="next-puzzle-button"
-                />
-              ) : null}
+              <View style={styles.allDoneContainer}>
+                <Text style={styles.allDoneText}>All Done!</Text>
+                <Text style={styles.allDoneSubtext}>
+                  You've completed all {nextPuzzle.totalCount} puzzles today
+                </Text>
+              </View>
             </View>
           )}
 
           {/* Action Buttons (unless custom layout in children) */}
           {!hideDefaultButtons && (
-            <View style={[styles.buttonContainer, showNextPuzzle && nextPuzzle.hasNext && styles.buttonContainerWithNext]}>
-              {effectiveOnShare && (
-                <ElevatedButton
-                  title={finalButtonTitle}
-                  onPress={finalHandleShare}
-                  size="small"
-                  style={styles.buttonHalf}
-                  topColor={finalButtonColors.topColor}
-                  shadowColor={finalButtonColors.shadowColor}
-                  disabled={isImageSharing}
-                  testID="share-button"
-                />
+            <View style={styles.buttonColumnContainer}>
+              {/* When next puzzle available: Share full width, then Next Game + Done side by side */}
+              {showNextPuzzle && nextPuzzle.hasNext && !nextPuzzle.allDone ? (
+                <>
+                  {effectiveOnShare && (
+                    <ElevatedButton
+                      title={finalButtonTitle}
+                      onPress={finalHandleShare}
+                      size="small"
+                      style={styles.buttonFull}
+                      topColor={finalButtonColors.topColor}
+                      shadowColor={finalButtonColors.shadowColor}
+                      disabled={isImageSharing}
+                      testID="share-button"
+                    />
+                  )}
+                  <View style={styles.buttonContainer}>
+                    <ElevatedButton
+                      title={nextPuzzle.buttonLabel!}
+                      onPress={nextPuzzle.goToNext}
+                      size="small"
+                      style={styles.buttonHalf}
+                      topColor={colors.floodlightWhite}
+                      shadowColor={colors.textSecondary}
+                      textStyle={{ color: colors.stadiumNavy }}
+                      testID="next-puzzle-button"
+                    />
+                    {onClose && (
+                      <ElevatedButton
+                        title={closeLabel}
+                        onPress={onClose}
+                        size="small"
+                        style={styles.buttonHalf}
+                        topColor={colors.textSecondary}
+                        shadowColor={colors.stadiumNavy}
+                        testID="close-button"
+                      />
+                    )}
+                  </View>
+                </>
+              ) : (
+                <View style={styles.buttonContainer}>
+                  {effectiveOnShare && (
+                    <ElevatedButton
+                      title={finalButtonTitle}
+                      onPress={finalHandleShare}
+                      size="small"
+                      style={styles.buttonHalf}
+                      topColor={finalButtonColors.topColor}
+                      shadowColor={finalButtonColors.shadowColor}
+                      disabled={isImageSharing}
+                      testID="share-button"
+                    />
+                  )}
+                  {onReview ? (
+                    <ElevatedButton
+                      title="Review"
+                      onPress={onReview}
+                      size="small"
+                      style={styles.buttonHalf}
+                      topColor={colors.cardYellow}
+                      shadowColor="#B8960F"
+                      testID="review-button"
+                    />
+                  ) : onClose && (
+                    <ElevatedButton
+                      title={closeLabel}
+                      onPress={onClose}
+                      size="small"
+                      style={effectiveOnShare ? styles.buttonHalf : styles.buttonFull}
+                      topColor={colors.textSecondary}
+                      shadowColor={colors.stadiumNavy}
+                      testID="close-button"
+                    />
+                  )}
+                </View>
               )}
-              {onReview ? (
-                <ElevatedButton
-                  title="Review"
-                  onPress={onReview}
-                  size="small"
-                  style={styles.buttonHalf}
-                  topColor={colors.cardYellow}
-                  shadowColor="#B8960F"
-                  testID="review-button"
+
+              {/* Challenge a Friend button */}
+              {puzzleId && gameMode && challengeScore !== undefined && (
+                <ChallengeButton
+                  puzzleId={puzzleId}
+                  gameMode={gameMode}
+                  score={challengeScore}
                 />
-              ) : onClose && (
-                showNextPuzzle && nextPuzzle.hasNext ? (
-                  <Pressable
-                    onPress={onClose}
-                    style={styles.closeLinkContainer}
-                    hitSlop={8}
-                    testID="close-button"
-                  >
-                    <Text style={styles.closeLinkText}>{closeLabel}</Text>
-                  </Pressable>
-                ) : (
-                  <ElevatedButton
-                    title={closeLabel}
-                    onPress={onClose}
-                    size="small"
-                    style={effectiveOnShare ? styles.buttonHalf : styles.buttonFull}
-                    topColor={colors.textSecondary}
-                    shadowColor={colors.stadiumNavy}
-                    testID="close-button"
-                  />
-                )
               )}
             </View>
           )}
@@ -690,9 +954,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  buttonContainerWithNext: {
-    marginTop: spacing.xs,
-    justifyContent: 'center',
+  buttonColumnContainer: {
+    width: '100%',
+    gap: spacing.sm,
   },
   closeLinkContainer: {
     flex: 1,

@@ -38,6 +38,7 @@ import {
   NotificationWrapper,
   initializeNotifications,
 } from "@/features/notifications";
+import { useReferralCompletion } from "@/features/referral";
 import { getRevenueCatApiKey } from "@/config/revenueCat";
 // import { SentryErrorFallback } from "@/components";
 import { usePostHog } from "posthog-react-native";
@@ -97,6 +98,15 @@ function PostHogLogger() {
     }
   }, [posthog]);
 
+  return null;
+}
+
+/**
+ * ReferralCompletionTracker - Completes referral when referred user finishes first game.
+ * Must be inside AuthProvider.
+ */
+function ReferralCompletionTracker() {
+  useReferralCompletion();
   return null;
 }
 
@@ -460,10 +470,14 @@ export default function RootLayout() {
             >
               <PostHogLogger />
               <PostHogIdentifier />
+              <ReferralCompletionTracker />
               {appContent}
             </SafePostHogProvider>
           ) : (
-            appContent
+            <>
+              <ReferralCompletionTracker />
+              {appContent}
+            </>
           )}
         </AuthProvider>
       )}

@@ -30,15 +30,16 @@ interface UseRandomPlayResult {
 }
 
 /**
- * Calculate the start date of the 3-day free window.
- * Free window = today + 2 previous days (3 total)
+ * Calculate the start date of the free window.
+ * Default: today + 2 previous days (3 total).
+ * Referred users: today + 6 previous days (7 total).
  *
  * Pattern from: src/features/archive/utils/dateGrouping.ts
  */
-function getFreeWindowStartDate(): string {
+function getFreeWindowStartDate(windowDays: number = 3): string {
   const todayStr = getAuthorizedDateUnsafe();
   const today = new Date(todayStr + 'T12:00:00');
-  today.setDate(today.getDate() - 2);
+  today.setDate(today.getDate() - (windowDays - 1));
   return today.toISOString().split('T')[0];
 }
 

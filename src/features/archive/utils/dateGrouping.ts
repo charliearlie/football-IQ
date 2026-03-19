@@ -135,13 +135,17 @@ export function formatPuzzleDate(dateString: string): string {
 }
 
 /**
- * Check if a puzzle date is within the free access window (last 3 days).
+ * Check if a puzzle date is within the free access window.
  * Uses the time integrity system for the authorized "today" date.
  *
+ * Default window is 3 days (today + 2 previous days).
+ * Referred users get 7 days (today + 6 previous days).
+ *
  * @param puzzleDate - Puzzle date in YYYY-MM-DD format
- * @returns true if the puzzle is within the 3-day window
+ * @param windowDays - Number of days in the free window (default: 3)
+ * @returns true if the puzzle is within the free window
  */
-export function isWithinFreeWindow(puzzleDate: string): boolean {
+export function isWithinFreeWindow(puzzleDate: string, windowDays: number = 3): boolean {
   // Add time component to avoid timezone parsing issues
   // (YYYY-MM-DD without time is parsed as UTC, which can shift the day in local timezone)
   const date = new Date(puzzleDate + 'T12:00:00');
@@ -152,9 +156,9 @@ export function isWithinFreeWindow(puzzleDate: string): boolean {
   const today = new Date(todayStr + 'T12:00:00');
   today.setHours(0, 0, 0, 0);
 
-  // 3-day window = today + 2 previous days (3 total)
+  // windowDays window = today + (windowDays - 1) previous days
   const windowStart = new Date(today);
-  windowStart.setDate(windowStart.getDate() - 2);
+  windowStart.setDate(windowStart.getDate() - (windowDays - 1));
 
   return date >= windowStart;
 }
@@ -199,7 +203,8 @@ export function isPuzzleLocked(
   isPremium: boolean,
   puzzleId?: string,
   adUnlocks?: UnlockedPuzzle[],
-  hasCompletedAttempt?: boolean
+  hasCompletedAttempt?: boolean,
+  freeWindowDays?: number
 ): boolean {
   // HIGHEST PRIORITY: Completed puzzles are never locked (permanent unlock)
   // Users can always view results for puzzles they've completed
@@ -209,7 +214,7 @@ export function isPuzzleLocked(
   if (isPremium) return false;
 
   // Within free window: not locked
-  if (isWithinFreeWindow(puzzleDate)) return false;
+  if (isWithinFreeWindow(puzzleDate, freeWindowDays)) return false;
 
   // Has valid ad unlock: not locked
   if (puzzleId && adUnlocks && hasValidAdUnlock(puzzleId, adUnlocks)) {

@@ -24,6 +24,12 @@ export const ANALYTICS_EVENTS = {
   HINT_USED: 'hint_used',
   STREAK_MILESTONE_REACHED: 'streak_milestone_reached',
   STREAK_RECOVERED: 'streak_recovered',
+  STREAK_FREEZE_AD_EARNED: 'streak_freeze_ad_earned',
+  NOTIFICATION_OPENED: 'notification_opened',
+  NOTIFICATION_SCHEDULED: 'notification_scheduled',
+  REFERRAL_LINK_SHARED: 'referral_link_shared',
+  REFERRAL_ATTRIBUTED: 'referral_attributed',
+  REFERRAL_REWARD_CLAIMED: 'referral_reward_claimed',
 } as const;
 
 // Base type compatible with PostHog's event properties
@@ -99,6 +105,33 @@ interface StreakMilestoneReachedProps extends EventProps {
 interface StreakRecoveredProps extends EventProps {
   previous_streak: number;
   games_played: number;
+}
+
+interface StreakFreezeAdEarnedProps extends EventProps {
+  available_freezes: number;
+  streak_length: number;
+}
+
+interface ReferralLinkSharedProps extends EventProps {
+  source: string;
+}
+
+interface ReferralAttributedProps extends EventProps {
+  referral_code: string;
+}
+
+interface ReferralRewardClaimedProps extends EventProps {
+  unlocks_granted: number;
+}
+
+interface NotificationOpenedProps extends EventProps {
+  notification_type: string;
+  notification_id: string;
+}
+
+interface NotificationScheduledProps extends EventProps {
+  notification_type: string;
+  notification_id: string;
 }
 
 export function useAnalytics() {
@@ -190,6 +223,42 @@ export function useAnalytics() {
     [capture]
   );
 
+  const trackStreakFreezeAdEarned = useCallback(
+    (props: StreakFreezeAdEarnedProps) =>
+      capture(ANALYTICS_EVENTS.STREAK_FREEZE_AD_EARNED, props),
+    [capture]
+  );
+
+  const trackReferralLinkShared = useCallback(
+    (props: ReferralLinkSharedProps) =>
+      capture(ANALYTICS_EVENTS.REFERRAL_LINK_SHARED, props),
+    [capture]
+  );
+
+  const trackReferralAttributed = useCallback(
+    (props: ReferralAttributedProps) =>
+      capture(ANALYTICS_EVENTS.REFERRAL_ATTRIBUTED, props),
+    [capture]
+  );
+
+  const trackReferralRewardClaimed = useCallback(
+    (props: ReferralRewardClaimedProps) =>
+      capture(ANALYTICS_EVENTS.REFERRAL_REWARD_CLAIMED, props),
+    [capture]
+  );
+
+  const trackNotificationOpened = useCallback(
+    (props: NotificationOpenedProps) =>
+      capture(ANALYTICS_EVENTS.NOTIFICATION_OPENED, props),
+    [capture]
+  );
+
+  const trackNotificationScheduled = useCallback(
+    (props: NotificationScheduledProps) =>
+      capture(ANALYTICS_EVENTS.NOTIFICATION_SCHEDULED, props),
+    [capture]
+  );
+
   return {
     capture,
     trackGameStarted,
@@ -206,5 +275,11 @@ export function useAnalytics() {
     trackHintUsed,
     trackStreakMilestoneReached,
     trackStreakRecovered,
+    trackStreakFreezeAdEarned,
+    trackNotificationOpened,
+    trackNotificationScheduled,
+    trackReferralLinkShared,
+    trackReferralAttributed,
+    trackReferralRewardClaimed,
   };
 }
