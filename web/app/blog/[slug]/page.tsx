@@ -9,6 +9,7 @@ import { BlogHeader } from "@/components/blog/BlogHeader";
 import { ArticleRenderer } from "@/components/blog/ArticleRenderer";
 import { getReadingTime } from "@/lib/blog/markdown";
 import type { BlogArticleRow } from "@/lib/blog/types";
+import { WEB_PLAYABLE_GAMES } from "@/lib/constants";
 
 export const revalidate = 3600;
 
@@ -213,6 +214,32 @@ export default async function ArticlePage({ params }: PageProps) {
         ) : (
           <p className="text-slate-400">Content unavailable.</p>
         )}
+
+        {/* Internal links to game modes */}
+        <aside className="mt-12 pt-8 border-t border-white/5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">
+            Test Your Football Knowledge
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {WEB_PLAYABLE_GAMES.map((game) => (
+              <Link
+                key={game.slug}
+                href={`/play/${game.slug}`}
+                className="flex flex-col gap-1 p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04] transition-all group"
+              >
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: game.accentColor }}
+                >
+                  {game.title}
+                </span>
+                <span className="text-xs text-slate-500 leading-snug group-hover:text-slate-400 transition-colors">
+                  Play free &rarr;
+                </span>
+              </Link>
+            ))}
+          </div>
+        </aside>
 
       </article>
 
