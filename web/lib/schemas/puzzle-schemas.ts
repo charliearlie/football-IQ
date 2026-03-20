@@ -329,6 +329,28 @@ export type TimelineContent = z.infer<typeof timelineContentSchema>;
 export type TimelineEvent = z.infer<typeof timelineEventSchema>;
 
 // ============================================================================
+// WHO AM I? (who_am_i)
+// ============================================================================
+
+export const whoAmIClueSchema = z.object({
+  number: z.coerce.number().int().min(1).max(5),
+  text: z.string().min(1, "Clue text required"),
+});
+
+export const whoAmIContentSchema = z.object({
+  clues: z
+    .array(whoAmIClueSchema)
+    .min(3, "At least 3 clues required")
+    .max(5, "Maximum 5 clues"),
+  correct_player_name: z.string().min(1, "Player name required"),
+  correct_player_id: z.string().min(1, "Player ID required"),
+  fun_fact: z.string().optional(),
+});
+
+export type WhoAmIContent = z.infer<typeof whoAmIContentSchema>;
+export type WhoAmIClue = z.infer<typeof whoAmIClueSchema>;
+
+// ============================================================================
 // CONTENT SCHEMA MAP
 // ============================================================================
 
@@ -345,6 +367,7 @@ export const contentSchemaMap = {
   starting_xi: startingXIContentSchema,
   connections: connectionsContentSchema,
   timeline: timelineContentSchema,
+  who_am_i: whoAmIContentSchema,
 } as const;
 
 // Union type for all content types
@@ -359,7 +382,8 @@ export type PuzzleContent =
   | TopTensContent
   | StartingXIContent
   | ConnectionsContent
-  | TimelineContent;
+  | TimelineContent
+  | WhoAmIContent;
 
 // ============================================================================
 // FULL PUZZLE FORM SCHEMA

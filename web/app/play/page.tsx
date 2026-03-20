@@ -153,13 +153,12 @@ export default function PlayPage() {
                     >
                       Play now &rarr;
                     </span>
-                    <Link
+                    <a
                       href={`/play/${game.slug}/about`}
-                      className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs text-slate-600 hover:text-slate-400 transition-colors relative z-10"
                     >
                       How to play
-                    </Link>
+                    </a>
                   </div>
                 </Link>
               ))}
