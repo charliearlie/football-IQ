@@ -166,7 +166,18 @@ export function PremiumUpsellModal({
 
         if (result.success) {
           // Force sync premium status to Supabase
-          await forceSync();
+          let syncResult = await forceSync();
+
+          // Safety net: retry once after 1s if sync didn't confirm premium
+          if (!syncResult.isPremium) {
+            await new Promise(r => setTimeout(r, 1000));
+            syncResult = await forceSync();
+          }
+
+          if (!syncResult.isPremium) {
+            console.warn('[PremiumUpsellModal] Premium sync unconfirmed - will update via realtime');
+          }
+
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setState('success');
         } else {
@@ -210,7 +221,18 @@ export function PremiumUpsellModal({
 
       if (result.success) {
         // Force sync premium status to Supabase
-        await forceSync();
+        let syncResult = await forceSync();
+
+        // Safety net: retry once after 1s if sync didn't confirm premium
+        if (!syncResult.isPremium) {
+          await new Promise(r => setTimeout(r, 1000));
+          syncResult = await forceSync();
+        }
+
+        if (!syncResult.isPremium) {
+          console.warn('[PremiumUpsellModal] Restore sync unconfirmed - will update via realtime');
+        }
+
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setState('success');
       } else {

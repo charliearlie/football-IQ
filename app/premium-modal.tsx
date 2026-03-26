@@ -163,7 +163,17 @@ export default function PremiumModalScreen() {
 
         if (result.success) {
           // Force sync premium status to Supabase
-          await forceSync();
+          let syncResult = await forceSync();
+
+          // Safety net: retry once after 1s if sync didn't confirm premium
+          if (!syncResult.isPremium && isMountedRef.current) {
+            await new Promise(r => setTimeout(r, 1000));
+            syncResult = await forceSync();
+          }
+
+          if (!syncResult.isPremium) {
+            console.warn('[PremiumModal] Premium sync unconfirmed - will update via realtime');
+          }
 
           // Haptics may fail on some devices - don't let it break the flow
           try {
@@ -222,7 +232,17 @@ export default function PremiumModalScreen() {
 
       if (result.success) {
         // Force sync premium status to Supabase
-        await forceSync();
+        let syncResult = await forceSync();
+
+        // Safety net: retry once after 1s if sync didn't confirm premium
+        if (!syncResult.isPremium && isMountedRef.current) {
+          await new Promise(r => setTimeout(r, 1000));
+          syncResult = await forceSync();
+        }
+
+        if (!syncResult.isPremium) {
+          console.warn('[PremiumModal] Restore sync unconfirmed - will update via realtime');
+        }
 
         // Haptics may fail on some devices - don't let it break the flow
         try {

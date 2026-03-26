@@ -57,17 +57,20 @@ const mockSupabaseChannel = jest.fn(() => ({
   })),
 }));
 
+const mockSupabaseRpc = jest.fn();
+
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     auth: mockSupabaseAuth,
     from: mockSupabaseFrom,
     channel: mockSupabaseChannel,
     removeChannel: jest.fn(),
+    rpc: mockSupabaseRpc,
   },
 }));
 
 // Export mocks for test access
-export { mockSupabaseAuth, mockSupabaseFrom, mockSupabaseChannel };
+export { mockSupabaseAuth, mockSupabaseFrom, mockSupabaseChannel, mockSupabaseRpc };
 
 // Mock expo-haptics
 jest.mock('expo-haptics', () => ({

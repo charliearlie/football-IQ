@@ -54,7 +54,6 @@ import { SettingsRow } from "../components/SettingsRow";
 import { SettingsSection } from "../components/SettingsSection";
 import { RateAppModal } from "../components/RateAppModal";
 import { PremiumUpsellBanner } from "@/features/ads/components/PremiumUpsellBanner";
-import { ReferralShareButton, ReferralStatsCard } from "@/features/referral";
 
 export interface SettingsScreenProps {
   testID?: string;
@@ -161,7 +160,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "3.2.0";
+  const appVersion = Constants.expoConfig?.version ?? "3.3.0";
 
   const handleVersionTap = useCallback(() => {
     const now = Date.now();
@@ -390,9 +389,6 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
 
         {/* Premium Banner */}
         <PremiumUpsellBanner fullWidth />
-
-        {/* Invite Friends — full referral stats card */}
-        <ReferralStatsCard userId={session?.user?.id ?? null} />
 
         {/* Subscription */}
         <SettingsSection title="SUBSCRIPTION">

@@ -35,6 +35,8 @@ interface UseProfileResult {
   refetch: () => Promise<void>;
   /** Refresh local unsynced IQ (call after completing a game) */
   refreshLocalIQ: () => Promise<void>;
+  /** Directly set profile state without a network round-trip */
+  setProfileDirect: (profile: Profile) => void;
 }
 
 /**
@@ -169,6 +171,10 @@ export function useProfile(userId: string | null): UseProfileResult {
     };
   }, [userId, fetchProfile]);
 
+  const setProfileDirect = useCallback((newProfile: Profile) => {
+    setProfile(newProfile);
+  }, []);
+
   // Derived state
   const isPremium = profile?.is_premium ?? false;
   const displayName = profile?.display_name ?? null;
@@ -187,5 +193,6 @@ export function useProfile(userId: string | null): UseProfileResult {
     totalIQ,
     refetch: fetchProfile,
     refreshLocalIQ,
+    setProfileDirect,
   };
 }

@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Trophy } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { colors, fonts, fontWeights, spacing, borderRadius } from "@/theme";
+import { colors, fonts, fontWeights, spacing, borderRadius, layout } from "@/theme";
 import {
   usePerformanceStats,
   ScoutingReportOverlay,
@@ -466,6 +466,7 @@ export default function ScoutReportScreen() {
         <FloatingPlayCTA
           unplayedCount={unplayedCount}
           onPress={handlePlayTodayPress}
+          insideTabBar
         />
       </SafeAreaView>
     </TabScreenWrapper>
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing["3xl"] + 60,
+    paddingBottom: spacing["3xl"] + 60 + layout.tabBarHeight,
   },
   section: {
     marginBottom: spacing.xl,

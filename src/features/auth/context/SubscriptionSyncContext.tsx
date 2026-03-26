@@ -21,7 +21,7 @@ import React, {
   useCallback,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CustomerInfo } from 'react-native-purchases';
+import Purchases, { CustomerInfo } from 'react-native-purchases';
 import { useAuth } from './AuthContext';
 import {
   identifyUser,
@@ -42,7 +42,7 @@ const SILENT_RESTORE_ATTEMPTED_KEY = '@silent_restore_attempted';
 
 interface SubscriptionSyncContextValue {
   /** Force a sync of current entitlement status */
-  forceSync: () => Promise<void>;
+  forceSync: () => Promise<{ success: boolean; isPremium: boolean }>;
   /** Restore purchases from App Store */
   restorePurchases: () => Promise<{ success: boolean; hasPremium: boolean }>;
 }
@@ -61,49 +61,60 @@ interface SubscriptionSyncProviderProps {
 export function SubscriptionSyncProvider({
   children,
 }: SubscriptionSyncProviderProps) {
-  const { user, isInitialized, refetchProfile } = useAuth();
+  const { user, isInitialized, setProfileDirect } = useAuth();
   const removeListenerRef = useRef<(() => void) | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
-  // Track last known premium status to avoid unnecessary refetches
+  // Track last known premium status to avoid unnecessary syncs
   const lastPremiumStatusRef = useRef<boolean | null>(null);
+  // Mutex to prevent concurrent execution of handleCustomerInfoUpdate
+  const syncInProgressRef = useRef(false);
 
   /**
    * Handle customer info updates from RevenueCat.
-   * Only triggers profile refetch if premium status actually changed.
+   * Only syncs to Supabase if premium status actually changed.
+   * Uses mutex to prevent concurrent execution.
    */
   const handleCustomerInfoUpdate = useCallback(
     async (customerInfo: CustomerInfo) => {
       const userId = currentUserIdRef.current;
       if (!userId) return;
 
+      if (syncInProgressRef.current) return;
+
       const { hasPremium } = checkPremiumEntitlement(customerInfo);
 
-      // Only proceed if premium status actually changed
+      // Always update local tracking
       const premiumChanged = hasPremium !== lastPremiumStatusRef.current;
       if (!premiumChanged && lastPremiumStatusRef.current !== null) {
-        // Status unchanged - skip sync to avoid unnecessary re-renders
         return;
       }
 
-      console.log('[SubscriptionSync] Entitlement update:', {
-        userId,
-        hasPremium,
-        previousStatus: lastPremiumStatusRef.current,
-        changed: premiumChanged,
-      });
-
-      const { error } = await syncPremiumToSupabase(userId, hasPremium);
-      if (error) {
-        console.error('[SubscriptionSync] Failed to sync to Supabase:', error);
-      } else {
-        // Update tracked status BEFORE refetch to prevent re-triggering
+      // Only sync UPGRADES to Supabase — never downgrade client-side.
+      // Revocation is handled server-side via RevenueCat webhook.
+      if (!hasPremium) {
+        console.log('[SubscriptionSync] RC says not premium — skipping Supabase downgrade');
         lastPremiumStatusRef.current = hasPremium;
-        // Only refetch profile when status actually changed
-        await refetchProfile();
-        console.log('[SubscriptionSync] Profile refetched after premium sync');
+        return;
+      }
+
+      syncInProgressRef.current = true;
+      try {
+        console.log('[SubscriptionSync] Upgrading to premium:', { userId });
+
+        const { profile, error } = await syncPremiumToSupabase(userId, true);
+        if (error || !profile) {
+          console.error('[SubscriptionSync] Failed to sync premium upgrade:', error);
+          return;
+        }
+
+        setProfileDirect(profile);
+        lastPremiumStatusRef.current = true;
+        console.log('[SubscriptionSync] Premium upgrade synced successfully');
+      } finally {
+        syncInProgressRef.current = false;
       }
     },
-    [refetchProfile]
+    [setProfileDirect]
   );
 
   /**
@@ -201,16 +212,38 @@ export function SubscriptionSyncProvider({
 
   /**
    * Force a manual sync of current entitlement status.
+   * Bypasses handleCustomerInfoUpdate to avoid mutex/concurrency issues with the listener.
+   * Uses getCustomerInfo() instead of re-identifying.
    */
-  const forceSync = useCallback(async () => {
+  const forceSync = useCallback(async (): Promise<{ success: boolean; isPremium: boolean }> => {
     const userId = currentUserIdRef.current;
-    if (!userId) return;
+    if (!userId) return { success: false, isPremium: false };
 
-    const { customerInfo } = await identifyUser(userId);
-    if (customerInfo) {
-      await handleCustomerInfoUpdate(customerInfo);
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const { hasPremium } = checkPremiumEntitlement(customerInfo);
+
+      if (hasPremium) {
+        // Upgrade: sync premium to Supabase
+        const { profile, error } = await syncPremiumToSupabase(userId, true);
+        if (error || !profile) {
+          console.error('[SubscriptionSync] forceSync upgrade failed:', error);
+          return { success: false, isPremium: false };
+        }
+        setProfileDirect(profile);
+        lastPremiumStatusRef.current = true;
+        return { success: true, isPremium: true };
+      }
+
+      // RC says not premium — don't downgrade, just report current DB state
+      console.log('[SubscriptionSync] forceSync: RC not premium, preserving DB state');
+      lastPremiumStatusRef.current = false;
+      return { success: true, isPremium: false };
+    } catch (error) {
+      console.error('[SubscriptionSync] forceSync error:', error);
+      return { success: false, isPremium: false };
     }
-  }, [handleCustomerInfoUpdate]);
+  }, [setProfileDirect]);
 
   /**
    * Manually restore purchases (via Settings).

@@ -80,7 +80,7 @@ export function HomeHeader({
           // At-risk state
           <Animated.View style={[styles.streakPill, styles.atRiskPill, animatedStyle]}>
             <Flame size={16} color={HOME_COLORS.redCard} fill={HOME_COLORS.redCard} />
-            <Text style={styles.atRiskText}>
+            <Text style={styles.atRiskText} numberOfLines={1}>
               {streak} day streak at risk! {hoursLeft}h left
             </Text>
           </Animated.View>
@@ -129,7 +129,8 @@ const styles = StyleSheet.create({
   rightCluster: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    flexShrink: 1,
   },
   proPill: {
     backgroundColor: HOME_COLORS.cardYellow,
@@ -141,6 +142,7 @@ const styles = StyleSheet.create({
     gap: 6,
     borderBottomWidth: 3,
     borderBottomColor: HOME_COLORS.cardYellowShadow,
+    flexShrink: 0,
   },
   proText: {
     fontFamily: 'Outfit-ExtraBold',
@@ -159,6 +161,7 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderColor: HOME_COLORS.border,
+    flexShrink: 1,
   },
   streakCount: {
     fontFamily: HOME_FONTS.stats,

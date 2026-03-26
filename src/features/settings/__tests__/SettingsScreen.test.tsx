@@ -187,7 +187,7 @@ jest.mock("expo-store-review", () => ({
 jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: "3.2.0",
+      version: "3.3.0",
     },
   },
 }));
@@ -350,9 +350,19 @@ jest.mock("@/features/referral", () => ({
       </View>
     );
   },
-  useReferralCode: () => ({ code: null, loading: false, error: null, generateCode: jest.fn() }),
+  useReferralCode: () => ({
+    code: null,
+    loading: false,
+    error: null,
+    generateCode: jest.fn(),
+  }),
   useReferralAttribution: () => ({}),
-  useReferralStats: () => ({ stats: null, loading: false, error: null, refresh: jest.fn() }),
+  useReferralStats: () => ({
+    stats: null,
+    loading: false,
+    error: null,
+    refresh: jest.fn(),
+  }),
   ReferralRewardToast: () => null,
 }));
 

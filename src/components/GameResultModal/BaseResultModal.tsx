@@ -53,9 +53,6 @@ import {
 } from '@/features/stats/utils/tierProgression';
 import { useAuth } from '@/features/auth';
 import { useCurrentStreak } from '@/hooks/useCurrentStreak';
-import { ChallengeButton } from '@/features/challenges';
-import { useInterstitialAd } from '@/features/ads/hooks/useInterstitialAd';
-import { ReferralPrompt } from '@/features/referral/components/ReferralPrompt';
 import type { GameMode } from '@/features/puzzles/types/puzzle.types';
 
 export type ResultType = 'win' | 'loss' | 'draw' | 'complete';
@@ -557,9 +554,6 @@ export function BaseResultModal({
   const effectiveOldIQ = oldIQ ?? (showRetention ? authTotalIQ - iqEarned : undefined);
   const effectiveNewIQ = newIQ ?? (showRetention ? authTotalIQ : undefined);
 
-  // Interstitial ad — records game completion and shows ad every 2nd game
-  useInterstitialAd(visible);
-
   // Session chaining — finds next unplayed daily puzzle
   const nextPuzzle = useNextPuzzle(showNextPuzzle);
 
@@ -719,11 +713,6 @@ export function BaseResultModal({
             />
           )}
 
-          {/* Referral prompt — shown after wins for non-premium users */}
-          {!effectiveIsPremium && showRetention && (resultType === 'win' || resultType === 'complete') && (
-            <ReferralPrompt userId={profile?.id ?? null} />
-          )}
-
           {/* All Done message when all puzzles completed */}
           {showNextPuzzle && nextPuzzle.allDone && (
             <View style={styles.nextPuzzleContainer}>
@@ -816,14 +805,6 @@ export function BaseResultModal({
                 </View>
               )}
 
-              {/* Challenge a Friend button */}
-              {puzzleId && gameMode && challengeScore !== undefined && (
-                <ChallengeButton
-                  puzzleId={puzzleId}
-                  gameMode={gameMode}
-                  score={challengeScore}
-                />
-              )}
             </View>
           )}
         </Animated.View>

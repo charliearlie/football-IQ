@@ -13,7 +13,7 @@ import {
   addCustomerInfoListener,
   silentRestorePurchases,
 } from '../services/SubscriptionSync';
-import { mockPurchases, mockSupabaseFrom } from '../../../../jest-setup';
+import { mockPurchases, mockSupabaseFrom, mockSupabaseRpc } from '../../../../jest-setup';
 
 // Get mock of default export
 const Purchases = mockPurchases;
@@ -106,53 +106,45 @@ describe('SubscriptionSync Service', () => {
   });
 
   describe('syncPremiumToSupabase', () => {
-    it('updates profile to premium when isPremium is true', async () => {
-      const mockEq = jest.fn().mockResolvedValue({ error: null });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      const mockSelect = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ single: jest.fn() }) });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate, select: mockSelect });
+    it('calls upgrade_to_premium RPC and returns profile', async () => {
+      const mockProfile = { id: 'user-123', is_premium: true, premium_purchased_at: '2026-03-19T00:00:00Z' };
+      mockSupabaseRpc.mockResolvedValue({ data: [mockProfile], error: null });
 
       const result = await syncPremiumToSupabase('user-123', true);
 
       expect(result.error).toBeNull();
-      expect(mockSupabaseFrom).toHaveBeenCalledWith('profiles');
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          is_premium: true,
-          premium_purchased_at: expect.any(String),
-        })
-      );
-      expect(mockEq).toHaveBeenCalledWith('id', 'user-123');
+      expect(result.profile).toEqual(mockProfile);
+      expect(mockSupabaseRpc).toHaveBeenCalledWith('upgrade_to_premium');
     });
 
-    it('updates profile to non-premium when isPremium is false', async () => {
-      const mockEq = jest.fn().mockResolvedValue({ error: null });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      const mockSelect = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ single: jest.fn() }) });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate, select: mockSelect });
-
+    it('is a no-op when called with isPremium=false', async () => {
       const result = await syncPremiumToSupabase('user-123', false);
 
       expect(result.error).toBeNull();
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          is_premium: false,
-          premium_purchased_at: null,
-        })
-      );
+      expect(result.profile).toBeNull();
+      expect(mockSupabaseRpc).not.toHaveBeenCalled();
     });
 
-    it('returns error when Supabase update fails', async () => {
+    it('returns error when RPC fails', async () => {
       const mockError = { message: 'Database error' };
-      const mockEq = jest.fn().mockResolvedValue({ error: mockError });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      const mockSelect = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ single: jest.fn() }) });
-      mockSupabaseFrom.mockReturnValue({ update: mockUpdate, select: mockSelect });
+      mockSupabaseRpc.mockResolvedValue({ data: null, error: mockError });
 
       const result = await syncPremiumToSupabase('user-123', true);
 
       expect(result.error).not.toBeNull();
       expect(result.error?.message).toBe('Database error');
+      expect(result.profile).toBeNull();
+    });
+
+    it('returns error when upgrade did not take effect', async () => {
+      const mockProfile = { id: 'user-123', is_premium: false, premium_purchased_at: null };
+      mockSupabaseRpc.mockResolvedValue({ data: [mockProfile], error: null });
+
+      const result = await syncPremiumToSupabase('user-123', true);
+
+      expect(result.error).not.toBeNull();
+      expect(result.error?.message).toBe('Premium upgrade did not take effect');
+      expect(result.profile).toBeNull();
     });
   });
 

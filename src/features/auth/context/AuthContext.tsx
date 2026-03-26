@@ -41,6 +41,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     totalIQ,
     refetch: refetchProfile,
     refreshLocalIQ,
+    setProfileDirect,
   } = useProfile(user?.id ?? null);
 
   // Initialize auth on mount
@@ -209,6 +210,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateDisplayName,
     signOut,
     refetchProfile,
+    setProfileDirect,
     refreshLocalIQ,
     totalIQ,
   }), [
@@ -225,6 +227,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateDisplayName,
     signOut,
     refetchProfile,
+    setProfileDirect,
     refreshLocalIQ,
     totalIQ,
   ]);

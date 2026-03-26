@@ -11,13 +11,15 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { ElevatedButton } from '@/components/ElevatedButton';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, layout } from '@/theme';
 
 interface FloatingPlayCTAProps {
   /** Number of unplayed puzzles today. Bar is hidden when this is 0. */
   unplayedCount: number;
   /** Called when the button is pressed */
   onPress: () => void;
+  /** When true, adds tabBarHeight to bottom offset so the CTA clears the tab bar */
+  insideTabBar?: boolean;
 }
 
 /**
@@ -26,7 +28,7 @@ interface FloatingPlayCTAProps {
  * Fades in with a simple entrance animation whenever unplayedCount > 0.
  * Uses absolute positioning so it floats over the screen's ScrollView.
  */
-export function FloatingPlayCTA({ unplayedCount, onPress }: FloatingPlayCTAProps) {
+export function FloatingPlayCTA({ unplayedCount, onPress, insideTabBar = false }: FloatingPlayCTAProps) {
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function FloatingPlayCTA({ unplayedCount, onPress }: FloatingPlayCTAProps
   const buttonTitle = `PLAY TODAY'S PUZZLES  ·  ${unplayedCount} LEFT`;
 
   return (
-    <Animated.View style={[styles.container, { opacity }]} pointerEvents="box-none">
+    <Animated.View style={[styles.container, { opacity }, insideTabBar && { bottom: layout.tabBarHeight }]} pointerEvents="box-none">
       <View style={styles.inner}>
         <ElevatedButton
           title={buttonTitle}

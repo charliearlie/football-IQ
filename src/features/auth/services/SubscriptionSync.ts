@@ -15,6 +15,7 @@
 import Purchases, { CustomerInfo } from 'react-native-purchases';
 import { supabase } from '@/lib/supabase';
 import { PREMIUM_ENTITLEMENT_ID } from '@/config/revenueCat';
+import { Profile } from '@/features/auth/types/auth.types';
 
 /**
  * Result of checking entitlement status.
@@ -44,34 +45,47 @@ export function checkPremiumEntitlement(
 }
 
 /**
- * Updates the user's premium status in Supabase profiles table.
+ * Upgrades the user to premium via a SECURITY DEFINER RPC.
  *
- * @param userId - Supabase user ID
- * @param isPremium - Whether user should be premium
- * @returns Object with error if update failed
+ * The profiles table has a trigger (protect_profile_privileged_fields) that
+ * silently reverts is_premium on direct UPDATE. The upgrade_to_premium() RPC
+ * bypasses this trigger and is the only client-safe way to set premium status.
+ *
+ * Note: only upgrades (is_premium=true) are supported client-side.
+ * Downgrades are handled server-side via RevenueCat webhooks.
+ *
+ * @param userId - Supabase user ID (used for verification logging only; RPC uses auth.uid())
+ * @param isPremium - Must be true; false is a no-op (kept for call-site compatibility)
+ * @returns Object with updated profile and/or error
  */
 export async function syncPremiumToSupabase(
   userId: string,
   isPremium: boolean
-): Promise<{ error: Error | null }> {
+): Promise<{ profile: Profile | null; error: Error | null }> {
+  if (!isPremium) {
+    console.warn('[SubscriptionSync] syncPremiumToSupabase called with false — ignored');
+    return { profile: null, error: null };
+  }
+
   try {
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        is_premium: isPremium,
-        premium_purchased_at: isPremium ? new Date().toISOString() : null,
-      })
-      .eq('id', userId);
+    const { data, error } = await supabase.rpc('upgrade_to_premium');
 
     if (error) {
-      console.error('[SubscriptionSync] Supabase update error:', error);
-      return { error: new Error(error.message) };
+      console.error('[SubscriptionSync] upgrade_to_premium RPC error:', error);
+      return { profile: null, error: new Error(error.message) };
     }
 
-    return { error: null };
+    // RPC returns an array (RETURNS SETOF), take the first row
+    const profile = Array.isArray(data) ? data[0] : data;
+
+    if (!profile || !profile.is_premium) {
+      return { profile: null, error: new Error('Premium upgrade did not take effect') };
+    }
+
+    return { profile, error: null };
   } catch (err) {
     console.error('[SubscriptionSync] Sync exception:', err);
-    return { error: err as Error };
+    return { profile: null, error: err as Error };
   }
 }
 

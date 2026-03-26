@@ -60,8 +60,12 @@ const VALID_STATUSES = ["draft", "reviewing", "published", "rejected"];
 
 function authorize(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
+  const apiSecret = process.env.API_SECRET;
   const cronSecret = process.env.CRON_SECRET;
-  return !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+  return (
+    (!!apiSecret && authHeader === `Bearer ${apiSecret}`) ||
+    (!!cronSecret && authHeader === `Bearer ${cronSecret}`)
+  );
 }
 
 // ============================================================================

@@ -48,7 +48,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { usePlayToUnlock } from "@/hooks/usePlayToUnlock";
 import { HOME_COLORS } from "@/theme/home-design";
 import { getUserRank } from "@/features/leaderboard";
-import { OnThisDaySection } from "@/features/on-this-day";
+
 
 /**
  * Get today's date in YYYY-MM-DD format.
@@ -399,8 +399,6 @@ export default function HomeScreen() {
           </>
         )}
 
-        {/* 7. On This Day */}
-        <OnThisDaySection />
       </ScrollView>
 
       {/* Completed Game Modal */}
