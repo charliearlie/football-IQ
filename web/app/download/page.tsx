@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Download, Smartphone, Monitor, Apple } from "lucide-react";
 import { appStoreUrl } from "@/lib/constants";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 
 type Platform = "ios" | "android" | "desktop" | "detecting";
 
@@ -81,20 +82,27 @@ function IOSRedirectState() {
 
 function AndroidState() {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center backdrop-blur-sm">
-      <Smartphone className="w-12 h-12 text-card-yellow mx-auto mb-4" />
-      <h1 className="font-bebas text-2xl text-floodlight tracking-wide mb-2">
-        Coming Soon to Android
-      </h1>
-      <p className="text-slate-400 text-sm mb-6">
-        Football IQ is currently available on iOS. We&apos;re working hard to bring it to Android.
-      </p>
-      <p className="text-slate-400 text-sm">
-        In the meantime, play free quizzes at{" "}
-        <Link href="/" className="text-pitch-green hover:underline">
-          football-iq.app
-        </Link>
-      </p>
+    <div className="max-w-sm w-full space-y-4">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm">
+        <Smartphone className="w-12 h-12 text-card-yellow mx-auto mb-4" />
+        <h1 className="font-bebas text-2xl text-floodlight tracking-wide mb-2">
+          Coming Soon to Android
+        </h1>
+        <p className="text-slate-400 text-sm mb-6">
+          Football IQ is currently available on iOS. We&apos;re working hard to bring it to Android.
+        </p>
+        <p className="text-slate-400 text-sm">
+          In the meantime, play free quizzes at{" "}
+          <Link href="/" className="text-pitch-green hover:underline">
+            football-iq.app
+          </Link>
+        </p>
+      </div>
+      <EmailCaptureForm
+        source="download"
+        title="Notify me when Android launches"
+        description="We'll let you know the moment Football IQ arrives on Google Play."
+      />
     </div>
   );
 }

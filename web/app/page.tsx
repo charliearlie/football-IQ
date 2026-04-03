@@ -12,6 +12,7 @@ import { Footer } from "@/components/landing/Footer";
 import { SocialProofStrip } from "@/components/landing/SocialProofStrip";
 import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
 import { JsonLd } from "@/components/JsonLd";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 
 export const revalidate = 3600;
 
@@ -241,6 +242,14 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Email capture */}
+        <section className="pb-6">
+          <EmailCaptureForm
+            source="landing"
+            title="Get weekly football trivia in your inbox"
+          />
         </section>
 
         {/* App-only modes — compact list, not full cards */}

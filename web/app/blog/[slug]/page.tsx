@@ -10,6 +10,7 @@ import { ArticleRenderer } from "@/components/blog/ArticleRenderer";
 import { getReadingTime } from "@/lib/blog/markdown";
 import type { BlogArticleRow } from "@/lib/blog/types";
 import { WEB_PLAYABLE_GAMES } from "@/lib/constants";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 
 export const revalidate = 3600;
 
@@ -240,6 +241,15 @@ export default async function ArticlePage({ params }: PageProps) {
             ))}
           </div>
         </aside>
+
+        {/* Email capture */}
+        <div className="mt-8">
+          <EmailCaptureForm
+            source="blog"
+            title="Get weekly football trivia in your inbox"
+            description="New puzzles, game modes, and football trivia delivered weekly. No spam."
+          />
+        </div>
 
       </article>
 
