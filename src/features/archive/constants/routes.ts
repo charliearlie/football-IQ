@@ -24,4 +24,6 @@ export const GAME_MODE_ROUTES: Record<GameMode, string> = {
   connections: 'connections',
   timeline: 'timeline',
   who_am_i: 'who-am-i',
+  balldle: 'balldle',
+  higher_lower: 'higher-lower',
 };

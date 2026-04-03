@@ -8,7 +8,7 @@
 
 import React, { memo } from 'react';
 import { SvgXml } from 'react-native-svg';
-import { Grid3X3, Link, Shirt, HelpCircle } from 'lucide-react-native';
+import { Grid3X3, Link, Shirt, TrendingUp, Dices, HelpCircle } from 'lucide-react-native';
 import { colors } from '@/theme';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
 
@@ -123,6 +123,10 @@ function GameModeIconComponent({ gameMode, size = 24 }: GameModeIconProps) {
       return <Link size={size} color={LUCIDE_FALLBACK_COLOR} />;
     case 'the_thread':
       return <Shirt size={size} color={LUCIDE_FALLBACK_COLOR} />;
+    case 'higher_lower':
+      return <TrendingUp size={size} color={LUCIDE_FALLBACK_COLOR} />;
+    case 'balldle':
+      return <Dices size={size} color={LUCIDE_FALLBACK_COLOR} />;
     default:
       return <HelpCircle size={size} color={colors.textSecondary} />;
   }

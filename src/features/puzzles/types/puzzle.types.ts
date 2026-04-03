@@ -44,7 +44,9 @@ export type GameMode =
   | 'starting_xi'
   | 'connections'
   | 'timeline'
-  | 'who_am_i';
+  | 'who_am_i'
+  | 'balldle'
+  | 'higher_lower';
 
 /**
  * Result of a sync operation

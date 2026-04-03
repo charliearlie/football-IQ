@@ -60,6 +60,14 @@ const MODE_FLAVOUR: Record<GameMode, { strengthText: string; weaknessText: strin
     strengthText: 'Identifies players from the smallest of clues.',
     weaknessText: 'Mystery clues prove too cryptic.',
   },
+  balldle: {
+    strengthText: 'Connects player attributes with remarkable precision.',
+    weaknessText: 'Attribute-based deduction still needs work.',
+  },
+  higher_lower: {
+    strengthText: 'Has an intuitive feel for transfer market valuations.',
+    weaknessText: 'Transfer fee comparisons trip them up.',
+  },
 };
 
 /**

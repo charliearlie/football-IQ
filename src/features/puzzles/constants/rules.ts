@@ -368,6 +368,57 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     icon: undefined,
     accentColor: colors.cardYellow,
   },
+
+  balldle: {
+    gameMode: 'balldle',
+    displayTitle: 'Balldle',
+    goal: 'Guess the footballer in 6 tries from attribute feedback',
+    rules: [
+      { text: '6 attempts to guess the mystery player', highlight: '6 attempts' },
+      { text: 'Each guess shows club, league, nationality, position, age feedback' },
+      { text: 'Green = correct, yellow = close, red = wrong', highlight: 'Green = correct' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'IQ based on number of guesses needed',
+      potentialLabel: 'FIRST GUESS',
+      tiers: [
+        { range: '1 guess', label: 'Legendary' },
+        { range: '2 guesses', label: 'World Class' },
+        { range: '3 guesses', label: 'Director of Football' },
+        { range: '4 guesses', label: 'Chief Scout' },
+        { range: '5 guesses', label: 'Scout' },
+        { range: '6 guesses', label: 'Trainee' },
+      ],
+    },
+    icon: undefined,
+    accentColor: colors.pitchGreen,
+  },
+
+  higher_lower: {
+    gameMode: 'higher_lower',
+    displayTitle: 'Higher/Lower',
+    goal: 'Guess if the next transfer fee is higher or lower',
+    rules: [
+      { text: '10 rounds of transfer fee comparisons', highlight: '10 rounds' },
+      { text: 'Guess if Player 2 cost more or less' },
+      { text: "One wrong answer and it's game over!", highlight: 'game over' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'IQ based on rounds survived — later rounds worth more',
+      potentialLabel: 'PERFECT 10',
+      tiers: [
+        { range: '10/10 correct', label: 'Perfect 10' },
+        { range: '8-9 correct', label: 'World Class' },
+        { range: '6-7 correct', label: 'Director of Football' },
+        { range: '4-5 correct', label: 'Chief Scout' },
+        { range: '1-3 correct', label: 'Scout' },
+      ],
+    },
+    icon: undefined,
+    accentColor: colors.cardYellow,
+  },
 };
 
 /**

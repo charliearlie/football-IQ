@@ -30,6 +30,7 @@ import {
   ListOrdered,
   Users,
   HelpCircle,
+  Dices,
   type LucideIcon,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
@@ -110,6 +111,16 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     name: 'The Identifier',
     icon: HelpCircle,
     description: 'Recognises players from minimal clues',
+  },
+  balldle: {
+    name: 'Attribute Analyst',
+    icon: Dices,
+    description: 'Decodes player identities through attribute feedback',
+  },
+  higher_lower: {
+    name: 'Market Instinct',
+    icon: TrendingUp,
+    description: 'Reads transfer valuations like a seasoned director',
   },
 };
 

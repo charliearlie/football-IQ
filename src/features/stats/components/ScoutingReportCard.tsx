@@ -30,6 +30,7 @@ import {
   ListOrdered,
   Users,
   HelpCircle,
+  Dices,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import { getTierForPoints, getTierColor } from '../utils/tierProgression';
@@ -52,6 +53,8 @@ const ARCHETYPE_ICONS: Record<GameMode, LucideIcon> = {
   connections: Grid3X3,
   timeline: Clock,
   who_am_i: HelpCircle,
+  balldle: Dices,
+  higher_lower: TrendingUp,
 };
 
 /**
@@ -71,6 +74,8 @@ const ARCHETYPE_NAMES: Record<GameMode, string> = {
   connections: 'Group Finder',
   timeline: 'Timekeeper',
   who_am_i: 'The Identifier',
+  balldle: 'Attribute Analyst',
+  higher_lower: 'Market Instinct',
 };
 
 export interface ScoutingReportData {

@@ -252,6 +252,8 @@ describe('getDominantMode', () => {
       connections: 0,
       timeline: 0,
       who_am_i: 0,
+      balldle: 0,
+      higher_lower: 0,
     };
 
     const result = getDominantMode(byMode);
@@ -273,6 +275,8 @@ describe('getDominantMode', () => {
       connections: 0,
       timeline: 0,
       who_am_i: 0,
+      balldle: 0,
+      higher_lower: 0,
     };
 
     const result = getDominantMode(byMode);
@@ -294,6 +298,8 @@ describe('getDominantMode', () => {
       connections: 0,
       timeline: 0,
       who_am_i: 0,
+      balldle: 0,
+      higher_lower: 0,
     };
 
     const result = getDominantMode(byMode);
@@ -303,8 +309,8 @@ describe('getDominantMode', () => {
 });
 
 describe('ALL_GAME_MODES constant', () => {
-  it('contains exactly 13 game modes', () => {
-    expect(ALL_GAME_MODES).toHaveLength(13);
+  it('contains exactly 15 game modes', () => {
+    expect(ALL_GAME_MODES).toHaveLength(15);
   });
 
   it('includes all expected modes', () => {
@@ -341,6 +347,8 @@ describe('FieldExperience interface', () => {
         connections: 0,
         timeline: 0,
         who_am_i: 0,
+        balldle: 0,
+        higher_lower: 0,
       },
       totalAppearances: 46,
       dominantMode: 'guess_the_transfer',

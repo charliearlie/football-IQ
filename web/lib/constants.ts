@@ -13,6 +13,8 @@ export const GAME_MODES = [
   "connections",
   "timeline",
   "who_am_i",
+  "higher_lower",
+  "balldle",
 ] as const;
 
 export type GameMode = (typeof GAME_MODES)[number];
@@ -32,6 +34,8 @@ export const GAME_MODE_DISPLAY_NAMES: Record<GameMode, string> = {
   connections: "Connections",
   timeline: "Timeline",
   who_am_i: "Who Am I?",
+  higher_lower: "Higher/Lower",
+  balldle: "Balldle",
 };
 
 // Short names for compact display
@@ -49,6 +53,8 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   connections: "CON",
   timeline: "TL",
   who_am_i: "WAI",
+  higher_lower: "HL",
+  balldle: "BD",
 };
 
 // Premium-only modes — temporarily disabled for outreach
@@ -137,6 +143,8 @@ export const APP_ONLY_GAMES: { title: string; description: string }[] = [
   { title: "Goalscorer Recall", description: "Name every scorer from a classic match" },
   { title: "Starting XI", description: "Find the missing players in iconic lineups" },
   { title: "Who Am I?", description: "Guess the footballer from 5 progressive clues" },
+  { title: "Higher/Lower", description: "Did they pay more or less? Compare real transfer fees" },
+  { title: "Balldle", description: "Wordle for footballers — 6 guesses, attribute feedback" },
 ];
 
 // Fallback puzzle data for when no puzzle exists for today

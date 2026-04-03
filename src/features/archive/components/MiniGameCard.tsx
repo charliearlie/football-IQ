@@ -48,6 +48,8 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   connections: 'Connections',
   timeline: 'Timeline',
   who_am_i: 'Who Am I?',
+  balldle: 'Balldle',
+  higher_lower: 'Higher/Lower',
 };
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };

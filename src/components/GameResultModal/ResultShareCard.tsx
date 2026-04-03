@@ -31,6 +31,7 @@ import {
   ListOrdered,
   Users,
   HelpCircle,
+  Dices,
 } from 'lucide-react-native';
 import { colors, fonts, fontWeights, spacing, borderRadius } from '@/theme';
 import { getTierForPoints, getTierColor } from '@/features/stats/utils/tierProgression';
@@ -54,6 +55,8 @@ const GAME_MODE_ICONS: Record<GameMode, LucideIcon> = {
   connections: Grid3X3,
   timeline: Clock,
   who_am_i: HelpCircle,
+  balldle: Dices,
+  higher_lower: TrendingUp,
 };
 
 export type ResultShareType = 'perfect' | 'win' | 'complete' | 'loss';
