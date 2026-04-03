@@ -36,6 +36,7 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import { usePostHog } from 'posthog-react-native';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { ProBadge } from '@/components/ProBadge';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -64,6 +65,7 @@ export function UnlockChoiceModal({
 }: UnlockChoiceModalProps) {
   const router = useRouter();
   const posthog = usePostHog();
+  const { trackPaywallDismissed, trackAdDeclined } = useAnalytics();
   const [state, setState] = useState<UnlockChoiceState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -117,6 +119,11 @@ export function UnlockChoiceModal({
 
 
   // IMPORTANT: No auto-navigation listeners.
+  const handleDismiss = useCallback(() => {
+    trackPaywallDismissed({ trigger_source: 'unlock_choice' });
+    onClose();
+  }, [onClose, trackPaywallDismissed]);
+
   // We rely entirely on the user pressing "Play Now" or "Close".
 
   /**
@@ -239,7 +246,7 @@ export function UnlockChoiceModal({
           {state !== 'loading_ad' && state !== 'showing_ad' && state !== 'ad_success' && (
             <Pressable
               style={styles.closeButton}
-              onPress={onClose}
+              onPress={handleDismiss}
               hitSlop={12}
               testID={`${testID}-close`}
             >

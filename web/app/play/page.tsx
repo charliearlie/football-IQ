@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
-import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, APP_STORE_URL } from "@/lib/constants";
+import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants";
 
 const BASE_URL = "https://www.football-iq.app";
 
@@ -92,7 +92,7 @@ export default function PlayPage() {
               Football IQ
             </Link>
             <a
-              href={APP_STORE_URL}
+              href={appStoreUrl('web_play')}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-semibold text-stadium-navy bg-pitch-green px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
@@ -172,7 +172,7 @@ export default function PlayPage() {
                 More Modes in the App
               </h2>
               <a
-                href={APP_STORE_URL}
+                href={appStoreUrl('web_play')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-pitch-green font-semibold hover:underline"
@@ -206,7 +206,7 @@ export default function PlayPage() {
               The app includes everything here plus 6 more game modes, a full puzzle archive, streaks, achievements, and weekly tournaments.
             </p>
             <a
-              href={APP_STORE_URL}
+              href={appStoreUrl('web_play')}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-pitch-green text-stadium-navy font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity text-sm"

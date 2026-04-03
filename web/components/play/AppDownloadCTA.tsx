@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Smartphone, Lock } from "lucide-react";
-import { APP_ONLY_GAMES, APP_STORE_URL } from "@/lib/constants";
+import { APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants";
 
 export function AppDownloadCTA() {
   return (
@@ -42,7 +42,7 @@ export function AppDownloadCTA() {
       {/* Store badges */}
       <div className="flex flex-col items-center gap-3">
         <Link
-          href={APP_STORE_URL}
+          href={appStoreUrl('web_play_cta')}
           target="_blank"
           rel="noopener noreferrer"
           className="transition-all hover:opacity-90 hover:scale-105"

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Download, Smartphone, Monitor, Apple } from "lucide-react";
-import { APP_STORE_URL } from "@/lib/constants";
+import { appStoreUrl } from "@/lib/constants";
 
 type Platform = "ios" | "android" | "desktop" | "detecting";
 
@@ -22,7 +22,7 @@ export default function DownloadPage() {
     setPlatform(detected);
 
     if (detected === "ios") {
-      window.location.replace(APP_STORE_URL);
+      window.location.replace(appStoreUrl('web_download'));
     }
   }, []);
 
@@ -69,7 +69,7 @@ function IOSRedirectState() {
         If you&apos;re not redirected automatically:
       </p>
       <a
-        href={APP_STORE_URL}
+        href={appStoreUrl('web_download')}
         className="inline-flex items-center gap-2 bg-pitch-green text-stadium-navy font-bold px-6 py-3 rounded-full hover:bg-pitch-green/90 transition-colors"
       >
         <Download className="w-4 h-4" />
@@ -104,7 +104,7 @@ function DesktopState() {
     <div className="max-w-md w-full space-y-6">
       {/* iOS card */}
       <a
-        href={APP_STORE_URL}
+        href={appStoreUrl('web_download')}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/10 transition-colors group"

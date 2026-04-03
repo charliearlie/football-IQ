@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { APP_STORE_URL } from "@/lib/constants";
+import { appStoreUrl } from "@/lib/constants";
 
 interface GameNavProps {
   title: string;
@@ -24,7 +24,7 @@ export function GameNav({ title }: GameNavProps) {
       </h1>
 
       <Link
-        href={APP_STORE_URL}
+        href={appStoreUrl('web_game_nav')}
         target="_blank"
         rel="noopener noreferrer"
         className="bg-pitch-green text-stadium-navy text-xs font-bold px-3 py-1.5 rounded-full hover:bg-pitch-green/90 transition-colors"

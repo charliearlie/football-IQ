@@ -25,7 +25,7 @@ import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/fe
 import {
   PremiumUpsellContent,
 } from '@/features/subscription';
-import { ANALYTICS_EVENTS } from '@/hooks/useAnalytics';
+import { ANALYTICS_EVENTS, useAnalytics } from '@/hooks/useAnalytics';
 import { colors } from '@/theme/colors';
 import { PREMIUM_OFFERING_ID } from '@/config/revenueCat';
 
@@ -47,6 +47,7 @@ export default function PremiumModalScreen() {
   const posthog = usePostHog();
   const { user } = useAuth();
   const { forceSync } = useSubscriptionSync();
+  const { trackPaywallDismissed } = useAnalytics();
 
   // Track mounted state to prevent updates after unmount
   const isMountedRef = useRef(true);
@@ -67,9 +68,10 @@ export default function PremiumModalScreen() {
 
   const handleClose = useCallback(() => {
     if (isMountedRef.current) {
+      trackPaywallDismissed({ trigger_source: mode ?? 'direct' });
       router.back();
     }
-  }, [router]);
+  }, [router, mode, trackPaywallDismissed]);
 
   const fetchOfferings = useCallback(async () => {
     setState('loading');

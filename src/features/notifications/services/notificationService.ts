@@ -256,6 +256,7 @@ export function addReceivedListener(
 
 /**
  * Add a listener for notification interactions (user tapped notification).
+ * Also records the open event to Supabase for tracking open rates.
  */
 export function addResponseListener(
   callback: (response: Notifications.NotificationResponse) => void
@@ -273,8 +274,39 @@ export function addResponseListener(
       },
     });
 
+    // Record notification open for server-side push tracking
+    recordNotificationOpen(response.notification).catch(() => {
+      // Never crash the app over analytics
+    });
+
     callback(response);
   });
+}
+
+/**
+ * Record a notification open event to Supabase.
+ * Uses the notification data to identify the source campaign.
+ */
+async function recordNotificationOpen(notification: Notifications.Notification): Promise<void> {
+  try {
+    const data = notification.request.content.data as Record<string, string> | undefined;
+    const notificationId = data?.notificationId;
+
+    // Only record opens for server-side notifications that include a notificationId
+    if (!notificationId) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.rpc as any)('record_notification_open', {
+      p_notification_id: notificationId,
+      p_user_id: user.id,
+    });
+  } catch (error) {
+    // Silently fail — analytics should never crash the app
+    console.warn('[Notifications] Failed to record open:', error);
+  }
 }
 
 /**

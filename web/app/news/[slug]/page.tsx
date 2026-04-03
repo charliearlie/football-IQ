@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeroStrip } from "@/components/landing/HeroStrip";
 import { Footer } from "@/components/landing/Footer";
 import {
-  APP_STORE_URL,
+  appStoreUrl,
   PLAY_STORE_URL,
   WEB_PLAYABLE_GAMES,
   APP_ONLY_GAMES,
@@ -28,7 +28,7 @@ const NEWS_ARTICLES: Record<string, NewsArticle> = {
         <p className="text-slate-300 leading-relaxed mb-4">
           Football IQ is now available to download worldwide on the{" "}
           <a
-            href={APP_STORE_URL}
+            href={appStoreUrl('web_news')}
             className="text-pitch-green hover:underline underline-offset-2"
             target="_blank"
             rel="noopener noreferrer"
@@ -124,7 +124,7 @@ const NEWS_ARTICLES: Record<string, NewsArticle> = {
         </p>
         <div className="flex flex-wrap gap-4 mt-4">
           <a
-            href={APP_STORE_URL}
+            href={appStoreUrl('web_news')}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg px-5 py-3 text-floodlight font-semibold transition-colors"

@@ -75,6 +75,11 @@ export const ANDROID_PACKAGE = "com.footballiq.app";
 export const APP_STORE_URL = "https://apps.apple.com/app/football-iq-daily-quiz-game/id6757344691";
 export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
+/** App Store URL with campaign tracking for App Store Connect analytics */
+export function appStoreUrl(campaign: string): string {
+  return `${APP_STORE_URL}?mt=8&ct=${encodeURIComponent(campaign)}`;
+}
+
 // Web-playable game modes (available on /play)
 export interface WebPlayableGame {
   dbMode: GameMode;

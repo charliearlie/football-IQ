@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GAME_MODES, GAME_MODE_DISPLAY_NAMES, type GameMode } from "@/lib/constants";
-import { sendPushNotification, getSentNotifications, getTokenCount, getTodaysPuzzles, type TodaysPuzzle } from "./actions";
+import { sendPushNotification, getSentNotifications, getTokenCount, getTodaysPuzzles, getSegmentCount, type TodaysPuzzle, type NotificationSegment } from "./actions";
 
 interface SentNotification {
   id: string;
@@ -45,7 +45,9 @@ export default function NotificationsPage() {
     message: string;
   } | null>(null);
   const [history, setHistory] = useState<SentNotification[]>([]);
+  const [segment, setSegment] = useState<NotificationSegment>("all");
   const [tokenCount, setTokenCount] = useState(0);
+  const [segmentCount, setSegmentCount] = useState<number | null>(null);
   const [todaysPuzzles, setTodaysPuzzles] = useState<TodaysPuzzle[]>([]);
 
   // Load history, token count, and today's puzzles on mount
@@ -56,6 +58,12 @@ export default function NotificationsPage() {
     getTokenCount().then(setTokenCount);
     getTodaysPuzzles().then(({ puzzles }) => setTodaysPuzzles(puzzles));
   }, []);
+
+  // Update segment count when segment changes
+  useEffect(() => {
+    setSegmentCount(null);
+    getSegmentCount(segment).then(setSegmentCount);
+  }, [segment]);
 
   const handleSend = () => {
     if (!title.trim() || !body.trim()) {
@@ -69,6 +77,7 @@ export default function NotificationsPage() {
         body: body.trim(),
         gameMode: gameMode === "none" ? "" : gameMode,
         puzzleId: puzzleId.trim() || undefined,
+        segment,
       });
 
       if (res.success) {
@@ -92,7 +101,7 @@ export default function NotificationsPage() {
   return (
     <AdminPageShell
       title="Notifications"
-      subtitle="Send push notifications to all users"
+      subtitle="Send targeted push notifications"
     >
       <div className="grid gap-6 lg:grid-cols-[1fr,1fr]">
         {/* Send Notification Form */}
@@ -108,6 +117,35 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
             <span>{tokenCount} registered device{tokenCount !== 1 ? "s" : ""}</span>
+          </div>
+
+          {/* Segment selector */}
+          <div className="space-y-2">
+            <Label>Audience Segment</Label>
+            <Select
+              value={segment}
+              onValueChange={(v: string) => setSegment(v as NotificationSegment)}
+            >
+              <SelectTrigger className="bg-white/5 border-white/10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All users</SelectItem>
+                <SelectItem value="free">Free users only</SelectItem>
+                <SelectItem value="premium">Premium subscribers</SelectItem>
+                <SelectItem value="at_risk">At risk (24-48h inactive)</SelectItem>
+                <SelectItem value="lapsed_7d">Lapsed (7+ days inactive)</SelectItem>
+                <SelectItem value="never_played">Never played (signed up, 0 IQ)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Estimated audience:{" "}
+              {segmentCount === null ? (
+                <span className="animate-pulse">calculating...</span>
+              ) : (
+                <span className="text-pitch-green font-medium">{segmentCount} device{segmentCount !== 1 ? "s" : ""}</span>
+              )}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -209,7 +247,7 @@ export default function NotificationsPage() {
             ) : (
               <>
                 <Send className="h-4 w-4 mr-2" />
-                Send to All Devices
+                {segment === "all" ? "Send to All Devices" : `Send to ${segmentCount ?? "..."} Devices`}
               </>
             )}
           </Button>

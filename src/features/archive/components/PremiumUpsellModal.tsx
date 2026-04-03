@@ -29,6 +29,7 @@ import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/fe
 import {
   PremiumUpsellContent,
 } from '@/features/subscription';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { colors } from '@/theme/colors';
 import { spacing, borderRadius } from '@/theme/spacing';
 import { fonts, textStyles } from '@/theme/typography';
@@ -93,6 +94,7 @@ export function PremiumUpsellModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { user } = useAuth();
   const { forceSync } = useSubscriptionSync();
+  const { trackPaywallDismissed } = useAnalytics();
 
   /**
    * Fetch offerings from RevenueCat.
@@ -119,6 +121,11 @@ export function PremiumUpsellModal({
       setState('error');
     }
   }, []);
+
+  const handleClose = useCallback(() => {
+    trackPaywallDismissed({ trigger_source: mode ?? 'archive' });
+    onClose();
+  }, [onClose, mode, trackPaywallDismissed]);
 
   // Auto-fetch offerings when modal opens, reset when it closes
   useEffect(() => {
@@ -281,7 +288,7 @@ export function PremiumUpsellModal({
           style={[styles.modal, isTablet && styles.modalTablet]}
         >
            <PremiumUpsellContent
-              onClose={onClose}
+              onClose={handleClose}
               onPurchase={handlePurchase}
               onRestore={handleRestore}
               packages={packages}

@@ -30,6 +30,13 @@ export const ANALYTICS_EVENTS = {
   REFERRAL_LINK_SHARED: 'referral_link_shared',
   REFERRAL_ATTRIBUTED: 'referral_attributed',
   REFERRAL_REWARD_CLAIMED: 'referral_reward_claimed',
+  PAYWALL_DISMISSED: 'paywall_dismissed',
+  ARCHIVE_LOCK_SEEN: 'archive_lock_seen',
+  NOTIFICATION_PERMISSION_GRANTED: 'notification_permission_granted',
+  NOTIFICATION_PERMISSION_DENIED: 'notification_permission_denied',
+  REFERRAL_CTA_SHOWN: 'referral_cta_shown',
+  AD_DECLINED: 'ad_declined',
+  STORE_REVIEW_PROMPTED: 'store_review_prompted',
 } as const;
 
 // Base type compatible with PostHog's event properties
@@ -132,6 +139,34 @@ interface NotificationOpenedProps extends EventProps {
 interface NotificationScheduledProps extends EventProps {
   notification_type: string;
   notification_id: string;
+}
+
+interface PaywallDismissedProps extends EventProps {
+  trigger_source: string;
+}
+
+interface ArchiveLockSeenProps extends EventProps {
+  puzzle_date: string;
+  game_mode?: string;
+}
+
+interface NotificationPermissionProps extends EventProps {
+  prompt_location?: string;
+}
+
+interface ReferralCtaShownProps extends EventProps {
+  placement: string;
+}
+
+interface AdDeclinedProps extends EventProps {
+  game_mode?: string;
+  ad_type?: string;
+}
+
+interface StoreReviewPromptedProps extends EventProps {
+  trigger: string;
+  streak_days?: number;
+  session_count?: number;
 }
 
 export function useAnalytics() {
@@ -259,6 +294,43 @@ export function useAnalytics() {
     [capture]
   );
 
+  const trackPaywallDismissed = useCallback(
+    (props: PaywallDismissedProps) => capture(ANALYTICS_EVENTS.PAYWALL_DISMISSED, props),
+    [capture]
+  );
+
+  const trackArchiveLockSeen = useCallback(
+    (props: ArchiveLockSeenProps) => capture(ANALYTICS_EVENTS.ARCHIVE_LOCK_SEEN, props),
+    [capture]
+  );
+
+  const trackNotificationPermissionGranted = useCallback(
+    (props?: NotificationPermissionProps) =>
+      capture(ANALYTICS_EVENTS.NOTIFICATION_PERMISSION_GRANTED, props),
+    [capture]
+  );
+
+  const trackNotificationPermissionDenied = useCallback(
+    (props?: NotificationPermissionProps) =>
+      capture(ANALYTICS_EVENTS.NOTIFICATION_PERMISSION_DENIED, props),
+    [capture]
+  );
+
+  const trackReferralCtaShown = useCallback(
+    (props: ReferralCtaShownProps) => capture(ANALYTICS_EVENTS.REFERRAL_CTA_SHOWN, props),
+    [capture]
+  );
+
+  const trackAdDeclined = useCallback(
+    (props: AdDeclinedProps) => capture(ANALYTICS_EVENTS.AD_DECLINED, props),
+    [capture]
+  );
+
+  const trackStoreReviewPrompted = useCallback(
+    (props: StoreReviewPromptedProps) => capture(ANALYTICS_EVENTS.STORE_REVIEW_PROMPTED, props),
+    [capture]
+  );
+
   return {
     capture,
     trackGameStarted,
@@ -281,5 +353,12 @@ export function useAnalytics() {
     trackReferralLinkShared,
     trackReferralAttributed,
     trackReferralRewardClaimed,
+    trackPaywallDismissed,
+    trackArchiveLockSeen,
+    trackNotificationPermissionGranted,
+    trackNotificationPermissionDenied,
+    trackReferralCtaShown,
+    trackAdDeclined,
+    trackStoreReviewPrompted,
   };
 }

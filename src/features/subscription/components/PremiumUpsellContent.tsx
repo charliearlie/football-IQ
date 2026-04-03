@@ -27,6 +27,9 @@ import { fonts } from '@/theme/typography';
 import { processPackagesWithOffers } from '@/features/subscription';
 import { ProBadge } from '@/components/ProBadge';
 
+/** Context determines the hero copy and CTA text on the paywall */
+export type PaywallContext = 'general' | 'archive' | 'streak_save' | 'first_win';
+
 interface PremiumUpsellContentProps {
   onClose: () => void;
   onPurchase: (pkg: PurchasesPackage) => void;
@@ -37,6 +40,8 @@ interface PremiumUpsellContentProps {
   errorMessage?: string | null;
   onRetry?: () => void;
   testID?: string;
+  /** Contextual variant — changes hero copy based on what triggered the paywall */
+  context?: PaywallContext;
 }
 
 export function PremiumUpsellContent({
@@ -49,6 +54,7 @@ export function PremiumUpsellContent({
   errorMessage,
   onRetry,
   testID,
+  context = 'general',
 }: PremiumUpsellContentProps) {
   const { height: screenHeight } = useWindowDimensions();
   const isSmallScreen = screenHeight < 700;
@@ -56,6 +62,14 @@ export function PremiumUpsellContent({
   // Use actual container dimensions for SVG gradients (formSheet on iPad is smaller than screen)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
+  // Contextual hero copy based on what triggered the paywall
+  const heroSubtitle = {
+    general: 'Unlimited games. Zero ads. Full stats.',
+    archive: 'Unlock every game in the archive.',
+    streak_save: 'Protect your streak forever.',
+    first_win: "You're a natural. Keep the momentum.",
+  }[context];
+
   // Best practice: Pre-select Annual (Best Value).
   const processedOffers = React.useMemo(() => processPackagesWithOffers(packages, 'ANNUAL', eligibility), [packages, eligibility]);
   
@@ -221,7 +235,7 @@ export function PremiumUpsellContent({
              <Text style={styles.heroTitle}>
                   Football IQ <Text style={{ color: colors.cardYellow }}>PRO</Text>
              </Text>
-             <Text style={styles.heroSubtitle}>Unlimited games. Zero ads. Full stats.</Text>
+             <Text style={styles.heroSubtitle}>{heroSubtitle}</Text>
         </View>
 
         {/* Benefits */}

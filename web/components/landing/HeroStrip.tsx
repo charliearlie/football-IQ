@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
-import { APP_STORE_URL } from "@/lib/constants";
+import { appStoreUrl } from "@/lib/constants";
 
 export function HeroStrip() {
   return (
@@ -21,7 +21,7 @@ export function HeroStrip() {
 
           {/* GET APP pill */}
           <Link
-            href={APP_STORE_URL}
+            href={appStoreUrl('web_hero')}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 bg-pitch-green text-stadium-navy text-xs font-bold px-3 py-1.5 rounded-full hover:bg-pitch-green/90 transition-colors"

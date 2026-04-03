@@ -1,24 +1,43 @@
-import { Calendar, Clock, Gamepad2 } from "lucide-react";
+import { Calendar, Clock, Gamepad2, Users } from "lucide-react";
 
-const PROOF_POINTS = [
-  {
-    icon: Gamepad2,
-    value: "11 MODES",
-    label: "Something new every day",
-  },
-  {
-    icon: Clock,
-    value: "3-DAY ARCHIVE",
-    label: "Miss one? Catch up for free",
-  },
-  {
-    icon: Calendar,
-    value: "DAILY",
-    label: "Fresh games at midnight",
-  },
-];
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M+`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K+`;
+  return `${n}+`;
+}
 
-export function SocialProofStrip() {
+interface SocialProofStripProps {
+  /** Total games played across all users — pass from server component */
+  gamesPlayed?: number;
+}
+
+export function SocialProofStrip({ gamesPlayed }: SocialProofStripProps) {
+  const PROOF_POINTS = [
+    ...(gamesPlayed && gamesPlayed > 100
+      ? [
+          {
+            icon: Users,
+            value: `${formatCount(gamesPlayed)} GAMES PLAYED`,
+            label: "Join the community",
+          },
+        ]
+      : []),
+    {
+      icon: Gamepad2,
+      value: "13 MODES",
+      label: "Something new every day",
+    },
+    {
+      icon: Clock,
+      value: "3-DAY ARCHIVE",
+      label: "Miss one? Catch up for free",
+    },
+    {
+      icon: Calendar,
+      value: "DAILY",
+      label: "Fresh games at midnight",
+    },
+  ];
   return (
     <section className="py-10 border-y border-white/5 bg-white/[0.02]">
       <div className="container mx-auto px-4">
