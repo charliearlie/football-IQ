@@ -13,7 +13,7 @@ Run: `npx jest --no-coverage`
 | useStoreReview | `src/hooks/__tests__/useStoreReview.test.ts` | 21 | PASS |
 | createChallenge | `src/features/challenges/__tests__/createChallenge.test.ts` | 13 | PASS |
 | PremiumUpsellContent | `src/features/subscription/__tests__/PremiumUpsellContent.test.tsx` | 27 | PASS |
-| SyncService (pre-existing) | `src/services/player/__tests__/SyncService.test.ts` | 7 | FAIL |
+| SyncService | `src/services/player/__tests__/SyncService.test.ts` | 7 | PASS |
 
 ### Web (Vitest)
 Run: `cd web && npx vitest run lib/__tests__/constants.test.ts lib/__tests__/push.test.ts`
@@ -23,7 +23,7 @@ Run: `cd web && npx vitest run lib/__tests__/constants.test.ts lib/__tests__/pus
 | constants/appStoreUrl | `web/lib/__tests__/constants.test.ts` | 16 | PASS |
 | push utilities | `web/lib/__tests__/push.test.ts` | 20 | PASS |
 
-**Total: 142 new tests, 135 passing, 7 failing (pre-existing in SyncService)**
+**Total: 142 new tests, 142 passing, 0 failing**
 
 ---
 
@@ -93,14 +93,58 @@ Run: `cd web && npx vitest run lib/__tests__/constants.test.ts lib/__tests__/pus
 
 ---
 
-## Phase 5: Email Capture (TODO)
-_Tests to be added when implemented_
+## Phase 5: Email Capture
 
-## Phase 6: SEO Content Expansion (TODO)
-_Tests to be added when implemented_
+| # | Feature | Steps | Expected Result | Status |
+|---|---------|-------|-----------------|--------|
+| 5.1 | email_subscribers table | Check Supabase | Table exists with email, source, welcome_sequence_step columns | TODO |
+| 5.2a | Subscribe API | POST `/api/email/subscribe` with `{"email":"test@example.com","source":"landing"}` | Returns `{ success: true }` | TODO |
+| 5.2b | Subscribe - invalid email | POST with `{"email":"notanemail"}` | Returns 400 with `{ error: "Invalid email" }` | TODO |
+| 5.2c | Subscribe - duplicate | POST same email twice | Second request succeeds (upsert ignores duplicate) | TODO |
+| 5.3a | Email form - landing | Visit homepage | Email capture form visible below game grid | TODO |
+| 5.3b | Email form - blog | Visit any blog article | Email capture form at bottom of article | TODO |
+| 5.3c | Email form - scout | Visit `/scout/[userId]` | Email capture form after scout report | TODO |
+| 5.3d | Email form - download | Visit `/download` | Email capture form with Android waitlist messaging | TODO |
+| 5.4 | Welcome sequence cron | `curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/welcome-sequence` | Returns JSON with emails sent count | TODO |
+| 5.5 | Vercel cron | Deploy > check Vercel dashboard | welcome-sequence cron at 8am UTC daily | TODO |
 
-## Phase 9: New Game Modes (TODO)
-_Tests to be added when implemented_
+## Phase 6: SEO Content Expansion
+
+| # | Feature | Steps | Expected Result | Status |
+|---|---------|-------|-----------------|--------|
+| 6.1a | Quiz - Premier League | Visit `/quiz/premier-league` | Page loads with SEO title, questions, FAQ schema, game CTAs | TODO |
+| 6.1b | Quiz - Champions League | Visit `/quiz/champions-league` | Page loads with questions and CTAs | TODO |
+| 6.1c | Quiz - World Cup | Visit `/quiz/world-cup` | Page loads with questions and CTAs | TODO |
+| 6.1d | Quiz - Guess the Footballer | Visit `/quiz/guess-the-footballer` | Page loads with clue-based questions | TODO |
+| 6.2 | Quiz pages - JSON-LD | View page source on any quiz page | Contains `<script type="application/ld+json">` with FAQPage schema | TODO |
+| 6.3 | Blog index | Visit `/blog` | Blog index page loads (may be empty if no articles yet) | TODO |
+| 6.4 | Data journalism template | Check `web/app/blog/data/[slug]/page.tsx` exists | Template file created | DONE |
+| 6.5 | Sitemap | Visit `/sitemap.xml` | Contains quiz page URLs | TODO |
+
+## Phase 9: New Game Modes
+
+| # | Feature | Steps | Expected Result | Status |
+|---|---------|-------|-----------------|--------|
+| 9.1a | Balldle - types registered | Check GameMode union type | Includes `'balldle'` | DONE |
+| 9.1b | Balldle - route map | Check GAME_MODE_ROUTE_MAP | `balldle: 'balldle'` entry | DONE |
+| 9.1c | Balldle - rules map | Check RULES_MAP | Balldle rules with 6 tiers | DONE |
+| 9.1d | Balldle - home list | Check GAME_METADATA | `balldle` entry present | DONE |
+| 9.1e | Balldle - game icon | Check GameModeIcon | Lucide fallback for balldle | DONE |
+| 9.1f | Balldle - web constants | Check web/lib/constants.ts | balldle in GAME_MODES + display names | DONE |
+| 9.1g | Balldle - feature module | Check src/features/balldle/ | types, hooks, utils, components, screens, index.ts | DONE |
+| 9.1h | Balldle - app routes | Check app/balldle/ | index.tsx and [puzzleId].tsx | DONE |
+| 9.1i | Balldle - gameplay | Play a Balldle puzzle | 6 guess grid, attribute feedback (green/yellow/red), score | TODO |
+| 9.2a | Higher/Lower - types registered | Check GameMode union type | Includes `'higher_lower'` | DONE |
+| 9.2b | Higher/Lower - route map | Check GAME_MODE_ROUTE_MAP | `higher_lower: 'higher-lower'` entry | DONE |
+| 9.2c | Higher/Lower - rules map | Check RULES_MAP | Higher/Lower rules with 5 tiers | DONE |
+| 9.2d | Higher/Lower - home list | Check GAME_METADATA | `higher_lower` entry present | DONE |
+| 9.2e | Higher/Lower - game icon | Check GameModeIcon | Lucide TrendingUp fallback | DONE |
+| 9.2f | Higher/Lower - web constants | Check web/lib/constants.ts | higher_lower in GAME_MODES + display names | DONE |
+| 9.2g | Higher/Lower - feature module | Check src/features/higher-lower/ | types, hooks, utils, components, screens, index.ts | DONE |
+| 9.2h | Higher/Lower - app routes | Check app/higher-lower/ | index.tsx and [puzzleId].tsx | DONE |
+| 9.2i | Higher/Lower - gameplay | Play a Higher/Lower puzzle | Transfer cards, higher/lower buttons, streak scoring | TODO |
+| 9.3 | TypeScript clean | Run `npx tsc --noEmit` in web/ | No new errors from game modes | DONE |
+| 9.4 | Tests pass | Run `npx jest --no-coverage` | 2300+ tests pass, 0 failures | DONE |
 
 ---
 
@@ -108,7 +152,7 @@ _Tests to be added when implemented_
 
 | Issue | File | Notes |
 |-------|------|-------|
-| 7 failing tests | `src/services/player/__tests__/SyncService.test.ts` | mockRpc not wiring correctly — needs fix |
+| ~~7 failing tests~~ | `src/services/player/__tests__/SyncService.test.ts` | **FIXED** — was using local mockRpc overwritten by jest-setup.ts global mock |
 | TS error | `src/features/auth/services/SubscriptionSync.ts:71` | `upgrade_to_premium` not in typed RPC list |
 | Lint warning | `web/app/(dashboard)/calendar/actions.ts` | no-explicit-any (pre-existing) |
 | Missing dep | `country-flag-icons/string/3x2` | Import warning (pre-existing) |

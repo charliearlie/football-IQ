@@ -368,6 +368,23 @@ export const contentSchemaMap = {
   connections: connectionsContentSchema,
   timeline: timelineContentSchema,
   who_am_i: whoAmIContentSchema,
+  balldle: z.object({
+    answer: z.object({
+      player_name: z.string(),
+      player_id: z.string(),
+      club: z.string(),
+      league: z.string(),
+      nationality: z.string(),
+      position: z.string(),
+      age: z.number(),
+    }),
+  }),
+  higher_lower: z.object({
+    pairs: z.array(z.object({
+      player1: z.object({ name: z.string(), club: z.string(), fee: z.number() }),
+      player2: z.object({ name: z.string(), club: z.string(), fee: z.number() }),
+    })),
+  }),
 } as const;
 
 // Union type for all content types
