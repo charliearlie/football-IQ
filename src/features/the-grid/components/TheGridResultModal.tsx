@@ -110,6 +110,9 @@ export function TheGridResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="the_grid"
+      challengeScore={score.points}
     >
       <ScoreDisplay value={`${score.cellsFilled}/9`} />
       <ScoreDistributionContainer

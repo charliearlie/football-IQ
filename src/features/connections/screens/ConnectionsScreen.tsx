@@ -372,7 +372,7 @@ export function ConnectionsScreen({
             onClose={handleClose}
             onShare={handleShare}
             gaveUp={state.gameStatus === "gave_up"}
-            showNextPuzzle={!isReviewMode}
+            showNextPuzzle={!isReviewMode && puzzle?.puzzle_date === new Date().toISOString().split('T')[0]}
             testID="result-modal"
           />
         )}

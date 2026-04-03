@@ -675,7 +675,7 @@ export function BaseResultModal({
         {shouldShowConfetti && <Confetti active={visible} testID="confetti" />}
 
         <Animated.View
-          entering={SlideInDown.springify().damping(15).stiffness(100)}
+          entering={SlideInDown.springify().damping(20).mass(0.8).stiffness(100)}
           style={[styles.modal, { borderColor }]}
         >
           {/* Close X button */}
@@ -762,10 +762,10 @@ export function BaseResultModal({
                   )}
                   <View style={styles.buttonContainer}>
                     <ElevatedButton
-                      title={nextPuzzle.buttonLabel!}
+                      title={nextPuzzle.buttonLabel ?? 'Next Puzzle'}
                       onPress={nextPuzzle.goToNext}
                       size="small"
-                      style={styles.buttonHalf}
+                      style={onClose ? styles.buttonHalf : styles.buttonFull}
                       topColor={colors.floodlightWhite}
                       shadowColor={colors.textSecondary}
                       textStyle={{ color: colors.stadiumNavy }}

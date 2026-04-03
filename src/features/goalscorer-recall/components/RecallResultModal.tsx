@@ -107,6 +107,9 @@ export function RecallResultModal({
       closeLabel="Continue"
       showConfetti={score.won}
       showNextPuzzle={showNextPuzzle}
+      puzzleId={puzzleId}
+      gameMode="guess_the_goalscorers"
+      challengeScore={score.points}
     >
       {/* Distribution graph - highlights user's score position */}
       <ScoreDistributionContainer

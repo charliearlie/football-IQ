@@ -284,7 +284,7 @@ export function TopTensScreen({
           puzzleDate={puzzle?.puzzle_date ?? ''}
           onShare={shareResult}
           onClose={handleClose}
-          showNextPuzzle={!isReviewMode}
+          showNextPuzzle={!isReviewMode && puzzle?.puzzle_date === new Date().toISOString().split('T')[0]}
           testID="game-result-modal"
         />
       )}

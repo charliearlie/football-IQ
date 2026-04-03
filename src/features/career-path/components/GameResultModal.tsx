@@ -127,6 +127,9 @@ export function GameResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode={gameMode}
+      challengeScore={score.points}
     >
       {/* Answer reveal for loss */}
       {!won && <AnswerReveal value={correctAnswer} />}

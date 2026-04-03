@@ -273,7 +273,7 @@ export function WhoAmIScreen({
           onClose={handleCloseModal}
           gaveUp={state.gameStatus === 'revealed'}
           funFact={whoAmIContent.fun_fact}
-          showNextPuzzle={!isReviewMode}
+          showNextPuzzle={!isReviewMode && puzzle?.puzzle_date === new Date().toISOString().split('T')[0]}
           testID="result-modal"
         />
       )}

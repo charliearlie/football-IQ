@@ -135,6 +135,9 @@ export function TransferResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="guess_the_transfer"
+      challengeScore={score.points}
     >
       {won ? (
         <ScoreDisplay value={formatTransferScore(score)} />

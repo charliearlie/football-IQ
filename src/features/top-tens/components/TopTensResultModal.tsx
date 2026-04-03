@@ -116,6 +116,9 @@ export function TopTensResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="top_tens"
+      challengeScore={score.points}
     >
       <ScoreDisplay value={`${score.foundCount}/10`} />
       <ScoreDistributionContainer

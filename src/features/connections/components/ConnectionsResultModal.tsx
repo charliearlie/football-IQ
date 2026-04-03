@@ -109,6 +109,9 @@ export function ConnectionsResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="connections"
+      challengeScore={score.points}
     >
       <ScoreDisplay label="Groups Found" value={`${score.solvedCount}/4`} />
       <ScoreDistributionContainer

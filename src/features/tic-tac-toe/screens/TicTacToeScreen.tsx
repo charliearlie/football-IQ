@@ -337,7 +337,7 @@ export function TicTacToeScreen({
           cells={state.cells}
           onShare={shareResult}
           onClose={handleClose}
-          showNextPuzzle={!isReviewMode}
+          showNextPuzzle={!isReviewMode && puzzle?.puzzle_date === new Date().toISOString().split('T')[0]}
         />
       )}
 

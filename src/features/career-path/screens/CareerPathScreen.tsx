@@ -520,7 +520,7 @@ export function CareerPathScreen({
             onShare={shareResult}
             onViewPath={state.gameStatus === "won" ? handleViewPath : undefined}
             onClose={() => router.back()}
-            showNextPuzzle={!isReviewMode}
+            showNextPuzzle={!isReviewMode && puzzle?.puzzle_date === new Date().toISOString().split('T')[0]}
             testID="game-result-modal"
           />
         )}

@@ -137,6 +137,9 @@ export function TheThreadResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="the_thread"
+      challengeScore={score.points}
     >
       {/* Answer reveal for loss */}
       {!won && <AnswerReveal value={correctClubName} />}

@@ -146,6 +146,9 @@ export function TopicalQuizResultModal({
       showConfetti={isGood}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="topical_quiz"
+      challengeScore={score.points}
     >
       <View style={styles.scoreContainer}>
         <Text style={styles.scoreLabel}>Score</Text>

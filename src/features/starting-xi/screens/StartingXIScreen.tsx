@@ -285,7 +285,7 @@ export function StartingXIScreen({
           router.back();
         }}
         onShare={handleShare}
-        showNextPuzzle={!isReviewMode}
+        showNextPuzzle={!isReviewMode && puzzle?.puzzle_date === new Date().toISOString().split('T')[0]}
         testID="result-modal"
       />
 

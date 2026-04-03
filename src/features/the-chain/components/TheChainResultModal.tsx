@@ -206,6 +206,9 @@ export function TheChainResultModal({
       showConfetti={false}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="the_chain"
+      challengeScore={score.points}
     >
       <View style={styles.content}>
         {/* Compact score display */}

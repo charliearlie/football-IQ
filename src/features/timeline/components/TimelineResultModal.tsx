@@ -117,6 +117,9 @@ export function TimelineResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="timeline"
+      challengeScore={score.points}
     >
       <ScoreDisplay label="Attempts" value={`${score.totalAttempts}/5`} />
       <ScoreDistributionContainer

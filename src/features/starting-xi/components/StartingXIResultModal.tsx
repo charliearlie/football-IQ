@@ -145,6 +145,9 @@ export function StartingXIResultModal({
       onClose={onClose}
       showNextPuzzle={showNextPuzzle}
       testID={testID}
+      puzzleId={puzzleId}
+      gameMode="starting_xi"
+      challengeScore={score.points}
     >
       <ScoreDisplay
         label={`Players Found${matchName ? ` • ${matchName}` : ''}`}
