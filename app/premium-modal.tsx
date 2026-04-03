@@ -24,6 +24,7 @@ import { usePostHog } from 'posthog-react-native';
 import { useAuth, useSubscriptionSync, waitForEntitlementActivation } from '@/features/auth';
 import {
   PremiumUpsellContent,
+  type PaywallContext,
 } from '@/features/subscription';
 import { ANALYTICS_EVENTS, useAnalytics } from '@/hooks/useAnalytics';
 import { colors } from '@/theme/colors';
@@ -290,6 +291,7 @@ export default function PremiumModalScreen() {
           state={state}
           errorMessage={errorMessage}
           onRetry={fetchOfferings}
+          context={(mode as PaywallContext) ?? 'general'}
        />
     </View>
   );

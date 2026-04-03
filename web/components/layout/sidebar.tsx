@@ -7,6 +7,7 @@ import {
   BarChart3,
   Bell,
   Calendar,
+  TrendingUp,
   Trophy,
   Settings,
   LogOut,
@@ -46,6 +47,7 @@ const navigation: NavSection[] = [
     items: [
       { name: "Calendar", href: "/calendar", icon: Calendar },
       { name: "Notifications", href: "/notifications", icon: Bell },
+      { name: "Growth", href: "/growth", icon: TrendingUp },
       { name: "Player Scout", href: "/player-scout", icon: Globe },
     ],
   },

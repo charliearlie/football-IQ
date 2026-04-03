@@ -56,6 +56,7 @@ import { useCurrentStreak } from '@/hooks/useCurrentStreak';
 import type { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { useChallenge } from '@/features/challenges';
 import { getGameDisplayTitle } from '@/features/puzzles/constants/rules';
+import { usePaywallExperiment } from '@/features/subscription/hooks/usePaywallExperiment';
 
 export type ResultType = 'win' | 'loss' | 'draw' | 'complete';
 
@@ -562,6 +563,16 @@ export function BaseResultModal({
   // Challenge a friend
   const canChallenge = !!(puzzleId && gameMode && challengeScore !== undefined);
   const { challengeState, createAndShare: createAndShareChallenge } = useChallenge();
+
+  // A/B test: paywall after first win
+  const { maybeTriggerPostWinPaywall } = usePaywallExperiment();
+
+  // Trigger paywall experiment when modal becomes visible with a win result
+  useEffect(() => {
+    if (visible && (resultType === 'win' || resultType === 'complete') && iqEarned !== undefined) {
+      maybeTriggerPostWinPaywall();
+    }
+  }, [visible, resultType, iqEarned, maybeTriggerPostWinPaywall]);
 
   // ViewShot ref for image capture
   const viewShotRef = useRef<ViewShot>(null!);
