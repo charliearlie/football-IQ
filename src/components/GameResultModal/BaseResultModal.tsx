@@ -54,6 +54,8 @@ import {
 import { useAuth } from '@/features/auth';
 import { useCurrentStreak } from '@/hooks/useCurrentStreak';
 import type { GameMode } from '@/features/puzzles/types/puzzle.types';
+import { useChallenge } from '@/features/challenges';
+import { getGameDisplayTitle } from '@/features/puzzles/constants/rules';
 
 export type ResultType = 'win' | 'loss' | 'draw' | 'complete';
 
@@ -557,6 +559,10 @@ export function BaseResultModal({
   // Session chaining — finds next unplayed daily puzzle
   const nextPuzzle = useNextPuzzle(showNextPuzzle);
 
+  // Challenge a friend
+  const canChallenge = !!(puzzleId && gameMode && challengeScore !== undefined);
+  const { challengeState, createAndShare: createAndShareChallenge } = useChallenge();
+
   // ViewShot ref for image capture
   const viewShotRef = useRef<ViewShot>(null!);
 
@@ -805,6 +811,33 @@ export function BaseResultModal({
                 </View>
               )}
 
+              {/* Challenge a Friend button */}
+              {canChallenge && resultType !== 'loss' && (
+                <Pressable
+                  onPress={() => {
+                    if (challengeState === 'idle' || challengeState === 'error') {
+                      createAndShareChallenge({
+                        gameMode: gameMode!,
+                        puzzleId: puzzleId!,
+                        score: challengeScore!,
+                        scoreDisplay: shareData?.scoreDisplay,
+                        gameModeName: getGameDisplayTitle(gameMode!),
+                      });
+                    }
+                  }}
+                  disabled={challengeState === 'creating' || challengeState === 'sharing'}
+                  style={styles.challengeButton}
+                >
+                  <Text style={styles.challengeButtonText}>
+                    {challengeState === 'creating' ? '⏳ Creating...' :
+                     challengeState === 'sharing' ? '📤 Sharing...' :
+                     challengeState === 'shared' ? '✅ Shared!' :
+                     challengeState === 'error' ? '❌ Try again' :
+                     '🏆 Challenge a Friend'}
+                  </Text>
+                </Pressable>
+              )}
+
             </View>
           )}
         </Animated.View>
@@ -956,6 +989,22 @@ const styles = StyleSheet.create({
   },
   buttonFull: {
     flex: 1,
+  },
+  challengeButton: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(250, 204, 21, 0.3)',
+    backgroundColor: 'rgba(250, 204, 21, 0.08)',
+    alignItems: 'center' as const,
+  },
+  challengeButtonText: {
+    fontFamily: fonts.headline,
+    fontSize: 14,
+    letterSpacing: 0.5,
+    color: colors.cardYellow,
   },
   closeButton: {
     position: 'absolute',

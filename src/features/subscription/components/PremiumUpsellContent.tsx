@@ -277,6 +277,11 @@ export function PremiumUpsellContent({
                 <Check size={48} color={colors.pitchGreen} />
                 <Text style={styles.successTitle}>WELCOME TO PRO!</Text>
                 <Text style={styles.successSubtitle}>You now have full access.</Text>
+                <View style={styles.referralCta}>
+                    <Text style={styles.referralCtaText}>
+                        Share Football IQ and give your friends 7 free days
+                    </Text>
+                </View>
             </View>
         ) : (
             <View style={styles.plansContainer}>
@@ -738,6 +743,22 @@ const styles = StyleSheet.create({
       fontWeight: '500',
       fontSize: 14,
       color: colors.floodlightWhite,
+      textAlign: 'center',
+  },
+  referralCta: {
+      marginTop: 16,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(250, 204, 21, 0.25)',
+      backgroundColor: 'rgba(250, 204, 21, 0.08)',
+  },
+  referralCtaText: {
+      fontFamily: fonts.body,
+      fontWeight: '500',
+      fontSize: 12,
+      color: colors.cardYellow,
       textAlign: 'center',
   }
 });
