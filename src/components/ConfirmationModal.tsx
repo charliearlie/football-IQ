@@ -71,7 +71,7 @@ export function ConfirmationModal({
     >
       <View style={styles.overlay}>
         <Animated.View
-          entering={SlideInUp.springify().damping(20).stiffness(300)}
+          entering={SlideInUp.duration(250)}
           style={styles.centeredView}
         >
           <View style={styles.card}>
