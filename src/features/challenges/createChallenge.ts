@@ -9,7 +9,10 @@ import { Share, Platform } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from '@/lib/supabase';
 
-const CHALLENGE_API_URL = 'https://football-iq.app/api/challenges';
+const CHALLENGE_API_URL =
+  process.env.EXPO_PUBLIC_WEB_URL
+    ? `${process.env.EXPO_PUBLIC_WEB_URL}/api/challenges`
+    : 'https://www.football-iq.app/api/challenges';
 
 export interface CreateChallengeInput {
   gameMode: string;
@@ -49,7 +52,11 @@ export async function createChallenge(
       }),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'unknown');
+      console.warn(`[Challenges] API error ${response.status}: ${errorText}`);
+      return null;
+    }
 
     const data = await response.json();
     return { id: data.id, url: data.url };

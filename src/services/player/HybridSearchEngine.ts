@@ -13,6 +13,7 @@ import { searchPlayerCache } from '@/lib/database';
 import { searchPlayersOracle } from '../oracle/WikidataService';
 import { getDatabase } from '@/lib/database';
 import { UnifiedPlayer } from '../oracle/types';
+import { normalizeSearchName } from './playerUtils';
 
 /** Minimum local results before triggering Oracle fallback */
 const MIN_LOCAL_RESULTS = 3;
@@ -48,14 +49,8 @@ function calculateLocalRelevance(
   name: string,
   scoutRank: number
 ): number {
-  const normalizedName = name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-  const normalizedQuery = query
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+  const normalizedName = normalizeSearchName(name);
+  const normalizedQuery = normalizeSearchName(query);
 
   // scout_rank bonus: small fraction to break ties (max ~0.2 for top players)
   const rankBonus = Math.min(scoutRank / 1000, 0.2);
@@ -188,11 +183,7 @@ async function cacheOracleResults(
   try {
     const db = getDatabase();
     for (const player of players) {
-      const searchName = player.name
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .trim();
+      const searchName = normalizeSearchName(player.name);
 
       await db.runAsync(
         `INSERT OR REPLACE INTO player_search_cache

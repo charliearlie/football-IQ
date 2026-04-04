@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { Platform } from 'react-native';
+import { normalizeSearchName } from '@/services/player/playerUtils';
 import {
   LocalPuzzle,
   LocalAttempt,
@@ -1609,11 +1610,7 @@ export async function searchPlayerCache(
   if (!query || query.length < 3) return [];
 
   const database = getDatabase();
-  const normalizedQuery = query
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
+  const normalizedQuery = normalizeSearchName(query);
 
   return database.getAllAsync<CachedPlayer>(
     `SELECT id, name, scout_rank, birth_year, position_category, nationality_code
@@ -2038,11 +2035,7 @@ export async function searchClubColors(
   if (!query || query.length < 2) return [];
 
   const database = getDatabase();
-  const normalizedQuery = query
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
+  const normalizedQuery = normalizeSearchName(query);
 
   // Search with prefix priority ordering
   return database.getAllAsync<ClubColor>(

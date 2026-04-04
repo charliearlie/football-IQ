@@ -748,30 +748,29 @@ export function BaseResultModal({
               {/* When next puzzle available: Share full width, then Next Game + Done side by side */}
               {showNextPuzzle && nextPuzzle.hasNext && !nextPuzzle.allDone ? (
                 <>
-                  {effectiveOnShare && (
-                    <ElevatedButton
-                      title={finalButtonTitle}
-                      onPress={finalHandleShare}
-                      size="small"
-                      style={styles.buttonFull}
-                      topColor={finalButtonColors.topColor}
-                      shadowColor={finalButtonColors.shadowColor}
-                      disabled={isImageSharing}
-                      testID="share-button"
-                    />
-                  )}
                   <View style={styles.buttonContainer}>
                     <ElevatedButton
                       title={nextPuzzle.buttonLabel ?? 'Next Puzzle'}
                       onPress={nextPuzzle.goToNext}
                       size="small"
-                      style={onClose ? styles.buttonHalf : styles.buttonFull}
+                      style={styles.buttonHalf}
                       topColor={colors.floodlightWhite}
                       shadowColor={colors.textSecondary}
                       textStyle={{ color: colors.stadiumNavy }}
                       testID="next-puzzle-button"
                     />
-                    {onClose && (
+                    {effectiveOnShare ? (
+                      <ElevatedButton
+                        title={finalButtonTitle}
+                        onPress={finalHandleShare}
+                        size="small"
+                        style={styles.buttonHalf}
+                        topColor={finalButtonColors.topColor}
+                        shadowColor={finalButtonColors.shadowColor}
+                        disabled={isImageSharing}
+                        testID="share-button"
+                      />
+                    ) : onClose ? (
                       <ElevatedButton
                         title={closeLabel}
                         onPress={onClose}
@@ -781,8 +780,13 @@ export function BaseResultModal({
                         shadowColor={colors.stadiumNavy}
                         testID="close-button"
                       />
-                    )}
+                    ) : null}
                   </View>
+                  {effectiveOnShare && onClose && (
+                    <Pressable onPress={onClose} style={styles.closeLinkContainer}>
+                      <Text style={styles.closeLinkText}>{closeLabel}</Text>
+                    </Pressable>
+                  )}
                 </>
               ) : (
                 <View style={styles.buttonContainer}>
