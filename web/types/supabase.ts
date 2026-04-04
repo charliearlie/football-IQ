@@ -253,6 +253,35 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_opens: {
+        Row: {
+          id: string
+          notification_id: string | null
+          opened_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          notification_id?: string | null
+          opened_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          notification_id?: string | null
+          opened_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_opens_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "sent_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_tokens: {
         Row: {
           id: string
@@ -316,8 +345,11 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           id: string
+          is_admin: boolean
           is_premium: boolean | null
+          is_readonly: boolean
           premium_purchased_at: string | null
+          referral_code: string | null
           total_iq: number
           updated_at: string | null
           username: string | null
@@ -327,8 +359,11 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           id: string
+          is_admin?: boolean
           is_premium?: boolean | null
+          is_readonly?: boolean
           premium_purchased_at?: string | null
+          referral_code?: string | null
           total_iq?: number
           updated_at?: string | null
           username?: string | null
@@ -338,8 +373,11 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           id?: string
+          is_admin?: boolean
           is_premium?: boolean | null
+          is_readonly?: boolean
           premium_purchased_at?: string | null
+          referral_code?: string | null
           total_iq?: number
           updated_at?: string | null
           username?: string | null
@@ -392,6 +430,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduled_notifications: {
+        Row: {
+          body: string
+          campaign_type: string | null
+          created_at: string | null
+          data: Json
+          id: string
+          recipient_count: number | null
+          scheduled_for: string
+          segment: string
+          sent_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          body: string
+          campaign_type?: string | null
+          created_at?: string | null
+          data?: Json
+          id?: string
+          recipient_count?: number | null
+          scheduled_for: string
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          campaign_type?: string | null
+          created_at?: string | null
+          data?: Json
+          id?: string
+          recipient_count?: number | null
+          scheduled_for?: string
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
       }
       user_streaks: {
         Row: {
@@ -505,6 +585,91 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      challenge_responses: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          id: string
+          metadata: Json | null
+          responder_id: string
+          score: number
+          score_display: string | null
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          responder_id: string
+          score: number
+          score_display?: string | null
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          responder_id?: string
+          score?: number
+          score_display?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_responses_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          challenger_id: string
+          challenger_metadata: Json | null
+          challenger_score: number
+          challenger_score_display: string | null
+          created_at: string | null
+          game_mode: string
+          id: string
+          play_count: number | null
+          puzzle_date: string | null
+          puzzle_id: string
+        }
+        Insert: {
+          challenger_id: string
+          challenger_metadata?: Json | null
+          challenger_score: number
+          challenger_score_display?: string | null
+          created_at?: string | null
+          game_mode: string
+          id?: string
+          play_count?: number | null
+          puzzle_date?: string | null
+          puzzle_id: string
+        }
+        Update: {
+          challenger_id?: string
+          challenger_metadata?: Json | null
+          challenger_score?: number
+          challenger_score_display?: string | null
+          created_at?: string | null
+          game_mode?: string
+          id?: string
+          play_count?: number | null
+          puzzle_date?: string | null
+          puzzle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_puzzle_id_fkey"
+            columns: ["puzzle_id"]
+            isOneToOne: false
+            referencedRelation: "daily_puzzles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clubs: {
         Row: {
@@ -679,6 +844,10 @@ export type Database = {
       bump_elite_index_version: {
         Args: Record<string, never>
         Returns: number
+      }
+      record_notification_open: {
+        Args: { p_notification_id: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

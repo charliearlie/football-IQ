@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { APP_STORE_URL } from "@/lib/constants";
+import { appStoreUrl } from "@/lib/constants";
 import { CheckCircle } from "lucide-react";
 
 interface SuccessModalProps {
@@ -49,7 +49,7 @@ export function SuccessModal({ open, onClose, playerName, revealedCount, totalSt
         {/* Store badges - primary CTAs */}
         <div className="flex flex-col items-center gap-3 mb-4 animate-bounce-in" style={{ animationDelay: "0.25s" }}>
           <Link
-            href={APP_STORE_URL}
+            href={appStoreUrl('web_success')}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Download on the App Store"

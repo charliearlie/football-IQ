@@ -129,6 +129,8 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   connections: ConnectionsPlaceholder,
   timeline: TimelineForm,
   who_am_i: ConnectionsPlaceholder,
+  balldle: ConnectionsPlaceholder,
+  higher_lower: ConnectionsPlaceholder,
 };
 
 const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }>> = {
@@ -145,6 +147,8 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   connections: ConnectionsPreviewPlaceholder,
   timeline: TimelinePreview,
   who_am_i: ConnectionsPreviewPlaceholder,
+  balldle: ConnectionsPreviewPlaceholder,
+  higher_lower: ConnectionsPreviewPlaceholder,
 };
 
 // ============================================================================

@@ -10,7 +10,7 @@ import {
   copyToClipboard,
   getConsecutiveStreak,
 } from "@/lib/playSession";
-import { APP_STORE_URL, WEB_PLAYABLE_GAMES } from "@/lib/constants";
+import { appStoreUrl, WEB_PLAYABLE_GAMES } from "@/lib/constants";
 
 interface PlayedTodayGateProps {
   gameSlug: string;
@@ -123,7 +123,7 @@ export function PlayedTodayGate({ gameSlug, children }: PlayedTodayGateProps) {
           Track your scores, build streaks, and climb the ranks in the app.
         </p>
         <Link
-          href={APP_STORE_URL}
+          href={appStoreUrl('web_played_gate')}
           target="_blank"
           rel="noopener noreferrer"
           className="transition-all hover:opacity-90 hover:scale-105 inline-block"

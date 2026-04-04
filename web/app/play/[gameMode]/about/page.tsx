@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { GAME_MODE_SEO } from "@/lib/seoData";
-import { WEB_PLAYABLE_GAMES, APP_STORE_URL } from "@/lib/constants";
+import { WEB_PLAYABLE_GAMES, appStoreUrl } from "@/lib/constants";
 
 const BASE_URL = "https://www.football-iq.app";
 
@@ -283,7 +283,7 @@ export default async function GameModeAboutPage({ params }: PageProps) {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <a
-                href={APP_STORE_URL}
+                href={appStoreUrl('web_game_about')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-floodlight text-stadium-navy font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity text-sm"

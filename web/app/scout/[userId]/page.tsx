@@ -13,6 +13,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
+import { EmailCaptureForm } from '@/components/EmailCaptureForm';
 
 // Tier thresholds (matching mobile app)
 const IQ_TIERS = [
@@ -169,6 +170,15 @@ export default async function ScoutReportPage({ params }: PageProps) {
           <p className="text-slate-500 text-sm">
             Download Football IQ on iOS or Android
           </p>
+        </div>
+
+        {/* Email capture */}
+        <div className="mt-8 w-full">
+          <EmailCaptureForm
+            source="scout"
+            title="Get weekly football trivia in your inbox"
+            description="New puzzles and challenges delivered weekly. No spam."
+          />
         </div>
       </div>
 

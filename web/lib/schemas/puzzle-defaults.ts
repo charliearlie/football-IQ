@@ -196,6 +196,23 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
     correct_player_name: "",
     correct_player_id: "",
   }),
+  balldle: () => ({
+    answer: {
+      player_name: "",
+      player_id: "",
+      club: "",
+      league: "",
+      nationality: "",
+      position: "",
+      age: 25,
+    },
+  }),
+  higher_lower: () => ({
+    pairs: Array.from({ length: 10 }, () => ({
+      player1: { name: "", club: "", fee: 0 },
+      player2: { name: "", club: "", fee: 0 },
+    })),
+  }),
 };
 
 export function getDefaultContent(gameMode: GameMode): unknown {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/constants";
+import { appStoreUrl, PLAY_STORE_URL } from "@/lib/constants";
 
 export function AppPromoBanner() {
   return (
@@ -24,7 +24,7 @@ export function AppPromoBanner() {
 
       <div className="flex flex-wrap gap-3">
         <Link
-          href={APP_STORE_URL}
+          href={appStoreUrl('web_blog')}
           target="_blank"
           rel="noopener noreferrer"
           className="transition-all hover:opacity-90 hover:scale-105"

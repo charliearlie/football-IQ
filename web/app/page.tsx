@@ -3,14 +3,16 @@ import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
 import { createAdminClient } from "@/lib/supabase/server";
-import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, APP_STORE_URL } from "@/lib/constants";
+import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants";
 import { GameHubCard } from "@/components/play/GameHubCard";
 import { AdSlot } from "@/components/play/AdSlot";
 import { HeroStrip } from "@/components/landing/HeroStrip";
 import { DailyProgress } from "@/components/play/DailyProgress";
 import { Footer } from "@/components/landing/Footer";
+import { SocialProofStrip } from "@/components/landing/SocialProofStrip";
 import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
 import { JsonLd } from "@/components/JsonLd";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 
 export const revalidate = 3600;
 
@@ -63,6 +65,12 @@ export default async function HomePage() {
     .in("game_mode", webModes);
 
   const liveModes = new Set(data?.map((r) => r.game_mode) ?? []);
+
+  // Total games played for social proof (cached via revalidate)
+  const { count: gamesPlayed } = await supabase
+    .from("puzzle_attempts")
+    .select("*", { count: "exact", head: true })
+    .eq("completed", true);
 
   const todayDate = new Date();
   const dayStr = todayDate.toLocaleDateString("en-GB", { weekday: "long" });
@@ -150,6 +158,8 @@ export default async function HomePage() {
 
       <HeroStrip />
 
+      <SocialProofStrip gamesPlayed={gamesPlayed ?? undefined} />
+
       <div className="container mx-auto px-4 max-w-2xl">
         {/* Hero intro — gives first-time visitors context */}
         <section className="pt-8 pb-6 text-center">
@@ -205,7 +215,7 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
               <Link
-                href={APP_STORE_URL}
+                href={appStoreUrl('web_home')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-all hover:opacity-90 hover:scale-105"
@@ -232,6 +242,14 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Email capture */}
+        <section className="pb-6">
+          <EmailCaptureForm
+            source="landing"
+            title="Get weekly football trivia in your inbox"
+          />
         </section>
 
         {/* App-only modes — compact list, not full cards */}

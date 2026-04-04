@@ -6,6 +6,7 @@ import { Check, Copy } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { WEB_PLAYABLE_GAMES } from "@/lib/constants";
 import { AppDownloadCTA } from "@/components/play/AppDownloadCTA";
+import { PostGameDownloadBanner } from "@/components/play/PostGameDownloadBanner";
 import {
   copyToClipboard,
   markPlayed,
@@ -165,7 +166,10 @@ export function PostGameCTA({
         </div>
       ) : null}
 
-      {/* App download pitch */}
+      {/* Compact post-game download prompt */}
+      <PostGameDownloadBanner />
+
+      {/* App download pitch — full breakdown of app-only modes */}
       <AppDownloadCTA />
     </div>
   );
