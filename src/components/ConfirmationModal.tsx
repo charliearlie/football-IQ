@@ -71,7 +71,7 @@ export function ConfirmationModal({
     >
       <View style={styles.overlay}>
         <Animated.View
-          entering={SlideInUp.springify().damping(15)}
+          entering={SlideInUp.springify().damping(20).stiffness(300)}
           style={styles.centeredView}
         >
           <View style={styles.card}>
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     alignSelf: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+    backgroundColor: 'rgba(10, 10, 18, 0.97)',
     borderRadius: borderRadius.xl,
     borderWidth: 1,
     borderColor: colors.glassBorder,
