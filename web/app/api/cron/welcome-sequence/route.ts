@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     } else if (subscribers && subscribers.length > 0) {
       for (const sub of subscribers) {
         try {
-          await resend.emails.send({
+          await getResend().emails.send({
             from: "Football IQ <noreply@football-iq.app>",
             to: sub.email,
             subject: "Did you know Football IQ has 11 game modes?",
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
     } else if (subscribers && subscribers.length > 0) {
       for (const sub of subscribers) {
         try {
-          await resend.emails.send({
+          await getResend().emails.send({
             from: "Football IQ <noreply@football-iq.app>",
             to: sub.email,
             subject: "Unlock the full Football IQ archive",

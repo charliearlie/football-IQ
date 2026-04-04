@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email (fire and forget — don't fail the subscription if email fails)
     try {
       if (process.env.RESEND_API_KEY) {
-        await resend.emails.send({
+        await getResend().emails.send({
           from: "Football IQ <noreply@football-iq.app>",
           to: email.toLowerCase().trim(),
           subject: "Welcome to Football IQ! ⚽",
