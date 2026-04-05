@@ -13,12 +13,15 @@ import {
   AlertTriangle,
   Search,
   Keyboard,
+  Trash2,
+  UserX,
 } from "lucide-react";
 import {
   getNextPlayerToValidate,
   confirmPlayer,
   fixPlayerClub,
-  fixPlayerNationality,
+  markNoClub,
+  deletePlayer,
   searchClubs,
   getValidationStats,
   type ValidatorPlayer,
@@ -138,6 +141,39 @@ export default function ValidatePage() {
       loadStats();
     } else {
       toast.error(result.error ?? "Failed to fix");
+    }
+    setActing(false);
+  }
+
+  async function handleNoClub() {
+    if (!player || acting) return;
+    setActing(true);
+
+    const result = await markNoClub(player.id, player.mismatch_id);
+    if (result.success) {
+      setSessionCount((c) => c + 1);
+      toast.success(`${player.name} marked as no club`);
+      await loadNext();
+      loadStats();
+    } else {
+      toast.error(result.error ?? "Failed");
+    }
+    setActing(false);
+  }
+
+  async function handleDelete() {
+    if (!player || acting) return;
+    if (!confirm(`Delete ${player.name} permanently? This cannot be undone.`)) return;
+    setActing(true);
+
+    const result = await deletePlayer(player.id);
+    if (result.success) {
+      setSessionCount((c) => c + 1);
+      toast.success(`${player.name} deleted`);
+      await loadNext();
+      loadStats();
+    } else {
+      toast.error(result.error ?? "Failed to delete");
     }
     setActing(false);
   }
@@ -290,6 +326,30 @@ export default function ValidatePage() {
             <div className="space-y-4 border-t border-white/10 pt-5">
               <div className="text-sm font-medium text-floodlight">
                 Fix current club
+              </div>
+
+              {/* Quick actions */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNoClub}
+                  disabled={acting}
+                  className="text-xs"
+                >
+                  <UserX className="mr-1 h-3 w-3" />
+                  No club (retired)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={acting}
+                  className="text-xs border-red-card/30 text-red-card hover:bg-red-card/10"
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
+                  Delete player
+                </Button>
               </div>
 
               {/* Club search */}

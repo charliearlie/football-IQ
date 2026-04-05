@@ -330,6 +330,65 @@ export async function fixPlayerClub(
   return { success: true };
 }
 
+/**
+ * Mark player as having no current club (retired/free agent).
+ * Closes all open appearances and marks as verified.
+ */
+export async function markNoClub(
+  playerId: string,
+  mismatchId: number | null,
+): Promise<ActionResult> {
+  await ensureAdminWrite();
+  const supabase = await createAdminClient();
+
+  // Close all open appearances
+  await supabase
+    .from("player_appearances")
+    .update({ end_year: new Date().getFullYear() })
+    .eq("player_id", playerId)
+    .is("end_year", null);
+
+  // Mark verified with no club
+  const { error } = await supabase
+    .from("players")
+    .update({
+      verified_at: new Date().toISOString(),
+      verified_club: null,
+      verified_league: null,
+    })
+    .eq("id", playerId);
+
+  if (error) return { success: false, error: error.message };
+
+  if (mismatchId) {
+    await supabase
+      .from("club_mismatches")
+      .update({ resolved_at: new Date().toISOString(), resolved_action: "no_club" })
+      .eq("id", mismatchId);
+  }
+
+  return { success: true };
+}
+
+/**
+ * Delete a player and all related data.
+ */
+export async function deletePlayer(
+  playerId: string,
+): Promise<ActionResult> {
+  await ensureAdminWrite();
+  const supabase = await createAdminClient();
+
+  // Delete in dependency order
+  await supabase.from("club_mismatches").delete().eq("player_id", playerId);
+  await supabase.from("player_achievements").delete().eq("player_id", playerId);
+  await supabase.from("player_appearances").delete().eq("player_id", playerId);
+  const { error } = await supabase.from("players").delete().eq("id", playerId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
 export async function fixPlayerNationality(
   playerId: string,
   nationalityCode: string,
