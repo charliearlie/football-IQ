@@ -11,8 +11,16 @@ import {
   acceptFlaggedMapping,
   inspectApiPlayer,
   backfillWikidataCareers,
+  discoverMissingPlayers,
+  refreshEliteCareers,
+  backfillClubLeagues,
 } from "@/app/(dashboard)/admin/actions";
-import type { BackfillResult } from "@/app/(dashboard)/admin/actions";
+import type {
+  BackfillResult,
+  DiscoveryResult,
+  RefreshResult,
+  LeagueBackfillResult,
+} from "@/app/(dashboard)/admin/actions";
 import type {
   MappingRunResult,
   CareerValidationResult,
@@ -21,7 +29,7 @@ import type {
   AmbiguousCandidate,
   ApiClubSummary,
 } from "@/lib/data-pipeline/map-external-ids";
-import { Loader2, Play, FlaskConical, Search, Link2, CheckCircle2, AlertTriangle, Info, Check, ChevronDown, Eye, Database } from "lucide-react";
+import { Loader2, Play, FlaskConical, Search, Link2, CheckCircle2, AlertTriangle, Info, Check, ChevronDown, Eye, Database, Globe, RefreshCw, Layers } from "lucide-react";
 
 type MappingResult = MappingRunResult & { savedCount: number };
 type ValidationResult = CareerValidationResult & { clubMappingsSaved: number; clubDuplicates: string[] };
@@ -32,6 +40,9 @@ export default function DataPipelinePage() {
       title="Data Pipeline"
       subtitle="External ID mapping and data reconciliation"
     >
+      <DiscoverPlayersCard />
+      <RefreshCareersCard />
+      <LeagueBackfillCard />
       <BackfillCard />
       <MappingCard />
       <CareerValidationCard />
@@ -1000,6 +1011,330 @@ function MappingRow({
           {item.confidence}
         </Badge>
       </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Discover Missing Players
+// ============================================================================
+
+const LEAGUES = [
+  "Premier League",
+  "La Liga",
+  "Serie A",
+  "Bundesliga",
+  "Ligue 1",
+];
+
+function DiscoverPlayersCard() {
+  const [running, setRunning] = useState(false);
+  const [selectedLeague, setSelectedLeague] = useState("Serie A");
+  const [result, setResult] = useState<DiscoveryResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRun() {
+    setRunning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await discoverMissingPlayers(selectedLeague);
+      if (res.success && res.data) {
+        setResult(res.data);
+      } else {
+        setError(res.error ?? "Unknown error");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-floodlight">
+            Discover Missing Players
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Find active squad players from top leagues not yet in our database
+          </p>
+        </div>
+        <Badge variant="secondary">SPARQL</Badge>
+      </div>
+
+      <div className="flex items-end gap-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            League
+          </label>
+          <select
+            value={selectedLeague}
+            onChange={(e) => setSelectedLeague(e.target.value)}
+            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight"
+          >
+            {LEAGUES.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <Button onClick={handleRun} disabled={running}>
+          {running ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Discovering...
+            </>
+          ) : (
+            <>
+              <Globe />
+              Discover Players
+            </>
+          )}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-red-card/30 bg-red-card/10 px-4 py-3 text-sm text-red-card">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-3">
+          <div className="flex items-start gap-3 rounded-md border border-pitch-green/30 bg-pitch-green/10 px-4 py-3">
+            <CheckCircle2 className="h-5 w-5 text-pitch-green shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-pitch-green">
+                Discovery complete for {result.league}
+              </p>
+              <p className="text-muted-foreground mt-1">
+                Found {result.totalFound} active players.{" "}
+                {result.alreadyExist} already in DB.{" "}
+                <strong>{result.newlyImported} newly imported</strong>,{" "}
+                {result.careersAdded} careers added.
+              </p>
+            </div>
+          </div>
+
+          {result.errors.length > 0 && (
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+              <p className="font-medium text-amber-400">
+                {result.errors.length} error(s):
+              </p>
+              <ul className="mt-1 space-y-0.5 text-muted-foreground text-xs">
+                {result.errors.slice(0, 10).map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Refresh Elite Careers
+// ============================================================================
+
+function RefreshCareersCard() {
+  const [running, setRunning] = useState(false);
+  const [limit, setLimit] = useState(50);
+  const [result, setResult] = useState<RefreshResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRun() {
+    setRunning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await refreshEliteCareers({ limit });
+      if (res.success && res.data) {
+        setResult(res.data);
+      } else {
+        setError(res.error ?? "Unknown error");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-floodlight">
+            Refresh Elite Careers
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Re-fetch career data from Wikidata for top players (stalest first)
+          </p>
+        </div>
+        <Badge variant="secondary">SPARQL</Badge>
+      </div>
+
+      <div className="flex items-end gap-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Batch size
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+            className="w-24 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight"
+          />
+        </div>
+
+        <Button onClick={handleRun} disabled={running}>
+          {running ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw />
+              Refresh Careers
+            </>
+          )}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-red-card/30 bg-red-card/10 px-4 py-3 text-sm text-red-card">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="flex items-start gap-3 rounded-md border border-pitch-green/30 bg-pitch-green/10 px-4 py-3">
+          <CheckCircle2 className="h-5 w-5 text-pitch-green shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-medium text-pitch-green">Refresh complete</p>
+            <p className="text-muted-foreground mt-1">
+              {result.refreshed} refreshed, {result.skipped} skipped,{" "}
+              {result.failed} failed
+            </p>
+            {result.errors.length > 0 && (
+              <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                {result.errors.slice(0, 5).map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// League Backfill
+// ============================================================================
+
+function LeagueBackfillCard() {
+  const [running, setRunning] = useState(false);
+  const [limit, setLimit] = useState(500);
+  const [result, setResult] = useState<LeagueBackfillResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRun() {
+    setRunning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await backfillClubLeagues({ limit });
+      if (res.success && res.data) {
+        setResult(res.data);
+      } else {
+        setError(res.error ?? "Unknown error");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-floodlight">
+            Backfill Club Leagues
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Fetch league data (P118) from Wikidata for clubs missing it
+          </p>
+        </div>
+        <Badge variant="secondary">SPARQL</Badge>
+      </div>
+
+      <div className="flex items-end gap-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Club limit
+          </label>
+          <input
+            type="number"
+            min={50}
+            max={2000}
+            step={50}
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+            className="w-24 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight"
+          />
+        </div>
+
+        <Button onClick={handleRun} disabled={running}>
+          {running ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Backfilling...
+            </>
+          ) : (
+            <>
+              <Layers />
+              Backfill Leagues
+            </>
+          )}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-red-card/30 bg-red-card/10 px-4 py-3 text-sm text-red-card">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="flex items-start gap-3 rounded-md border border-pitch-green/30 bg-pitch-green/10 px-4 py-3">
+          <CheckCircle2 className="h-5 w-5 text-pitch-green shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-medium text-pitch-green">Backfill complete</p>
+            <p className="text-muted-foreground mt-1">
+              {result.clubsProcessed} clubs processed,{" "}
+              {result.leaguesUpdated} leagues updated,{" "}
+              {result.errors} errors
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

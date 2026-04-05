@@ -1176,3 +1176,310 @@ export async function runCareerValidation(
     };
   }
 }
+
+// ============================================================================
+// PLAYER DATA PIPELINE — DISCOVERY & REFRESH
+// ============================================================================
+
+export interface DiscoveryResult {
+  league: string;
+  totalFound: number;
+  alreadyExist: number;
+  newlyImported: number;
+  careersAdded: number;
+  errors: string[];
+}
+
+export interface RefreshResult {
+  refreshed: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface LeagueBackfillResult {
+  clubsProcessed: number;
+  leaguesUpdated: number;
+  errors: number;
+}
+
+/**
+ * Discover missing players from a top-5 league via Wikidata SPARQL.
+ * Finds all active squad players, cross-references our DB, and imports the delta.
+ */
+export async function discoverMissingPlayers(
+  leagueName: string,
+): Promise<ActionResult<DiscoveryResult>> {
+  try {
+    await ensureAdminWrite();
+
+    const {
+      TOP_LEAGUE_QIDS,
+      fetchLeagueSquadPlayers,
+      fetchPlayerCareer,
+      savePlayersToSupabase,
+      saveCareerToSupabase,
+      sleep,
+    } = await import("@/lib/wikidata");
+
+    const leagueQid = TOP_LEAGUE_QIDS[leagueName];
+    if (!leagueQid) {
+      return { success: false, error: `Unknown league: ${leagueName}` };
+    }
+
+    // Fetch all active players from Wikidata for this league
+    const allPlayers = await fetchLeagueSquadPlayers(leagueQid);
+    if (allPlayers.length === 0) {
+      return {
+        success: false,
+        error: `No players found for ${leagueName} — Wikidata query may have timed out`,
+      };
+    }
+
+    // Check which ones we already have
+    const supabase = await createAdminClient();
+    const qids = allPlayers.map((p) => p.qid);
+    const existingIds = new Set<string>();
+
+    // Paginate through existing players (Supabase caps .in() at 300)
+    for (let i = 0; i < qids.length; i += 300) {
+      const batch = qids.slice(i, i + 300);
+      const { data } = await supabase
+        .from("players")
+        .select("id")
+        .in("id", batch);
+      if (data) {
+        for (const row of data) existingIds.add(row.id);
+      }
+    }
+
+    const newPlayers = allPlayers.filter((p) => !existingIds.has(p.qid));
+
+    const result: DiscoveryResult = {
+      league: leagueName,
+      totalFound: allPlayers.length,
+      alreadyExist: existingIds.size,
+      newlyImported: 0,
+      careersAdded: 0,
+      errors: [],
+    };
+
+    if (newPlayers.length === 0) {
+      return { success: true, data: result };
+    }
+
+    // Save new players
+    const saveResult = await savePlayersToSupabase(newPlayers);
+    if (!saveResult.success) {
+      result.errors.push(`Save players: ${saveResult.error}`);
+      return { success: true, data: result };
+    }
+    result.newlyImported = saveResult.count;
+
+    // Fetch and save careers for new players (with rate limiting)
+    for (const player of newPlayers) {
+      try {
+        const career = await fetchPlayerCareer(player.qid);
+        if (career.length > 0) {
+          const careerResult = await saveCareerToSupabase(player.qid, career);
+          if (careerResult.success) {
+            result.careersAdded++;
+          } else {
+            result.errors.push(`Career ${player.name}: ${careerResult.error}`);
+          }
+        }
+      } catch (err) {
+        result.errors.push(
+          `Career ${player.name}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+      await sleep(1500);
+    }
+
+    // Log run
+    try {
+      await supabase.from("agent_runs").insert({
+        run_date: new Date().toISOString().split("T")[0],
+        agent_name: "player_discovery",
+        status: "success",
+        puzzles_created: 0,
+        logs: JSON.parse(JSON.stringify(result)),
+      });
+    } catch {
+      // Non-fatal
+    }
+
+    return { success: true, data: result };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Discovery failed",
+    };
+  }
+}
+
+/**
+ * Refresh career data for elite players (scout_rank >= 50).
+ * Processes the stalest-refreshed players first.
+ */
+export async function refreshEliteCareers(
+  options: { limit?: number },
+): Promise<ActionResult<RefreshResult>> {
+  try {
+    await ensureAdminWrite();
+
+    const {
+      fetchPlayerCareer,
+      saveCareerToSupabase,
+      markCareerRefreshed,
+      sleep,
+    } = await import("@/lib/wikidata");
+
+    const supabase = await createAdminClient();
+    const limit = options.limit ?? 50;
+
+    const { data: players, error: pErr } = await supabase
+      .from("players")
+      .select("id, name, scout_rank")
+      .gte("scout_rank", 50)
+      .order("career_refreshed_at", { ascending: true, nullsFirst: true })
+      .limit(limit);
+
+    if (pErr) return { success: false, error: pErr.message };
+
+    const result: RefreshResult = {
+      refreshed: 0,
+      skipped: 0,
+      failed: 0,
+      errors: [],
+    };
+
+    for (const player of players ?? []) {
+      try {
+        const career = await fetchPlayerCareer(player.id);
+
+        if (career.length === 0) {
+          result.skipped++;
+          await markCareerRefreshed(player.id);
+          await sleep(1500);
+          continue;
+        }
+
+        // Regression guard
+        const { count: existingCount } = await supabase
+          .from("player_appearances")
+          .select("*", { count: "exact", head: true })
+          .eq("player_id", player.id);
+
+        if (
+          existingCount &&
+          existingCount > 2 &&
+          career.length < existingCount * 0.5
+        ) {
+          result.skipped++;
+          result.errors.push(
+            `Skipped ${player.name}: regression guard (${career.length} vs ${existingCount})`,
+          );
+          await markCareerRefreshed(player.id);
+          await sleep(1500);
+          continue;
+        }
+
+        const saveResult = await saveCareerToSupabase(player.id, career);
+        if (saveResult.success) {
+          result.refreshed++;
+          await markCareerRefreshed(player.id);
+        } else {
+          result.failed++;
+          result.errors.push(`${player.name}: ${saveResult.error}`);
+        }
+      } catch (err) {
+        result.failed++;
+        result.errors.push(
+          `${player.name}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+      await sleep(1500);
+    }
+
+    // Bump elite index
+    if (result.refreshed > 0) {
+      await supabase.rpc("bump_elite_index_version");
+    }
+
+    // Log run
+    try {
+      await supabase.from("agent_runs").insert({
+        run_date: new Date().toISOString().split("T")[0],
+        agent_name: "elite_career_refresh",
+        status: "success",
+        puzzles_created: 0,
+        logs: JSON.parse(JSON.stringify(result)),
+      });
+    } catch {
+      // Non-fatal
+    }
+
+    return { success: true, data: result };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Refresh failed",
+    };
+  }
+}
+
+/**
+ * Backfill league data for clubs missing it via Wikidata P118.
+ */
+export async function backfillClubLeagues(
+  options: { limit?: number },
+): Promise<ActionResult<LeagueBackfillResult>> {
+  try {
+    await ensureAdminWrite();
+
+    const { fetchClubLeagues, updateClubLeagues, sleep } =
+      await import("@/lib/wikidata");
+
+    const supabase = await createAdminClient();
+    const limit = options.limit ?? 500;
+
+    const { data: clubs, error: cErr } = await supabase
+      .from("clubs")
+      .select("id")
+      .is("league", null)
+      .limit(limit);
+
+    if (cErr) return { success: false, error: cErr.message };
+
+    const result: LeagueBackfillResult = {
+      clubsProcessed: clubs?.length ?? 0,
+      leaguesUpdated: 0,
+      errors: 0,
+    };
+
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < (clubs?.length ?? 0); i += BATCH_SIZE) {
+      const batch = (clubs ?? []).slice(i, i + BATCH_SIZE);
+      const qids = batch.map((c) => c.id);
+
+      try {
+        const leagueResults = await fetchClubLeagues(qids);
+        const { updated, errors } = await updateClubLeagues(leagueResults);
+        result.leaguesUpdated += updated;
+        result.errors += errors;
+      } catch {
+        result.errors += batch.length;
+      }
+
+      await sleep(6000);
+    }
+
+    return { success: true, data: result };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "League backfill failed",
+    };
+  }
+}

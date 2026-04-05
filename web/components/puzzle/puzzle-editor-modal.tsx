@@ -129,7 +129,7 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   connections: ConnectionsPlaceholder,
   timeline: TimelineForm,
   who_am_i: ConnectionsPlaceholder,
-  balldle: ConnectionsPlaceholder,
+  "whos-that": ConnectionsPlaceholder,
   higher_lower: ConnectionsPlaceholder,
 };
 
@@ -147,7 +147,7 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   connections: ConnectionsPreviewPlaceholder,
   timeline: TimelinePreview,
   who_am_i: ConnectionsPreviewPlaceholder,
-  balldle: ConnectionsPreviewPlaceholder,
+  "whos-that": ConnectionsPreviewPlaceholder,
   higher_lower: ConnectionsPreviewPlaceholder,
 };
 
@@ -536,7 +536,7 @@ export function PuzzleEditorModal({
                                 </p>
                               )}
                               <p className="text-xs text-muted-foreground/70 mt-2">
-                                Reported {format(parseISO(report.created_at), "MMM d, yyyy 'at' h:mm a")}
+                                Reported {report.created_at ? format(parseISO(report.created_at), "MMM d, yyyy 'at' h:mm a") : "Unknown"}
                               </p>
                             </div>
                             <div className="flex gap-1">
