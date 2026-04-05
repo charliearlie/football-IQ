@@ -26,6 +26,7 @@ import {
   History,
   FileText,
   ImageIcon,
+  CheckCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,7 @@ const navigation: NavSection[] = [
       { name: "Connections", href: "/admin/connections", icon: Puzzle },
       { name: "Timeline", href: "/admin/timeline", icon: History },
       { name: "Data Pipeline", href: "/admin/data-pipeline", icon: Database },
+      { name: "Validate Players", href: "/admin/validate", icon: CheckCircle },
       { name: "Club Merge", href: "/admin/club-merge", icon: GitMerge },
       { name: "Player Review", href: "/admin/player-review", icon: UserCheck },
       { name: "Content Integrity", href: "/admin/content-integrity", icon: ShieldCheck },
