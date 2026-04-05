@@ -129,7 +129,7 @@ const formRegistry: Record<GameMode, React.ComponentType> = {
   connections: ConnectionsPlaceholder,
   timeline: TimelineForm,
   who_am_i: ConnectionsPlaceholder,
-  "whos-that": ConnectionsPlaceholder,
+  balldle: ConnectionsPlaceholder,
   higher_lower: ConnectionsPlaceholder,
 };
 
@@ -147,7 +147,7 @@ const previewRegistry: Record<GameMode, React.ComponentType<{ content: unknown }
   connections: ConnectionsPreviewPlaceholder,
   timeline: TimelinePreview,
   who_am_i: ConnectionsPreviewPlaceholder,
-  "whos-that": ConnectionsPreviewPlaceholder,
+  balldle: ConnectionsPreviewPlaceholder,
   higher_lower: ConnectionsPreviewPlaceholder,
 };
 
