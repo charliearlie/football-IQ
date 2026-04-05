@@ -22,6 +22,8 @@ export interface ValidatorPlayer {
   // Mismatch info (if any)
   mismatch_id: number | null;
   mismatch_api_club: string | null;
+  // Wikipedia summary for quick verification
+  wiki_extract: string | null;
 }
 
 export interface ValidationStats {
@@ -157,16 +159,20 @@ async function fetchPlayerDetails(
 
   if (!player) return null;
 
-  // Get current club (most recent open appearance)
-  const { data: appearance } = await supabase
-    .from("player_appearances")
-    .select("id, club_id, start_year, clubs(name, league)")
-    .eq("player_id", playerId)
-    .is("end_year", null)
-    .order("start_year", { ascending: false })
-    .limit(1)
-    .single();
+  // Get current club and Wikipedia summary in parallel
+  const [appearanceResult, wikiExtract] = await Promise.all([
+    supabase
+      .from("player_appearances")
+      .select("id, club_id, start_year, clubs(name, league)")
+      .eq("player_id", playerId)
+      .is("end_year", null)
+      .order("start_year", { ascending: false })
+      .limit(1)
+      .single(),
+    fetchWikipediaExtract(playerId),
+  ]);
 
+  const appearance = appearanceResult.data;
   const club = appearance?.clubs as { name: string; league: string | null } | null;
 
   return {
@@ -182,7 +188,40 @@ async function fetchPlayerDetails(
     league: club?.league ?? null,
     appearance_id: appearance?.id ?? null,
     start_year: appearance?.start_year ?? null,
+    wiki_extract: wikiExtract,
   };
+}
+
+/**
+ * Fetch the Wikipedia summary for a player via their Wikidata QID.
+ * Uses Wikidata sitelinks → Wikipedia REST API (free, no key).
+ * Returns the first ~2 sentences which usually mention current club.
+ */
+async function fetchWikipediaExtract(qid: string): Promise<string | null> {
+  try {
+    // Step 1: Get English Wikipedia title from Wikidata
+    const wdUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qid}&props=sitelinks&sitefilter=enwiki&format=json`;
+    const wdRes = await fetch(wdUrl, {
+      headers: { "User-Agent": "FootballIQ-Validator/1.0" },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!wdRes.ok) return null;
+    const wdJson = await wdRes.json();
+    const title = wdJson.entities?.[qid]?.sitelinks?.enwiki?.title;
+    if (!title) return null;
+
+    // Step 2: Get Wikipedia summary
+    const wpUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const wpRes = await fetch(wpUrl, {
+      headers: { "User-Agent": "FootballIQ-Validator/1.0" },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!wpRes.ok) return null;
+    const wpJson = await wpRes.json();
+    return wpJson.extract ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // ============================================================================

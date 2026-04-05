@@ -264,6 +264,20 @@ export default function ValidatePage() {
             )}
           </div>
 
+          {/* Wikipedia extract */}
+          {player.wiki_extract && (
+            <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3">
+              <div className="text-xs font-medium text-blue-400 uppercase tracking-wider mb-1">
+                Wikipedia
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {player.wiki_extract.length > 300
+                  ? player.wiki_extract.slice(0, 300) + "..."
+                  : player.wiki_extract}
+              </p>
+            </div>
+          )}
+
           {/* Verified status */}
           {player.verified_at && (
             <div className="text-xs text-muted-foreground">
