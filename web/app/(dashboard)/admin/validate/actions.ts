@@ -96,12 +96,13 @@ async function getNextPlayerFallback(
     Date.now() - 90 * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  // Try unverified first (highest scout_rank)
+  // Try unverified first (highest scout_rank, born after 1985 to skip retired)
   const { data: unverified } = await supabase
     .from("players")
     .select("id")
     .is("verified_at", null)
     .gte("scout_rank", 10)
+    .gte("birth_year", 1985)
     .not("id", "in", `(${skipFilter.join(",")})`)
     .order("scout_rank", { ascending: false })
     .limit(1)
@@ -123,6 +124,7 @@ async function getNextPlayerFallback(
     .select("id")
     .lt("verified_at", threeMonthsAgo)
     .gte("scout_rank", 10)
+    .gte("birth_year", 1985)
     .not("id", "in", `(${skipFilter.join(",")})`)
     .order("scout_rank", { ascending: false })
     .limit(1)
@@ -344,18 +346,21 @@ export async function getValidationStats(): Promise<ActionResult<ValidationStats
   const { count: total } = await supabase
     .from("players")
     .select("*", { count: "exact", head: true })
-    .gte("scout_rank", 10);
+    .gte("scout_rank", 10)
+    .gte("birth_year", 1985);
 
   const { count: verified } = await supabase
     .from("players")
     .select("*", { count: "exact", head: true })
     .gte("scout_rank", 10)
+    .gte("birth_year", 1985)
     .gte("verified_at", threeMonthsAgo);
 
   const { count: unverified } = await supabase
     .from("players")
     .select("*", { count: "exact", head: true })
     .gte("scout_rank", 10)
+    .gte("birth_year", 1985)
     .is("verified_at", null);
 
   const { count: mismatches } = await supabase
