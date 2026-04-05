@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient, ensureAdminWrite } from "@/lib/supabase/server";
+import { normalizeClubName } from "@/lib/data-pipeline/map-external-ids";
 
 // ============================================================================
 // TYPES
@@ -39,6 +40,23 @@ export interface ClubSearchResult {
   name: string;
   league: string | null;
   country_code: string | null;
+}
+
+export interface PlayerSearchResult {
+  id: string;
+  name: string;
+  nationality_code: string | null;
+  scout_rank: number;
+  birth_year: number | null;
+  position_category: string | null;
+}
+
+export interface WikiBatchResult {
+  processed: number;
+  autoVerified: number;
+  mismatched: number;
+  noExtract: number;
+  errors: number;
 }
 
 interface ActionResult<T = unknown> {
@@ -481,4 +499,253 @@ export async function getValidationStats(): Promise<ActionResult<ValidationStats
       mismatches: mismatchNum,
     },
   };
+}
+
+// ============================================================================
+// PLAYER SEARCH
+// ============================================================================
+
+export async function searchPlayersForValidation(
+  query: string,
+): Promise<PlayerSearchResult[]> {
+  if (query.length < 2) return [];
+
+  const supabase = await createAdminClient();
+  const sanitized = query
+    .toLowerCase()
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+
+  const { data } = await supabase
+    .from("players")
+    .select("id, name, nationality_code, scout_rank, birth_year, position_category")
+    .ilike("search_name", `%${sanitized}%`)
+    .order("scout_rank", { ascending: false })
+    .limit(15);
+
+  return data ?? [];
+}
+
+export async function getPlayerForValidation(
+  playerId: string,
+): Promise<ActionResult<ValidatorPlayer>> {
+  const supabase = await createAdminClient();
+
+  const player = await fetchPlayerDetails(supabase, playerId);
+  if (!player) return { success: false, error: "Player not found" };
+
+  // Check for open mismatch
+  const { data: mismatch } = await supabase
+    .from("club_mismatches")
+    .select("id, api_club_name")
+    .eq("player_id", playerId)
+    .is("resolved_at", null)
+    .limit(1)
+    .single();
+
+  return {
+    success: true,
+    data: {
+      ...player,
+      mismatch_id: mismatch?.id ?? null,
+      mismatch_api_club: mismatch?.api_club_name ?? null,
+    },
+  };
+}
+
+// ============================================================================
+// BATCH VERIFICATION
+// ============================================================================
+
+const CLUB_EXTRACT_REGEX =
+  /(?:plays?|playing)\s+(?:as\s+.*?\s+)?for\s+(.+?)(?:\s+in\s+|\s+of\s+the\s+|\.\s|,\s|\s+and\s+the\s+)/i;
+
+function normalizeForMatch(name: string): string {
+  return normalizeClubName(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function clubNamesMatch(a: string, b: string): boolean {
+  const na = normalizeForMatch(a);
+  const nb = normalizeForMatch(b);
+  if (!na || !nb) return false;
+  return na === nb || na.includes(nb) || nb.includes(na);
+}
+
+export async function runWikipediaBatchVerification(options: {
+  batchSize?: number;
+  minScoutRank?: number;
+}): Promise<ActionResult<WikiBatchResult>> {
+  await ensureAdminWrite();
+  const supabase = await createAdminClient();
+  const batchSize = options.batchSize ?? 50;
+  const minRank = options.minScoutRank ?? 10;
+
+  // Get unverified players
+  const { data: players, error: fetchErr } = await supabase
+    .from("players")
+    .select("id, name")
+    .is("verified_at", null)
+    .gte("scout_rank", minRank)
+    .gte("birth_year", 1985)
+    .order("scout_rank", { ascending: false })
+    .limit(batchSize);
+
+  if (fetchErr || !players) {
+    return { success: false, error: fetchErr?.message ?? "No players found" };
+  }
+
+  const result: WikiBatchResult = {
+    processed: players.length,
+    autoVerified: 0,
+    mismatched: 0,
+    noExtract: 0,
+    errors: 0,
+  };
+
+  // Process in small parallel batches of 5
+  for (let i = 0; i < players.length; i += 5) {
+    const batch = players.slice(i, i + 5);
+    const results = await Promise.allSettled(
+      batch.map((p) => verifyOnePlayer(supabase, p.id, p.name)),
+    );
+
+    for (const r of results) {
+      if (r.status === "rejected") {
+        result.errors++;
+      } else {
+        switch (r.value) {
+          case "verified":
+            result.autoVerified++;
+            break;
+          case "mismatched":
+            result.mismatched++;
+            break;
+          case "no_extract":
+            result.noExtract++;
+            break;
+          case "error":
+            result.errors++;
+            break;
+        }
+      }
+    }
+
+    // Rate limit between batches
+    if (i + 5 < players.length) {
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  }
+
+  return { success: true, data: result };
+}
+
+async function verifyOnePlayer(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  playerId: string,
+  playerName: string,
+): Promise<"verified" | "mismatched" | "no_extract" | "error"> {
+  try {
+    // Get current club
+    const { data: appearance } = await supabase
+      .from("player_appearances")
+      .select("clubs(name, league)")
+      .eq("player_id", playerId)
+      .is("end_year", null)
+      .order("start_year", { ascending: false })
+      .limit(1)
+      .single();
+
+    const club = appearance?.clubs as { name: string; league: string | null } | null;
+    if (!club?.name) return "no_extract";
+
+    // Get Wikipedia extract
+    const extract = await fetchWikipediaExtract(playerId);
+    if (!extract) return "no_extract";
+
+    // Parse club from extract
+    const match = extract.match(CLUB_EXTRACT_REGEX);
+    if (!match?.[1]) return "no_extract";
+
+    const extractedClub = match[1].trim();
+
+    // Compare
+    if (clubNamesMatch(extractedClub, club.name)) {
+      // Auto-verify
+      await supabase
+        .from("players")
+        .update({
+          verified_at: new Date().toISOString(),
+          verified_club: club.name,
+          verified_league: club.league,
+        })
+        .eq("id", playerId);
+      return "verified";
+    }
+
+    return "mismatched";
+  } catch {
+    return "error";
+  }
+}
+
+export async function bulkTrustWikidata(
+  maxScoutRank: number,
+): Promise<ActionResult<{ verified: number }>> {
+  await ensureAdminWrite();
+  const supabase = await createAdminClient();
+
+  // Get unverified players below threshold with current clubs
+  const { data: players, error: fetchErr } = await supabase
+    .from("players")
+    .select("id")
+    .is("verified_at", null)
+    .lt("scout_rank", maxScoutRank)
+    .gte("birth_year", 1985);
+
+  if (fetchErr || !players) {
+    return { success: false, error: fetchErr?.message ?? "No players found" };
+  }
+
+  let verified = 0;
+
+  // Process in batches of 100
+  for (let i = 0; i < players.length; i += 100) {
+    const batch = players.slice(i, i + 100);
+    const ids = batch.map((p) => p.id);
+
+    // Get current clubs for these players
+    const { data: appearances } = await supabase
+      .from("player_appearances")
+      .select("player_id, clubs(name, league)")
+      .in("player_id", ids)
+      .is("end_year", null);
+
+    const clubMap = new Map<string, { name: string; league: string | null }>();
+    for (const a of appearances ?? []) {
+      const club = a.clubs as { name: string; league: string | null } | null;
+      if (club) clubMap.set(a.player_id, club);
+    }
+
+    // Update each player
+    for (const id of ids) {
+      const club = clubMap.get(id);
+      const { error } = await supabase
+        .from("players")
+        .update({
+          verified_at: new Date().toISOString(),
+          verified_club: club?.name ?? null,
+          verified_league: club?.league ?? null,
+        })
+        .eq("id", id);
+
+      if (!error) verified++;
+    }
+  }
+
+  return { success: true, data: { verified } };
 }

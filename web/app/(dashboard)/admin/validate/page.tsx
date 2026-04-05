@@ -15,6 +15,10 @@ import {
   Keyboard,
   Trash2,
   UserX,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  ShieldCheck,
 } from "lucide-react";
 import {
   getNextPlayerToValidate,
@@ -24,9 +28,15 @@ import {
   deletePlayer,
   searchClubs,
   getValidationStats,
+  searchPlayersForValidation,
+  getPlayerForValidation,
+  runWikipediaBatchVerification,
+  bulkTrustWikidata,
   type ValidatorPlayer,
   type ValidationStats,
   type ClubSearchResult,
+  type PlayerSearchResult,
+  type WikiBatchResult,
 } from "./actions";
 import { toast } from "sonner";
 
@@ -38,6 +48,21 @@ export default function ValidatePage() {
   const [fixMode, setFixMode] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
   const [skippedIds, setSkippedIds] = useState<string[]>([]);
+
+  // Player search state
+  const [playerQuery, setPlayerQuery] = useState("");
+  const [playerResults, setPlayerResults] = useState<PlayerSearchResult[]>([]);
+  const [playerSearching, setPlayerSearching] = useState(false);
+  const [showPlayerSearch, setShowPlayerSearch] = useState(false);
+  const playerSearchTimeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const playerSearchRef = useRef<HTMLInputElement>(null);
+
+  // Batch tools state
+  const [showBatchTools, setShowBatchTools] = useState(false);
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchResult, setBatchResult] = useState<WikiBatchResult | null>(null);
+  const [trustRunning, setTrustRunning] = useState(false);
+  const [trustResult, setTrustResult] = useState<{ verified: number } | null>(null);
 
   // Fix mode state
   const [clubQuery, setClubQuery] = useState("");
@@ -82,7 +107,12 @@ export default function ValidatePage() {
       if (fixMode || acting || loading || !player) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      if (e.key === "ArrowRight" || e.key === "Enter") {
+      if (e.key === "/") {
+        e.preventDefault();
+        setShowPlayerSearch(true);
+        setTimeout(() => playerSearchRef.current?.focus(), 0);
+        return;
+      } else if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
         handleConfirm();
       } else if (e.key === "ArrowLeft") {
@@ -161,6 +191,56 @@ export default function ValidatePage() {
     setActing(false);
   }
 
+  async function handlePlayerSearch(playerId: string) {
+    setShowPlayerSearch(false);
+    setPlayerQuery("");
+    setPlayerResults([]);
+    setLoading(true);
+    setFixMode(false);
+
+    const result = await getPlayerForValidation(playerId);
+    if (result.success && result.data) {
+      setPlayer(result.data);
+    } else {
+      toast.error(result.error ?? "Player not found");
+    }
+    setLoading(false);
+  }
+
+  async function handleBatchVerify() {
+    setBatchRunning(true);
+    setBatchResult(null);
+    const result = await runWikipediaBatchVerification({
+      batchSize: 50,
+      minScoutRank: 10,
+    });
+    if (result.success && result.data) {
+      setBatchResult(result.data);
+      toast.success(
+        `Batch done: ${result.data.autoVerified} verified, ${result.data.mismatched} mismatched`,
+      );
+      loadStats();
+    } else {
+      toast.error(result.error ?? "Batch failed");
+    }
+    setBatchRunning(false);
+  }
+
+  async function handleBulkTrust() {
+    if (!confirm("Trust Wikidata data for all low-priority players (scout_rank < 20)? This marks them as verified.")) return;
+    setTrustRunning(true);
+    setTrustResult(null);
+    const result = await bulkTrustWikidata(20);
+    if (result.success && result.data) {
+      setTrustResult(result.data);
+      toast.success(`${result.data.verified} players marked as verified`);
+      loadStats();
+    } else {
+      toast.error(result.error ?? "Bulk trust failed");
+    }
+    setTrustRunning(false);
+  }
+
   async function handleDelete() {
     if (!player || acting) return;
     if (!confirm(`Delete ${player.name} permanently? This cannot be undone.`)) return;
@@ -177,6 +257,26 @@ export default function ValidatePage() {
     }
     setActing(false);
   }
+
+  // Player search with debounce
+  useEffect(() => {
+    if (playerQuery.length < 2) {
+      setPlayerResults([]);
+      return;
+    }
+
+    if (playerSearchTimeout.current) clearTimeout(playerSearchTimeout.current);
+    playerSearchTimeout.current = setTimeout(async () => {
+      setPlayerSearching(true);
+      const results = await searchPlayersForValidation(playerQuery);
+      setPlayerResults(results);
+      setPlayerSearching(false);
+    }, 300);
+
+    return () => {
+      if (playerSearchTimeout.current) clearTimeout(playerSearchTimeout.current);
+    };
+  }, [playerQuery]);
 
   // Club search with debounce
   useEffect(() => {
@@ -241,9 +341,137 @@ export default function ValidatePage() {
               {stats.expired} expired
             </Badge>
           )}
-          <span className="ml-auto">Session: {sessionCount}</span>
+          <span className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowPlayerSearch(!showPlayerSearch);
+                if (!showPlayerSearch) setTimeout(() => playerSearchRef.current?.focus(), 0);
+              }}
+              className="text-xs gap-1"
+            >
+              <Search className="h-3 w-3" />
+              /
+            </Button>
+            Session: {sessionCount}
+          </span>
         </div>
       )}
+
+      {/* Player search */}
+      {showPlayerSearch && (
+        <div className="mb-4 mx-auto max-w-lg space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              ref={playerSearchRef}
+              type="text"
+              value={playerQuery}
+              onChange={(e) => setPlayerQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setShowPlayerSearch(false);
+                  setPlayerQuery("");
+                  setPlayerResults([]);
+                }
+              }}
+              placeholder="Search players by name..."
+              className="w-full rounded-md border border-white/10 bg-white/5 pl-9 pr-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground"
+              autoFocus
+            />
+            {playerSearching && (
+              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          {playerResults.length > 0 && (
+            <div className="max-h-64 overflow-y-auto rounded-md border border-white/10 bg-white/[0.03]">
+              {playerResults.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handlePlayerSearch(p.id)}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2"
+                >
+                  <span className="text-floodlight font-medium">{p.name}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {p.position_category ?? "?"} · {p.birth_year ?? "?"} · Rank {p.scout_rank}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Batch tools */}
+      <div className="mb-4 mx-auto max-w-lg">
+        <button
+          onClick={() => setShowBatchTools(!showBatchTools)}
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-floodlight transition-colors"
+        >
+          {showBatchTools ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          Batch Tools
+        </button>
+        {showBatchTools && (
+          <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-4 space-y-4">
+            {/* Wikipedia auto-verify */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-floodlight flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5" />
+                  Auto-verify via Wikipedia
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Matches Wikipedia &quot;plays for [Club]&quot; against our data (batch of 50)
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleBatchVerify}
+                disabled={batchRunning}
+                className="text-xs"
+              >
+                {batchRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : "Run"}
+              </Button>
+            </div>
+            {batchResult && (
+              <div className="text-xs text-muted-foreground bg-white/[0.03] rounded px-3 py-2 font-mono">
+                Processed {batchResult.processed} · Verified {batchResult.autoVerified} · Mismatched {batchResult.mismatched} · No extract {batchResult.noExtract} · Errors {batchResult.errors}
+              </div>
+            )}
+
+            <div className="border-t border-white/5" />
+
+            {/* Bulk trust */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-floodlight flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Trust Wikidata (low priority)
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Marks all unverified players with scout_rank &lt; 20 as verified
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleBulkTrust}
+                disabled={trustRunning}
+                className="text-xs"
+              >
+                {trustRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : "Run"}
+              </Button>
+            </div>
+            {trustResult && (
+              <div className="text-xs text-muted-foreground bg-white/[0.03] rounded px-3 py-2 font-mono">
+                {trustResult.verified} players marked as verified
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Player card */}
       <div className="mx-auto max-w-lg">
@@ -481,6 +709,7 @@ export default function ValidatePage() {
               <span>← Fix</span>
               <span>Space Skip</span>
               <span>→ OK</span>
+              <span>/ Search</span>
             </div>
           )}
         </div>
