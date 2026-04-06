@@ -655,13 +655,18 @@ export async function runWikipediaBatchVerification(options: {
   const batchSize = options.batchSize ?? 50;
   const minRank = options.minScoutRank ?? 10;
 
-  // Get unverified players
+  // Get unverified players, skipping those wiki-checked in the last 3 months
+  const threeMonthsAgo = new Date(
+    Date.now() - 90 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
   const { data: players, error: fetchErr } = await supabase
     .from("players")
     .select("id, name")
     .is("verified_at", null)
     .gte("scout_rank", minRank)
     .gte("birth_year", 1985)
+    .or(`wiki_checked_at.is.null,wiki_checked_at.lt.${threeMonthsAgo}`)
     .order("scout_rank", { ascending: false })
     .limit(batchSize);
 
@@ -732,15 +737,24 @@ async function verifyOnePlayer(
       .single();
 
     const club = appearance?.clubs as { name: string; league: string | null } | null;
-    if (!club?.name) return { status: "no_extract" };
+    if (!club?.name) {
+      await stampWikiChecked(supabase, playerId);
+      return { status: "no_extract" };
+    }
 
     // Get Wikipedia extract
     const extract = await fetchWikipediaExtract(playerId);
-    if (!extract) return { status: "no_extract" };
+    if (!extract) {
+      await stampWikiChecked(supabase, playerId);
+      return { status: "no_extract" };
+    }
 
     // Parse club from extract
     const match = extract.match(CLUB_EXTRACT_REGEX);
-    if (!match?.[1]) return { status: "no_extract" };
+    if (!match?.[1]) {
+      await stampWikiChecked(supabase, playerId);
+      return { status: "no_extract" };
+    }
 
     const extractedClub = cleanExtractedClub(match[1]);
 
@@ -762,6 +776,8 @@ async function verifyOnePlayer(
       return { status: "verified" };
     }
 
+    // Mismatch — stamp so we don't re-check for 3 months
+    await stampWikiChecked(supabase, playerId);
     return {
       status: "mismatched",
       detail: { id: playerId, name: playerName, ourClub: club.name, wikiClub: extractedClub },
@@ -769,6 +785,16 @@ async function verifyOnePlayer(
   } catch {
     return { status: "error" };
   }
+}
+
+async function stampWikiChecked(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  playerId: string,
+): Promise<void> {
+  await supabase
+    .from("players")
+    .update({ wiki_checked_at: new Date().toISOString() } as Record<string, unknown>)
+    .eq("id", playerId);
 }
 
 export async function bulkTrustWikidata(
