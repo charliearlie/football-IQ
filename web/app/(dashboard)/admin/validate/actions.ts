@@ -572,9 +572,11 @@ export async function getPlayerForValidation(
 const CLUB_EXTRACT_REGEX =
   /(?:plays?|playing)\s+(?:as\s+.*?\s+)?for\s+(.+?)(?:\.\s|\.$|,\s|\s+and\s+(?:captains?|represents?|is\s))/i;
 
-// Wikipedia often says "Premier League club Tottenham Hotspur" — strip the league/country prefix
+// Wikipedia often says "Premier League club Tottenham Hotspur" — strip the league/country prefix.
+// Matches: "<League Name> club/side/team <Club Name>" but requires at least 2 words before
+// "club/side/team" to avoid stripping actual club names like "Club Brugge".
 const LEAGUE_PREFIX_REGEX =
-  /^(?:(?:the\s+)?(?:Premier League|La Liga|Serie A|Bundesliga|Ligue 1|Eredivisie|Primeira Liga|Süper Lig|MLS|EFL Championship|Saudi Pro League|Scottish Premiership|Belgian Pro League|Campeonato Brasileiro Série A|Argentine Primera División|J1 League|Super League|League One|League Two|National League|Segunda División|2\. Bundesliga|Serie B|Ligue 2|Championship|Russian Premier League|Brasileirão|Liga MX|A-League|Danish Superliga|Swiss Super League|Austrian Bundesliga|Czech First League|Ukrainian Premier League|Croatian First Football League|Greek Super League|Ekstraklasa|K League 1|Chinese Super League|Indian Super League)\s+)?(?:side|club|team)\s+/i;
+  /^(?:the\s+)?(?:\S+\s+){1,}(?:side|club|team)\s+/i;
 
 /**
  * Clean up the extracted club name from Wikipedia.
@@ -803,7 +805,7 @@ async function verifyOnePlayer(
     }
 
     // Mismatch — try to find the Wikipedia club in our DB
-    const suggestedClub = await findClubByName(supabase, extractedClub);
+    const suggestedClub = await findClubByName(supabase, extractedClub, playerName);
 
     await stampWikiChecked(supabase, playerId);
     return {
@@ -824,6 +826,7 @@ async function verifyOnePlayer(
 async function findClubByName(
   supabase: Awaited<ReturnType<typeof createAdminClient>>,
   clubName: string,
+  playerName?: string,
 ): Promise<ClubSearchResult | null> {
   const normalized = clubName
     .normalize("NFD")
@@ -838,9 +841,63 @@ async function findClubByName(
     .select("id, name, league, country_code")
     .ilike("search_name", `%${normalized}%`)
     .order("name")
-    .limit(1);
+    .limit(10);
 
-  return data?.[0] ?? null;
+  if (!data || data.length === 0) return null;
+  if (data.length === 1) return data[0];
+
+  // Multiple matches (e.g. "Everton" → Everton F.C. + Everton de Viña del Mar)
+  // Use LLM to pick the right one
+  return llmPickClub(clubName, data, playerName) ?? data[0];
+}
+
+async function llmPickClub(
+  wikiClubName: string,
+  candidates: ClubSearchResult[],
+  playerName?: string,
+): Promise<ClubSearchResult | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const options = candidates
+    .map((c, i) => `${i + 1}. ${c.name} (${c.league ?? "unknown league"}, ${c.country_code ?? "?"})`)
+    .join("\n");
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 0,
+        max_tokens: 5,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a football expert. Given a club name from a Wikipedia article and a list of database matches, respond with ONLY the number of the correct club. If unsure, respond '0'.",
+          },
+          {
+            role: "user",
+            content: `Wikipedia says${playerName ? ` ${playerName} plays for` : ""}: "${wikiClubName}"\n\nWhich club?\n${options}`,
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return null;
+    const json = await res.json();
+    const answer = json.choices?.[0]?.message?.content?.trim();
+    const idx = parseInt(answer, 10);
+    if (idx >= 1 && idx <= candidates.length) return candidates[idx - 1];
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 async function stampWikiChecked(
