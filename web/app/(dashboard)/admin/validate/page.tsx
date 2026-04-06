@@ -496,7 +496,7 @@ export default function ValidatePage() {
                   Auto-verify via Wikipedia
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Matches Wikipedia &quot;plays for [Club]&quot; against our data (batch of 50)
+                  Matches Wikipedia &quot;plays for [Club]&quot; against our data (batch of 30)
                 </p>
               </div>
               <Button

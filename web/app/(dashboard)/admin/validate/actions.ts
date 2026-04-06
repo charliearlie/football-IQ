@@ -230,10 +230,13 @@ async function fetchWikipediaExtract(qid: string): Promise<string | null> {
     // Step 1: Get English Wikipedia title from Wikidata
     const wdUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qid}&props=sitelinks&sitefilter=enwiki&format=json`;
     const wdRes = await fetch(wdUrl, {
-      headers: { "User-Agent": "FootballIQ-Validator/1.0" },
-      signal: AbortSignal.timeout(3000),
+      headers: { "User-Agent": "FootballIQ-Validator/1.0 (admin@football-iq.com)" },
+      signal: AbortSignal.timeout(8000),
     });
-    if (!wdRes.ok) return null;
+    if (!wdRes.ok) {
+      console.warn(`[wiki] Wikidata ${wdRes.status} for ${qid}`);
+      return null;
+    }
     const wdJson = await wdRes.json();
     const title = wdJson.entities?.[qid]?.sitelinks?.enwiki?.title;
     if (!title) return null;
@@ -241,13 +244,17 @@ async function fetchWikipediaExtract(qid: string): Promise<string | null> {
     // Step 2: Get Wikipedia summary
     const wpUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
     const wpRes = await fetch(wpUrl, {
-      headers: { "User-Agent": "FootballIQ-Validator/1.0" },
-      signal: AbortSignal.timeout(3000),
+      headers: { "User-Agent": "FootballIQ-Validator/1.0 (admin@football-iq.com)" },
+      signal: AbortSignal.timeout(8000),
     });
-    if (!wpRes.ok) return null;
+    if (!wpRes.ok) {
+      console.warn(`[wiki] Wikipedia ${wpRes.status} for ${title}`);
+      return null;
+    }
     const wpJson = await wpRes.json();
     return wpJson.extract ?? null;
-  } catch {
+  } catch (err) {
+    console.warn(`[wiki] Error for ${qid}:`, err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -656,7 +663,7 @@ export async function runWikipediaBatchVerification(options: {
 }): Promise<ActionResult<WikiBatchResult>> {
   await ensureAdminWrite();
   const supabase = await createAdminClient();
-  const batchSize = options.batchSize ?? 50;
+  const batchSize = options.batchSize ?? 30;
   const minRank = options.minScoutRank ?? 10;
 
   // Get unverified players, skipping those wiki-checked in the last 3 months
@@ -688,9 +695,9 @@ export async function runWikipediaBatchVerification(options: {
     mismatchDetails: [],
   };
 
-  // Process in small parallel batches of 5
-  for (let i = 0; i < players.length; i += 5) {
-    const batch = players.slice(i, i + 5);
+  // Process in small parallel batches of 3 (Wikipedia rate limits)
+  for (let i = 0; i < players.length; i += 3) {
+    const batch = players.slice(i, i + 3);
     const results = await Promise.allSettled(
       batch.map((p) => verifyOnePlayer(supabase, p.id, p.name)),
     );
@@ -712,9 +719,9 @@ export async function runWikipediaBatchVerification(options: {
       }
     }
 
-    // Rate limit between batches
-    if (i + 5 < players.length) {
-      await new Promise((r) => setTimeout(r, 200));
+    // Rate limit between batches — 500ms to avoid Wikipedia throttling
+    if (i + 3 < players.length) {
+      await new Promise((r) => setTimeout(r, 500));
     }
   }
 
