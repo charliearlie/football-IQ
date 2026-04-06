@@ -566,8 +566,26 @@ export async function getPlayerForValidation(
 // BATCH VERIFICATION
 // ============================================================================
 
+// Matches "plays for [CLUB]" — captures everything after "for" up to a sentence boundary
 const CLUB_EXTRACT_REGEX =
-  /(?:plays?|playing)\s+(?:as\s+.*?\s+)?for\s+(.+?)(?:\s+in\s+|\s+of\s+the\s+|\.\s|,\s|\s+and\s+the\s+)/i;
+  /(?:plays?|playing)\s+(?:as\s+.*?\s+)?for\s+(.+?)(?:\.\s|\.$|,\s|\s+and\s+(?:captains?|represents?|is\s))/i;
+
+// Wikipedia often says "Premier League club Tottenham Hotspur" — strip the league/country prefix
+const LEAGUE_PREFIX_REGEX =
+  /^(?:(?:the\s+)?(?:Premier League|La Liga|Serie A|Bundesliga|Ligue 1|Eredivisie|Primeira Liga|Süper Lig|MLS|EFL Championship|Saudi Pro League|Scottish Premiership|Belgian Pro League|Campeonato Brasileiro Série A|Argentine Primera División|J1 League|Super League|League One|League Two|National League|Segunda División|2\. Bundesliga|Serie B|Ligue 2|Championship|Russian Premier League|Brasileirão|Liga MX|A-League|Danish Superliga|Swiss Super League|Austrian Bundesliga|Czech First League|Ukrainian Premier League|Croatian First Football League|Greek Super League|Ekstraklasa|K League 1|Chinese Super League|Indian Super League)\s+)?(?:side|club|team)\s+/i;
+
+/**
+ * Clean up the extracted club name from Wikipedia.
+ * Strips league prefix patterns like "Premier League club" and trailing noise.
+ */
+function cleanExtractedClub(raw: string): string {
+  let cleaned = raw.trim();
+  // Strip league prefix: "Premier League club Tottenham Hotspur" → "Tottenham Hotspur"
+  cleaned = cleaned.replace(LEAGUE_PREFIX_REGEX, "");
+  // Strip trailing qualifiers: "Nottingham Forest and captains" → "Nottingham Forest"
+  cleaned = cleaned.replace(/\s+and\s+.*$/, "");
+  return cleaned.trim();
+}
 
 function normalizeForMatch(name: string): string {
   return normalizeClubName(name)
@@ -582,6 +600,50 @@ function clubNamesMatch(a: string, b: string): boolean {
   const nb = normalizeForMatch(b);
   if (!na || !nb) return false;
   return na === nb || na.includes(nb) || nb.includes(na);
+}
+
+/**
+ * LLM fallback: ask GPT-4o-mini if two club names refer to the same club.
+ * Only called when string normalization fails to match.
+ * Returns true if the LLM thinks they're the same club, false otherwise.
+ */
+async function llmClubMatch(ourClub: string, wikiClub: string): Promise<boolean> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return false;
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 0,
+        max_tokens: 5,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a football club name matcher. Answer ONLY 'yes' or 'no'. Do these two names refer to the same football club? Consider abbreviations (FC, F.C.), full names, translations, and common variants.",
+          },
+          {
+            role: "user",
+            content: `Club A: "${ourClub}"\nClub B: "${wikiClub}"`,
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return false;
+    const json = await res.json();
+    const answer = json.choices?.[0]?.message?.content?.toLowerCase()?.trim();
+    return answer === "yes";
+  } catch {
+    return false;
+  }
 }
 
 export async function runWikipediaBatchVerification(options: {
@@ -680,10 +742,14 @@ async function verifyOnePlayer(
     const match = extract.match(CLUB_EXTRACT_REGEX);
     if (!match?.[1]) return { status: "no_extract" };
 
-    const extractedClub = match[1].trim();
+    const extractedClub = cleanExtractedClub(match[1]);
 
-    // Compare
-    if (clubNamesMatch(extractedClub, club.name)) {
+    // Compare — first try string normalization, then LLM fallback
+    const isMatch =
+      clubNamesMatch(extractedClub, club.name) ||
+      (await llmClubMatch(club.name, extractedClub));
+
+    if (isMatch) {
       // Auto-verify
       await supabase
         .from("players")
