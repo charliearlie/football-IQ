@@ -37,6 +37,7 @@ import {
   type ClubSearchResult,
   type PlayerSearchResult,
   type WikiBatchResult,
+  type MismatchDetail,
 } from "./actions";
 import { toast } from "sonner";
 
@@ -53,7 +54,6 @@ export default function ValidatePage() {
   const [playerQuery, setPlayerQuery] = useState("");
   const [playerResults, setPlayerResults] = useState<PlayerSearchResult[]>([]);
   const [playerSearching, setPlayerSearching] = useState(false);
-  const [showPlayerSearch, setShowPlayerSearch] = useState(false);
   const playerSearchTimeout = useRef<ReturnType<typeof setTimeout>>(null);
   const playerSearchRef = useRef<HTMLInputElement>(null);
 
@@ -109,8 +109,7 @@ export default function ValidatePage() {
 
       if (e.key === "/") {
         e.preventDefault();
-        setShowPlayerSearch(true);
-        setTimeout(() => playerSearchRef.current?.focus(), 0);
+        playerSearchRef.current?.focus();
         return;
       } else if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
@@ -192,7 +191,6 @@ export default function ValidatePage() {
   }
 
   async function handlePlayerSearch(playerId: string) {
-    setShowPlayerSearch(false);
     setPlayerQuery("");
     setPlayerResults([]);
     setLoading(true);
@@ -341,67 +339,50 @@ export default function ValidatePage() {
               {stats.expired} expired
             </Badge>
           )}
-          <span className="ml-auto flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setShowPlayerSearch(!showPlayerSearch);
-                if (!showPlayerSearch) setTimeout(() => playerSearchRef.current?.focus(), 0);
-              }}
-              className="text-xs gap-1"
-            >
-              <Search className="h-3 w-3" />
-              /
-            </Button>
-            Session: {sessionCount}
-          </span>
+          <span className="ml-auto">Session: {sessionCount}</span>
         </div>
       )}
 
-      {/* Player search */}
-      {showPlayerSearch && (
-        <div className="mb-4 mx-auto max-w-lg space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              ref={playerSearchRef}
-              type="text"
-              value={playerQuery}
-              onChange={(e) => setPlayerQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  setShowPlayerSearch(false);
-                  setPlayerQuery("");
-                  setPlayerResults([]);
-                }
-              }}
-              placeholder="Search players by name..."
-              className="w-full rounded-md border border-white/10 bg-white/5 pl-9 pr-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground"
-              autoFocus
-            />
-            {playerSearching && (
-              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-          {playerResults.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded-md border border-white/10 bg-white/[0.03]">
-              {playerResults.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => handlePlayerSearch(p.id)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2"
-                >
-                  <span className="text-floodlight font-medium">{p.name}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {p.position_category ?? "?"} · {p.birth_year ?? "?"} · Rank {p.scout_rank}
-                  </span>
-                </button>
-              ))}
-            </div>
+      {/* Player search (always visible) */}
+      <div className="mb-4 mx-auto max-w-lg space-y-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <input
+            ref={playerSearchRef}
+            type="text"
+            value={playerQuery}
+            onChange={(e) => setPlayerQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setPlayerQuery("");
+                setPlayerResults([]);
+                playerSearchRef.current?.blur();
+              }
+            }}
+            placeholder="Search players... ( / )"
+            className="w-full rounded-md border border-white/10 bg-white/5 pl-9 pr-3 py-2 text-sm text-floodlight placeholder:text-muted-foreground"
+          />
+          {playerSearching && (
+            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
           )}
         </div>
-      )}
+        {playerResults.length > 0 && (
+          <div className="max-h-64 overflow-y-auto rounded-md border border-white/10 bg-white/[0.03]">
+            {playerResults.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => handlePlayerSearch(p.id)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2"
+              >
+                <span className="text-floodlight font-medium">{p.name}</span>
+                <span className="text-muted-foreground text-xs">
+                  {p.position_category ?? "?"} · {p.birth_year ?? "?"} · Rank {p.scout_rank}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Batch tools */}
       <div className="mb-4 mx-auto max-w-lg">
@@ -436,8 +417,31 @@ export default function ValidatePage() {
               </Button>
             </div>
             {batchResult && (
-              <div className="text-xs text-muted-foreground bg-white/[0.03] rounded px-3 py-2 font-mono">
-                Processed {batchResult.processed} · Verified {batchResult.autoVerified} · Mismatched {batchResult.mismatched} · No extract {batchResult.noExtract} · Errors {batchResult.errors}
+              <div className="space-y-2">
+                <div className="text-xs text-muted-foreground bg-white/[0.03] rounded px-3 py-2 font-mono">
+                  Processed {batchResult.processed} · Verified {batchResult.autoVerified} · Mismatched {batchResult.mismatched} · No extract {batchResult.noExtract} · Errors {batchResult.errors}
+                </div>
+                {batchResult.mismatchDetails.length > 0 && (
+                  <div className="rounded border border-amber-500/20 bg-amber-500/5">
+                    <div className="px-3 py-1.5 text-xs font-medium text-amber-400 border-b border-amber-500/10">
+                      Mismatches — click to validate
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {batchResult.mismatchDetails.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => handlePlayerSearch(m.id)}
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
+                        >
+                          <span className="text-floodlight font-medium">{m.name}</span>
+                          <span className="text-muted-foreground ml-2">
+                            Ours: {m.ourClub} · Wiki: {m.wikiClub}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

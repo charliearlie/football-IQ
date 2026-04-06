@@ -51,12 +51,20 @@ export interface PlayerSearchResult {
   position_category: string | null;
 }
 
+export interface MismatchDetail {
+  id: string;
+  name: string;
+  ourClub: string;
+  wikiClub: string;
+}
+
 export interface WikiBatchResult {
   processed: number;
   autoVerified: number;
   mismatched: number;
   noExtract: number;
   errors: number;
+  mismatchDetails: MismatchDetail[];
 }
 
 interface ActionResult<T = unknown> {
@@ -605,6 +613,7 @@ export async function runWikipediaBatchVerification(options: {
     mismatched: 0,
     noExtract: 0,
     errors: 0,
+    mismatchDetails: [],
   };
 
   // Process in small parallel batches of 5
@@ -617,21 +626,15 @@ export async function runWikipediaBatchVerification(options: {
     for (const r of results) {
       if (r.status === "rejected") {
         result.errors++;
+      } else if (r.value.status === "verified") {
+        result.autoVerified++;
+      } else if (r.value.status === "mismatched") {
+        result.mismatched++;
+        result.mismatchDetails.push(r.value.detail);
+      } else if (r.value.status === "no_extract") {
+        result.noExtract++;
       } else {
-        switch (r.value) {
-          case "verified":
-            result.autoVerified++;
-            break;
-          case "mismatched":
-            result.mismatched++;
-            break;
-          case "no_extract":
-            result.noExtract++;
-            break;
-          case "error":
-            result.errors++;
-            break;
-        }
+        result.errors++;
       }
     }
 
@@ -644,11 +647,17 @@ export async function runWikipediaBatchVerification(options: {
   return { success: true, data: result };
 }
 
+type VerifyResult =
+  | { status: "verified" }
+  | { status: "mismatched"; detail: MismatchDetail }
+  | { status: "no_extract" }
+  | { status: "error" };
+
 async function verifyOnePlayer(
   supabase: Awaited<ReturnType<typeof createAdminClient>>,
   playerId: string,
   playerName: string,
-): Promise<"verified" | "mismatched" | "no_extract" | "error"> {
+): Promise<VerifyResult> {
   try {
     // Get current club
     const { data: appearance } = await supabase
@@ -661,15 +670,15 @@ async function verifyOnePlayer(
       .single();
 
     const club = appearance?.clubs as { name: string; league: string | null } | null;
-    if (!club?.name) return "no_extract";
+    if (!club?.name) return { status: "no_extract" };
 
     // Get Wikipedia extract
     const extract = await fetchWikipediaExtract(playerId);
-    if (!extract) return "no_extract";
+    if (!extract) return { status: "no_extract" };
 
     // Parse club from extract
     const match = extract.match(CLUB_EXTRACT_REGEX);
-    if (!match?.[1]) return "no_extract";
+    if (!match?.[1]) return { status: "no_extract" };
 
     const extractedClub = match[1].trim();
 
@@ -684,12 +693,15 @@ async function verifyOnePlayer(
           verified_league: club.league,
         })
         .eq("id", playerId);
-      return "verified";
+      return { status: "verified" };
     }
 
-    return "mismatched";
+    return {
+      status: "mismatched",
+      detail: { id: playerId, name: playerName, ourClub: club.name, wikiClub: extractedClub },
+    };
   } catch {
-    return "error";
+    return { status: "error" };
   }
 }
 
