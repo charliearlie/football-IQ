@@ -41,6 +41,99 @@ import {
 } from "./actions";
 import { toast } from "sonner";
 
+function MismatchRow({
+  mismatch,
+  onFixed,
+  onView,
+}: {
+  mismatch: MismatchDetail;
+  onFixed: (id: string) => void;
+  onView: () => void;
+}) {
+  const [acting, setActing] = useState(false);
+
+  async function handleConfirmFix() {
+    if (!mismatch.suggestedClub || acting) return;
+    setActing(true);
+    const result = await fixPlayerClub(
+      mismatch.id,
+      mismatch.suggestedClub.id,
+      mismatch.suggestedClub.name,
+      mismatch.suggestedClub.league,
+      null,
+    );
+    if (result.success) {
+      toast.success(`${mismatch.name} → ${mismatch.suggestedClub.name}`);
+      onFixed(mismatch.id);
+    } else {
+      toast.error(result.error ?? "Failed to fix");
+    }
+    setActing(false);
+  }
+
+  async function handleMarkNoClub() {
+    if (acting) return;
+    setActing(true);
+    const result = await markNoClub(mismatch.id, null);
+    if (result.success) {
+      toast.success(`${mismatch.name} marked as no club`);
+      onFixed(mismatch.id);
+    } else {
+      toast.error(result.error ?? "Failed");
+    }
+    setActing(false);
+  }
+
+  return (
+    <div className="px-3 py-2 space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <button onClick={onView} className="text-left min-w-0">
+          <span className="text-xs text-floodlight font-medium">{mismatch.name}</span>
+          <span className="text-xs text-muted-foreground ml-1.5">
+            Ours: {mismatch.ourClub}
+          </span>
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        {mismatch.suggestedClub ? (
+          <>
+            <span className="text-xs text-muted-foreground truncate">
+              Wiki says: <span className="text-floodlight">{mismatch.suggestedClub.name}</span>
+              {mismatch.suggestedClub.league && (
+                <span className="text-muted-foreground"> ({mismatch.suggestedClub.league})</span>
+              )}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleConfirmFix}
+              disabled={acting}
+              className="text-xs shrink-0 h-6 px-2 border-pitch-green/30 text-pitch-green hover:bg-pitch-green/10"
+            >
+              {acting ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Check className="h-3 w-3 mr-1" />Fix</>}
+            </Button>
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Wiki says: <span className="text-amber-400">{mismatch.wikiClub}</span>
+            <span className="text-muted-foreground/60 ml-1">(not in DB)</span>
+          </span>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleMarkNoClub}
+          disabled={acting}
+          className="text-xs shrink-0 h-6 px-2"
+          title="Mark as no club"
+        >
+          <UserX className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ValidatePage() {
   const [player, setPlayer] = useState<ValidatorPlayer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -419,25 +512,33 @@ export default function ValidatePage() {
             {batchResult && (
               <div className="space-y-2">
                 <div className="text-xs text-muted-foreground bg-white/[0.03] rounded px-3 py-2 font-mono">
-                  Processed {batchResult.processed} · Verified {batchResult.autoVerified} · Mismatched {batchResult.mismatched} · No extract {batchResult.noExtract} · Errors {batchResult.errors}
+                  Processed {batchResult.processed} · Verified {batchResult.autoVerified} · Retired {batchResult.retired} · Mismatched {batchResult.mismatched} · No extract {batchResult.noExtract} · Errors {batchResult.errors}
                 </div>
                 {batchResult.mismatchDetails.length > 0 && (
                   <div className="rounded border border-amber-500/20 bg-amber-500/5">
                     <div className="px-3 py-1.5 text-xs font-medium text-amber-400 border-b border-amber-500/10">
-                      Mismatches — click to validate
+                      Mismatches — review and fix
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
+                    <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
                       {batchResult.mismatchDetails.map((m) => (
-                        <button
+                        <MismatchRow
                           key={m.id}
-                          onClick={() => handlePlayerSearch(m.id)}
-                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
-                        >
-                          <span className="text-floodlight font-medium">{m.name}</span>
-                          <span className="text-muted-foreground ml-2">
-                            Ours: {m.ourClub} · Wiki: {m.wikiClub}
-                          </span>
-                        </button>
+                          mismatch={m}
+                          onFixed={(id) => {
+                            setBatchResult((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    mismatchDetails: prev.mismatchDetails.filter((d) => d.id !== id),
+                                    mismatched: prev.mismatched - 1,
+                                    autoVerified: prev.autoVerified + 1,
+                                  }
+                                : prev,
+                            );
+                            loadStats();
+                          }}
+                          onView={() => handlePlayerSearch(m.id)}
+                        />
                       ))}
                     </div>
                   </div>

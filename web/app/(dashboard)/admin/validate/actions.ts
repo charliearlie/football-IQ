@@ -56,6 +56,7 @@ export interface MismatchDetail {
   name: string;
   ourClub: string;
   wikiClub: string;
+  suggestedClub: ClubSearchResult | null;
 }
 
 export interface WikiBatchResult {
@@ -63,6 +64,7 @@ export interface WikiBatchResult {
   autoVerified: number;
   mismatched: number;
   noExtract: number;
+  retired: number;
   errors: number;
   mismatchDetails: MismatchDetail[];
 }
@@ -679,6 +681,7 @@ export async function runWikipediaBatchVerification(options: {
     autoVerified: 0,
     mismatched: 0,
     noExtract: 0,
+    retired: 0,
     errors: 0,
     mismatchDetails: [],
   };
@@ -695,6 +698,8 @@ export async function runWikipediaBatchVerification(options: {
         result.errors++;
       } else if (r.value.status === "verified") {
         result.autoVerified++;
+      } else if (r.value.status === "retired") {
+        result.retired++;
       } else if (r.value.status === "mismatched") {
         result.mismatched++;
         result.mismatchDetails.push(r.value.detail);
@@ -716,6 +721,7 @@ export async function runWikipediaBatchVerification(options: {
 
 type VerifyResult =
   | { status: "verified" }
+  | { status: "retired" }
   | { status: "mismatched"; detail: MismatchDetail }
   | { status: "no_extract" }
   | { status: "error" };
@@ -749,6 +755,26 @@ async function verifyOnePlayer(
       return { status: "no_extract" };
     }
 
+    // Detect retired/former players
+    const retiredPattern = /\bformer\s+(?:professional\s+)?(?:football|soccer)|retired\s+(?:professional\s+)?(?:football|soccer)|who\s+(?:formerly|last)\s+played/i;
+    if (retiredPattern.test(extract)) {
+      // Auto-mark as no club
+      await supabase
+        .from("player_appearances")
+        .update({ end_year: new Date().getFullYear() })
+        .eq("player_id", playerId)
+        .is("end_year", null);
+      await supabase
+        .from("players")
+        .update({
+          verified_at: new Date().toISOString(),
+          verified_club: null,
+          verified_league: null,
+        })
+        .eq("id", playerId);
+      return { status: "retired" };
+    }
+
     // Parse club from extract
     const match = extract.match(CLUB_EXTRACT_REGEX);
     if (!match?.[1]) {
@@ -776,15 +802,45 @@ async function verifyOnePlayer(
       return { status: "verified" };
     }
 
-    // Mismatch — stamp so we don't re-check for 3 months
+    // Mismatch — try to find the Wikipedia club in our DB
+    const suggestedClub = await findClubByName(supabase, extractedClub);
+
     await stampWikiChecked(supabase, playerId);
     return {
       status: "mismatched",
-      detail: { id: playerId, name: playerName, ourClub: club.name, wikiClub: extractedClub },
+      detail: {
+        id: playerId,
+        name: playerName,
+        ourClub: club.name,
+        wikiClub: extractedClub,
+        suggestedClub,
+      },
     };
   } catch {
     return { status: "error" };
   }
+}
+
+async function findClubByName(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  clubName: string,
+): Promise<ClubSearchResult | null> {
+  const normalized = clubName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+
+  const { data } = await supabase
+    .from("clubs")
+    .select("id, name, league, country_code")
+    .ilike("search_name", `%${normalized}%`)
+    .order("name")
+    .limit(1);
+
+  return data?.[0] ?? null;
 }
 
 async function stampWikiChecked(
