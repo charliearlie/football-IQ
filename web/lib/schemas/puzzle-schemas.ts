@@ -368,7 +368,7 @@ export const contentSchemaMap = {
   connections: connectionsContentSchema,
   timeline: timelineContentSchema,
   who_am_i: whoAmIContentSchema,
-  balldle: z.object({
+  'whos-that': z.object({
     answer: z.object({
       player_name: z.string(),
       player_id: z.string(),
@@ -376,14 +376,19 @@ export const contentSchemaMap = {
       league: z.string(),
       nationality: z.string(),
       position: z.string(),
-      age: z.number(),
+      birth_year: z.number(),
     }),
   }),
   higher_lower: z.object({
+    // Chain format: 11 players, round N compares players[N] vs players[N+1]
+    players: z.array(z.object({ name: z.string(), club: z.string(), fee: z.number() })).optional(),
+    // Legacy format: independent pairs
     pairs: z.array(z.object({
       player1: z.object({ name: z.string(), club: z.string(), fee: z.number() }),
       player2: z.object({ name: z.string(), club: z.string(), fee: z.number() }),
-    })),
+    })).optional(),
+  }).refine(data => data.players || data.pairs, {
+    message: "Either 'players' (chain) or 'pairs' (legacy) must be provided",
   }),
 } as const;
 

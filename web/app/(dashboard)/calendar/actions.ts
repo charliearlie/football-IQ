@@ -923,7 +923,7 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
     correct_player_name: "",
     correct_player_id: "",
   },
-  balldle: {
+  "whos-that": {
     answer: {
       player_name: "",
       player_id: "",
