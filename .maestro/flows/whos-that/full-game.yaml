@@ -1,0 +1,69 @@
+appId: com.charliearlie.footballiq.app
+name: "Who's That? — Full Game (B-1 to B-3)"
+tags:
+  - game-modes
+  - whos-that
+---
+# Prerequisites: Who's That? puzzle seeded for today (run seed-puzzles.sh)
+- launchApp
+- waitForAnimationToEnd
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# Find and tap the Who's That? card
+- scrollUntilVisible:
+    element:
+      text: "WHO'S THAT?"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    text: "WHO'S THAT?"
+
+# B-1: Verify intro/onboarding screen appears (first time)
+- extendedWaitUntil:
+    visible:
+      id: "whos-that-intro"
+    timeout: 5000
+
+# Dismiss intro
+- tapOn:
+    text: "Let's Play"
+
+# B-2: Verify game screen loads
+- extendedWaitUntil:
+    visible:
+      id: "whos-that-screen"
+    timeout: 5000
+- assertVisible:
+    id: "whos-that-grid"
+- assertVisible:
+    id: "action-zone"
+
+# Type the known correct answer (seeded puzzle answer: Bukayo Saka)
+- tapOn:
+    id: "action-zone-autocomplete"
+- inputText: "Bukayo Saka"
+
+# Wait for autocomplete dropdown and select
+- waitForAnimationToEnd
+- tapOn:
+    text: "Bukayo Saka"
+    index: 0
+
+# B-3: Verify result modal appears (correct answer = instant win)
+- extendedWaitUntil:
+    visible:
+      id: "result-modal"
+    timeout: 5000
+
+# Verify challenge button is visible (win state)
+- assertVisible:
+    id: "challenge-button"
+
+# Verify share button exists
+- assertVisible:
+    id: "share-button"

@@ -161,6 +161,42 @@ function transformConnectionsDistribution(
 }
 
 /**
+ * Transform Who's That? distribution from normalized 0-100 scores to guess-count buckets.
+ *
+ * Scoring: points = 7 - guessCount (won), 0 (lost). Normalized = (points/6)*100.
+ * Bucket mapping: 100→1 guess, 83→2, 67→3, 50→4, 33→5, 17→6, 0→X (lost).
+ */
+function transformWhosThatDistribution(
+  distribution: DistributionEntry[]
+): DistributionEntry[] {
+  // 6 buckets with INVERTED scores so the graph (sorted descending) aligns with labels.
+  // Labels ['1','2','3','4','5','6'] are index-mapped to descending scores [7,6,5,4,3,2].
+  // So score=7 → label "1" (best), score=2 → label "6" (worst win). Losses are excluded.
+  const guessMap = new Map<number, number>();
+  for (let i = 2; i <= 7; i++) guessMap.set(i, 0);
+
+  for (const entry of distribution) {
+    let bucketScore: number;
+    if (entry.score >= 90) bucketScore = 7;       // 1 guess (100 normalized, 6 pts)
+    else if (entry.score >= 70) bucketScore = 6;  // 2 guesses (83 normalized, 5 pts)
+    else if (entry.score >= 55) bucketScore = 5;  // 3 guesses (67 normalized, 4 pts)
+    else if (entry.score >= 40) bucketScore = 4;  // 4 guesses (50 normalized, 3 pts)
+    else if (entry.score >= 25) bucketScore = 3;  // 5 guesses (33 normalized, 2 pts)
+    else if (entry.score >= 10) bucketScore = 2;  // 6 guesses (17 normalized, 1 pt)
+    else continue;                                 // lost — exclude from distribution
+
+    const current = guessMap.get(bucketScore) || 0;
+    guessMap.set(bucketScore, current + entry.percentage);
+  }
+
+  return Array.from(guessMap.entries()).map(([score, percentage]) => ({
+    score,
+    count: 0,
+    percentage,
+  }));
+}
+
+/**
  * Map Connections raw IQ points to group-count bucket value.
  * 10 pts → 4 (4 groups), 6 → 3, 4 → 2, 2 → 1, 0 → 0.
  */
@@ -350,6 +386,8 @@ export function ScoreDistributionContainer({
     normalizedForPercentile = userScore * 10;
   } else if (gameMode === 'the_chain') {
     normalizedForPercentile = Math.max(0, Math.min(100, (12 - userScore) * 10));
+  } else if (gameMode === 'whos-that') {
+    normalizedForPercentile = (userScore / 6) * 100;
   }
   const percentile = computePercentile(distribution, normalizedForPercentile);
 
@@ -498,6 +536,36 @@ export function ScoreDistributionContainer({
           userScore={normalizedUserScore}
           maxScore={100}
           bucketSize={10}
+          scoreLabels={getScoreLabelsForMode(gameMode)}
+          isFirstPlayer={isFirstPlayer}
+          testID={testID}
+        />
+        <PercentileLabel percentile={percentile} />
+      </>
+    );
+  }
+
+  // For Who's That?, transform to Wordle-style guess count distribution (1-6 + X)
+  if (gameMode === 'whos-that') {
+    // userScore is raw points (0-6), normalize to 0-100 for bucket matching
+    const normalizedUserScore = (userScore / 6) * 100;
+
+    const { distribution: mergedDistribution } =
+      mergeUserAttemptOptimistically(distribution, totalAttempts, normalizedUserScore, 10);
+
+    const transformedDistribution = transformWhosThatDistribution(mergedDistribution);
+
+    // Map points to bucket score: 6pts→7(label"1"), 5→6(label"2"), ..., 0→1(label"X")
+    const userBucketScore = userScore + 1;
+
+    return (
+      <>
+        <ScoreDistributionGraph
+          distribution={transformedDistribution}
+          userScore={userBucketScore}
+          maxScore={7}
+          minScore={2}
+          bucketSize={1}
           scoreLabels={getScoreLabelsForMode(gameMode)}
           isFirstPlayer={isFirstPlayer}
           testID={testID}

@@ -21,9 +21,12 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createAdminClient();
 
+  const activeOnly = searchParams.get("active_only") === "true";
+
   const { data, error } = await supabase.rpc("search_players_oracle", {
     query_text: q,
     match_limit: limitParam,
+    active_only: activeOnly,
   });
 
   if (error) {

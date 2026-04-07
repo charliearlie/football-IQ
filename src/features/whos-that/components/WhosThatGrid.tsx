@@ -1,5 +1,5 @@
 /**
- * BalldeGrid Component
+ * WhosThatGrid Component
  *
  * Renders the 6-row guess grid. Filled rows show colour feedback.
  * Empty rows show placeholder cells for remaining attempts.
@@ -7,13 +7,13 @@
 
 import { View, StyleSheet } from 'react-native';
 import { colors, spacing } from '@/theme';
-import { GuessFeedback } from '../types/balldle.types';
-import { BalldeGuessRow } from './BalldeGuessRow';
+import { GuessFeedback } from '../types/whosThat.types';
+import { WhosThatGuessRow } from './WhosThatGuessRow';
 
-const ATTRIBUTE_LABELS = ['Club', 'League', 'Nat.', 'Pos.', 'Age'];
+const ATTRIBUTE_LABELS = ['Club', 'League', 'Nat.', 'Pos.', 'Born'];
 const MAX_GUESSES = 6;
 
-export interface BalldeGridProps {
+export interface WhosThatGridProps {
   guesses: GuessFeedback[];
   testID?: string;
 }
@@ -31,7 +31,7 @@ function EmptyRow({ isCurrent, testID }: { isCurrent: boolean; testID?: string }
   );
 }
 
-export function BalldeGrid({ guesses, testID }: BalldeGridProps) {
+export function WhosThatGrid({ guesses, testID }: WhosThatGridProps) {
   const filledCount = guesses.length;
   const emptyCount = MAX_GUESSES - filledCount;
 
@@ -39,7 +39,7 @@ export function BalldeGrid({ guesses, testID }: BalldeGridProps) {
     <View style={styles.container} testID={testID}>
       {/* Filled rows */}
       {guesses.map((guess, index) => (
-        <BalldeGuessRow
+        <WhosThatGuessRow
           key={`guess-${index}`}
           guess={guess}
           testID={testID ? `${testID}-row-${index}` : undefined}

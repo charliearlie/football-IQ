@@ -39,7 +39,7 @@ export const EMPTY_FIELD_EXPERIENCE: FieldExperience = {
     connections: 0,
     timeline: 0,
     who_am_i: 0,
-    balldle: 0,
+    'whos-that': 0,
     higher_lower: 0,
   },
   totalAppearances: 0,

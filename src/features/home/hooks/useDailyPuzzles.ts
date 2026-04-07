@@ -64,6 +64,8 @@ const GAME_MODE_ORDER: GameMode[] = [
   'starting_xi',
   'connections',
   'timeline',
+  'whos-that',
+  'higher_lower',
 ];
 
 /**

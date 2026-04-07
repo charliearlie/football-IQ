@@ -1,21 +1,21 @@
 /**
- * Balldle Game Types
+ * Who's That? Game Types
  *
- * Type definitions for the "Balldle" game mode — Wordle for footballers.
+ * Type definitions for the "Who's That?" game mode — Wordle for footballers.
  * Players guess a footballer in 6 tries with attribute feedback.
  */
 
 // Re-export scoring types for convenience
-export type { BalldeScore } from '../utils/scoring';
+export type { WhosThatScore } from '../utils/scoring';
 
 // =============================================================================
 // CONTENT TYPES (mirror CMS schema)
 // =============================================================================
 
 /**
- * The Balldle puzzle content structure
+ * The Who's That? puzzle content structure
  */
-export interface BalldeContent {
+export interface WhosThatContent {
   answer: {
     /** Full player name */
     player_name: string;
@@ -29,8 +29,10 @@ export interface BalldeContent {
     nationality: string;
     /** Position (e.g. "Forward", "Midfielder", "Defender", "Goalkeeper") */
     position: string;
-    /** Age in years */
-    age: number;
+    /** Birth year (e.g. 2001) */
+    birth_year: number;
+    /** @deprecated Use birth_year instead. Kept for backward compat with old puzzles. */
+    age?: number;
   };
 }
 
@@ -51,7 +53,7 @@ export interface AttributeFeedback {
   value: string;
   /** Color indicating correctness */
   color: FeedbackColor;
-  /** Direction arrow for age attribute only */
+  /** Direction arrow for birth year attribute */
   direction?: 'up' | 'down';
 }
 
@@ -65,7 +67,7 @@ export interface GuessFeedback {
   league: AttributeFeedback;
   nationality: AttributeFeedback;
   position: AttributeFeedback;
-  age: AttributeFeedback;
+  birthYear: AttributeFeedback;
 }
 
 // =============================================================================
@@ -73,9 +75,9 @@ export interface GuessFeedback {
 // =============================================================================
 
 /**
- * Balldle game state
+ * Who's That? game state
  */
-export interface BalldeState {
+export interface WhosThatState {
   /** Array of completed guess feedback rows */
   guesses: GuessFeedback[];
   /** Maximum number of guesses allowed */
@@ -83,7 +85,7 @@ export interface BalldeState {
   /** Current game status */
   gameStatus: 'playing' | 'won' | 'lost';
   /** Score when game ends (null while playing) */
-  score: import('../utils/scoring').BalldeScore | null;
+  score: import('../utils/scoring').WhosThatScore | null;
   /** Whether the last guess was incorrect (for shake animation) */
   lastGuessIncorrect: boolean;
   /** Unique attempt ID for persistence */
@@ -97,7 +99,7 @@ export interface BalldeState {
 /**
  * Payload for restoring progress from saved attempt
  */
-export interface BalldeRestorePayload {
+export interface WhosThatRestorePayload {
   /** Restored guesses */
   guesses: GuessFeedback[];
   /** Restored attempt ID */
@@ -107,20 +109,20 @@ export interface BalldeRestorePayload {
 }
 
 /**
- * Actions for Balldle game reducer
+ * Actions for Who's That? game reducer
  */
-export type BalldeAction =
+export type WhosThatAction =
   | { type: 'SUBMIT_GUESS'; payload: GuessFeedback & { isCorrect: boolean } }
   | { type: 'CLEAR_SHAKE' }
   | { type: 'SET_ATTEMPT_ID'; payload: string }
-  | { type: 'RESTORE_PROGRESS'; payload: BalldeRestorePayload }
+  | { type: 'RESTORE_PROGRESS'; payload: WhosThatRestorePayload }
   | { type: 'ATTEMPT_SAVED' }
   | { type: 'RESET' };
 
 /**
- * Metadata structure saved with Balldle attempts
+ * Metadata structure saved with Who's That? attempts
  */
-export interface BalldeAttemptMetadata {
+export interface WhosThatAttemptMetadata {
   /** All guesses with feedback */
   guesses: GuessFeedback[];
   /** Whether player won */
@@ -134,9 +136,9 @@ export interface BalldeAttemptMetadata {
 // =============================================================================
 
 /**
- * Create initial Balldle game state
+ * Create initial Who's That? game state
  */
-export function createInitialState(): BalldeState {
+export function createInitialState(): WhosThatState {
   return {
     guesses: [],
     maxGuesses: 6,
@@ -154,12 +156,12 @@ export function createInitialState(): BalldeState {
 // =============================================================================
 
 /**
- * Parse and validate Balldle content from puzzle JSON
+ * Parse and validate Who's That? content from puzzle JSON
  *
  * @param content - Raw puzzle content
- * @returns Validated BalldeContent or null if invalid
+ * @returns Validated WhosThatContent or null if invalid
  */
-export function parseBalldeContent(content: unknown): BalldeContent | null {
+export function parseWhosThatContent(content: unknown): WhosThatContent | null {
   if (!content || typeof content !== 'object') return null;
 
   const obj = content as Record<string, unknown>;
@@ -173,7 +175,16 @@ export function parseBalldeContent(content: unknown): BalldeContent | null {
   if (typeof answer.league !== 'string' || !answer.league) return null;
   if (typeof answer.nationality !== 'string' || !answer.nationality) return null;
   if (typeof answer.position !== 'string' || !answer.position) return null;
-  if (typeof answer.age !== 'number' || answer.age < 0) return null;
+  // Support both birth_year (new) and age (legacy) — derive birth_year from age if needed
+  const currentYear = new Date().getFullYear();
+  let birthYear: number;
+  if (typeof answer.birth_year === 'number' && answer.birth_year > 1900) {
+    birthYear = answer.birth_year;
+  } else if (typeof answer.age === 'number' && answer.age > 0) {
+    birthYear = currentYear - answer.age;
+  } else {
+    return null;
+  }
 
   return {
     answer: {
@@ -183,7 +194,7 @@ export function parseBalldeContent(content: unknown): BalldeContent | null {
       league: answer.league,
       nationality: answer.nationality,
       position: answer.position,
-      age: answer.age,
+      birth_year: birthYear,
     },
   };
 }

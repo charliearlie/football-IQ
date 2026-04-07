@@ -1,7 +1,7 @@
 /**
- * Balldle Game Hook
+ * Who's That? Game Hook
  *
- * Main game state management for the Balldle game mode.
+ * Main game state management for the Who's That? game mode.
  * Uses reducer pattern for predictable state updates.
  *
  * Players guess a footballer in up to 6 tries, receiving
@@ -17,21 +17,21 @@ import { useAuth } from '@/features/auth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useGamePersistence } from '@/hooks/useGamePersistence';
 import {
-  BalldeState,
-  BalldeAction,
-  BalldeAttemptMetadata,
+  WhosThatState,
+  WhosThatAction,
+  WhosThatAttemptMetadata,
   GuessFeedback,
   createInitialState,
-  parseBalldeContent,
-} from '../types/balldle.types';
-import { calculateBalldeScore, normalizeBalldeScore } from '../utils/scoring';
-import { generateBalldeEmojiGrid } from '../utils/share';
+  parseWhosThatContent,
+} from '../types/whosThat.types';
+import { calculateWhosThatScore, normalizeWhosThatScore } from '../utils/scoring';
+import { generateWhosThatEmojiGrid } from '../utils/share';
 import { generateFeedback } from '../utils/feedback';
 
 /**
- * Reducer for Balldle game state.
+ * Reducer for Who's That? game state.
  */
-function balldeReducer(state: BalldeState, action: BalldeAction): BalldeState {
+function whosThatReducer(state: WhosThatState, action: WhosThatAction): WhosThatState {
   switch (action.type) {
     case 'SUBMIT_GUESS': {
       const { isCorrect, ...feedback } = action.payload;
@@ -39,7 +39,7 @@ function balldeReducer(state: BalldeState, action: BalldeAction): BalldeState {
       const guessCount = newGuesses.length;
 
       if (isCorrect) {
-        const score = calculateBalldeScore(guessCount, true);
+        const score = calculateWhosThatScore(guessCount, true);
         return {
           ...state,
           guesses: newGuesses,
@@ -50,7 +50,7 @@ function balldeReducer(state: BalldeState, action: BalldeAction): BalldeState {
       }
 
       if (guessCount >= state.maxGuesses) {
-        const score = calculateBalldeScore(guessCount, false);
+        const score = calculateWhosThatScore(guessCount, false);
         return {
           ...state,
           guesses: newGuesses,
@@ -95,7 +95,7 @@ function balldeReducer(state: BalldeState, action: BalldeAction): BalldeState {
 }
 
 // Export reducer for testing
-export { balldeReducer };
+export { whosThatReducer };
 
 /**
  * Share result type
@@ -107,20 +107,20 @@ export interface ShareResult {
 }
 
 /**
- * Main hook for Balldle game.
+ * Main hook for Who's That? game.
  *
  * @param puzzle - The puzzle to play
  * @param isFocused - Whether the screen is focused
  * @returns Game state and actions
  */
-export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean = true) {
+export function useWhosThat(puzzle: ParsedLocalPuzzle | null, isFocused: boolean = true) {
   // Parse content
-  const balldeContent = useMemo(() => {
+  const whosThatContent = useMemo(() => {
     if (!puzzle) return null;
-    return parseBalldeContent(puzzle.content);
+    return parseWhosThatContent(puzzle.content);
   }, [puzzle]);
 
-  const [state, dispatch] = useReducer(balldeReducer, undefined, createInitialState);
+  const [state, dispatch] = useReducer(whosThatReducer, undefined, createInitialState);
   const { syncAttempts } = usePuzzleContext();
   const { refreshLocalIQ } = useAuth();
   const { triggerSuccess, triggerError, triggerCompletion } = useHaptics();
@@ -130,7 +130,7 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
   const remainingGuesses = state.maxGuesses - state.guesses.length;
 
   // Game persistence
-  useGamePersistence<BalldeState, BalldeAttemptMetadata>({
+  useGamePersistence<WhosThatState, WhosThatAttemptMetadata>({
     puzzle,
     isFocused,
     state,
@@ -155,13 +155,13 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
       return {
         id: attemptId,
         completed: 1,
-        score: normalizeBalldeScore(score),
+        score: normalizeWhosThatScore(score),
         score_display: `${score.points}/${score.maxPoints}`,
         metadata: JSON.stringify({
           guesses: s.guesses,
           won: s.gameStatus === 'won',
           guessCount: s.guesses.length,
-        } satisfies BalldeAttemptMetadata),
+        } satisfies WhosThatAttemptMetadata),
         started_at: s.startedAt,
         completed_at: completedAt,
         synced: 0,
@@ -207,10 +207,10 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
         league: string;
         nationality: string;
         position: string;
-        age: number;
+        birthYear: number;
       }
     ) => {
-      if (state.gameStatus !== 'playing' || !balldeContent) return;
+      if (state.gameStatus !== 'playing' || !whosThatContent) return;
 
       // Check if already guessed this player
       const alreadyGuessed = state.guesses.some(
@@ -219,27 +219,37 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
       if (alreadyGuessed) return;
 
       // Primary check: ID exact match
-      let isCorrect = playerId != null && playerId === balldeContent.answer.player_id;
+      let isCorrect = playerId != null && playerId === whosThatContent.answer.player_id;
 
       // Fallback: fuzzy name matching
       if (!isCorrect) {
-        const { isMatch } = validateGuess(playerName, balldeContent.answer.player_name);
+        const { isMatch } = validateGuess(playerName, whosThatContent.answer.player_name);
         isCorrect = isMatch;
       }
 
       // Generate attribute feedback — use real attributes if provided, otherwise
-      // use the answer's own data so at least the correct player shows all green
-      const attrs = playerAttributes ?? {
-        club: isCorrect ? balldeContent.answer.club : '',
-        league: isCorrect ? balldeContent.answer.league : '',
-        nationality: isCorrect ? balldeContent.answer.nationality : '',
-        position: isCorrect ? balldeContent.answer.position : '',
-        age: isCorrect ? balldeContent.answer.age : 0,
-      };
+      // use the answer's own data so at least the correct player shows all green.
+      // When the guess IS correct, always use the answer's attributes to guarantee all-green
+      // (avoids birth_year vs exact-age mismatches).
+      const attrs = isCorrect
+        ? {
+            club: whosThatContent.answer.club,
+            league: whosThatContent.answer.league,
+            nationality: whosThatContent.answer.nationality,
+            position: whosThatContent.answer.position,
+            birthYear: whosThatContent.answer.birth_year,
+          }
+        : playerAttributes ?? {
+            club: '',
+            league: '',
+            nationality: '',
+            position: '',
+            birthYear: 0,
+          };
 
       const feedback = generateFeedback(
         { playerName, ...attrs },
-        balldeContent.answer
+        whosThatContent.answer
       );
 
       if (isCorrect) {
@@ -254,7 +264,7 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
         payload: { ...feedback, isCorrect },
       });
     },
-    [state.gameStatus, state.guesses, balldeContent, triggerSuccess, triggerError, triggerCompletion]
+    [state.gameStatus, state.guesses, whosThatContent, triggerSuccess, triggerError, triggerCompletion]
   );
 
   /**
@@ -272,7 +282,7 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
     const { Share, Platform } = await import('react-native');
     const ExpoClipboard = await import('expo-clipboard');
 
-    const emojiGrid = generateBalldeEmojiGrid(state.guesses);
+    const emojiGrid = generateWhosThatEmojiGrid(state.guesses);
     const dateStr = puzzle.puzzle_date;
 
     const firstLine = state.score.won
@@ -281,7 +291,7 @@ export function useBalldle(puzzle: ParsedLocalPuzzle | null, isFocused: boolean 
         : `Got it in ${state.score.guessCount}/${state.score.maxPoints} guesses`
       : `Couldn't crack it in ${state.score.maxPoints} tries`;
 
-    const shareText = `Football IQ — Balldle
+    const shareText = `Football IQ — Who's That?
 ${firstLine}
 ${dateStr}
 
@@ -303,7 +313,7 @@ Play at https://football-iq.app?ref=share`;
       }
       return { success: false, method: 'share' };
     } catch (error) {
-      console.error('[Balldle] Share failed:', error);
+      console.error('[WhosThat] Share failed:', error);
       try {
         await ExpoClipboard.setStringAsync(shareText);
         return { success: true, method: 'clipboard' };
@@ -323,7 +333,7 @@ Play at https://football-iq.app?ref=share`;
     dispatch,
 
     // Derived data from content
-    balldeContent,
+    whosThatContent,
 
     // Derived state
     isGameOver,

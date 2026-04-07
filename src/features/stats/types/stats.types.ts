@@ -44,7 +44,7 @@ export const GAME_MODE_DISPLAY: Record<
   connections: { displayName: 'Connections', skillName: 'Group Recognition' },
   timeline: { displayName: 'Timeline', skillName: 'Chronological Memory' },
   who_am_i: { displayName: 'Who Am I?', skillName: 'Player Knowledge' },
-  balldle: { displayName: 'Balldle', skillName: 'Player Attributes' },
+  'whos-that': { displayName: "Who's That?", skillName: 'Player Attributes' },
   higher_lower: { displayName: 'Higher/Lower', skillName: 'Market Instinct' },
 };
 
@@ -67,7 +67,7 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
   connections: 0.02, // 2% - new mode, low weight initially
   timeline: 0.02, // 2% - new mode, low weight initially
   who_am_i: 0.02, // 2% - new mode, low weight initially
-  balldle: 0.02, // 2% - new mode, low weight initially
+  'whos-that': 0.02, // 2% - new mode, low weight initially
   higher_lower: 0.02, // 2% - new mode, low weight initially
 };
 

@@ -60,7 +60,7 @@ const MODE_FLAVOUR: Record<GameMode, { strengthText: string; weaknessText: strin
     strengthText: 'Identifies players from the smallest of clues.',
     weaknessText: 'Mystery clues prove too cryptic.',
   },
-  balldle: {
+  'whos-that': {
     strengthText: 'Connects player attributes with remarkable precision.',
     weaknessText: 'Attribute-based deduction still needs work.',
   },

@@ -1,5 +1,5 @@
 /**
- * Balldle Game Screen
+ * Who's That? Game Screen
  *
  * Players guess a footballer in up to 6 tries.
  * Each guess reveals colour-coded feedback for 5 attributes.
@@ -24,20 +24,22 @@ import {
   GameIntroScreen,
 } from '@/features/puzzles';
 import { colors, spacing, textStyles } from '@/theme';
-import { GameContainer } from '@/components';
+import { GameContainer, ElevatedButton } from '@/components';
 import { AdBanner } from '@/features/ads';
 import { UnifiedPlayer } from '@/services/oracle/types';
-import { useBalldle } from '../hooks/useBalldle';
-import { BalldeGrid } from '../components/BalldeGrid';
-import { BalldeActionZone } from '../components/BalldeActionZone';
-import { BalldeResultModal } from '../components/BalldeResultModal';
+import { supabase } from '@/lib/supabase';
+import { nationalityCodeToName } from '../utils/nationalities';
+import { useWhosThat } from '../hooks/useWhosThat';
+import { WhosThatGrid } from '../components/WhosThatGrid';
+import { WhosThatActionZone } from '../components/WhosThatActionZone';
+import { WhosThatResultModal } from '../components/WhosThatResultModal';
 
-interface BalldeScreenProps {
+interface WhosThatScreenProps {
   puzzleId?: string;
   isReviewMode?: boolean;
 }
 
-export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenProps) {
+export function WhosThatScreen({ puzzleId, isReviewMode = false }: WhosThatScreenProps) {
   const router = useRouter();
   const isFocused = useIsFocused();
 
@@ -46,22 +48,22 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
     shouldShowIntro,
     isReady: isOnboardingReady,
     completeIntro,
-  } = useOnboarding('balldle');
+  } = useOnboarding('whos-that');
 
   // Puzzle loading
-  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'balldle');
+  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'whos-that');
 
   // Game hook
   const {
     state,
-    balldeContent,
+    whosThatContent,
     isGameOver,
     remainingGuesses,
     submitGuess,
     shareResult,
-  } = useBalldle(puzzle, isFocused);
+  } = useWhosThat(puzzle, isFocused);
 
-  // Modal state
+  // Modal state — user taps "See how you scored" to open (no auto-open)
   const [showResultModal, setShowResultModal] = useState(false);
 
   // Track keyboard visibility
@@ -79,16 +81,8 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
     };
   }, []);
 
-  // Show modal after game ends
-  useEffect(() => {
-    if (!isGameOver || showResultModal) return;
-
-    const timer = setTimeout(() => {
-      setShowResultModal(true);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [isGameOver, showResultModal]);
+  // Track retired-player rejection for inline message
+  const [retiredPlayerName, setRetiredPlayerName] = useState<string | null>(null);
 
   // Handlers
   const handleBackToHome = useCallback(() => {
@@ -96,42 +90,56 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
   }, [router]);
 
   const handlePlayerSelect = useCallback(
-    (player: UnifiedPlayer) => {
-      // PlayerAutocomplete returns UnifiedPlayer with position_category, birth_year, etc.
-      // We pass the player id and name; attribute data must come from a richer source.
-      // For now we pass what the oracle provides; the hook will derive age from birth_year
-      // if balldeContent has a matching player. In practice, the CMS answer attributes
-      // are used for feedback — we supply whatever we have from the autocomplete.
-      const currentYear = new Date().getFullYear();
-      submitGuess(player.name, player.id, {
-        club: '',        // oracle/unified player has no club data — game logic handles this
-        league: '',
-        nationality: player.nationality_code ?? '',
-        position: player.position_category ?? '',
-        age: player.birth_year != null ? currentYear - player.birth_year : 0,
-      });
-    },
-    [submitGuess]
-  );
+    async (player: UnifiedPlayer) => {
+      setRetiredPlayerName(null);
+      const nationalityName = nationalityCodeToName(player.nationality_code ?? '');
+      let birthYear = player.birth_year ?? 0;
+      const position = player.position_category ?? '';
 
-  const handleTextSubmit = useCallback(
-    (text: string) => {
-      if (text.trim()) {
-        submitGuess(text.trim());
+      // Fetch club + league from Supabase for richer feedback
+      let club = '';
+      let league = '';
+      try {
+        const { data } = await supabase.rpc('get_balldle_attributes', {
+          p_player_id: player.id,
+        });
+        if (data) {
+          const attrs = typeof data === 'string' ? JSON.parse(data) : data;
+          club = attrs.club ?? '';
+          league = attrs.league ?? '';
+          if (attrs.birth_year) birthYear = attrs.birth_year;
+          // Clean up Wikidata-style club names (e.g., "Arsenal F.C." → "Arsenal")
+          club = club.replace(/ F\.?C\.?$/i, '').replace(/ A\.?F\.?C\.?$/i, '').trim();
+        }
+      } catch (err) {
+        console.warn('[WhosThat] Failed to fetch player attributes:', err);
       }
+
+      // Reject retired players (no current club)
+      if (!club) {
+        setRetiredPlayerName(player.name);
+        return;
+      }
+
+      submitGuess(player.name, player.id, {
+        club,
+        league,
+        nationality: nationalityName,
+        position,
+        birthYear,
+      });
     },
     [submitGuess]
   );
 
   const handleCloseModal = useCallback(() => {
     setShowResultModal(false);
-    handleBackToHome();
-  }, [handleBackToHome]);
+  }, []);
 
   // Onboarding loading state
   if (!isOnboardingReady) {
     return (
-      <GameContainer title="Balldle" testID="balldle-screen">
+      <GameContainer title="Who's That?" testID="whos-that-screen">
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
         </View>
@@ -143,9 +151,9 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
   if (shouldShowIntro) {
     return (
       <GameIntroScreen
-        gameMode="balldle"
+        gameMode="whos-that"
         onStart={completeIntro}
-        testID="balldle-intro"
+        testID="whos-that-intro"
       />
     );
   }
@@ -153,7 +161,7 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
   // Loading state
   if (isLoading) {
     return (
-      <GameContainer title="Balldle" testID="balldle-screen">
+      <GameContainer title="Who's That?" testID="whos-that-screen">
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
           <Text style={[textStyles.body, styles.loadingText]}>
@@ -165,9 +173,9 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
   }
 
   // No puzzle available
-  if (!puzzle || !balldeContent) {
+  if (!puzzle || !whosThatContent) {
     return (
-      <GameContainer title="Balldle" testID="balldle-screen">
+      <GameContainer title="Who's That?" testID="whos-that-screen">
         <View style={styles.centered}>
           <Text style={textStyles.h2}>No Game Today</Text>
           <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
@@ -179,7 +187,7 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
   }
 
   return (
-    <GameContainer title="Balldle" testID="balldle-screen">
+    <GameContainer title="Who's That?" testID="whos-that-screen">
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -195,15 +203,17 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>BALLDLE</Text>
             <Text style={styles.headerSubtitle}>
               Guess the footballer in 6 tries
+            </Text>
+            <Text style={styles.disclaimer}>
+              Player data accurate as of 4 April 2026
             </Text>
           </View>
 
           {/* Attribute legend */}
           <View style={styles.legend}>
-            {['Club', 'League', 'Nat.', 'Pos.', 'Age'].map((label) => (
+            {['Club', 'League', 'Nat.', 'Pos.', 'Born'].map((label) => (
               <Text key={label} style={styles.legendLabel}>
                 {label}
               </Text>
@@ -211,45 +221,66 @@ export function BalldeScreen({ puzzleId, isReviewMode = false }: BalldeScreenPro
           </View>
 
           {/* Guess grid */}
-          <BalldeGrid
+          <WhosThatGrid
             guesses={state.guesses}
-            testID="balldle-grid"
+            testID="whos-that-grid"
           />
 
-          {/* Answer revealed on game over (lost) */}
-          {isGameOver && !state.score?.won && (
+          {/* Inline result on game over */}
+          {isGameOver && (
             <View style={styles.answerReveal}>
-              <Text style={styles.answerLabel}>The answer was</Text>
-              <Text style={styles.answerName}>
-                {balldeContent.answer.player_name}
+              <Text style={styles.answerLabel}>
+                {state.score?.won ? 'Correct!' : 'The answer was'}
+              </Text>
+              <Text style={[styles.answerName, !state.score?.won && styles.answerNameLoss]}>
+                {whosThatContent.answer.player_name}
               </Text>
             </View>
           )}
         </ScrollView>
 
         {/* Action Zone */}
-        <BalldeActionZone
-          onPlayerSelect={handlePlayerSelect}
-          onTextSubmit={handleTextSubmit}
-          shouldShake={state.lastGuessIncorrect}
-          isGameOver={isGameOver}
-          remainingGuesses={remainingGuesses}
-          maxGuesses={state.maxGuesses}
-          testID="action-zone"
-        />
+        {isGameOver ? (
+          <View style={styles.gameOverActionZone}>
+            <ElevatedButton
+              title="See how you scored"
+              onPress={() => setShowResultModal(true)}
+              fullWidth
+              testID="see-score-button"
+            />
+          </View>
+        ) : (
+          <>
+            {retiredPlayerName && (
+              <View style={styles.retiredWarning}>
+                <Text style={styles.retiredWarningText}>
+                  {retiredPlayerName} doesn't have a current club — try an active player
+                </Text>
+              </View>
+            )}
+            <WhosThatActionZone
+              onPlayerSelect={handlePlayerSelect}
+              shouldShake={state.lastGuessIncorrect}
+              isGameOver={isGameOver}
+              remainingGuesses={remainingGuesses}
+              maxGuesses={state.maxGuesses}
+              testID="action-zone"
+            />
+          </>
+        )}
 
         {/* Ad Banner */}
         {!keyboardVisible && !isGameOver && (
-          <AdBanner testID="balldle-ad-banner" />
+          <AdBanner testID="whos-that-ad-banner" />
         )}
       </KeyboardAvoidingView>
 
       {/* Result Modal */}
       {state.score && (
-        <BalldeResultModal
+        <WhosThatResultModal
           visible={showResultModal}
           score={state.score}
-          correctPlayerName={balldeContent.answer.player_name}
+          correctPlayerName={whosThatContent.answer.player_name}
           guesses={state.guesses}
           puzzleId={puzzle.id}
           puzzleDate={puzzle.puzzle_date}
@@ -293,17 +324,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.lg,
   },
-  headerTitle: {
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontSize: 28,
-    color: colors.pitchGreen,
-    letterSpacing: 2,
-  },
   headerSubtitle: {
     fontFamily: 'SpaceGrotesk-Regular',
-    fontSize: 14,
+    fontSize: 15,
     color: 'rgba(255, 255, 255, 0.5)',
-    marginTop: 4,
+  },
+  disclaimer: {
+    fontFamily: 'SpaceGrotesk-Regular',
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 2,
   },
   legend: {
     flexDirection: 'row',
@@ -338,5 +368,23 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.pitchGreen,
     marginTop: 4,
+  },
+  answerNameLoss: {
+    color: colors.floodlightWhite,
+  },
+  retiredWarning: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  retiredWarningText: {
+    fontFamily: 'SpaceGrotesk-Regular',
+    fontSize: 13,
+    color: colors.cardYellow,
+    textAlign: 'center',
+  },
+  gameOverActionZone: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
   },
 });

@@ -45,7 +45,7 @@ export type GameMode =
   | 'connections'
   | 'timeline'
   | 'who_am_i'
-  | 'balldle'
+  | 'whos-that'
   | 'higher_lower';
 
 /**

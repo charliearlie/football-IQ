@@ -57,6 +57,7 @@ import type { GameMode } from '@/features/puzzles/types/puzzle.types';
 import { useChallenge } from '@/features/challenges';
 import { getGameDisplayTitle } from '@/features/puzzles/constants/rules';
 import { usePaywallExperiment } from '@/features/subscription/hooks/usePaywallExperiment';
+import { useStoreReview } from '@/hooks/useStoreReview';
 
 export type ResultType = 'win' | 'loss' | 'draw' | 'complete';
 
@@ -222,7 +223,7 @@ function FloatingIQBadge({ iqEarned, visible }: { iqEarned: number; visible: boo
   }));
 
   return (
-    <Animated.View style={[floatingIQStyles.container, animatedStyle]} pointerEvents="none">
+    <Animated.View testID="iq-badge" style={[floatingIQStyles.container, animatedStyle]} pointerEvents="none">
       <Text style={floatingIQStyles.text}>+{iqEarned} IQ</Text>
     </Animated.View>
   );
@@ -564,6 +565,12 @@ export function BaseResultModal({
   const canChallenge = !!(puzzleId && gameMode && challengeScore !== undefined);
   const { challengeState, createAndShare: createAndShareChallenge } = useChallenge();
 
+  // Store review prompt at high-engagement moments
+  const tierChanged = effectiveOldIQ !== undefined && effectiveNewIQ !== undefined
+    ? didTierChange(effectiveOldIQ, effectiveNewIQ).changed
+    : false;
+  useStoreReview({ visible, resultType, streakDays: effectiveStreakDays, tierChanged });
+
   // A/B test: paywall after first win
   const { maybeTriggerPostWinPaywall } = usePaywallExperiment();
 
@@ -711,23 +718,29 @@ export function BaseResultModal({
 
           {/* Streak badge — only on first completion */}
           {effectiveStreakDays !== undefined && effectiveStreakDays > 0 && (
-            <StreakBadge streakDays={effectiveStreakDays} />
+            <View testID="streak-badge">
+              <StreakBadge streakDays={effectiveStreakDays} />
+            </View>
           )}
 
           {/* Tier progress bar — only when IQ was gained */}
           {effectiveOldIQ !== undefined && effectiveNewIQ !== undefined && effectiveNewIQ > effectiveOldIQ && (
-            <TierProgressBar oldIQ={effectiveOldIQ} newIQ={effectiveNewIQ} />
+            <View testID="tier-progress-bar">
+              <TierProgressBar oldIQ={effectiveOldIQ} newIQ={effectiveNewIQ} />
+            </View>
           )}
 
           {/* Context-sensitive premium upsell */}
           {!effectiveIsPremium && showRetention && effectiveOldIQ !== undefined && effectiveOldIQ >= 15 && (
-            <UpsellBanner
-              oldIQ={effectiveOldIQ}
-              newIQ={effectiveNewIQ}
-              streakDays={effectiveStreakDays}
-              percentile={percentile}
-              onPress={() => router.push('/premium-modal')}
-            />
+            <View testID="upsell-banner">
+              <UpsellBanner
+                oldIQ={effectiveOldIQ}
+                newIQ={effectiveNewIQ}
+                streakDays={effectiveStreakDays}
+                percentile={percentile}
+                onPress={() => router.push('/premium-modal')}
+              />
+            </View>
           )}
 
           {/* All Done message when all puzzles completed */}
@@ -754,9 +767,7 @@ export function BaseResultModal({
                       onPress={nextPuzzle.goToNext}
                       size="small"
                       style={styles.buttonHalf}
-                      topColor={colors.floodlightWhite}
-                      shadowColor={colors.textSecondary}
-                      textStyle={{ color: colors.stadiumNavy }}
+                      variant="secondary"
                       testID="next-puzzle-button"
                     />
                     {effectiveOnShare ? (
@@ -829,13 +840,14 @@ export function BaseResultModal({
               {/* Challenge a Friend button */}
               {canChallenge && resultType !== 'loss' && (
                 <Pressable
+                  testID="challenge-button"
                   onPress={() => {
                     if (challengeState === 'idle' || challengeState === 'error') {
                       createAndShareChallenge({
                         gameMode: gameMode!,
                         puzzleId: puzzleId!,
                         score: challengeScore!,
-                        scoreDisplay: shareData?.scoreDisplay,
+                        scoreDisplay: undefined,
                         gameModeName: getGameDisplayTitle(gameMode!),
                       });
                     }
@@ -921,10 +933,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stadiumNavy,
     borderRadius: borderRadius['2xl'],
     borderWidth: 2,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
     alignItems: 'center',
     width: '100%',
     maxWidth: 340,
+    maxHeight: '95%',
+    flexGrow: 0,
+    flexShrink: 1,
     overflow: 'hidden',
   },
   iconContainer: {
@@ -988,7 +1005,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   closeLinkContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,

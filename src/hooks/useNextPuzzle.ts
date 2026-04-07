@@ -69,11 +69,7 @@ export function useNextPuzzle(enabled: boolean = true): UseNextPuzzleResult {
 
   let buttonLabel: string | null = null;
   if (nextCard !== null) {
-    const nextNumber = completedCount + 1;
-    buttonLabel =
-      unplayedCount === 1
-        ? `Final Puzzle (${nextNumber} of ${totalCount})`
-        : `Next Puzzle (${nextNumber} of ${totalCount})`;
+    buttonLabel = unplayedCount === 1 ? 'Final Puzzle' : 'Next Puzzle';
   }
 
   return {

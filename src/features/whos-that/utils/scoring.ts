@@ -1,5 +1,5 @@
 /**
- * Scoring System for Balldle
+ * Scoring System for Who's That?
  *
  * Score based on how few guesses were needed to identify the player.
  * 6 guesses total — fewer guesses = higher score.
@@ -15,9 +15,9 @@
  */
 
 /**
- * Score data for a completed Balldle game.
+ * Score data for a completed Who's That? game.
  */
-export interface BalldeScore {
+export interface WhosThatScore {
   /** Points earned (0-6) */
   points: number;
   /** Maximum possible points (6) */
@@ -29,13 +29,13 @@ export interface BalldeScore {
 }
 
 /**
- * Calculate the final score for a Balldle game.
+ * Calculate the final score for a Who's That? game.
  *
  * @param guessCount - Number of guesses used when game ended
  * @param won - Whether the player guessed correctly
- * @returns BalldeScore object
+ * @returns WhosThatScore object
  */
-export function calculateBalldeScore(guessCount: number, won: boolean): BalldeScore {
+export function calculateWhosThatScore(guessCount: number, won: boolean): WhosThatScore {
   const maxPoints = 6;
   const points = won ? maxPoints - (guessCount - 1) : 0;
 
@@ -50,14 +50,14 @@ export function calculateBalldeScore(guessCount: number, won: boolean): BalldeSc
 /**
  * Format score for display as "X/Y" string.
  */
-export function formatBalldeScore(score: BalldeScore): string {
+export function formatWhosThatScore(score: WhosThatScore): string {
   return `${score.points}/${score.maxPoints}`;
 }
 
 /**
  * Normalize score to 0-100 for distribution charts.
  */
-export function normalizeBalldeScore(score: BalldeScore): number {
+export function normalizeWhosThatScore(score: WhosThatScore): number {
   if (score.maxPoints === 0) return 0;
   return Math.round((score.points / score.maxPoints) * 100);
 }

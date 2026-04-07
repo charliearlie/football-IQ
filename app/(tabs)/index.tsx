@@ -48,6 +48,8 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { usePlayToUnlock } from "@/hooks/usePlayToUnlock";
 import { HOME_COLORS } from "@/theme/home-design";
 import { getUserRank } from "@/features/leaderboard";
+import { useWhatsNew } from "@/features/home/hooks/useWhatsNew";
+import { WhatsNewModal } from "@/features/home/components/WhatsNewModal";
 
 
 /**
@@ -133,6 +135,9 @@ export default function HomeScreen() {
 
   // Play 3, Unlock 1 mechanic (free users only)
   const playToUnlock = usePlayToUnlock();
+
+  // What's New modal (shows once per version)
+  const whatsNew = useWhatsNew();
 
   // First-time user who is offline: auth failed (no user), no local puzzles, and confirmed offline
   const isFirstTimeOffline =
@@ -264,7 +269,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["top"]} testID="home-screen">
       {/* 1. Header */}
       <HomeHeader
         streak={stats.currentStreak}
@@ -422,6 +427,13 @@ export default function HomeScreen() {
           testID="completed-game-modal"
         />
       )}
+
+      {/* What's New Modal */}
+      <WhatsNewModal
+        visible={whatsNew.visible}
+        version={whatsNew.version}
+        onDismiss={whatsNew.dismiss}
+      />
 
       {/* Unlock Choice Modal */}
       <UnlockChoiceModal

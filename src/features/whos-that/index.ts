@@ -1,33 +1,33 @@
 /**
- * Balldle Feature
+ * Who's That? Feature
  *
  * Wordle for footballers — guess the player in 6 tries with attribute feedback.
  */
 
 // Types
 export type {
-  BalldeContent,
+  WhosThatContent,
   FeedbackColor,
   AttributeFeedback,
   GuessFeedback,
-  BalldeState,
-  BalldeRestorePayload,
-  BalldeAction,
-  BalldeAttemptMetadata,
-} from './types/balldle.types';
+  WhosThatState,
+  WhosThatRestorePayload,
+  WhosThatAction,
+  WhosThatAttemptMetadata,
+} from './types/whosThat.types';
 
 export {
   createInitialState,
-  parseBalldeContent,
-} from './types/balldle.types';
+  parseWhosThatContent,
+} from './types/whosThat.types';
 
 // Scoring
-export type { BalldeScore } from './utils/scoring';
+export type { WhosThatScore } from './utils/scoring';
 
 export {
-  calculateBalldeScore,
-  formatBalldeScore,
-  normalizeBalldeScore,
+  calculateWhosThatScore,
+  formatWhosThatScore,
+  normalizeWhosThatScore,
 } from './utils/scoring';
 
 // Feedback
@@ -36,9 +36,9 @@ export type { GuessInput } from './utils/feedback';
 
 // Share
 export {
-  generateBalldeEmojiGrid,
-  generateBalldeShareText,
-  shareBalldeResult,
+  generateWhosThatEmojiGrid,
+  generateWhosThatShareText,
+  shareWhosThatResult,
 } from './utils/share';
 
 // Score Display
@@ -48,14 +48,14 @@ export {
 } from './utils/scoreDisplay';
 
 // Hook
-export { useBalldle, balldeReducer } from './hooks/useBalldle';
-export type { ShareResult } from './hooks/useBalldle';
+export { useWhosThat, whosThatReducer } from './hooks/useWhosThat';
+export type { ShareResult } from './hooks/useWhosThat';
 
 // Screen
-export { BalldeScreen } from './screens/BalldeScreen';
+export { WhosThatScreen } from './screens/WhosThatScreen';
 
 // Components
-export { BalldeGuessRow } from './components/BalldeGuessRow';
-export { BalldeGrid } from './components/BalldeGrid';
-export { BalldeActionZone } from './components/BalldeActionZone';
-export { BalldeResultModal } from './components/BalldeResultModal';
+export { WhosThatGuessRow } from './components/WhosThatGuessRow';
+export { WhosThatGrid } from './components/WhosThatGrid';
+export { WhosThatActionZone } from './components/WhosThatActionZone';
+export { WhosThatResultModal } from './components/WhosThatResultModal';

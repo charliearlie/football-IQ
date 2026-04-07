@@ -23,7 +23,7 @@ import { BlurView } from 'expo-blur';
 import { ElevatedButton, ErrorFlashOverlay } from '@/components';
 import { colors, spacing, fonts, fontWeights, borderRadius } from '@/theme';
 import { useHaptics } from '@/hooks/useHaptics';
-import { searchPlayersHybrid } from '@/services/player/HybridSearchEngine';
+import { searchPlayersHybrid, HybridSearchOptions } from '@/services/player/HybridSearchEngine';
 import { FlagIcon } from '@/components/FlagIcon';
 import { UnifiedPlayer } from '@/services/oracle/types';
 
@@ -38,13 +38,19 @@ export interface PlayerAutocompleteProps {
   /** Called when user selects a player from the dropdown */
   onSelect: (player: UnifiedPlayer) => void;
   /** Called when user submits typed text without selecting from dropdown */
-  onSubmitText: (text: string) => void;
+  onSubmitText?: (text: string) => void;
+  /** Hide the submit button and disable return-key submission (select-only mode) */
+  selectOnly?: boolean;
   /** Whether to trigger shake animation */
   shouldShake: boolean;
   /** Whether the game is over (disables input) */
   isGameOver: boolean;
   /** Callback when input gains focus */
   onFocus?: () => void;
+  /** Optional filter applied to search results before display */
+  filter?: (player: UnifiedPlayer) => boolean;
+  /** Search options passed to HybridSearchEngine (e.g. activeOnly) */
+  searchOptions?: HybridSearchOptions;
   /** Test ID prefix */
   testID?: string;
 }
@@ -61,6 +67,9 @@ export function PlayerAutocomplete({
   shouldShake,
   isGameOver,
   onFocus,
+  filter,
+  searchOptions,
+  selectOnly = false,
   testID,
 }: PlayerAutocompleteProps) {
   const [query, setQuery] = useState('');
@@ -146,14 +155,16 @@ export function PlayerAutocomplete({
     searchPlayersHybrid(text, (newResults) => {
       if (token !== requestTokenRef.current) return;
       callbackCount++;
-      setResults(newResults);
+      const filtered = filter ? newResults.filter(filter) : newResults;
+      setResults(filtered);
       // First callback delivers local results; second delivers Oracle-merged results.
       // Stop searching when Oracle completes (2nd call) or won't fire (≥3 local hits).
-      if (callbackCount > 1 || newResults.length >= 3) {
+      // In activeOnly mode, only one callback fires (Oracle-only).
+      if (callbackCount > 1 || filtered.length >= 3 || searchOptions?.activeOnly) {
         setIsSearching(false);
       }
-    });
-  }, []);
+    }, searchOptions);
+  }, [filter, searchOptions]);
 
   const handleSelect = useCallback(
     (player: UnifiedPlayer) => {
@@ -169,7 +180,7 @@ export function PlayerAutocomplete({
   );
 
   const handleSubmit = useCallback(() => {
-    if (!query.trim() || isGameOver) return;
+    if (selectOnly || !query.trim() || isGameOver) return;
 
     if (selectedRef.current) {
       // Already submitted via onSelect -- no-op
@@ -177,8 +188,8 @@ export function PlayerAutocomplete({
     }
     // User typed without selecting from dropdown -- submit as text
     Keyboard.dismiss();
-    onSubmitText(query.trim());
-  }, [query, isGameOver, onSubmitText]);
+    onSubmitText?.(query.trim());
+  }, [selectOnly, query, isGameOver, onSubmitText]);
 
   // Dropdown visibility logic
   const shouldShowDropdown = isOpen && query.length >= 3;
@@ -199,8 +210,8 @@ export function PlayerAutocomplete({
             editable={!isGameOver}
             autoCapitalize="words"
             autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={handleSubmit}
+            returnKeyType={selectOnly ? 'default' : 'done'}
+            onSubmitEditing={selectOnly ? undefined : handleSubmit}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             testID={testID ? `${testID}-input` : undefined}
@@ -211,13 +222,15 @@ export function PlayerAutocomplete({
             testID={testID ? `${testID}-error-flash` : undefined}
           />
         </Animated.View>
-        <ElevatedButton
-          title="Submit"
-          onPress={handleSubmit}
-          disabled={isGameOver || !query.trim()}
-          size="medium"
-          testID={testID ? `${testID}-submit` : undefined}
-        />
+        {!selectOnly && (
+          <ElevatedButton
+            title="Submit"
+            onPress={handleSubmit}
+            disabled={isGameOver || !query.trim()}
+            size="medium"
+            testID={testID ? `${testID}-submit` : undefined}
+          />
+        )}
       </View>
 
       {(showResults || showLoading || showNoResults) && (

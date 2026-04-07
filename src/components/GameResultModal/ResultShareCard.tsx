@@ -55,7 +55,7 @@ const GAME_MODE_ICONS: Record<GameMode, LucideIcon> = {
   connections: Grid3X3,
   timeline: Clock,
   who_am_i: HelpCircle,
-  balldle: Dices,
+  'whos-that': Dices,
   higher_lower: TrendingUp,
 };
 

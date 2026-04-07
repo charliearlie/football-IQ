@@ -28,7 +28,7 @@ const mockGetUser = supabase.auth.getUser as jest.Mock;
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-const CHALLENGE_API_URL = 'https://football-iq.app/api/challenges';
+const CHALLENGE_API_URL = 'https://www.football-iq.app/api/challenges';
 
 const validInput: CreateChallengeInput = {
   gameMode: 'career_path',
@@ -134,6 +134,7 @@ describe('createChallenge', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
+        text: async () => 'Internal Server Error',
         json: async () => ({ error: 'Internal Server Error' }),
       });
 
@@ -146,6 +147,7 @@ describe('createChallenge', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 422,
+        text: async () => 'Invalid puzzle ID',
         json: async () => ({ error: 'Invalid puzzle ID' }),
       });
 

@@ -17,7 +17,7 @@ import {
 export type { LocalCatalogEntry } from '@/types/database';
 
 const DATABASE_NAME = 'football_iq.db';
-const SCHEMA_VERSION = 15;
+const SCHEMA_VERSION = 16;
 
 /**
  * SQLite database instance for Football IQ local storage.
@@ -421,6 +421,41 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 
     await database.execAsync('PRAGMA user_version = 15');
     console.log('[Database] Migration v15 complete');
+  }
+
+  // Migration v16: Normalize search_name for diacritics support
+  // Fixes "Odegaard" not matching "Ødegaard" by re-normalizing all search_name values
+  if (currentVersion < 16) {
+    console.log('[Database] Running migration v16: Normalize search_name for diacritics');
+
+    // Re-seed elite index (seedEliteIndex now calls normalizeSearchName)
+    const eliteIndex = require('../../assets/data/elite-index.json');
+    await seedEliteIndex(database, eliteIndex.players);
+
+    // Normalize non-elite cached players in JS
+    const rows = await database.getAllAsync<{ id: string; name: string }>(
+      'SELECT id, name FROM player_search_cache WHERE is_elite = 0'
+    );
+    for (const row of rows) {
+      await database.runAsync(
+        'UPDATE player_search_cache SET search_name = $search_name WHERE id = $id',
+        { $search_name: normalizeSearchName(row.name), $id: row.id }
+      );
+    }
+
+    // Also normalize player_database table
+    const dbRows = await database.getAllAsync<{ id: string; name: string }>(
+      'SELECT id, name FROM player_database'
+    );
+    for (const row of dbRows) {
+      await database.runAsync(
+        'UPDATE player_database SET search_name = $search_name WHERE id = $id',
+        { $search_name: normalizeSearchName(row.name), $id: row.id }
+      );
+    }
+
+    await database.execAsync('PRAGMA user_version = 16');
+    console.log('[Database] Migration v16 complete');
   }
 }
 
@@ -1410,7 +1445,7 @@ export async function savePlayer(player: LocalPlayer): Promise<void> {
       $id: player.id,
       $external_id: player.external_id,
       $name: player.name,
-      $search_name: player.search_name,
+      $search_name: normalizeSearchName(player.name),
       $clubs: player.clubs,
       $nationalities: player.nationalities,
       $is_active: player.is_active,
@@ -1452,7 +1487,7 @@ export async function savePlayers(players: LocalPlayer[]): Promise<void> {
       params[`$${base + 1}`] = player.id;
       params[`$${base + 2}`] = player.external_id;
       params[`$${base + 3}`] = player.name;
-      params[`$${base + 4}`] = player.search_name;
+      params[`$${base + 4}`] = normalizeSearchName(player.name);
       params[`$${base + 5}`] = player.clubs;
       params[`$${base + 6}`] = player.nationalities;
       params[`$${base + 7}`] = player.is_active;
@@ -1761,7 +1796,7 @@ async function seedEliteIndex(
       const base = idx * 8;
       params[`$${base + 1}`] = player.id;
       params[`$${base + 2}`] = player.name;
-      params[`$${base + 3}`] = player.search_name;
+      params[`$${base + 3}`] = normalizeSearchName(player.name);
       params[`$${base + 4}`] = player.scout_rank;
       params[`$${base + 5}`] = player.birth_year;
       params[`$${base + 6}`] = player.position_category;
@@ -1876,7 +1911,7 @@ export async function upsertPlayerCache(
       const base = idx * 9;
       params[`$${base + 1}`] = player.id;
       params[`$${base + 2}`] = player.name;
-      params[`$${base + 3}`] = player.search_name;
+      params[`$${base + 3}`] = normalizeSearchName(player.name);
       params[`$${base + 4}`] = player.scout_rank;
       params[`$${base + 5}`] = player.birth_year;
       params[`$${base + 6}`] = player.position_category;

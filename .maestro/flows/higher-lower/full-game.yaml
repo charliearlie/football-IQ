@@ -1,0 +1,117 @@
+appId: com.charliearlie.footballiq.app
+name: "Higher/Lower — Full Game (HL-1 to HL-4)"
+tags:
+  - game-modes
+  - higher-lower
+---
+# Prerequisites: Higher/Lower puzzle seeded for today (run seed-puzzles.sh)
+- launchApp
+- waitForAnimationToEnd
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# Find and tap the Higher/Lower card
+- scrollUntilVisible:
+    element:
+      text: "HIGHER/LOWER"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    text: "HIGHER/LOWER"
+
+# HL-1: Verify intro/onboarding screen appears (first time)
+- extendedWaitUntil:
+    visible:
+      id: "higher-lower-intro"
+    timeout: 5000
+
+# Dismiss intro
+- tapOn:
+    text: "Let's Play"
+
+# HL-2: Verify game screen loads with two player cards
+- extendedWaitUntil:
+    visible:
+      id: "higher-lower-screen"
+    timeout: 5000
+- assertVisible:
+    id: "player1-card"
+- assertVisible:
+    id: "player2-card"
+- assertVisible:
+    id: "action-zone"
+
+# HL-3: Play through rounds — tap LOWER for round 1 (Neymar 222 vs Mbappe 180)
+# Mbappe's fee (180) is LOWER than Neymar's (222) — correct answer
+- tapOn:
+    id: "action-zone-lower"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 2: Coutinho 135 vs Lukaku 97.5 — Lukaku is LOWER
+- tapOn:
+    id: "action-zone-lower"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 3: Bale 101 vs Ronaldo 94 — Ronaldo is LOWER
+- tapOn:
+    id: "action-zone-lower"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 4: Pogba 105 vs Hazard 115 — Hazard is HIGHER
+- tapOn:
+    id: "action-zone-higher"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 5: Zidane 77.5 vs Ferdinand 46.6 — Ferdinand is LOWER
+- tapOn:
+    id: "action-zone-lower"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 6: Van Dijk 75 vs Kepa 80 — Kepa is HIGHER
+- tapOn:
+    id: "action-zone-higher"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 7: Griezmann 120 vs Joao Felix 127 — Felix is HIGHER
+- tapOn:
+    id: "action-zone-higher"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 8: Sancho 85 vs Havertz 80 — Havertz is LOWER
+- tapOn:
+    id: "action-zone-lower"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 9: Cucurella 65 vs Grealish 100 — Grealish is HIGHER
+- tapOn:
+    id: "action-zone-higher"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# Round 10: Haaland 60 vs Nunez 85 — Nunez is HIGHER
+- tapOn:
+    id: "action-zone-higher"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+
+# HL-4: Verify result modal appears after 10 rounds (perfect game)
+- extendedWaitUntil:
+    visible:
+      id: "result-modal"
+    timeout: 5000
+
+# Verify challenge button visible (win)
+- assertVisible:
+    id: "challenge-button"

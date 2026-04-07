@@ -48,7 +48,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   connections: 'Connections',
   timeline: 'Timeline',
   who_am_i: 'Who Am I?',
-  balldle: 'Balldle',
+  'whos-that': "Who's That?",
   higher_lower: 'Higher/Lower',
 };
 

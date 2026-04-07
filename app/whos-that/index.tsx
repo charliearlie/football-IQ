@@ -1,14 +1,14 @@
 import { Stack } from 'expo-router';
-import { BalldeScreen } from '@/features/balldle';
+import { WhosThatScreen } from '@/features/whos-that';
 
 /**
- * Static route for Balldle — uses today's puzzle.
+ * Static route for Who's That? — uses today's puzzle.
  */
-export default function BalldeIndexRoute() {
+export default function WhosThatIndexRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <BalldeScreen />
+      <WhosThatScreen />
     </>
   );
 }

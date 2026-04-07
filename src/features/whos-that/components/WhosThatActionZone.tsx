@@ -1,5 +1,5 @@
 /**
- * BalldeActionZone Component
+ * WhosThatActionZone Component
  *
  * Input area for player guesses.
  * Uses the shared PlayerAutocomplete for player search.
@@ -10,9 +10,8 @@ import { colors, spacing, fonts } from '@/theme';
 import { PlayerAutocomplete } from '@/components';
 import { UnifiedPlayer } from '@/services/oracle/types';
 
-export interface BalldeActionZoneProps {
+export interface WhosThatActionZoneProps {
   onPlayerSelect: (player: UnifiedPlayer) => void;
-  onTextSubmit: (text: string) => void;
   shouldShake: boolean;
   isGameOver: boolean;
   remainingGuesses: number;
@@ -20,24 +19,25 @@ export interface BalldeActionZoneProps {
   testID?: string;
 }
 
-export function BalldeActionZone({
+export function WhosThatActionZone({
   onPlayerSelect,
-  onTextSubmit,
   shouldShake,
   isGameOver,
   remainingGuesses,
   maxGuesses,
   testID,
-}: BalldeActionZoneProps) {
+}: WhosThatActionZoneProps) {
   if (isGameOver) return null;
 
   return (
     <View style={styles.container} testID={testID}>
       <PlayerAutocomplete
         onSelect={onPlayerSelect}
-        onSubmitText={onTextSubmit}
         shouldShake={shouldShake}
         isGameOver={isGameOver}
+        selectOnly
+        filter={(player) => !!player.position_category}
+        searchOptions={{ activeOnly: true }}
         testID={testID ? `${testID}-autocomplete` : undefined}
       />
 

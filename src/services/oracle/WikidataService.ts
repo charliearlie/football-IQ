@@ -19,13 +19,15 @@ import { OraclePlayer } from './types';
  */
 export async function searchPlayersOracle(
   query: string,
-  limit: number = 10
+  limit: number = 10,
+  activeOnly: boolean = false
 ): Promise<OraclePlayer[]> {
   if (!query || query.length < 3) return [];
 
   const { data, error } = await supabase.rpc('search_players_oracle', {
     query_text: query,
     match_limit: limit,
+    active_only: activeOnly,
   });
 
   if (error) {

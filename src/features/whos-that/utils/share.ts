@@ -1,11 +1,11 @@
 /**
- * Share utilities for Balldle game results.
+ * Share utilities for Who's That? game results.
  */
 
 import { Share, Platform } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { BalldeScore } from './scoring';
-import { GuessFeedback } from '../types/balldle.types';
+import { WhosThatScore } from './scoring';
+import { GuessFeedback } from '../types/whosThat.types';
 
 export interface ShareResult {
   success: boolean;
@@ -14,12 +14,12 @@ export interface ShareResult {
 }
 
 /**
- * Generate emoji grid summary for a Balldle result.
+ * Generate emoji grid summary for a Who's That? result.
  *
  * Each row: club + league + nationality + position + age squares.
  * green  = 🟩, yellow = 🟨, red = 🟥
  */
-export function generateBalldeEmojiGrid(guesses: GuessFeedback[]): string {
+export function generateWhosThatEmojiGrid(guesses: GuessFeedback[]): string {
   const colorToEmoji: Record<string, string> = {
     green: '🟩',
     yellow: '🟨',
@@ -28,7 +28,7 @@ export function generateBalldeEmojiGrid(guesses: GuessFeedback[]): string {
 
   return guesses
     .map((g) =>
-      [g.club, g.league, g.nationality, g.position, g.age]
+      [g.club, g.league, g.nationality, g.position, g.birthYear]
         .map((attr) => colorToEmoji[attr.color] ?? '⬜')
         .join('')
     )
@@ -36,10 +36,10 @@ export function generateBalldeEmojiGrid(guesses: GuessFeedback[]): string {
 }
 
 /**
- * Generate share text for a Balldle result.
+ * Generate share text for a Who's That? result.
  */
-export function generateBalldeShareText(
-  score: BalldeScore,
+export function generateWhosThatShareText(
+  score: WhosThatScore,
   guesses: GuessFeedback[],
   puzzleDate?: string
 ): string {
@@ -51,7 +51,7 @@ export function generateBalldeShareText(
       })
     : 'Today';
 
-  const emojiGrid = generateBalldeEmojiGrid(guesses);
+  const emojiGrid = generateWhosThatEmojiGrid(guesses);
 
   const firstLine = score.won
     ? score.guessCount === 1
@@ -60,11 +60,11 @@ export function generateBalldeShareText(
     : `Couldn't crack it in ${score.maxPoints} tries`;
 
   const playUrl = puzzleDate
-    ? `https://football-iq.app/play/balldle?ref=share&mode=balldle&date=${puzzleDate}`
-    : 'https://football-iq.app/play/balldle?ref=share&mode=balldle';
+    ? `https://football-iq.app/play/whos-that?ref=share&mode=whos-that&date=${puzzleDate}`
+    : 'https://football-iq.app/play/whos-that?ref=share&mode=whos-that';
 
   const lines = [
-    `Football IQ — Balldle`,
+    `Football IQ — Who's That?`,
     firstLine,
     dateStr,
     '',
@@ -78,15 +78,15 @@ export function generateBalldeShareText(
 }
 
 /**
- * Share Balldle result.
+ * Share Who's That? result.
  * Uses native share on mobile, clipboard fallback on web.
  */
-export async function shareBalldeResult(
-  score: BalldeScore,
+export async function shareWhosThatResult(
+  score: WhosThatScore,
   guesses: GuessFeedback[],
   puzzleDate?: string
 ): Promise<ShareResult> {
-  const shareText = generateBalldeShareText(score, guesses, puzzleDate);
+  const shareText = generateWhosThatShareText(score, guesses, puzzleDate);
 
   if (Platform.OS !== 'web') {
     try {
@@ -96,7 +96,7 @@ export async function shareBalldeResult(
       }
       return { success: false, method: 'share' };
     } catch (error) {
-      console.warn('[Balldle] Native share failed, falling back to clipboard:', error);
+      console.warn('[WhosThat] Native share failed, falling back to clipboard:', error);
     }
   }
 

@@ -30,177 +30,184 @@ Run: `cd web && npx vitest run lib/__tests__/constants.test.ts lib/__tests__/pus
 ## How to Test in Simulator
 
 1. Start Metro with cache clear: `npx expo start --clear`
-2. New game modes (Balldle, Higher/Lower) only appear on home screen if puzzles exist for today — create them via the API first (see Phase 9 section)
+2. New game modes (Who's That?, Higher/Lower) only appear on home screen if puzzles exist for today — create them via the API first (see Phase 9 section)
 3. For web features, run: `cd web && source ~/.nvm/nvm.sh && nvm use 22 && npm run dev`
 
 ---
 
-## Manual Test Plan — Mobile App (Simulator)
+## What Visual Changes Were Made to the App
 
-### Phase 1: Analytics & Conversion
+### Result Modal (every game mode)
 
-**What you'll see:** Contextual paywall copy changes, post-game download banner on web, social proof on homepage.
+These changes appear on the result modal after completing any game:
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 1.2a | Contextual paywall copy — general | Open premium modal from settings or home | Subtitle: **"Unlimited games. Zero ads. Full stats."** | TODO |
-| 1.2b | Contextual paywall copy — streak_save | Trigger paywall from streak loss (or deep link `/premium-modal?mode=streak_save`) | Subtitle: **"Protect your streak forever."** | TODO |
-| 1.2c | Contextual paywall copy — first_win | Win first game with A/B test enabled in PostHog | Subtitle: **"You're a natural. Keep the momentum."** | TODO |
-| 1.1a | paywall_dismissed tracking | Open premium modal > dismiss it | Check PostHog for `paywall_dismissed` event with `trigger_source` property | TODO |
-| 1.1d | Store review prompt | Complete 5+ games across sessions (90-day interval) | System review dialog appears; PostHog shows `store_review_prompted` | TODO |
+| What | Where | Details |
+|------|-------|---------|
+| **Challenge a Friend** | Below Share/Next Puzzle buttons | Yellow-bordered button. Only shows on wins. Tapping creates a challenge via API and opens the native share sheet. |
+| **Tier progress bar** | Above buttons | Shows current tier name + IQ gained, animated fill bar toward next tier. "TIER UP!" text on tier change. |
+| **Streak badge** | Above tier bar | Flame icon + "X day streak" label. Only when streak is active. |
+| **Upsell banner** | Between streak/tier and buttons | Non-premium users with 15+ IQ see one of: tier-up copy, streak milestone copy, or default stats upsell. |
+| **Store review prompt** | Native OS dialog | Appears ~1.5s after win if: 3+ day streak, tier promotion, or 5+ completed games. Rate-limited to once per 90 days. |
+| **Button layout fix** | Button row | Next Puzzle + Share now side by side (was: full-width Share above, Next+Done below). |
 
-**Web-only (test in browser at localhost:3000):**
+### Paywall / Premium Modal
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 1.4a | UTM tracking on App Store links | Click any App Store button on homepage | URL contains `?mt=8&ct=web_home` | TODO |
-| 1.5 | Post-game download banner | Complete any web game (e.g. `/play/career-path`) | Green **"Want more?"** banner below result with App Store link | TODO |
-| 1.6a | Social proof strip | Visit homepage | Strip below hero showing **"X+ GAMES PLAYED"** and **"15 MODES"** | TODO |
+| What | Where | Details |
+|------|-------|---------|
+| **Contextual subtitle** | Below "Football IQ Pro" title | Changes based on trigger: "Unlimited games. Zero ads. Full stats." (general), "Protect your streak forever." (streak save), "You're a natural. Keep the momentum." (first win), "Unlock every game in the archive." (archive) |
+| **Referral CTA** | Post-purchase success screen | Yellow-bordered box: "Share Football IQ and give your friends 7 free days" with share button |
+| **A/B test trigger** | After first win | If PostHog `paywall_timing_v1` flag is `test`, paywall appears after first win of the session |
 
-### Phase 2: Server-Side Push & Lifecycle
+### Home Screen
 
-**What you'll see:** No visual changes in app — these are server-side crons + admin dashboard features.
+| What | Where | Details |
+|------|-------|---------|
+| **Who's That? card** | Daily game list | New game card: "WHO'S THAT? — Guess the player". Only shows if a whos-that puzzle exists for today. |
+| **Higher/Lower card** | Daily game list | New game card: "HIGHER/LOWER — Compare the fees". Only shows if a higher_lower puzzle exists for today. |
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 2.1 | Streak saver cron | `curl -H "Authorization: Bearer $CRON_SECRET" https://www.football-iq.app/api/cron/streak-saver` | JSON with sent/failed/eligibleUsers counts | TODO |
-| 2.2 | DB tables exist | Check Supabase dashboard | `scheduled_notifications` and `notification_opens` tables present | DONE |
-| 2.4a | Lifecycle nudge cron | `curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/lifecycle-nudge` | JSON with at_risk/lapsed_7d/never_played results | TODO |
-| 2.4b | Weekly recap cron | `curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/weekly-recap` | JSON with personalised message counts | TODO |
-| 2.5a | Admin notification segments | Admin dashboard > Notifications > Select "Free users only" | Estimated audience count updates dynamically | TODO |
-| 2.6 | Vercel crons registered | Deploy > Vercel dashboard > Crons tab | 3 crons: streak-saver, lifecycle-nudge, weekly-recap | TODO |
+### Give Up Confirmation Modal
 
-### Phase 3: Viral Growth Features
+| What | Details |
+|------|---------|
+| **Darker background** | Changed from slate blue to near-black (`rgba(10, 10, 18, 0.97)`) |
+| **No bounce** | Smooth 250ms slide-up instead of spring bounce |
 
-**What you'll see:** "Challenge a Friend" button on result modals after winning, referral CTA after purchase.
+### New Game Modes
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 3.1a | **Challenge a Friend button** | Win any game mode > see result modal | **"Challenge a Friend"** button visible below Share/Done buttons | TODO |
-| 3.1b | Challenge hidden on loss | Lose a game > see result modal | Challenge button is NOT shown (only Share + Done) | TODO |
-| 3.1c | Challenge share flow | Win a game > tap "Challenge a Friend" | Button shows "Creating..." then opens native share sheet with challenge URL | TODO |
-| 3.5 | Referral CTA post-purchase | Subscribe to premium (sandbox) | Success screen shows **"Share Football IQ and give your friends 7 free days"** with share button | TODO |
+**Who's That?** (Wordle for footballers):
+- Intro/onboarding screen on first play (6 attempts, attribute feedback rules)
+- Player search autocomplete (type name, select from dropdown)
+- 6-row guess grid with 5 colour-coded attribute columns: Club, League, Nationality, Position, Age
+  - Green = exact match, Yellow = close, Red/Gray = wrong
+- Result modal with score and emoji grid
 
-**Web-only:**
+**Higher/Lower** (transfer fee comparison):
+- Intro/onboarding screen on first play (10 rounds, one wrong = game over)
+- Two stacked player cards with "VS" divider
+  - Top card: name, club, fee visible
+  - Bottom card: name, club, fee hidden as "?"
+- HIGHER / LOWER buttons at bottom
+- Fee reveal animation: green (correct) or red (wrong), auto-advance after ~1.5s
+- Result modal with rounds completed, score out of 55
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 3.1c | Challenge web page | Visit `/challenge/[valid-uuid]` in browser | Shows challenger name, score, game mode, and **download CTA** | TODO |
-| 3.1d | Challenge 404 | Visit `/challenge/invalid-id` | Shows "Challenge Not Found" page | TODO |
+### Invisible Changes (no visual impact)
 
-### Phase 4: A/B Testing & Growth Dashboard
-
-**What you'll see:** Growth dashboard in admin, paywall experiment behaviour.
-
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 4.1a | Paywall after first win | Enable `paywall_timing_v1` flag in PostHog (test variant) > win a game | Premium modal appears with "first_win" context copy | TODO |
-| 4.1b | Control variant | Set flag to control > win a game | No paywall after win (normal behaviour) | TODO |
-| 4.1c | Once per session only | Win multiple games (test variant) | Paywall triggers on **first win only**, not subsequent | TODO |
-| 4.2a | **Growth dashboard** | Visit admin dashboard > Growth tab | Page loads with 4 sections: overview, retention, virality, push | TODO |
-| 4.2f | Growth nav item | Check admin sidebar | **"Growth"** item with TrendingUp icon, between Notifications and Player Scout | TODO |
-
----
-
-## Manual Test Plan — Result Modal Bug Fixes
-
-**What you'll see:** Fixed button layout, correct archive behavior, challenge button appearing.
-
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| BF-1 | **No empty button gap** | Win first daily game > result modal | "NEXT PUZZLE (2 OF 3)" takes **full width** (no invisible gap on the right) | TODO |
-| BF-2a | **Archive doesn't show daily chain** | Play an archive puzzle (past date) | Result modal shows **Share + Done** only, NOT "NEXT PUZZLE (X OF 3)" | TODO |
-| BF-2b | Daily still chains correctly | Play today's first daily puzzle | Result modal shows **"NEXT PUZZLE (2 OF 3)"** correctly | TODO |
-| BF-3 | **Challenge button on all modes** | Win Career Path / Connections / any mode | **"Challenge a Friend"** button visible below share/close buttons | TODO |
+These are server-side or analytics-only — nothing to visually test in the simulator:
+- PostHog analytics events (`game_started`, `game_completed`, `paywall_dismissed`, etc.)
+- Push notification crons (streak saver, lifecycle nudge, weekly recap)
+- Growth dashboard (web admin only)
+- Email capture forms (web only)
+- SEO quiz pages (web only)
+- Post-game download banner (web only)
+- UTM tracking on App Store links (web only)
+- Social proof strip on homepage (web only)
 
 ---
 
-## Manual Test Plan — Web Features
+## Manual Test Checklist — Mobile
 
-### Phase 5: Email Capture
+### Result Modal
 
-**What you'll see:** Email signup forms on multiple pages, subscribe API.
+| # | Test | Steps | Expected | Status |
+|---|------|-------|----------|--------|
+| R-1 | Challenge button visible on win | Win any game mode | "Challenge a Friend" button below Share | TODO |
+| R-2 | Challenge hidden on loss | Lose a game | No challenge button | TODO |
+| R-3 | Challenge share works | Win > tap Challenge a Friend | Shows "Creating..." then native share sheet opens with URL (no emoji grid in message) | TODO |
+| R-4 | Tier progress bar | Win a game (earn IQ) | Progress bar with tier name, fill animation, "+X IQ" | TODO |
+| R-5 | Tier up celebration | Earn enough IQ to tier up | "TIER UP!" text, bar fills completely | TODO |
+| R-6 | Streak badge | Win with active streak | Flame icon + "X day streak" | TODO |
+| R-7 | Button layout | Win daily game with next puzzle available | NEXT PUZZLE + SHARE side by side, no green bar above | TODO |
+| R-8 | Archive no chain | Play archive puzzle (past date) | Share + Done only, NOT "NEXT PUZZLE (X OF 3)" | TODO |
+| R-9 | Store review prompt | Win with 5+ completed games (clear AsyncStorage `@football_iq_last_review_prompt` first) | Native review dialog after ~1.5s | TODO |
+| R-10 | Upsell banner (non-premium) | Win with 15+ IQ, not premium | Upsell text appears above buttons | TODO |
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 5.1 | DB table exists | Check Supabase | `email_subscribers` table with email, source, welcome_sequence_step | DONE |
-| 5.2a | Subscribe API | `curl -X POST .../api/email/subscribe -d '{"email":"test@test.com","source":"landing"}'` | `{ success: true }` | TODO |
-| 5.2b | Invalid email rejected | POST with `{"email":"notanemail"}` | 400: `{ error: "Invalid email" }` | TODO |
-| 5.3a | **Email form on landing** | Visit homepage, scroll below game grid | Email input + "Subscribe" button with **"Get weekly football trivia"** heading | TODO |
-| 5.3b | **Email form on blog** | Visit any `/blog/[slug]` article | Email capture form at bottom of article | TODO |
-| 5.3c | **Email form on scout** | Visit `/scout/[userId]` | Email capture form after scout report | TODO |
-| 5.3d | **Email form on download** | Visit `/download` | Email form with **Android waitlist** messaging | TODO |
-| 5.4 | Welcome sequence cron | `curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/welcome-sequence` | JSON with emails_sent count | TODO |
+### Paywall
 
-### Phase 6: SEO Content Expansion
+| # | Test | Steps | Expected | Status |
+|---|------|-------|----------|--------|
+| P-1 | General copy | Open premium modal from settings | Subtitle: "Unlimited games. Zero ads. Full stats." | TODO |
+| P-2 | Streak save copy | Trigger paywall from streak context | Subtitle: "Protect your streak forever." | TODO |
+| P-3 | Referral CTA | Complete purchase (sandbox) | Yellow box: "Share Football IQ and give your friends 7 free days" | TODO |
 
-**What you'll see:** New quiz pages with trivia questions and game CTAs.
+### Home Screen
 
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 6.1a | **Quiz — Premier League** | Visit `/quiz/premier-league` | H1 with "Premier League", 4 sections of questions, CTAs to play modes, FAQ accordion | TODO |
-| 6.1b | **Quiz — Champions League** | Visit `/quiz/champions-league` | Similar layout with Champions League questions | TODO |
-| 6.1c | **Quiz — World Cup** | Visit `/quiz/world-cup` | World Cup questions across 4 sections | TODO |
-| 6.1d | **Quiz — Guess the Footballer** | Visit `/quiz/guess-the-footballer` | Clue-based questions (nationality, position, achievements) | TODO |
-| 6.2 | JSON-LD schema | View page source on any quiz page | `<script type="application/ld+json">` with FAQPage schema | TODO |
-| 6.3 | Blog index | Visit `/blog` | Page loads (may show "No articles yet" if empty) | TODO |
-| 6.4 | Data journalism template | Visit `/blog/data/test` (will 404 but template exists) | Template file at `web/app/blog/data/[slug]/page.tsx` | DONE |
-| 6.5 | Sitemap includes quizzes | Visit `/sitemap.xml` | Contains `/quiz/premier-league`, etc. | TODO |
+| # | Test | Steps | Expected | Status |
+|---|------|-------|----------|--------|
+| H-1 | Who's That? card | Create whos-that puzzle for today (see below), open app | "WHO'S THAT?" card in daily list | TODO |
+| H-2 | Higher/Lower card | Create higher_lower puzzle for today (see below), open app | "HIGHER/LOWER" card in daily list | TODO |
+
+### Give Up Modal
+
+| # | Test | Steps | Expected | Status |
+|---|------|-------|----------|--------|
+| G-1 | Dark background, no bounce | Start any game > tap Give Up | Dark overlay, smooth slide (no spring bounce) | TODO |
+
+### New Game Modes
+
+| # | Test | Steps | Expected | Status |
+|---|------|-------|----------|--------|
+| B-1 | Who's That? intro | Tap Who's That? card (first time) | Onboarding: "6 attempts", attribute feedback rules | TODO |
+| B-2 | Who's That? gameplay | Type player name | Autocomplete dropdown, select player, 5 colour-coded cells per guess | TODO |
+| B-3 | Who's That? result | Win or exhaust 6 guesses | Result modal with score, Share + Challenge buttons | TODO |
+| HL-1 | Higher/Lower intro | Tap Higher/Lower card (first time) | Onboarding: "10 rounds", "one wrong = game over" | TODO |
+| HL-2 | Higher/Lower gameplay | Start playing | Two cards, top fee visible, bottom "?", HIGHER/LOWER buttons | TODO |
+| HL-3 | Higher/Lower reveal | Tap Higher or Lower | Fee reveals green (correct) or red (wrong), auto-advances | TODO |
+| HL-4 | Higher/Lower result | Complete 10 or get one wrong | Result modal with rounds + score out of 55 | TODO |
 
 ---
 
-## Phase 9: New Game Modes
+## Creating Test Puzzles for New Game Modes
 
-**Note:** Balldle and Higher/Lower only appear on the home screen when puzzles exist for today's date. Create test puzzles first:
+Who's That? and Higher/Lower only appear on the home screen when puzzles exist for today's date. Create them first:
 
 ```bash
-# Create a Balldle puzzle for today
+# Create a Who's That? puzzle for today
 curl -X PUT https://www.football-iq.app/api/puzzles \
   -H "Authorization: Bearer $FOOTBALL_IQ_API_SECRET" \
   -H "Content-Type: application/json" \
-  -d '{"puzzle_date":"2026-04-04","game_mode":"balldle","status":"live","source":"manual","content":{"answer":{"player_name":"Bukayo Saka","player_id":"Q54307379","club":"Arsenal","league":"Premier League","nationality":"England","position":"Forward","age":24}}}'
+  -d '{"puzzle_date":"2026-04-04","game_mode":"whos-that","status":"live","source":"manual","content":{"answer":{"player_name":"Bukayo Saka","player_id":"Q59306386","club":"Arsenal","league":"Premier League","nationality":"England","position":"Forward","age":24}}}'
 
-# Create a Higher/Lower puzzle for today
+# Create a Higher/Lower puzzle for today (chain format — winner carries forward)
 curl -X PUT https://www.football-iq.app/api/puzzles \
   -H "Authorization: Bearer $FOOTBALL_IQ_API_SECRET" \
   -H "Content-Type: application/json" \
-  -d '{"puzzle_date":"2026-04-04","game_mode":"higher_lower","status":"live","source":"manual","content":{"pairs":[{"player1":{"name":"Neymar","club":"PSG","fee":222},"player2":{"name":"Mbappe","club":"Real Madrid","fee":180}},{"player1":{"name":"Coutinho","club":"Barcelona","fee":135},"player2":{"name":"Lukaku","club":"Chelsea","fee":97.5}},{"player1":{"name":"Bale","club":"Real Madrid","fee":101},"player2":{"name":"Ronaldo","club":"Real Madrid","fee":94}},{"player1":{"name":"Pogba","club":"Man United","fee":105},"player2":{"name":"Hazard","club":"Real Madrid","fee":115}},{"player1":{"name":"Zidane","club":"Real Madrid","fee":77.5},"player2":{"name":"Ferdinand","club":"Man United","fee":46.6}},{"player1":{"name":"Van Dijk","club":"Liverpool","fee":75},"player2":{"name":"Kepa","club":"Chelsea","fee":80}},{"player1":{"name":"Griezmann","club":"Barcelona","fee":120},"player2":{"name":"Joao Felix","club":"Atletico","fee":127}},{"player1":{"name":"Sancho","club":"Man United","fee":85},"player2":{"name":"Havertz","club":"Chelsea","fee":80}},{"player1":{"name":"Cucurella","club":"Chelsea","fee":65},"player2":{"name":"Grealish","club":"Man City","fee":100}},{"player1":{"name":"Haaland","club":"Man City","fee":60},"player2":{"name":"Nunez","club":"Liverpool","fee":85}}]}}'
+  -d '{"puzzle_date":"2026-04-04","game_mode":"higher_lower","status":"live","source":"manual","content":{"players":[{"name":"Neymar","club":"PSG","fee":222},{"name":"Mbappe","club":"Real Madrid","fee":180},{"name":"Coutinho","club":"Barcelona","fee":135},{"name":"Pogba","club":"Man United","fee":105},{"name":"Hazard","club":"Real Madrid","fee":115},{"name":"Griezmann","club":"Barcelona","fee":120},{"name":"Joao Felix","club":"Atletico","fee":127},{"name":"Lukaku","club":"Chelsea","fee":97.5},{"name":"Grealish","club":"Man City","fee":100},{"name":"Haaland","club":"Man City","fee":60},{"name":"Nunez","club":"Liverpool","fee":85}]}}'
 ```
-
-### Code verification (DONE)
-
-| # | Check | Status |
-|---|-------|--------|
-| 9.1a-f | Balldle registered in GameMode, route map, rules, home list, icon, web constants | DONE |
-| 9.1g-h | Balldle feature module + app routes exist | DONE |
-| 9.2a-f | Higher/Lower registered in same 6 locations | DONE |
-| 9.2g-h | Higher/Lower feature module + app routes exist | DONE |
-| 9.3 | Web TypeScript clean (`npx tsc --noEmit`) | DONE |
-| 9.4 | Mobile tests pass (2300+) | DONE |
-
-### Gameplay testing (after creating puzzles above)
-
-| # | What to look for | Steps | Expected | Status |
-|---|-----------------|-------|----------|--------|
-| 9.1i | **Balldle on home screen** | Open app (after creating puzzle) | **"BALLDLE"** card visible in daily game list | TODO |
-| 9.1j | **Balldle intro screen** | Tap Balldle card (first time) | Onboarding screen with rules: "6 attempts", attribute feedback explanation | TODO |
-| 9.1k | **Balldle gameplay** | Start playing > type a player name | Autocomplete dropdown, select player, see **5 coloured attribute cells** (green/yellow/red) per guess | TODO |
-| 9.1l | **Balldle result** | Win or use all 6 guesses | Result modal with score, emoji grid, Share + Challenge buttons | TODO |
-| 9.2i | **Higher/Lower on home screen** | Open app (after creating puzzle) | **"HIGHER/LOWER"** card visible in daily game list | TODO |
-| 9.2j | **Higher/Lower intro screen** | Tap Higher/Lower card (first time) | Onboarding with rules: "10 rounds", "one wrong = game over" | TODO |
-| 9.2k | **Higher/Lower gameplay** | Start playing | Two player cards stacked with **"VS"** divider, top fee visible, bottom hidden as **"?"**, **HIGHER/LOWER** buttons at bottom | TODO |
-| 9.2l | **Higher/Lower reveal** | Tap Higher or Lower | Bottom card fee reveals with **green** (correct) or **red** (wrong) highlight, auto-advances after ~1.5s | TODO |
-| 9.2m | **Higher/Lower result** | Complete 10 rounds or get one wrong | Result modal with rounds completed, streak score out of 55, emoji grid (checkmarks/crosses) | TODO |
 
 ---
 
-## Pre-existing Issues
+## Manual Test Checklist — Web
+
+Run: `cd web && source ~/.nvm/nvm.sh && nvm use 22 && npm run dev` then visit localhost:3000.
+
+| # | Test | Steps | Expected | Status |
+|---|------|-------|----------|--------|
+| W-1 | Email form on landing | Homepage, scroll below game grid | Email input + "Subscribe" button | TODO |
+| W-2 | Email form on blog | Visit `/blog/[slug]` | Email form at bottom of article | TODO |
+| W-3 | Email form on scout | Visit `/scout/[userId]` | Email form after report | TODO |
+| W-4 | Email form on download | Visit `/download` | Email form with Android waitlist messaging | TODO |
+| W-5 | Subscribe API | POST to `/api/email/subscribe` with valid email | `{ success: true }` | TODO |
+| W-6 | Quiz — Premier League | Visit `/quiz/premier-league` | H1, 4 question sections, CTAs, FAQ accordion | TODO |
+| W-7 | Quiz — Champions League | Visit `/quiz/champions-league` | Same layout, CL questions | TODO |
+| W-8 | Quiz — World Cup | Visit `/quiz/world-cup` | Same layout, WC questions | TODO |
+| W-9 | Quiz — Guess the Footballer | Visit `/quiz/guess-the-footballer` | Clue-based questions | TODO |
+| W-10 | JSON-LD schema | View source on quiz page | `application/ld+json` with FAQPage | TODO |
+| W-11 | Sitemap | Visit `/sitemap.xml` | Contains `/quiz/premier-league`, etc. | TODO |
+| W-12 | Challenge page | Visit `/challenge/[valid-uuid]` | Challenger name, score, download CTA | TODO |
+| W-13 | Challenge 404 | Visit `/challenge/invalid-id` | "Challenge Not Found" page | TODO |
+| W-14 | Post-game download banner | Complete web game | Green "Want more?" banner with App Store link | TODO |
+| W-15 | Social proof strip | Visit homepage | Strip showing "X+ GAMES PLAYED" and "15 MODES" | TODO |
+| W-16 | UTM on App Store links | Click App Store button | URL contains `?mt=8&ct=web_home` | TODO |
+| W-17 | Growth dashboard | Admin > Growth tab | 4 sections: overview, retention, virality, push | TODO |
+
+---
+
+## Pre-existing Issues (not caused by growth work)
 
 | Issue | File | Notes |
 |-------|------|-------|
-| ~~7 failing tests~~ | `src/services/player/__tests__/SyncService.test.ts` | **FIXED** — was using local mockRpc overwritten by jest-setup.ts global mock |
 | TS error | `src/features/auth/services/SubscriptionSync.ts:71` | `upgrade_to_premium` not in typed RPC list |
-| Lint warning | `web/app/(dashboard)/calendar/actions.ts` | no-explicit-any (pre-existing) |
-| Missing dep | `country-flag-icons/string/3x2` | Import warning (pre-existing) |
-| Date-sensitive tests | `archive/LockHierarchy`, `auth/PremiumGating`, `archive/Gating` | 3 suites with hardcoded dates fail on date rollover — not related to growth work |
-| Reanimated mock | `settings/RateAppModal`, `settings/LegalModal`, etc. | `.mass()` not mocked in Reanimated — pre-existing |
+| Lint warning | `web/app/(dashboard)/calendar/actions.ts` | no-explicit-any |
+| Missing dep | `country-flag-icons/string/3x2` | Import warning |
+| Date-sensitive tests | `archive/LockHierarchy`, `auth/PremiumGating`, `archive/Gating` | 3 suites with hardcoded dates fail on date rollover |
+| Reanimated mock | `settings/RateAppModal`, `settings/LegalModal`, etc. | `.mass()` not mocked |

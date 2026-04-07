@@ -1,5 +1,5 @@
 /**
- * Feedback logic for Balldle
+ * Feedback logic for Who's That?
  *
  * Generates colour-coded attribute feedback for each guess,
  * following standard Wordle-style rules:
@@ -8,7 +8,8 @@
  *   red    = wrong
  */
 
-import { BalldeContent, FeedbackColor, AttributeFeedback, GuessFeedback } from '../types/balldle.types';
+import { WhosThatContent, FeedbackColor, AttributeFeedback, GuessFeedback } from '../types/whosThat.types';
+import { nationalityCodeToName } from './nationalities';
 
 // =============================================================================
 // CONTINENT MAP (nationality → continent)
@@ -149,6 +150,22 @@ function getContinent(nationality: string): string {
   return CONTINENT_MAP[nationality] ?? 'Unknown';
 }
 
+/**
+ * Fuzzy club name comparison.
+ * Handles Wikidata names ("Arsenal F.C.") vs puzzle answers ("Arsenal").
+ */
+function clubsMatch(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const normalize = (s: string) =>
+    s.replace(/ F\.?C\.?$/i, '')
+     .replace(/^AFC /i, '')
+     .replace(/ A\.?F\.?C\.?$/i, '')
+     .replace(/ & .*$/i, '')  // "Brighton & Hove Albion" → "Brighton"
+     .trim()
+     .toLowerCase();
+  return normalize(a) === normalize(b);
+}
+
 function getPositionCategory(position: string): string {
   return POSITION_CATEGORY[position] ?? position;
 }
@@ -157,15 +174,19 @@ function nationalityFeedback(
   guessNationality: string,
   answerNationality: string
 ): AttributeFeedback {
-  if (guessNationality === answerNationality) {
-    return { value: guessNationality, color: 'green' };
+  // Normalize both to display names (handles ISO codes like "GB-ENG" → "England")
+  const guessName = nationalityCodeToName(guessNationality);
+  const answerName = nationalityCodeToName(answerNationality);
+
+  if (guessName === answerName) {
+    return { value: guessName, color: 'green' };
   }
-  const guessContinent = getContinent(guessNationality);
-  const answerContinent = getContinent(answerNationality);
+  const guessContinent = getContinent(guessName);
+  const answerContinent = getContinent(answerName);
   if (guessContinent !== 'Unknown' && guessContinent === answerContinent) {
-    return { value: guessNationality, color: 'yellow' };
+    return { value: guessName, color: 'yellow' };
   }
-  return { value: guessNationality, color: 'red' };
+  return { value: guessName, color: 'red' };
 }
 
 function positionFeedback(
@@ -183,14 +204,15 @@ function positionFeedback(
   return { value: guessPosition, color: 'red' };
 }
 
-function ageFeedback(guessAge: number, answerAge: number): AttributeFeedback {
-  if (guessAge === answerAge) {
-    return { value: String(guessAge), color: 'green' };
+function birthYearFeedback(guessBirthYear: number, answerBirthYear: number): AttributeFeedback {
+  if (guessBirthYear === answerBirthYear) {
+    return { value: String(guessBirthYear), color: 'green' };
   }
-  const diff = Math.abs(guessAge - answerAge);
+  const diff = Math.abs(guessBirthYear - answerBirthYear);
   const color: FeedbackColor = diff <= 2 ? 'yellow' : 'red';
-  const direction = guessAge < answerAge ? 'up' : 'down';
-  return { value: String(guessAge), color, direction };
+  // Born earlier = older player, arrow points down; born later = younger, arrow up
+  const direction = guessBirthYear < answerBirthYear ? 'up' : 'down';
+  return { value: String(guessBirthYear), color, direction };
 }
 
 // =============================================================================
@@ -206,32 +228,38 @@ export interface GuessInput {
   league: string;
   nationality: string;
   position: string;
-  age: number;
+  birthYear: number;
 }
 
 /**
  * Generate feedback for a single guess against the puzzle answer.
  *
  * @param guess - The guessed player's attributes
- * @param answer - The correct answer from BalldeContent
+ * @param answer - The correct answer from WhosThatContent
  * @returns GuessFeedback with colour codes for each attribute
  */
 export function generateFeedback(
   guess: GuessInput,
-  answer: BalldeContent['answer']
+  answer: WhosThatContent['answer']
 ): GuessFeedback {
+  // Display clean club name (strip "F.C." etc.)
+  const displayClub = guess.club
+    .replace(/ F\.?C\.?$/i, '')
+    .replace(/ A\.?F\.?C\.?$/i, '')
+    .trim();
+
   return {
     playerName: guess.playerName,
     club: {
-      value: guess.club,
-      color: guess.club === answer.club ? 'green' : 'red',
+      value: displayClub || guess.club,
+      color: clubsMatch(guess.club, answer.club) ? 'green' : 'red',
     },
     league: {
       value: guess.league,
-      color: guess.league === answer.league ? 'green' : 'red',
+      color: guess.league.toLowerCase() === answer.league.toLowerCase() ? 'green' : 'red',
     },
     nationality: nationalityFeedback(guess.nationality, answer.nationality),
     position: positionFeedback(guess.position, answer.position),
-    age: ageFeedback(guess.age, answer.age),
+    birthYear: birthYearFeedback(guess.birthYear, answer.birth_year),
   };
 }

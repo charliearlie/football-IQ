@@ -160,7 +160,7 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
   }, []);
 
   // App version
-  const appVersion = Constants.expoConfig?.version ?? "3.3.0";
+  const appVersion = Constants.expoConfig?.version ?? "3.5.0";
 
   const handleVersionTap = useCallback(() => {
     const now = Date.now();
@@ -541,6 +541,18 @@ export function SettingsScreen({ testID }: SettingsScreenProps) {
               icon={<Trash2 size={20} color={colors.redCard} />}
               label="Clear Timeline Data"
               onPress={() => handleClearAttempts("timeline", "Timeline")}
+            />
+            <SettingsRow
+              icon={<Trash2 size={20} color={colors.redCard} />}
+              label="Clear Who's That? Data"
+              onPress={() => handleClearAttempts("whos-that", "Who's That?")}
+            />
+            <SettingsRow
+              icon={<Trash2 size={20} color={colors.redCard} />}
+              label="Clear Higher/Lower Data"
+              onPress={() =>
+                handleClearAttempts("higher_lower", "Higher/Lower")
+              }
             />
           </SettingsSection>
         )}

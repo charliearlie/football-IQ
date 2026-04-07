@@ -1,0 +1,54 @@
+appId: com.charliearlie.footballiq.app
+name: "Result Modal — Challenge Button (R-1, R-2)"
+tags:
+  - result-modal
+---
+# Test that Challenge a Friend button appears on wins.
+# Uses Who's That? with the known correct answer for a guaranteed win.
+
+# Prerequisites: Who's That? puzzle seeded for today
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# Navigate to Who's That? and win
+- scrollUntilVisible:
+    element:
+      text: "WHO'S THAT?"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    text: "WHO'S THAT?"
+
+# Dismiss intro if shown
+- extendedWaitUntil:
+    visible:
+      id: "whos-that-intro"
+    timeout: 5000
+- tapOn:
+    text: "Let's Play"
+
+# Win by typing correct answer
+- tapOn:
+    id: "action-zone-autocomplete"
+- inputText: "Bukayo Saka"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Bukayo Saka"
+    index: 0
+
+# R-1: Challenge button should be visible on win
+- extendedWaitUntil:
+    visible:
+      id: "result-modal"
+    timeout: 5000
+- assertVisible:
+    id: "challenge-button"
+
+# Verify the button text
+- assertVisible:
+    text: "Challenge a Friend"

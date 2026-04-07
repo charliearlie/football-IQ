@@ -53,7 +53,7 @@ const ARCHETYPE_ICONS: Record<GameMode, LucideIcon> = {
   connections: Grid3X3,
   timeline: Clock,
   who_am_i: HelpCircle,
-  balldle: Dices,
+  'whos-that': Dices,
   higher_lower: TrendingUp,
 };
 
@@ -74,7 +74,7 @@ const ARCHETYPE_NAMES: Record<GameMode, string> = {
   connections: 'Group Finder',
   timeline: 'Timekeeper',
   who_am_i: 'The Identifier',
-  balldle: 'Attribute Analyst',
+  'whos-that': 'Attribute Analyst',
   higher_lower: 'Market Instinct',
 };
 

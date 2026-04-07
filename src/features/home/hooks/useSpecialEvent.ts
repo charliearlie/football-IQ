@@ -21,7 +21,7 @@ const ROUTE_MAP: Record<GameMode, string> = {
   connections: 'connections',
   timeline: 'timeline',
   who_am_i: 'who-am-i',
-  balldle: 'balldle',
+  'whos-that': 'whos-that',
   higher_lower: 'higher-lower',
 };
 
@@ -42,7 +42,7 @@ const DEFAULT_TITLES: Record<GameMode, string> = {
   connections: 'SPECIAL CONNECTIONS',
   timeline: 'SPECIAL TIMELINE',
   who_am_i: 'SPECIAL WHO AM I?',
-  balldle: 'SPECIAL BALLDLE',
+  'whos-that': "SPECIAL WHO'S THAT?",
   higher_lower: 'SPECIAL HIGHER/LOWER',
 };
 

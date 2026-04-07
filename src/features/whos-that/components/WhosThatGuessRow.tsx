@@ -1,14 +1,14 @@
 /**
- * BalldeGuessRow Component
+ * WhosThatGuessRow Component
  *
- * A single row in the Balldle grid showing one guess with
+ * A single row in the Who's That? grid showing one guess with
  * colour-coded attribute cells: club, league, nationality, position, age.
  */
 
 import { View, Text, StyleSheet } from 'react-native';
 import { ArrowUp, ArrowDown } from 'lucide-react-native';
 import { colors, spacing, fonts } from '@/theme';
-import { GuessFeedback, FeedbackColor } from '../types/balldle.types';
+import { GuessFeedback, FeedbackColor } from '../types/whosThat.types';
 
 const FEEDBACK_COLORS: Record<FeedbackColor, string> = {
   green: colors.pitchGreen,
@@ -22,20 +22,20 @@ const FEEDBACK_TEXT_COLORS: Record<FeedbackColor, string> = {
   red: colors.floodlightWhite,
 };
 
-const ATTRIBUTE_LABELS = ['Club', 'League', 'Nat.', 'Pos.', 'Age'];
+const ATTRIBUTE_LABELS = ['Club', 'League', 'Nat.', 'Pos.', 'Born'];
 
-export interface BalldeGuessRowProps {
+export interface WhosThatGuessRowProps {
   guess: GuessFeedback;
   testID?: string;
 }
 
-export function BalldeGuessRow({ guess, testID }: BalldeGuessRowProps) {
+export function WhosThatGuessRow({ guess, testID }: WhosThatGuessRowProps) {
   const attributes = [
     guess.club,
     guess.league,
     guess.nationality,
     guess.position,
-    guess.age,
+    guess.birthYear,
   ];
 
   return (

@@ -47,6 +47,9 @@ export function getBucketSizeForMode(gameMode: GameMode, maxSteps?: number): num
     case 'the_chain':
       // Steps bucket - 10-point buckets for normalized scores
       return 10;
+    case 'whos-that':
+      // Who's That? uses custom transform, but default bucket size for API data
+      return 10;
     default:
       // Default: 10-point buckets (0%, 10%, 20%, ..., 100%)
       return 10;
@@ -134,6 +137,9 @@ export function getScoreLabelsForMode(
     case 'the_thread':
       // Hint-count labels: 0 hints (best) to give up (worst)
       return ['0 hints', '1 hint', '2 hints', '3 hints', 'Give up'];
+    case 'whos-that':
+      // Wordle-style guess count labels: 1-6
+      return ['1', '2', '3', '4', '5', '6'];
     default:
       // Default: use percentage labels
       return undefined;
@@ -187,6 +193,9 @@ export function normalizeScoreForMode(
     case 'the_thread':
       // 0-10 points -> 0-100
       return rawScore * 10;
+    case 'whos-that':
+      // 0-6 points -> 0-100
+      return Math.round((rawScore / 6) * 100);
     default:
       return rawScore;
   }

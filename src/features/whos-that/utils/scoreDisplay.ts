@@ -1,16 +1,16 @@
 /**
- * Score Display for Balldle
+ * Score Display for Who's That?
  *
  * Generates text-based descriptions for sharing game results.
  */
 
-import { BalldeScore } from './scoring';
+import { WhosThatScore } from './scoring';
 
 /**
  * Generate share text for the game result.
  */
 export function generateScoreDisplay(
-  score: BalldeScore,
+  score: WhosThatScore,
   options: { puzzleDate?: string } = {}
 ): string {
   const { puzzleDate } = options;
@@ -32,8 +32,8 @@ export function generateScoreDisplay(
   lines.push(generateScoreDescription(score));
 
   const playUrl = puzzleDate
-    ? `https://football-iq.app/play/balldle?ref=share&mode=balldle&date=${puzzleDate}`
-    : 'https://football-iq.app/play/balldle?ref=share&mode=balldle';
+    ? `https://football-iq.app/play/whos-that?ref=share&mode=whos-that&date=${puzzleDate}`
+    : 'https://football-iq.app/play/whos-that?ref=share&mode=whos-that';
   lines.push(playUrl);
 
   return lines.join('\n');
@@ -42,7 +42,7 @@ export function generateScoreDisplay(
 /**
  * Generate a text description of the game result for share cards.
  */
-export function generateScoreDescription(score: BalldeScore): string {
+export function generateScoreDescription(score: WhosThatScore): string {
   if (!score.won) return 'Did not guess correctly';
   if (score.guessCount === 1) return 'Guessed on the first attempt!';
   return `${score.guessCount} of ${score.maxPoints} guesses needed`;

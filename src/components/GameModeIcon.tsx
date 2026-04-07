@@ -125,7 +125,7 @@ function GameModeIconComponent({ gameMode, size = 24 }: GameModeIconProps) {
       return <Shirt size={size} color={LUCIDE_FALLBACK_COLOR} />;
     case 'higher_lower':
       return <TrendingUp size={size} color={LUCIDE_FALLBACK_COLOR} />;
-    case 'balldle':
+    case 'whos-that':
       return <Dices size={size} color={LUCIDE_FALLBACK_COLOR} />;
     default:
       return <HelpCircle size={size} color={colors.textSecondary} />;

@@ -1,0 +1,45 @@
+appId: com.charliearlie.footballiq.app
+name: "Give Up Modal — Dark Background (G-1)"
+tags:
+  - modals
+---
+# Test that the give up confirmation modal appears
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# Start a Career Path game (always available)
+- scrollUntilVisible:
+    element:
+      text: "CAREER PATH.*"
+    direction: DOWN
+    timeout: 10000
+    speed: 20
+    visibilityPercentage: 50
+- tapOn:
+    text: "CAREER PATH.*"
+
+# Wait for game to load
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "action-zone"
+    timeout: 10000
+
+# Tap give up button in the action zone
+- tapOn:
+    id: "action-zone-giveup"
+
+# Verify give up confirmation modal appears
+- extendedWaitUntil:
+    visible:
+      id: "give-up-modal"
+    timeout: 3000
+
+# Verify confirm button exists
+- assertVisible:
+    id: "give-up-modal-confirm"

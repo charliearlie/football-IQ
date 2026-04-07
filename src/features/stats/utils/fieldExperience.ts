@@ -31,7 +31,7 @@ export const ALL_GAME_MODES: GameMode[] = [
   'connections',
   'timeline',
   'who_am_i',
-  'balldle',
+  'whos-that',
   'higher_lower',
 ];
 
@@ -99,7 +99,7 @@ export function calculateFieldExperience(
     connections: 0,
     timeline: 0,
     who_am_i: 0,
-    balldle: 0,
+    'whos-that': 0,
     higher_lower: 0,
   };
 

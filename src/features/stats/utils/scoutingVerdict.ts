@@ -117,7 +117,7 @@ const STRENGTH_FRAGMENTS: Record<GameMode, string[]> = {
     'Identifies players from the smallest of clues.',
     'Reads between the lines to uncover the mystery player.',
   ],
-  balldle: [
+  'whos-that': [
     'Connects player attributes with remarkable precision.',
     'Spots the footballer through club, league, and nationality clues.',
   ],

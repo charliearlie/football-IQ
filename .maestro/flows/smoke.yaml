@@ -1,0 +1,27 @@
+appId: com.charliearlie.footballiq.app
+name: "Smoke Test — App Launch"
+---
+# Verify the app boots through splash → AuthGate → home screen
+- launchApp
+
+# The app has a multi-phase splash (native → animated → AuthGate)
+- waitForAnimationToEnd
+
+# Home screen should show
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# Verify the header text is visible
+- assertVisible:
+    text: "FOOTBALL IQ"
+
+# Verify at least one game card is rendered
+- scrollUntilVisible:
+    element:
+      text: "CAREER PATH.*"
+    direction: DOWN
+    timeout: 15000
+    speed: 20
+    visibilityPercentage: 50

@@ -112,7 +112,7 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     icon: HelpCircle,
     description: 'Recognises players from minimal clues',
   },
-  balldle: {
+  'whos-that': {
     name: 'Attribute Analyst',
     icon: Dices,
     description: 'Decodes player identities through attribute feedback',

@@ -81,6 +81,11 @@ function calculateLocalRelevance(
   return 0.5 + rankBonus;
 }
 
+export interface HybridSearchOptions {
+  /** When true, skip local cache and only use Oracle with active_only filter */
+  activeOnly?: boolean;
+}
+
 /**
  * Hybrid search with local-first strategy.
  *
@@ -88,15 +93,44 @@ function calculateLocalRelevance(
  * - If local results are sparse (<3), schedules a debounced Oracle query
  *   and calls `onUpdate` again with merged results.
  *
+ * When `activeOnly` is true, skips local cache entirely and goes straight
+ * to Oracle with the active_only flag (only players with a current club).
+ *
  * @param query - Search query (minimum 3 characters)
  * @param onUpdate - Callback invoked with updated results
+ * @param options - Search options
  */
 export async function searchPlayersHybrid(
   query: string,
-  onUpdate: (results: UnifiedPlayer[]) => void
+  onUpdate: (results: UnifiedPlayer[]) => void,
+  options?: HybridSearchOptions
 ): Promise<void> {
   if (!query || query.length < MIN_QUERY_LENGTH) {
     onUpdate([]);
+    return;
+  }
+
+  // Active-only mode: skip local cache, go straight to Oracle
+  if (options?.activeOnly) {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      try {
+        const oracleResults = await searchPlayersOracle(query, MAX_RESULTS, true);
+        const unified: UnifiedPlayer[] = oracleResults.map((p) => ({
+          id: p.id,
+          name: p.name,
+          nationality_code: p.nationality_code,
+          birth_year: p.birth_year,
+          position_category: p.position_category,
+          source: 'oracle' as const,
+          relevance_score: p.relevance_score,
+        }));
+        onUpdate(unified);
+      } catch (error) {
+        console.error('[HybridSearchEngine] Oracle active-only search failed:', error);
+        onUpdate([]);
+      }
+    }, DEBOUNCE_MS);
     return;
   }
 

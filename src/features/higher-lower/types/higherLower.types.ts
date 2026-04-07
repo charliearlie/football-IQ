@@ -35,10 +35,15 @@ export interface TransferPair {
 }
 
 /**
- * The Higher/Lower puzzle content structure
+ * The Higher/Lower puzzle content structure.
+ * Supports two formats:
+ * - `players`: Chain format — 11 players, each round compares [N] vs [N+1]
+ * - `pairs`: Legacy format — 10 independent pairs
  */
 export interface HigherLowerContent {
-  /** Array of 10 transfer pairs for 10 rounds */
+  /** Chain of players — round N compares players[N] vs players[N+1] */
+  players?: TransferPairPlayer[];
+  /** Legacy: independent pairs for each round */
   pairs: TransferPair[];
 }
 
@@ -168,7 +173,11 @@ function isValidTransferPair(value: unknown): value is TransferPair {
 }
 
 /**
- * Parse and validate Higher/Lower content from puzzle JSON
+ * Parse and validate Higher/Lower content from puzzle JSON.
+ *
+ * Supports two content formats:
+ * - `players` array (chain): 11+ players, derives pairs as [N] vs [N+1]
+ * - `pairs` array (legacy): explicit independent pairs
  *
  * @param content - Raw puzzle content
  * @returns Validated HigherLowerContent or null if invalid
@@ -178,6 +187,20 @@ export function parseHigherLowerContent(content: unknown): HigherLowerContent | 
 
   const obj = content as Record<string, unknown>;
 
+  // Chain format: players array → derive pairs
+  if (Array.isArray(obj.players) && obj.players.length >= 2) {
+    for (const player of obj.players) {
+      if (!isValidTransferPairPlayer(player)) return null;
+    }
+    const players = obj.players as TransferPairPlayer[];
+    const pairs: TransferPair[] = [];
+    for (let i = 0; i < players.length - 1; i++) {
+      pairs.push({ player1: players[i], player2: players[i + 1] });
+    }
+    return { players, pairs };
+  }
+
+  // Legacy format: explicit pairs
   if (!Array.isArray(obj.pairs) || obj.pairs.length < 1) {
     return null;
   }

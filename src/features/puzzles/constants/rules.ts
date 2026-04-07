@@ -369,9 +369,9 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     accentColor: colors.cardYellow,
   },
 
-  balldle: {
-    gameMode: 'balldle',
-    displayTitle: 'Balldle',
+  'whos-that': {
+    gameMode: 'whos-that',
+    displayTitle: "Who's That?",
     goal: 'Guess the footballer in 6 tries from attribute feedback',
     rules: [
       { text: '6 attempts to guess the mystery player', highlight: '6 attempts' },
