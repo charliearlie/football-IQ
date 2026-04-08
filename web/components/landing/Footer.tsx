@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="py-8 px-4 border-t border-white/5">
       <div className="max-w-2xl mx-auto">
-        <div className="grid grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
           <div>
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
               Explore
@@ -24,6 +24,28 @@ export function Footer() {
                 { href: "/play/connections", label: "Connections" },
                 { href: "/play/topical-quiz", label: "Topical Quiz" },
                 { href: "/play/timeline", label: "Timeline" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block text-sm text-slate-400 hover:text-floodlight transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
+              Quizzes
+            </p>
+            <div className="space-y-2">
+              {[
+                { href: "/quiz/premier-league", label: "Premier League" },
+                { href: "/quiz/champions-league", label: "Champions League" },
+                { href: "/quiz/world-cup", label: "World Cup" },
+                { href: "/quiz/guess-the-footballer", label: "Guess the Footballer" },
+                { href: "/football-trivia-questions", label: "Trivia Questions" },
               ].map((link) => (
                 <Link
                   key={link.href}

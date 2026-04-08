@@ -6,9 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/", "/login"],
+        disallow: ["/admin/", "/api/cron/", "/api/auth/", "/login"],
       },
     ],
-    sitemap: "https://football-iq.app/sitemap.xml",
+    sitemap: "https://www.football-iq.app/sitemap.xml",
   };
 }

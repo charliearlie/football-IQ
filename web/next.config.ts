@@ -17,16 +17,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      {
-        // Exact match only — sub-routes like /play/career-path are unaffected
-        source: "/play",
-        destination: "/",
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
