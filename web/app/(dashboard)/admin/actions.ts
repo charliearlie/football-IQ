@@ -10,6 +10,8 @@ import {
   runCareerValidationBatch,
   fetchPlayerTeams,
   apiTeamsToClubSummaries,
+  searchApiFootballPlayer,
+  type ApiFootballPlayer,
   type MappingRunResult,
   type CareerValidationResult,
   type OurAppearance,
@@ -1480,6 +1482,172 @@ export async function backfillClubLeagues(
     return {
       success: false,
       error: err instanceof Error ? err.message : "League backfill failed",
+    };
+  }
+}
+
+// ============================================================================
+// QUICK-ADD PLAYER
+// ============================================================================
+
+export interface ExternalPlayerResult {
+  apiFootballId: number;
+  name: string;
+  photo: string;
+  birthYear: number | null;
+  nationality: string;
+  currentClub: string | null;
+}
+
+export interface QuickAddInput {
+  apiFootballId: number;
+  name: string;
+  birthYear: number | null;
+  nationalityCode: string | null;
+  positionCategory: string | null;
+}
+
+/**
+ * Search API-Football for players by name.
+ * Returns display-friendly results for the Quick Add UI.
+ */
+export async function searchExternalPlayers(
+  name: string
+): Promise<ActionResult<ExternalPlayerResult[]>> {
+  try {
+    await ensureAdmin();
+    const apiKey = process.env.API_FOOTBALL_KEY;
+    if (!apiKey) {
+      return { success: false, error: "API_FOOTBALL_KEY not configured" };
+    }
+
+    const response = await searchApiFootballPlayer(name, apiKey);
+    const results: ExternalPlayerResult[] = response.response.map(
+      (p: ApiFootballPlayer) => {
+        const birthDate = p.player.birth?.date;
+        const birthYear = birthDate ? parseInt(birthDate.split("-")[0], 10) : null;
+
+        // Try to get current club from statistics (if present)
+        const currentClub =
+          p.statistics?.find((s) => s.team?.name)?.team?.name ?? null;
+
+        return {
+          apiFootballId: p.player.id,
+          name: p.player.name,
+          photo: p.player.photo,
+          birthYear: isNaN(birthYear ?? NaN) ? null : birthYear,
+          nationality: p.player.nationality,
+          currentClub,
+        };
+      }
+    );
+
+    return { success: true, data: results };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Search failed",
+    };
+  }
+}
+
+/**
+ * Add a player from API-Football to the database.
+ * Creates the player row and fetches their current club via the teams endpoint.
+ */
+export async function quickAddPlayer(
+  input: QuickAddInput
+): Promise<ActionResult<{ playerId: string; clubsAdded: number }>> {
+  try {
+    await ensureAdminWrite();
+    const supabase = await createAdminClient();
+
+    const playerId = `APIFB_${input.apiFootballId}`;
+    const searchName = input.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+    // Check if player with this api_football_id already exists
+    const { data: existing } = await supabase
+      .from("players")
+      .select("id, name")
+      .eq("api_football_id", input.apiFootballId)
+      .single();
+
+    if (existing) {
+      return {
+        success: false,
+        error: `Player already exists: ${existing.name} (${existing.id})`,
+      };
+    }
+
+    // Insert the player
+    const { error: insertError } = await supabase.from("players").insert({
+      id: playerId,
+      name: input.name,
+      search_name: searchName,
+      scout_rank: 0,
+      birth_year: input.birthYear,
+      position_category: input.positionCategory,
+      nationality_code: input.nationalityCode,
+      api_football_id: input.apiFootballId,
+    });
+
+    if (insertError) {
+      return { success: false, error: insertError.message };
+    }
+
+    // Fetch teams from API-Football to get career history
+    let clubsAdded = 0;
+    const apiKey = process.env.API_FOOTBALL_KEY;
+    if (apiKey) {
+      try {
+        const teams = await fetchPlayerTeams(input.apiFootballId, apiKey);
+        const clubs = apiTeamsToClubSummaries(teams);
+
+        for (const club of clubs) {
+          // Resolve to canonical club via RPC
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: matchedClubs } = await (supabase.rpc as any)(
+            "match_club_by_name",
+            {
+              club_name_input: club.clubName,
+              player_country_code: input.nationalityCode ?? undefined,
+            }
+          );
+
+          const canonicalClub = (
+            matchedClubs as { club_id: string; club_name: string }[] | null
+          )?.[0];
+
+          if (canonicalClub) {
+            const isCurrent = club.endYear >= new Date().getFullYear() - 1;
+
+            const { error: appError } = await supabase
+              .from("player_appearances")
+              .insert({
+                player_id: playerId,
+                club_id: canonicalClub.club_id,
+                start_year: club.startYear,
+                end_year: isCurrent ? null : club.endYear,
+              });
+
+            if (!appError) clubsAdded++;
+          }
+        }
+      } catch {
+        // Non-fatal: player was created but teams couldn't be fetched
+      }
+    }
+
+    revalidatePath("/admin/data-pipeline");
+    return { success: true, data: { playerId, clubsAdded } };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Quick add failed",
     };
   }
 }

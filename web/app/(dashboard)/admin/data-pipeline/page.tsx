@@ -14,12 +14,15 @@ import {
   discoverMissingPlayers,
   refreshEliteCareers,
   backfillClubLeagues,
+  searchExternalPlayers,
+  quickAddPlayer,
 } from "@/app/(dashboard)/admin/actions";
 import type {
   BackfillResult,
   DiscoveryResult,
   RefreshResult,
   LeagueBackfillResult,
+  ExternalPlayerResult,
 } from "@/app/(dashboard)/admin/actions";
 import type {
   MappingRunResult,
@@ -29,7 +32,7 @@ import type {
   AmbiguousCandidate,
   ApiClubSummary,
 } from "@/lib/data-pipeline/map-external-ids";
-import { Loader2, Play, FlaskConical, Search, Link2, CheckCircle2, AlertTriangle, Info, Check, ChevronDown, Eye, Database, Globe, RefreshCw, Layers } from "lucide-react";
+import { Loader2, Play, FlaskConical, Search, Link2, CheckCircle2, AlertTriangle, Info, Check, ChevronDown, Eye, Database, Globe, RefreshCw, Layers, UserPlus } from "lucide-react";
 
 type MappingResult = MappingRunResult & { savedCount: number };
 type ValidationResult = CareerValidationResult & { clubMappingsSaved: number; clubDuplicates: string[] };
@@ -40,6 +43,7 @@ export default function DataPipelinePage() {
       title="Data Pipeline"
       subtitle="External ID mapping and data reconciliation"
     >
+      <QuickAddPlayerCard />
       <DiscoverPlayersCard />
       <RefreshCareersCard />
       <LeagueBackfillCard />
@@ -1332,6 +1336,193 @@ function LeagueBackfillCard() {
               {result.leaguesUpdated} leagues updated,{" "}
               {result.errors} errors
             </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Quick Add Player
+// ============================================================================
+
+function QuickAddPlayerCard() {
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<ExternalPlayerResult[]>([]);
+  const [addingId, setAddingId] = useState<number | null>(null);
+  const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
+  const [error, setError] = useState<string | null>(null);
+  const [addResult, setAddResult] = useState<string | null>(null);
+
+  async function handleSearch() {
+    if (!query.trim()) return;
+    setSearching(true);
+    setError(null);
+    setResults([]);
+    setAddResult(null);
+
+    try {
+      const res = await searchExternalPlayers(query.trim());
+      if (res.success && res.data) {
+        setResults(res.data);
+        if (res.data.length === 0) setError("No players found");
+      } else {
+        setError(res.error ?? "Search failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Search failed");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function handleAdd(player: ExternalPlayerResult) {
+    setAddingId(player.apiFootballId);
+    setAddResult(null);
+    setError(null);
+
+    try {
+      const res = await quickAddPlayer({
+        apiFootballId: player.apiFootballId,
+        name: player.name,
+        birthYear: player.birthYear,
+        nationalityCode: null,
+        positionCategory: null,
+      });
+
+      if (res.success && res.data) {
+        setAddedIds((prev) => new Set([...prev, player.apiFootballId]));
+        setAddResult(
+          `Added ${player.name} (${res.data.playerId}) with ${res.data.clubsAdded} club(s)`
+        );
+      } else {
+        setError(res.error ?? "Add failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Add failed");
+    } finally {
+      setAddingId(null);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-floodlight">
+            Quick Add Player
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Search API-Football and add a missing player to the database
+          </p>
+        </div>
+        <Badge variant="secondary">
+          <UserPlus className="h-3 w-3 mr-1" />
+          Manual
+        </Badge>
+      </div>
+
+      <div className="flex items-end gap-4">
+        <div className="flex-1 space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Player name
+          </label>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="e.g. Michael Olise"
+            className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-floodlight"
+          />
+        </div>
+
+        <Button onClick={handleSearch} disabled={searching || !query.trim()}>
+          {searching ? (
+            <>
+              <Loader2 className="animate-spin h-4 w-4" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4" />
+              Search
+            </>
+          )}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 rounded-md bg-red-500/10 border border-red-500/20 p-3">
+          <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+          <p className="text-sm text-red-300">{error}</p>
+        </div>
+      )}
+
+      {addResult && (
+        <div className="flex items-start gap-2 rounded-md bg-green-500/10 border border-green-500/20 p-3">
+          <CheckCircle2 className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+          <p className="text-sm text-green-300">{addResult}</p>
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            {results.length} result(s)
+          </p>
+          <div className="divide-y divide-white/5">
+            {results.map((p) => {
+              const isAdded = addedIds.has(p.apiFootballId);
+              const isAdding = addingId === p.apiFootballId;
+
+              return (
+                <div
+                  key={p.apiFootballId}
+                  className="flex items-center gap-4 py-3"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.photo}
+                    alt={p.name}
+                    className="h-10 w-10 rounded-full bg-white/10 object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-floodlight truncate">
+                      {p.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {[
+                        p.nationality,
+                        p.birthYear ? `b. ${p.birthYear}` : null,
+                        p.currentClub,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={isAdded ? "secondary" : "default"}
+                    disabled={isAdded || isAdding}
+                    onClick={() => handleAdd(p)}
+                  >
+                    {isAdding ? (
+                      <Loader2 className="animate-spin h-3 w-3" />
+                    ) : isAdded ? (
+                      <>
+                        <Check className="h-3 w-3" />
+                        Added
+                      </>
+                    ) : (
+                      "Add"
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
