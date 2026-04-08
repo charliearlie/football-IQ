@@ -101,6 +101,20 @@ export default function RootLayout({
             ],
           }}
         />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": "https://www.football-iq.app/#website",
+            url: "https://www.football-iq.app",
+            name: "Football IQ",
+            description:
+              "Daily football quizzes and trivia games. Guess players from careers, transfers, and more.",
+            publisher: {
+              "@id": "https://www.football-iq.app/#organization",
+            },
+          }}
+        />
       </body>
     </html>
   );

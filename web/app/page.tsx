@@ -86,20 +86,7 @@ export default async function HomePage() {
           "@context": "https://schema.org",
           "@graph": [
             {
-              "@type": "WebSite",
-              "@id": "https://www.football-iq.app/#website",
-              url: "https://www.football-iq.app",
-              name: "Football IQ",
-              description:
-                "Daily football quizzes and trivia games. Guess players from careers, transfers, and more.",
-              publisher: {
-                "@type": "Organization",
-                name: "Football IQ",
-                url: "https://www.football-iq.app",
-              },
-            },
-            {
-              "@type": "SoftwareApplication",
+              "@type": "MobileApplication",
               "@id": "https://www.football-iq.app/#app",
               name: "Football IQ - Football Trivia",
               operatingSystem: "iOS",
@@ -272,6 +259,7 @@ export default async function HomePage() {
           </h2>
           <div className="grid grid-cols-2 gap-2">
             {[
+              { href: "/football-connections", label: "Football Connections" },
               { href: "/quiz/premier-league", label: "Premier League Trivia" },
               { href: "/quiz/champions-league", label: "Champions League Trivia" },
               { href: "/quiz/world-cup", label: "World Cup Trivia" },

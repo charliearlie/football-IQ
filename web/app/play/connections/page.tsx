@@ -60,38 +60,13 @@ interface PageProps {
 export default async function ConnectionsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const puzzle = await fetchDailyPuzzle("connections", params.date);
-
-  // No live puzzle for today (only applies when not viewing a specific date)
-  if (!puzzle && !params.date) {
-    const nextDate = await fetchNextPuzzleDate("connections");
-    return (
-      <GamePageShell title="Connections" gameSlug="connections">
-        <NoPuzzleToday
-          gameSlug="connections"
-          gameTitle="Connections"
-          nextDate={nextDate}
-        />
-      </GamePageShell>
-    );
-  }
-
+  const content = puzzle?.content as unknown as ConnectionsContent | undefined;
   const puzzleDate =
     puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content = puzzle?.content as unknown as ConnectionsContent;
+  const hasContent = !!content;
 
-  // No puzzle for a specific historical date
-  if (!content) {
-    const nextDate = await fetchNextPuzzleDate("connections");
-    return (
-      <GamePageShell title="Connections" gameSlug="connections">
-        <NoPuzzleToday
-          gameSlug="connections"
-          gameTitle="Connections"
-          nextDate={nextDate}
-        />
-      </GamePageShell>
-    );
-  }
+  const nextDate =
+    !hasContent ? await fetchNextPuzzleDate("connections") : null;
 
   return (
     <>
@@ -170,9 +145,17 @@ export default async function ConnectionsPage({ searchParams }: PageProps) {
         }}
       />
       <GamePageShell title="Connections" gameSlug="connections">
-        <PlayedTodayGate gameSlug="connections">
-          <ConnectionsGame content={content} puzzleDate={puzzleDate} />
-        </PlayedTodayGate>
+        {hasContent ? (
+          <PlayedTodayGate gameSlug="connections">
+            <ConnectionsGame content={content} puzzleDate={puzzleDate} />
+          </PlayedTodayGate>
+        ) : (
+          <NoPuzzleToday
+            gameSlug="connections"
+            gameTitle="Connections"
+            nextDate={nextDate}
+          />
+        )}
       </GamePageShell>
       <HowToPlay
         title="Connections"

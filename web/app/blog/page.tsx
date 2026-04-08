@@ -10,14 +10,14 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Daily Football Digest | Football News & Match Analysis | Football IQ",
   description:
-    "Daily football match analysis, transfer news, and tactical breakdowns. Updated every night.",
+    "Football match analysis, transfer news, and tactical breakdowns from the Football IQ team.",
   alternates: {
     canonical: "https://www.football-iq.app/blog",
   },
   openGraph: {
     title: "Daily Football Digest | Football IQ",
     description:
-      "Daily football match analysis, transfer news, and tactical breakdowns. Updated every night.",
+      "Football match analysis, transfer news, and tactical breakdowns from the Football IQ team.",
     url: "https://www.football-iq.app/blog",
     type: "website",
   },
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Daily Football Digest | Football IQ",
     description:
-      "Daily football match analysis, transfer news, and tactical breakdowns. Updated every night.",
+      "Football match analysis, transfer news, and tactical breakdowns from the Football IQ team.",
   },
   robots: {
     index: true,
@@ -62,7 +62,7 @@ export default async function BlogIndexPage() {
             DAILY DIGEST
           </h1>
           <p className="text-slate-400">
-            Football coverage, every single night.
+            Match analysis, transfer news, and tactical breakdowns.
           </p>
         </div>
 

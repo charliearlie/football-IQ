@@ -59,38 +59,13 @@ interface PageProps {
 export default async function TimelinePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const puzzle = await fetchDailyPuzzle("timeline", params.date);
-
-  // No live puzzle for today (only applies when not viewing a specific date)
-  if (!puzzle && !params.date) {
-    const nextDate = await fetchNextPuzzleDate("timeline");
-    return (
-      <GamePageShell title="Timeline" gameSlug="timeline">
-        <NoPuzzleToday
-          gameSlug="timeline"
-          gameTitle="Timeline"
-          nextDate={nextDate}
-        />
-      </GamePageShell>
-    );
-  }
-
+  const content = puzzle?.content as unknown as TimelineContent | undefined;
   const puzzleDate =
     puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content = puzzle?.content as unknown as TimelineContent;
+  const hasContent = !!content;
 
-  // No puzzle for a specific historical date
-  if (!content) {
-    const nextDate = await fetchNextPuzzleDate("timeline");
-    return (
-      <GamePageShell title="Timeline" gameSlug="timeline">
-        <NoPuzzleToday
-          gameSlug="timeline"
-          gameTitle="Timeline"
-          nextDate={nextDate}
-        />
-      </GamePageShell>
-    );
-  }
+  const nextDate =
+    !hasContent ? await fetchNextPuzzleDate("timeline") : null;
 
   return (
     <>
@@ -169,9 +144,17 @@ export default async function TimelinePage({ searchParams }: PageProps) {
         }}
       />
       <GamePageShell title="Timeline" gameSlug="timeline">
-        <PlayedTodayGate gameSlug="timeline">
-          <TimelineGame content={content} puzzleDate={puzzleDate} />
-        </PlayedTodayGate>
+        {hasContent ? (
+          <PlayedTodayGate gameSlug="timeline">
+            <TimelineGame content={content} puzzleDate={puzzleDate} />
+          </PlayedTodayGate>
+        ) : (
+          <NoPuzzleToday
+            gameSlug="timeline"
+            gameTitle="Timeline"
+            nextDate={nextDate}
+          />
+        )}
       </GamePageShell>
       <HowToPlay
         title="Timeline"

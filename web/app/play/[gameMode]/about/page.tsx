@@ -98,7 +98,7 @@ export default async function GameModeAboutPage({ params }: PageProps) {
         ],
       },
       {
-        "@type": "SoftwareApplication",
+        "@type": "MobileApplication",
         name: `Football IQ - ${seo.title}`,
         applicationCategory: "GameApplication",
         operatingSystem: "Web, iOS, Android",

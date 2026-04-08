@@ -19,6 +19,7 @@ export function Footer() {
                   href: "/football-trivia-questions",
                   label: "Trivia Questions",
                 },
+                { href: "/football-connections", label: "Football Connections" },
                 { href: "/play/career-path", label: "Career Path" },
                 { href: "/play/transfer-guess", label: "Transfer Guess" },
                 { href: "/play/connections", label: "Connections" },
