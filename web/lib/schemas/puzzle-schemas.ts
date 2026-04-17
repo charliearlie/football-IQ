@@ -380,12 +380,23 @@ export const contentSchemaMap = {
     }),
   }),
   higher_lower: z.object({
-    // Chain format: 11 players, round N compares players[N] vs players[N+1]
-    players: z.array(z.object({ name: z.string(), club: z.string(), fee: z.number() })).optional(),
+    // Chain format: 11+ entries, round N compares players[N] vs players[N+1]
+    players: z.array(z.union([
+      // New format: generic stat entry
+      z.object({ name: z.string(), context: z.string(), statLabel: z.string(), statType: z.string(), value: z.number() }),
+      // Legacy format: transfer fee only
+      z.object({ name: z.string(), club: z.string(), fee: z.number() }),
+    ])).optional(),
     // Legacy format: independent pairs
     pairs: z.array(z.object({
-      player1: z.object({ name: z.string(), club: z.string(), fee: z.number() }),
-      player2: z.object({ name: z.string(), club: z.string(), fee: z.number() }),
+      player1: z.union([
+        z.object({ name: z.string(), context: z.string(), statLabel: z.string(), statType: z.string(), value: z.number() }),
+        z.object({ name: z.string(), club: z.string(), fee: z.number() }),
+      ]),
+      player2: z.union([
+        z.object({ name: z.string(), context: z.string(), statLabel: z.string(), statType: z.string(), value: z.number() }),
+        z.object({ name: z.string(), club: z.string(), fee: z.number() }),
+      ]),
     })).optional(),
   }).refine(data => data.players || data.pairs, {
     message: "Either 'players' (chain) or 'pairs' (legacy) must be provided",

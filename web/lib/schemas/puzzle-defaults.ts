@@ -208,9 +208,12 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
     },
   }),
   higher_lower: () => ({
-    pairs: Array.from({ length: 10 }, () => ({
-      player1: { name: "", club: "", fee: 0 },
-      player2: { name: "", club: "", fee: 0 },
+    players: Array.from({ length: 11 }, () => ({
+      name: '',
+      context: '',
+      statLabel: 'League Appearances',
+      statType: 'league_appearances',
+      value: 0,
     })),
   }),
 };

@@ -143,7 +143,7 @@ export const APP_ONLY_GAMES: { title: string; description: string }[] = [
   { title: "Goalscorer Recall", description: "Name every scorer from a classic match" },
   { title: "Starting XI", description: "Find the missing players in iconic lineups" },
   { title: "Who Am I?", description: "Guess the footballer from 5 progressive clues" },
-  { title: "Higher/Lower", description: "Did they pay more or less? Compare real transfer fees" },
+  { title: "Higher/Lower", description: "Higher or lower? Compare real player stats" },
   { title: "Who's That?", description: "Wordle for footballers — 6 guesses, attribute feedback" },
 ];
 
