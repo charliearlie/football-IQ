@@ -17,9 +17,9 @@ import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Football IQ - Daily Football Quizzes & Trivia Games",
+  title: "Football IQ Games - Daily Football Quizzes & Trivia",
   description:
-    "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more. New puzzles every day. Test your football knowledge now.",
+    "Play Football IQ games free in your browser - daily football quizzes, trivia puzzles and guess-the-player challenges. New puzzles every day across 11 game modes.",
   alternates: {
     canonical: "https://www.football-iq.app",
   },
@@ -29,9 +29,9 @@ export const metadata: Metadata = {
     "max-image-preview": "large" as const,
   },
   openGraph: {
-    title: "Football IQ - Daily Football Quizzes & Trivia Games",
+    title: "Football IQ Games - Daily Football Quizzes & Trivia",
     description:
-      "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more. New puzzles every day.",
+      "Play Football IQ games free in your browser - daily football quizzes, trivia puzzles and guess-the-player challenges. New puzzles every day.",
     url: "https://www.football-iq.app",
     type: "website",
     images: [
@@ -39,15 +39,15 @@ export const metadata: Metadata = {
         url: "/api/og/play",
         width: 1200,
         height: 630,
-        alt: "Football IQ - Daily Football Quizzes",
+        alt: "Football IQ Games - Daily Football Quizzes",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Football IQ - Daily Football Quizzes & Trivia Games",
+    title: "Football IQ Games - Daily Football Quizzes & Trivia",
     description:
-      "Play free daily football quizzes in your browser. Guess players from career history, transfers, and more.",
+      "Play Football IQ games free in your browser - daily football quizzes and guess-the-player challenges.",
     images: ["/api/og/play"],
   },
 };
@@ -151,13 +151,15 @@ export default async function HomePage() {
         {/* Hero intro — gives first-time visitors context */}
         <section className="pt-8 pb-6 text-center">
           <h1 className="font-bebas text-5xl md:text-6xl tracking-wide text-floodlight leading-[0.95] mb-3">
-            FOOTBALL IQ<br />
-            <span className="text-pitch-green">DAILY GAMES</span>
+            FOOTBALL IQ <span className="text-pitch-green">GAMES</span>
           </h1>
+          <p className="font-bebas text-2xl md:text-3xl tracking-wider text-slate-400 mb-3">
+            DAILY FOOTBALL QUIZZES & TRIVIA
+          </p>
           <p className="text-slate-400 text-sm md:text-base max-w-md mx-auto">
-            Football IQ is a free daily football quiz with new puzzles every day.
-            Test your football trivia knowledge across career paths, transfers,
-            connections and more. Play in your browser or get all 11 game modes in the app.
+            Football IQ games are free daily football quizzes with new puzzles
+            every day. Test your football trivia knowledge across career paths,
+            transfers, connections and more. Play in your browser or get all 11 game modes in the app.
           </p>
         </section>
 
@@ -289,6 +291,10 @@ export default async function HomePage() {
                 a: "Football IQ is a free daily football quiz app with 11 game modes that test your knowledge of players, transfers, career histories, and more. New puzzles are published every day. You can play in your browser or download the app for the full experience.",
               },
               {
+                q: "What are Football IQ games?",
+                a: "Football IQ games are a collection of 11 daily football quizzes and trivia puzzles - Career Path, Transfer Guess, Connections, Topical Quiz, Timeline, and more. Each game drops a fresh puzzle every day. Play five modes free in your browser or download the app for all 11.",
+              },
+              {
                 q: "How do I play Football Connections?",
                 a: "In Football Connections, you are given 16 footballer names and must group them into 4 hidden categories. Each category connects 4 players — it could be by club, nationality, position, or something more creative. You get 4 guesses to find all the groups.",
               },
@@ -329,6 +335,14 @@ export default async function HomePage() {
                 acceptedAnswer: {
                   "@type": "Answer",
                   text: "Football IQ is a free daily football quiz app with 11 game modes that test your knowledge of players, transfers, career histories, and more. New puzzles are published every day. You can play in your browser or download the app for the full experience.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What are Football IQ games?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Football IQ games are a collection of 11 daily football quizzes and trivia puzzles - Career Path, Transfer Guess, Connections, Topical Quiz, Timeline, and more. Each game drops a fresh puzzle every day. Play five modes free in your browser or download the app for all 11.",
                 },
               },
               {

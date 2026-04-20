@@ -23,7 +23,7 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.football-iq.app"),
   title: {
-    default: "Football IQ - Daily Football Quizzes & Trivia Games",
+    default: "Football IQ Games - Daily Football Quizzes & Trivia",
     template: "%s | Football IQ",
   },
   description:
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     icon: "/images/favicon.png",
   },
   openGraph: {
-    title: "Football IQ - Daily Football Quizzes & Trivia Games",
+    title: "Football IQ Games - Daily Football Quizzes & Trivia",
     description:
       "Free daily football quizzes you can play in your browser. Guess players, test your knowledge, climb the tiers.",
     siteName: "Football IQ",
@@ -54,13 +54,13 @@ export const metadata: Metadata = {
         url: "/api/og/play",
         width: 1200,
         height: 630,
-        alt: "Football IQ - Daily Football Quizzes & Trivia Games",
+        alt: "Football IQ Games - Daily Football Quizzes & Trivia",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Football IQ - Daily Football Quizzes & Trivia Games",
+    title: "Football IQ Games - Daily Football Quizzes & Trivia",
     description:
       "Free daily football quizzes you can play in your browser. Guess players, test your knowledge, climb the tiers.",
     images: ["/api/og/play"],
@@ -93,6 +93,8 @@ export default function RootLayout({
             "@type": "Organization",
             "@id": "https://www.football-iq.app/#organization",
             name: "Football IQ",
+            alternateName: "Football IQ Games",
+            slogan: "Daily Football Quizzes & Trivia",
             url: "https://www.football-iq.app",
             logo: "https://www.football-iq.app/images/favicon.png",
             sameAs: [
@@ -108,6 +110,7 @@ export default function RootLayout({
             "@id": "https://www.football-iq.app/#website",
             url: "https://www.football-iq.app",
             name: "Football IQ",
+            alternateName: "Football IQ Games",
             description:
               "Daily football quizzes and trivia games. Guess players from careers, transfers, and more.",
             publisher: {

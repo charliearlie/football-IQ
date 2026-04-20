@@ -44,7 +44,7 @@ export default function DownloadPage() {
         href="/"
         className="mt-12 text-sm text-slate-400 hover:text-floodlight transition-colors"
       >
-        Back to Football IQ
+        Back to Football IQ Games
       </Link>
     </div>
   );

@@ -100,9 +100,13 @@ export function Footer() {
           </div>
         </div>
         <div className="flex items-center justify-between border-t border-white/5 pt-4">
-          <div className="font-bebas text-xl tracking-wider text-floodlight/40">
-            FOOTBALL IQ
-          </div>
+          <Link
+            href="/"
+            aria-label="Football IQ Games home"
+            className="font-bebas text-xl tracking-wider text-floodlight/40 hover:text-floodlight/60 transition-colors"
+          >
+            FOOTBALL IQ GAMES
+          </Link>
           <p className="text-xs text-muted-foreground">
             &copy; {currentYear} Football IQ
           </p>
