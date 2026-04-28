@@ -20,6 +20,7 @@ export {
   TopTensActionZone,
   TopTensResultModal,
   PremiumOnlyGate,
+  LastTensGate,
 } from './components';
 
 // Types

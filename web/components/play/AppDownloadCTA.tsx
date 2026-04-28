@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Smartphone, Lock } from "lucide-react";
 import { APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants";
+import { AndroidNotifyButton } from "@/components/AndroidNotifyButton";
 
 export function AppDownloadCTA() {
   return (
@@ -55,16 +56,7 @@ export function AppDownloadCTA() {
             className="h-[48px] w-auto"
           />
         </Link>
-        <div className="relative flex flex-col items-center">
-          <Image
-            src="/images/play-store.svg"
-            alt="Google Play — Coming Soon"
-            width={180}
-            height={48}
-            className="h-[48px] w-auto opacity-50"
-          />
-          <span className="text-xs text-slate-500 mt-1">Coming Soon</span>
-        </div>
+        <AndroidNotifyButton source="android-notify-app-cta" size="md" />
       </div>
     </div>
   );

@@ -19,6 +19,13 @@ import * as Haptics from 'expo-haptics';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
 import type { TimelineEvent } from '../types/timeline.types';
 
+// Use the app's primary green for accents — purple was too disconnected
+const accentColor = {
+  primary: colors.pitchGreen,
+  tint: 'rgba(46, 252, 93, 0.10)',
+  border: 'rgba(46, 252, 93, 0.20)',
+};
+
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 export interface TimelineCardProps {
@@ -91,7 +98,7 @@ export function TimelineCard({
 
   // Determine card state color
   let cardBg: string = colors.glassBackground;
-  let cardBorder: string = colors.glassBorder;
+  let cardBorder: string = 'rgba(255, 255, 255, 0.08)';
 
   if (isLocked) {
     cardBg = 'rgba(46, 252, 93, 0.1)';
@@ -102,6 +109,9 @@ export function TimelineCard({
   } else if (isRevealing && isCorrect === false) {
     cardBg = 'rgba(239, 68, 68, 0.15)';
     cardBorder = colors.redCard;
+  } else if (isDragging) {
+    cardBg = accentColor.tint;
+    cardBorder = accentColor.primary;
   }
 
   const yearColor = isCorrect === false ? colors.redCard : colors.pitchGreen;
@@ -125,11 +135,14 @@ export function TimelineCard({
         disabled={isLocked || !drag}
         style={styles.pressableContent}
       >
-        {/* Left handle — instant drag via grip icon */}
+        {/* Left: position number + drag handle */}
         <View style={styles.leftSection}>
+          <View style={styles.positionBadge}>
+            <Text style={styles.positionText}>{index + 1}</Text>
+          </View>
           {!isLocked && drag ? (
             <View onStartShouldSetResponder={() => true} onResponderGrant={handleDragStart}>
-              <GripVertical size={18} color={colors.textSecondary} strokeWidth={2} />
+              <GripVertical size={16} color={accentColor.primary} strokeWidth={2} />
             </View>
           ) : null}
         </View>
@@ -176,10 +189,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   leftSection: {
-    width: 24,
+    width: 36,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
+    gap: 4,
+  },
+  positionBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: accentColor.tint,
+    borderWidth: 1,
+    borderColor: accentColor.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  positionText: {
+    fontFamily: fonts.stats,
+    fontSize: 10,
+    color: accentColor.primary,
+    fontWeight: '700',
   },
   content: {
     flex: 1,

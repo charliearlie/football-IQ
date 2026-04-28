@@ -9,6 +9,7 @@
  */
 
 import type { DailyFootballData, MatchResult } from "./api-football";
+import type { Cluster } from "./clusters";
 
 // ============================================================================
 // TYPES
@@ -22,6 +23,11 @@ export interface GeneratedArticleRaw {
   excerpt: string;
   slug: string;
   content: string;
+  /**
+   * 2-4 pillar tags assigned by the LLM. Sanitized via sanitizeTags() before
+   * persisting — invalid tags are dropped silently.
+   */
+  tags?: string[];
 }
 
 export type { ReviewResult } from "./types";
@@ -71,6 +77,19 @@ BAD stats (NEVER include these): the minute a goal was scored ("71: the winner a
 ## Today on Football IQ
 A short, engaging paragraph encouraging readers to test their knowledge with today's puzzles in the Football IQ app. Reference 2-3 specific game modes by name that connect naturally to the day's article content (e.g. if a player milestone was discussed, mention Career Path; if team connections were a theme, mention Connections; if a big scoreline featured, mention Goalscorer Recall). Include a link to the web version at https://footballiq.app/play and mention the app is available on iOS and Android. Keep to 2-3 sentences — a natural recommendation, not an advert.
 
+INTERNAL LINKING RULES (apply throughout the article body):
+- Link to ONE pillar hub page (provided in the user prompt) using descriptive anchor text. This anchor must read naturally — not "click here", not just the URL.
+- Link to AT LEAST ONE game-mode page from /play (career-path, transfer-guess, connections, timeline, topical-quiz) when discussing a relevant moment.
+- Use markdown links: [descriptive anchor text](/path).
+- Never link to the homepage. Hubs and game-modes only.
+
+TAG ASSIGNMENT:
+Assign 2-4 tags to the article from this fixed taxonomy:
+  premier-league, champions-league, world-cup, transfer-news, trivia-questions,
+  football-history, connections, career-path, listicle, deep-dive, data-insight,
+  mode-spotlight, seasonal, guide, daily-football
+The tags MUST come from this list — invented tags are dropped silently. At least one tag should match the active cluster (provided in the user prompt) when the topic naturally aligns.
+
 OUTPUT FORMAT:
 Return a JSON object with exactly these fields:
 {
@@ -80,7 +99,8 @@ Return a JSON object with exactly these fields:
   "meta_description": "Compelling summary for search results — includes key facts, max 150 chars",
   "excerpt": "1-2 sentences that hook the reader — used in article previews",
   "slug": "date-prefixed-kebab-case-url e.g. 2026-02-23-city-top-of-the-league",
-  "content": "Full article markdown — all 4 sections with ## headings"
+  "content": "Full article markdown — all 4 sections with ## headings",
+  "tags": ["array", "of", "2-to-4", "tags", "from-the-taxonomy"]
 }`;
 
 // ============================================================================
@@ -122,7 +142,8 @@ export function buildGenerationPrompt(
   matchDate: string,
   articleDate: string,
   footballData: DailyFootballData,
-  researchContext: string
+  researchContext: string,
+  cluster?: Cluster
 ): string {
   const formattedMatchDate = new Date(matchDate).toLocaleDateString("en-GB", {
     weekday: "long",
@@ -186,7 +207,11 @@ Play free at: https://footballiq.app/play | Download on iOS App Store and Google
 ${noMatchesNote}
 
 REMEMBER: You are writing for Football IQ — a trivia app. Every paragraph should teach the reader something they didn't know. Weave in statistics, records, and historical context throughout, not just in the Numbers Game section.
-
+${cluster ? `\nACTIVE CLUSTER FOR THIS WEEK — "${cluster.name}":
+- Pillar hub URL (link to this once with descriptive anchor text): https://www.football-iq.app${cluster.hubUrl}
+- Preferred tags for this week (assign at least one when topic naturally fits): ${cluster.preferredTags.join(", ")}
+- Related game-mode pages worth linking when relevant: ${cluster.relatedGameModes.map((p) => `https://www.football-iq.app${p}`).join(", ")}
+When today's match content naturally fits the cluster theme, lean into it. When it doesn't, write the article straight and only assign cluster tags that genuinely apply — never force-fit.\n` : ""}
 Generate the full article JSON as specified. The slug must start with "${articleDate}-".`;
 }
 

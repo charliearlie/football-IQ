@@ -85,6 +85,15 @@ const config: Config = {
         "3d-tile-pressed": "0 0 0 #05050A",
         "3d-green": "0 6px 0 #1A9E38",
         "3d-green-pressed": "0 0 0 #1A9E38",
+        // 2026 design uplift surfaces
+        card: "inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px -12px rgba(0,0,0,0.5)",
+        elevated:
+          "inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 48px -16px rgba(0,0,0,0.6)",
+        "glow-green":
+          "0 0 0 1px rgba(46,252,93,0.3), 0 8px 32px -8px rgba(46,252,93,0.4)",
+      },
+      transitionTimingFunction: {
+        spring: "cubic-bezier(0.32, 0.72, 0, 1)",
       },
       keyframes: {
         "accordion-down": {

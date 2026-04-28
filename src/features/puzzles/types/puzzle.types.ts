@@ -41,6 +41,7 @@ export type GameMode =
   | 'guess_the_goalscorers'
   | 'topical_quiz'
   | 'top_tens'
+  | 'last_tens'
   | 'starting_xi'
   | 'connections'
   | 'timeline'

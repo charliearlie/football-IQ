@@ -1,9 +1,12 @@
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { Lightbulb } from 'lucide-react-native';
 import { PlayerAutocomplete } from '@/components';
-import { colors, spacing, fonts, textStyles } from '@/theme';
+import { colors, spacing, fonts } from '@/theme';
+import { getGameModeColor } from '@/theme/gameModeColors';
 import { UnifiedPlayer } from '@/services/oracle/types';
 import { MAX_GUESSES } from '../types/transferGuess.types';
+
+const modeColor = getGameModeColor('guess_the_transfer');
 
 export interface TransferActionZoneProps {
   /** Called when user selects a player from autocomplete dropdown */
@@ -78,27 +81,28 @@ export function TransferActionZone({
         testID={testID ? `${testID}-autocomplete` : undefined}
       />
 
-      {/* Hint / Give Up Links */}
+      {/* Hint button */}
       {canRevealHint && !isGameOver && (
         <Pressable
           onPress={onRevealHint}
           style={({ pressed }) => [
-            styles.hintLink,
-            pressed && styles.hintLinkPressed,
+            styles.hintButton,
+            pressed && styles.hintButtonPressed,
           ]}
           testID={`${testID}-reveal`}
         >
-          <Lightbulb size={14} color={colors.cardYellow} />
-          <Text style={styles.hintText}>Need a bigger hint? (Cost: 1 Guess)</Text>
+          <Lightbulb size={14} color={colors.stadiumNavy} />
+          <Text style={styles.hintButtonText}>REVEAL HINT  ·  COSTS 1 GUESS</Text>
         </Pressable>
       )}
 
+      {/* Give up link */}
       {showGiveUp && (
         <Pressable
           onPress={onGiveUp}
           style={({ pressed }) => [
-            styles.hintLink,
-            pressed && styles.hintLinkPressed,
+            styles.giveUpLink,
+            pressed && { opacity: 0.7 },
           ]}
           testID={`${testID}-giveup`}
         >
@@ -139,8 +143,8 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: colors.pitchGreen,
-    shadowColor: colors.pitchGreen,
+    backgroundColor: modeColor.primary,
+    shadowColor: modeColor.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 5,
@@ -153,20 +157,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
-  hintLink: {
+  hintButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: spacing.xs,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.cardYellow,
+    borderRadius: 10,
+    borderBottomWidth: 3,
+    borderBottomColor: colors.cardYellowShadow,
   },
-  hintLinkPressed: {
-    opacity: 0.7,
+  hintButtonPressed: {
+    opacity: 0.85,
+    transform: [{ translateY: 2 }],
   },
-  hintText: {
-    fontFamily: fonts.body,
+  hintButtonText: {
+    fontFamily: fonts.bodyExtraBold,
     fontSize: 12,
-    color: colors.cardYellow,
+    color: colors.stadiumNavy,
+    letterSpacing: 0.5,
+  },
+  giveUpLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
   },
   giveUpText: {
     fontFamily: fonts.body,

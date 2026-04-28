@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WifiOff } from "lucide-react-native";
 import { colors, textStyles, spacing } from "@/theme";
+import { useTrialEligibility } from "@/features/subscription/hooks/useTrialEligibility";
 import {
   useUserStats,
   useDailyPuzzles,
@@ -78,6 +79,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { profile, user, signInAnonymously, totalIQ } = useAuth();
   const { isConnected } = useNetworkStatus();
+  const { isTrialEligible } = useTrialEligibility();
   const {
     stats,
     isLoading: statsLoading,
@@ -400,6 +402,7 @@ export default function HomeScreen() {
               onWatchAd={handleWatchAd}
               onGoPro={handleGoPro}
               isPremium={isPremium}
+              isTrialEligible={isTrialEligible}
             />
           </>
         )}

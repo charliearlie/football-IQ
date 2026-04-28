@@ -62,23 +62,24 @@ export async function syncPremiumToSupabase(
   userId: string,
   isPremium: boolean
 ): Promise<{ profile: Profile | null; error: Error | null }> {
-  if (!isPremium) {
-    console.warn('[SubscriptionSync] syncPremiumToSupabase called with false — ignored');
-    return { profile: null, error: null };
-  }
-
   try {
-    const { data, error } = await supabase.rpc('upgrade_to_premium');
+    const rpcName = isPremium ? 'upgrade_to_premium' : 'downgrade_from_premium';
+    const { data, error } = await supabase.rpc(rpcName);
 
     if (error) {
-      console.error('[SubscriptionSync] upgrade_to_premium RPC error:', error);
+      console.error(`[SubscriptionSync] ${rpcName} RPC error:`, error);
       return { profile: null, error: new Error(error.message) };
     }
 
     // RPC returns an array (RETURNS SETOF), take the first row
     const profile = Array.isArray(data) ? data[0] : data;
 
-    if (!profile || !profile.is_premium) {
+    if (!profile) {
+      return { profile: null, error: new Error(`${rpcName} returned no profile`) };
+    }
+
+    // For upgrades, verify it took effect
+    if (isPremium && !profile.is_premium) {
       return { profile: null, error: new Error('Premium upgrade did not take effect') };
     }
 

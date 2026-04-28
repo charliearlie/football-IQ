@@ -63,18 +63,18 @@ export function ActionZone({
           // The component handles its own internal styling, but we ensure it contrasts well
         />
 
-        {/* Reveal Next - subtle text link (costly action) */}
+        {/* Reveal Next - amber button (costly action) */}
         {canRevealMore && !isGameOver && (
           <Pressable
             onPress={onRevealNext}
             style={({ pressed }) => [
-              styles.revealLink,
-              pressed && styles.revealLinkPressed,
+              styles.revealButton,
+              pressed && styles.revealButtonPressed,
             ]}
             testID={`${testID}-reveal`}
           >
-            <ChevronRight size={18} color={colors.goldPrimary} />
-            <Text style={styles.revealText}>Reveal next step</Text>
+            <ChevronRight size={16} color={colors.stadiumNavy} />
+            <Text style={styles.revealButtonText}>REVEAL NEXT STEP</Text>
           </Pressable>
         )}
 
@@ -83,8 +83,8 @@ export function ActionZone({
           <Pressable
             onPress={onGiveUp}
             style={({ pressed }) => [
-              styles.revealLink,
-              pressed && styles.revealLinkPressed,
+              styles.giveUpLink,
+              pressed && { opacity: 0.7 },
             ]}
             testID={testID ? `${testID}-giveup` : undefined}
           >
@@ -107,20 +107,33 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     gap: spacing.md,
   },
-  revealLink: {
+  revealButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.cardYellow,
+    borderRadius: 10,
+    borderBottomWidth: 3,
+    borderBottomColor: colors.cardYellowShadow,
+  },
+  revealButtonPressed: {
+    opacity: 0.85,
+    transform: [{ translateY: 2 }],
+  },
+  revealButtonText: {
+    fontFamily: fonts.bodyExtraBold,
+    fontSize: 13,
+    color: colors.stadiumNavy,
+    letterSpacing: 0.5,
+  },
+  giveUpLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: spacing.sm,
-  },
-  revealLinkPressed: {
-    opacity: 0.7,
-  },
-  revealText: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 14,
-    color: colors.goldPrimary, // Gold text for "Reveal next step" per V2 spec
   },
   giveUpText: {
     fontFamily: fonts.body,

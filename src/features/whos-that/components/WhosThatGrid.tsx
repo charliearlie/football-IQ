@@ -5,7 +5,16 @@
  * Empty rows show placeholder cells for remaining attempts.
  */
 
+import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { colors, spacing } from '@/theme';
 import { GuessFeedback } from '../types/whosThat.types';
 import { WhosThatGuessRow } from './WhosThatGuessRow';
@@ -19,13 +28,40 @@ export interface WhosThatGridProps {
 }
 
 function EmptyRow({ isCurrent, testID }: { isCurrent: boolean; testID?: string }) {
+  const pulse = useSharedValue(1);
+
+  useEffect(() => {
+    if (isCurrent) {
+      pulse.value = withRepeat(
+        withSequence(
+          withTiming(0.5, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [isCurrent, pulse]);
+
+  const pulseStyle = useAnimatedStyle(() => {
+    if (!isCurrent) return {};
+    return { opacity: pulse.value };
+  });
+
   return (
     <View
-      style={[styles.emptyRow, isCurrent && styles.emptyRowCurrent]}
+      style={[styles.emptyRow]}
       testID={testID}
     >
       {ATTRIBUTE_LABELS.map((label) => (
-        <View key={label} style={styles.emptyCell} />
+        <Animated.View
+          key={label}
+          style={[
+            styles.emptyCell,
+            isCurrent && styles.emptyCellCurrent,
+            isCurrent && pulseStyle,
+          ]}
+        />
       ))}
     </View>
   );
@@ -67,15 +103,16 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: spacing.xs,
   },
-  emptyRowCurrent: {
-    opacity: 0.6,
-  },
   emptyCell: {
     flex: 1,
     height: 44,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  emptyCellCurrent: {
+    backgroundColor: 'rgba(46, 252, 93, 0.08)',
+    borderColor: 'rgba(46, 252, 93, 0.25)',
   },
 });

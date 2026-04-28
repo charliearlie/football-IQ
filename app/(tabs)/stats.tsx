@@ -21,13 +21,13 @@ import {
 } from "@/features/stats";
 import { ElitePlayerCard } from "@/features/stats/components/ScoutReport";
 import { StatsGrid } from "@/features/stats/components/StatsGrid";
-import { FieldExperienceSection } from "@/features/stats/components/FieldExperienceSection";
-import { DetailedModeStatsSection } from "@/features/stats/components/DetailedModeStatsSection";
-import { SignatureStrengthCard } from "@/features/stats/components/SignatureStrengthCard";
-import { MonthReportCard } from "@/features/stats/components/MonthReportCard";
-import { BestDayCard } from "@/features/stats/components/BestDayCard";
 import { WeakSpotCTA } from "@/features/stats/components/WeakSpotCTA";
 import { CareerTimeline } from "@/features/stats/components/CareerTimeline";
+import { ClutchRating } from "@/features/stats/components/ClutchRating";
+import { FormTrend } from "@/features/stats/components/FormTrend";
+import { SpeedProfile } from "@/features/stats/components/SpeedProfile";
+import { ModeMastery } from "@/features/stats/components/ModeMastery";
+import { ProBlurOverlay } from "@/features/stats/components/ProBlurOverlay";
 import { useCareerTimeline } from "@/features/stats/hooks/useCareerTimeline";
 import { ScoutingReportData } from "@/features/stats/components/ScoutingReportCard";
 import { GAME_MODE_ROUTES } from "@/features/archive/constants/routes";
@@ -64,6 +64,7 @@ export default function ScoutReportScreen() {
     router.push("/(tabs)");
   }, [router]);
   const { profile, user, updateDisplayName, totalIQ } = useAuth();
+  const isPremium = profile?.is_premium ?? false;
   const { history: tierHistory, refresh: refreshTimeline } =
     useCareerTimeline();
 
@@ -348,77 +349,27 @@ export default function ScoutReportScreen() {
           />
 
           {/* Quick Stats Grid */}
-          <StatsGrid
-            matchesPlayed={stats.totalPuzzlesSolved}
-            accuracyPercent={overallAccuracy}
-            bestScore={overallBestScore}
-            perfectGames={stats.totalPerfectScores}
-            testID="stats-grid"
-          />
-
-          {/* ═══════════════════════════════════════════════════════════
-              ZONE 2 — SELF-KNOWLEDGE (Mid-Screen)
-              ═══════════════════════════════════════════════════════════ */}
-
-          <View style={styles.divider} />
-
-          {/* Signature Strength / Achilles Heel */}
-          {stats.strengthWeakness && (
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>
-                STRENGTHS & WEAKNESSES
-              </Text>
-              <SignatureStrengthCard
-                analysis={stats.strengthWeakness}
-                testID="signature-strength"
-              />
-            </View>
-          )}
-
-          {/* This Month's Report */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>THIS MONTH</Text>
-            <MonthReportCard
-              report={stats.thisMonthReport}
-              testID="month-report"
+            <StatsGrid
+              matchesPlayed={stats.totalPuzzlesSolved}
+              accuracyPercent={overallAccuracy}
+              bestScore={overallBestScore}
+              perfectGames={stats.totalPerfectScores}
+              testID="stats-grid"
             />
           </View>
 
           {/* ═══════════════════════════════════════════════════════════
-              ZONE 3 — DEEP DIVE (Below the Fold)
+              FREE SECTION — Engagement
               ═══════════════════════════════════════════════════════════ */}
 
-          <View style={styles.divider} />
-
-          {/* Mode Breakdown */}
-          {stats.detailedModeStats && stats.detailedModeStats.length > 0 && (
+          {/* Weak Spot CTA (moved up to drive engagement) */}
+          {stats.weakSpotMode && (
             <View style={styles.section}>
-              <Text style={styles.sectionHeader}>MODE BREAKDOWN</Text>
-              <DetailedModeStatsSection
-                stats={stats.detailedModeStats}
-                testID="detailed-mode-stats"
-              />
-            </View>
-          )}
-
-          {/* Career Timeline */}
-          {tierHistory.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>CAREER TIMELINE</Text>
-              <CareerTimeline
-                history={tierHistory}
-                testID="career-timeline"
-              />
-            </View>
-          )}
-
-          {/* Field Experience */}
-          {stats.fieldExperience.totalAppearances > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>FIELD EXPERIENCE</Text>
-              <FieldExperienceSection
-                fieldExperience={stats.fieldExperience}
-                testID="field-experience-section"
+              <WeakSpotCTA
+                weakSpot={stats.weakSpotMode}
+                onPress={handleWeakSpotPress}
+                testID="weak-spot-cta"
               />
             </View>
           )}
@@ -427,28 +378,86 @@ export default function ScoutReportScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>SEASON PROGRESS</Text>
             <StreakCalendar
-              isPremium={profile?.is_premium ?? false}
+              isPremium={isPremium}
               onPremiumPress={handlePremiumPress}
               variant="embedded"
               testID="streak-calendar"
             />
           </View>
 
-          {/* Best Day Ever */}
-          {stats.bestDay && (
+          {/* ═══════════════════════════════════════════════════════════
+              PRO SECTIONS — Blurred for free users
+              ═══════════════════════════════════════════════════════════ */}
+
+          <View style={styles.divider} />
+          <Text style={styles.sectionHeader}>ADVANCED ANALYTICS</Text>
+
+          {/* Clutch Rating */}
+          {stats.clutchRating && (
             <View style={styles.section}>
-              <BestDayCard bestDay={stats.bestDay} testID="best-day" />
+              <ProBlurOverlay isLocked={!isPremium} onUpgrade={handlePremiumPress}>
+                <ClutchRating
+                  clutchPercent={stats.clutchRating.clutchPercent}
+                  clutchWins={stats.clutchRating.clutchWins}
+                  pressureMoments={stats.clutchRating.pressureMoments}
+                  label={stats.clutchRating.label}
+                />
+              </ProBlurOverlay>
             </View>
           )}
 
-          {/* Weak Spot CTA */}
-          {stats.weakSpotMode && (
+          {/* Form Trend Sparkline */}
+          {stats.formTrend && stats.formTrend.dataPoints.length > 0 && (
             <View style={styles.section}>
-              <WeakSpotCTA
-                weakSpot={stats.weakSpotMode}
-                onPress={handleWeakSpotPress}
-                testID="weak-spot-cta"
-              />
+              <ProBlurOverlay isLocked={!isPremium} onUpgrade={handlePremiumPress}>
+                <FormTrend
+                  dataPoints={stats.formTrend.dataPoints}
+                  currentWeekAccuracy={stats.formTrend.currentWeekAccuracy}
+                  lifetimeAccuracy={stats.formTrend.lifetimeAccuracy}
+                  label={stats.formTrend.label}
+                />
+              </ProBlurOverlay>
+            </View>
+          )}
+
+          {/* Speed Profile */}
+          {stats.speedProfile && (
+            <View style={styles.section}>
+              <ProBlurOverlay isLocked={!isPremium} onUpgrade={handlePremiumPress}>
+                <SpeedProfile
+                  avgSeconds={stats.speedProfile.avgSeconds}
+                  archetype={stats.speedProfile.archetype}
+                  perMode={stats.speedProfile.perMode}
+                />
+              </ProBlurOverlay>
+            </View>
+          )}
+
+          {/* Mode Mastery (consolidated mode breakdown) */}
+          {stats.detailedModeStats && stats.detailedModeStats.length > 0 && (
+            <View style={styles.section}>
+              <ProBlurOverlay isLocked={!isPremium} onUpgrade={handlePremiumPress}>
+                <ModeMastery
+                  modes={stats.detailedModeStats.map((m) => ({
+                    gameMode: m.gameMode,
+                    displayName: m.displayName,
+                    accuracyPercent: m.accuracyPercent,
+                    gamesPlayed: m.gamesPlayed,
+                  }))}
+                />
+              </ProBlurOverlay>
+            </View>
+          )}
+
+          {/* Career Timeline */}
+          {tierHistory.length > 0 && (
+            <View style={styles.section}>
+              <ProBlurOverlay isLocked={!isPremium} onUpgrade={handlePremiumPress}>
+                <CareerTimeline
+                  history={tierHistory}
+                  testID="career-timeline"
+                />
+              </ProBlurOverlay>
             </View>
           )}
         </ScrollView>

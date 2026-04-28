@@ -215,6 +215,32 @@ export const RULES_MAP: Record<GameMode, GameRules> = {
     accentColor: colors.pitchGreen,
   },
 
+  last_tens: {
+    gameMode: 'last_tens',
+    displayTitle: 'Last 10',
+    goal: 'Name all 10 entries from the bottom of the ranking',
+    rules: [
+      { text: 'A "bottom 10" category is revealed (e.g., last 10 Premier League finishers, lowest-rated players)' },
+      { text: 'Correct guesses slot into their rank position' },
+      { text: 'Find all 10 for Hall of Famer status!', highlight: 'Hall of Famer' },
+    ],
+    scoring: {
+      type: 'tiered',
+      description: 'Progressive IQ growth - more correct answers unlock higher ranks',
+      potentialLabel: 'HALL OF FAMER',
+      tiers: [
+        { range: '1-2 correct', label: 'Scout' },
+        { range: '3-4 correct', label: 'Chief Scout' },
+        { range: '5-6 correct', label: 'Head of Scouting' },
+        { range: '7-8 correct', label: 'Director of Football' },
+        { range: '9 correct', label: 'World Class' },
+        { range: '10 correct', label: 'Hall of Famer' },
+      ],
+    },
+    icon: require('../../../../assets/images/puzzles/top-tens.png'),
+    accentColor: colors.pitchGreen,
+  },
+
   the_grid: {
     gameMode: 'the_grid',
     displayTitle: 'The Grid (beta)',

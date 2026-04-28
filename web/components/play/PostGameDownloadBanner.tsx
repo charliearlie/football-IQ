@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { X, Smartphone } from "lucide-react";
 import { appStoreUrl } from "@/lib/constants";
+import { AndroidNotifyButton } from "@/components/AndroidNotifyButton";
 
 export function PostGameDownloadBanner() {
   const [dismissed, setDismissed] = useState(false);
@@ -52,18 +53,7 @@ export function PostGameDownloadBanner() {
           />
         </Link>
 
-        <div className="flex flex-col items-start">
-          <Image
-            src="/images/play-store.svg"
-            alt="Google Play — Coming Soon"
-            width={134}
-            height={36}
-            className="h-[36px] w-auto opacity-40"
-          />
-          <span className="text-[10px] text-slate-600 mt-0.5 pl-0.5">
-            Coming Soon
-          </span>
-        </div>
+        <AndroidNotifyButton source="android-notify-postgame" size="sm" />
       </div>
     </div>
   );

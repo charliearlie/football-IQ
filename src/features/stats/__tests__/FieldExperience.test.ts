@@ -248,6 +248,7 @@ describe('getDominantMode', () => {
       the_thread: 0,
       topical_quiz: 4,
       top_tens: 6,
+      last_tens: 0,
       starting_xi: 8,
       connections: 0,
       timeline: 0,
@@ -271,6 +272,7 @@ describe('getDominantMode', () => {
       the_thread: 0,
       topical_quiz: 0,
       top_tens: 0,
+      last_tens: 0,
       starting_xi: 0,
       connections: 0,
       timeline: 0,
@@ -294,6 +296,7 @@ describe('getDominantMode', () => {
       the_thread: 0,
       topical_quiz: 0,
       top_tens: 0,
+      last_tens: 0,
       starting_xi: 0,
       connections: 0,
       timeline: 0,
@@ -309,8 +312,8 @@ describe('getDominantMode', () => {
 });
 
 describe('ALL_GAME_MODES constant', () => {
-  it('contains exactly 15 game modes', () => {
-    expect(ALL_GAME_MODES).toHaveLength(15);
+  it('contains exactly 16 game modes', () => {
+    expect(ALL_GAME_MODES).toHaveLength(16);
   });
 
   it('includes all expected modes', () => {
@@ -343,6 +346,7 @@ describe('FieldExperience interface', () => {
         the_thread: 0,
         topical_quiz: 4,
         top_tens: 6,
+        last_tens: 0,
         starting_xi: 8,
         connections: 0,
         timeline: 0,

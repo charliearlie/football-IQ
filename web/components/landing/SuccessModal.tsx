@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { appStoreUrl } from "@/lib/constants";
 import { CheckCircle } from "lucide-react";
+import { AndroidNotifyButton } from "@/components/AndroidNotifyButton";
 
 interface SuccessModalProps {
   open: boolean;
@@ -63,16 +64,7 @@ export function SuccessModal({ open, onClose, playerName, revealedCount, totalSt
               className="h-[54px] w-auto"
             />
           </Link>
-          <div className="relative">
-            <Image
-              src="/images/play-store.svg"
-              alt="Google Play — Coming Soon"
-              width={200}
-              height={54}
-              className="h-[54px] w-auto opacity-50"
-            />
-            <span className="absolute left-0 right-0 text-center text-xs text-slate-500 mt-1">Coming Soon</span>
-          </div>
+          <AndroidNotifyButton source="android-notify-success-modal" size="md" />
         </div>
 
         <button

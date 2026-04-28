@@ -74,6 +74,29 @@ export function TopTensPreview({ content }: TopTensPreviewProps) {
                     Also: {answer.aliases.filter((a) => a).join(", ")}
                   </p>
                 )}
+                {isJackpot &&
+                  answer.alternates &&
+                  answer.alternates.length > 0 && (
+                    <div className="mt-2 space-y-1 border-l-2 border-card-yellow/40 pl-2">
+                      {answer.alternates.map((alt, altIndex) => (
+                        <div key={altIndex}>
+                          <p className="text-sm font-medium text-floodlight">
+                            =10. {alt.name || "Tied entrant"}
+                          </p>
+                          {alt.info && (
+                            <p className="text-xs text-muted-foreground">
+                              {alt.info}
+                            </p>
+                          )}
+                          {alt.aliases && alt.aliases.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Also: {alt.aliases.filter((a) => a).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
 
               {/* Points */}

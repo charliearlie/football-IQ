@@ -43,11 +43,13 @@ export interface ShareResult {
 export async function shareTopTensResult(
   rankSlots: RankSlotState[],
   score: TopTensScore,
-  puzzleDate?: string
+  puzzleDate?: string,
+  variant: 'top_tens' | 'last_tens' = 'top_tens'
 ): Promise<ShareResult> {
   const options: ScoreDisplayOptions = {
     includeHeader: true,
     date: puzzleDate,
+    variant,
   };
 
   const shareText = generateTopTensScoreDisplay(rankSlots, score, options);

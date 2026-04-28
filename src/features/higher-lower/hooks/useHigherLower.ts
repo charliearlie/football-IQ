@@ -40,19 +40,7 @@ function higherLowerReducer(
       const newAnswers = [...state.answers, answer];
       const newResults = [...state.results, isCorrect];
 
-      if (!isCorrect) {
-        const score = calculateHigherLowerScore(newResults);
-        return {
-          ...state,
-          answers: newAnswers,
-          results: newResults,
-          showingResult: true,
-          gameStatus: 'lost',
-          score,
-        };
-      }
-
-      // Correct — show result then advance
+      // Always show result and advance — game continues regardless of correctness
       return {
         ...state,
         answers: newAnswers,
@@ -62,21 +50,17 @@ function higherLowerReducer(
     }
 
     case 'ADVANCE_ROUND': {
-      // If game is already over (lost), no-op
-      if (state.gameStatus === 'lost') {
-        return { ...state, showingResult: false };
-      }
-
       const nextRound = state.currentRound + 1;
 
       // All 10 rounds complete
       if (nextRound >= state.totalRounds) {
         const score = calculateHigherLowerScore(state.results);
+        const won = score.points === score.maxPoints;
         return {
           ...state,
           currentRound: nextRound,
           showingResult: false,
-          gameStatus: 'won',
+          gameStatus: won ? 'won' : 'lost',
           score,
         };
       }
@@ -162,14 +146,13 @@ export function useHigherLower(puzzle: ParsedLocalPuzzle | null, isFocused: bool
     serializeProgress: (s) => ({
       answers: s.answers,
       results: s.results,
-      roundsCompleted: s.currentRound,
       won: false,
     }),
     hasRestoredProgress: (meta) => (meta.answers?.length ?? 0) > 0,
     deserializeProgress: (meta, attempt) => ({
       attemptId: attempt.id,
       startedAt: attempt.started_at ?? new Date().toISOString(),
-      currentRound: meta.roundsCompleted ?? 0,
+      currentRound: meta.answers?.length ?? 0,
       answers: meta.answers ?? [],
       results: meta.results ?? [],
     }),
@@ -186,7 +169,6 @@ export function useHigherLower(puzzle: ParsedLocalPuzzle | null, isFocused: bool
         metadata: JSON.stringify({
           answers: s.answers,
           results: s.results,
-          roundsCompleted: score.roundsCompleted,
           won: s.gameStatus === 'won',
         }),
         started_at: s.startedAt,
@@ -235,17 +217,17 @@ export function useHigherLower(puzzle: ParsedLocalPuzzle | null, isFocused: bool
 
       const isCorrect =
         answer === 'higher'
-          ? currentPair.player2.fee > currentPair.player1.fee
-          : currentPair.player2.fee < currentPair.player1.fee;
+          ? currentPair.player2.value >= currentPair.player1.value
+          : currentPair.player2.value <= currentPair.player1.value;
 
       if (isCorrect) {
         triggerSuccess();
-        if (state.currentRound === state.totalRounds - 1) {
-          // Last round — completion haptic on advance
-          triggerCompletion();
-        }
       } else {
         triggerError();
+      }
+
+      if (state.currentRound === state.totalRounds - 1) {
+        triggerCompletion();
       }
 
       dispatch({

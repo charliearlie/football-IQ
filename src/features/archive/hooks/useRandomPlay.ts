@@ -5,8 +5,9 @@
  * Selects a random puzzle the user hasn't completed and navigates to it.
  *
  * Gating rules:
- * - Non-premium users: 3-day window + ad-unlocked puzzles, excludes career_path_pro/top_tens
- * - Premium users: full backlog, all game modes
+ * - Non-premium users: 3-day window + ad-unlocked puzzles
+ * - Premium users: full backlog
+ * - last_tens is always excluded — it has its own discovery gate, not the archive flow
  */
 
 import { useState, useCallback } from 'react';

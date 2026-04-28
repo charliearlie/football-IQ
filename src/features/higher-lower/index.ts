@@ -7,6 +7,8 @@
 
 // Types
 export type {
+  StatType,
+  HigherLowerEntry,
   TransferPairPlayer,
   TransferPair,
   HigherLowerContent,
@@ -43,6 +45,9 @@ export {
   generateScoreDescription,
 } from './utils/scoreDisplay';
 
+// Value formatting
+export { formatStatValue } from './utils/formatStatValue';
+
 // Hook
 export { useHigherLower, higherLowerReducer } from './hooks/useHigherLower';
 export type { ShareResult } from './hooks/useHigherLower';
@@ -54,3 +59,4 @@ export { HigherLowerScreen } from './screens/HigherLowerScreen';
 export { TransferCard } from './components/TransferCard';
 export { HigherLowerActionZone } from './components/HigherLowerActionZone';
 export { HigherLowerResultModal } from './components/HigherLowerResultModal';
+export { HigherLowerReviewList } from './components/HigherLowerReviewList';

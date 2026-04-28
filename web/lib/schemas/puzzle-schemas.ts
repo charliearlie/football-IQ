@@ -205,17 +205,39 @@ export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
 // TOP TENS (top_tens)
 // ============================================================================
 
-export const topTenAnswerSchema = z.object({
-  name: z.string().min(1, "Answer name required"),
-  aliases: z.array(z.string()).optional().default([]),
-  info: z.string().optional().default(""),
+// Base answer (used both at the top level and as alternates). Strict — cannot
+// itself contain alternates, since joint ranks are flat, not nested.
+const topTenAnswerBaseSchema = z
+  .object({
+    name: z.string().min(1, "Answer name required"),
+    aliases: z.array(z.string()).optional().default([]),
+    info: z.string().optional().default(""),
+  })
+  .strict();
+
+export const topTenAnswerSchema = topTenAnswerBaseSchema.extend({
+  // `alternates` are other entries tied at the same rank. Currently only
+  // meaningful on rank 10 (enforced by topTensContentSchema below).
+  alternates: z.array(topTenAnswerBaseSchema).optional().default([]),
 });
 
-export const topTensContentSchema = z.object({
-  title: z.string().min(1, "List title required"),
-  category: z.string().optional().default(""),
-  answers: z.array(topTenAnswerSchema).length(10, "Exactly 10 answers required"),
-});
+export const topTensContentSchema = z
+  .object({
+    title: z.string().min(1, "List title required"),
+    category: z.string().optional().default(""),
+    answers: z.array(topTenAnswerSchema).length(10, "Exactly 10 answers required"),
+  })
+  .superRefine((content, ctx) => {
+    content.answers.forEach((answer, index) => {
+      if (index !== 9 && answer.alternates && answer.alternates.length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["answers", index, "alternates"],
+          message: "Joint alternates are only allowed on rank 10",
+        });
+      }
+    });
+  });
 
 export type TopTensContent = z.infer<typeof topTensContentSchema>;
 export type TopTenAnswer = z.infer<typeof topTenAnswerSchema>;
@@ -364,6 +386,7 @@ export const contentSchemaMap = {
   guess_the_goalscorers: goalscorerRecallContentSchema,
   topical_quiz: topicalQuizContentSchema,
   top_tens: topTensContentSchema,
+  last_tens: topTensContentSchema,
   starting_xi: startingXIContentSchema,
   connections: connectionsContentSchema,
   timeline: timelineContentSchema,

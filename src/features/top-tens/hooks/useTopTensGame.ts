@@ -231,9 +231,14 @@ function createInitialGameState(): TopTensState {
  * Main hook for Top Tens game.
  *
  * @param puzzle - The puzzle to play
+ * @param gameMode - Variant of the engine. Defaults to 'top_tens'; pass
+ *   'last_tens' for the Last 10 variant (different share headline).
  * @returns Game state and actions
  */
-export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
+export function useTopTensGame(
+  puzzle: ParsedLocalPuzzle | null,
+  gameMode: 'top_tens' | 'last_tens' = 'top_tens'
+) {
   const [state, dispatch] = useReducer(topTensReducer, undefined, createInitialGameState);
   const { triggerNotification, triggerHeavy, triggerSelection } = useHaptics();
   const { syncAttempts } = usePuzzleContext();
@@ -583,8 +588,8 @@ export function useTopTensGame(puzzle: ParsedLocalPuzzle | null) {
       return { success: false, method: 'clipboard', error: new Error('No score to share') };
     }
 
-    return shareTopTensResult(state.rankSlots, state.score, puzzle?.puzzle_date);
-  }, [state.rankSlots, state.score, puzzle?.puzzle_date]);
+    return shareTopTensResult(state.rankSlots, state.score, puzzle?.puzzle_date, gameMode);
+  }, [state.rankSlots, state.score, puzzle?.puzzle_date, gameMode]);
 
   const resetGame = useCallback(() => {
     dispatch({ type: 'RESET_GAME' });

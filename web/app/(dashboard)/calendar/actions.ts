@@ -855,7 +855,12 @@ const PLACEHOLDER_CONTENT: Record<GameMode, unknown> = {
   top_tens: {
     title: "",
     category: "",
-    answers: Array.from({ length: 10 }, () => ({ name: "", aliases: [], info: "" })),
+    answers: Array.from({ length: 10 }, () => ({ name: "", aliases: [], info: "", alternates: [] })),
+  },
+  last_tens: {
+    title: "",
+    category: "",
+    answers: Array.from({ length: 10 }, () => ({ name: "", aliases: [], info: "", alternates: [] })),
   },
   starting_xi: {
     match_name: "",

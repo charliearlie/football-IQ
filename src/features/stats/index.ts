@@ -128,6 +128,20 @@ export type { FormationLabelProps } from './components/FormationLabel';
 export { NextMilestoneTicker } from './components/NextMilestoneTicker';
 export type { NextMilestoneTickerProps } from './components/NextMilestoneTicker';
 
+// Pro-tier stat visualizations (My IQ screen redesign)
+export { KnowledgeProfile } from './components/KnowledgeProfile';
+export type { KnowledgeProfileProps } from './components/KnowledgeProfile';
+export { ClutchRating } from './components/ClutchRating';
+export type { ClutchRatingProps } from './components/ClutchRating';
+export { FormTrend } from './components/FormTrend';
+export type { FormTrendProps } from './components/FormTrend';
+export { SpeedProfile } from './components/SpeedProfile';
+export type { SpeedProfileProps } from './components/SpeedProfile';
+export { ModeMastery } from './components/ModeMastery';
+export type { ModeMasteryProps } from './components/ModeMastery';
+export { ProBlurOverlay } from './components/ProBlurOverlay';
+export type { ProBlurOverlayProps } from './components/ProBlurOverlay';
+
 // Score Distribution
 export { ScoreDistributionContainer } from './components/ScoreDistributionContainer';
 export { ScoreDistributionGraph } from './components/ScoreDistributionGraph';

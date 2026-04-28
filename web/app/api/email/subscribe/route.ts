@@ -15,8 +15,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    const validSources = ["landing", "blog", "scout", "download"];
+    const validSources = [
+      "landing",
+      "blog",
+      "scout",
+      "download",
+      "android-notify",
+      "android-notify-postgame",
+      "android-notify-blog",
+      "android-notify-app-cta",
+      "android-notify-success-modal",
+      "android-notify-download-page",
+    ];
     const safeSource = validSources.includes(source) ? source : "landing";
+    const isAndroidNotify = safeSource.startsWith("android-notify");
 
     const { error } = await supabaseAdmin
       .from("email_subscribers")
@@ -33,11 +45,21 @@ export async function POST(request: NextRequest) {
     // Send welcome email (fire and forget — don't fail the subscription if email fails)
     try {
       if (process.env.RESEND_API_KEY) {
-        await getResend().emails.send({
-          from: "Football IQ <noreply@football-iq.app>",
-          to: email.toLowerCase().trim(),
-          subject: "Welcome to Football IQ! ⚽",
-          html: `
+        const subject = isAndroidNotify
+          ? "We'll let you know when Android launches 📱"
+          : "Welcome to Football IQ! ⚽";
+
+        const html = isAndroidNotify
+          ? `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #1a1a2e;">You're on the Android waitlist</h1>
+              <p>Thanks for signing up. We'll send you one email the moment Football IQ goes live on the Play Store — no spam in between.</p>
+              <p>While you wait, five of our 11 game modes are playable free in your browser:</p>
+              <a href="https://football-iq.app/play" style="display: inline-block; background: #4ade80; color: #1a1a2e; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Play Free in Your Browser</a>
+              <p style="color: #666; font-size: 12px; margin-top: 24px;">You received this because you joined the Android launch list at football-iq.app. <a href="https://football-iq.app/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe</a></p>
+            </div>
+          `
+          : `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #1a1a2e;">Welcome to Football IQ!</h1>
               <p>Thanks for signing up. You'll get weekly updates on new game modes, features, and football trivia challenges.</p>
@@ -45,7 +67,13 @@ export async function POST(request: NextRequest) {
               <a href="https://football-iq.app" style="display: inline-block; background: #4ade80; color: #1a1a2e; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Play Now</a>
               <p style="color: #666; font-size: 12px; margin-top: 24px;">You received this because you signed up at football-iq.app. <a href="https://football-iq.app/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe</a></p>
             </div>
-          `,
+          `;
+
+        await getResend().emails.send({
+          from: "Football IQ <noreply@football-iq.app>",
+          to: email.toLowerCase().trim(),
+          subject,
+          html,
         });
       }
     } catch (emailErr) {

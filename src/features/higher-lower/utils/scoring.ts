@@ -1,24 +1,18 @@
 /**
  * Scoring System for Higher/Lower
  *
- * Each correct round earns points equal to the round number.
- * Round 1 = 1pt, Round 2 = 2pt, ... Round 10 = 10pt
- * Max possible = 1+2+3+4+5+6+7+8+9+10 = 55 points
- *
- * Game ends immediately on first wrong answer.
+ * All 10 rounds are always played. Score = number of correct answers (0-10).
  */
 
 /**
  * Score data for a completed Higher/Lower game.
  */
 export interface HigherLowerScore {
-  /** Points earned (0-55) */
+  /** Correct answers (0-10) */
   points: number;
-  /** Maximum possible points (55) */
+  /** Maximum possible (10) */
   maxPoints: number;
-  /** Number of rounds completed (including the final wrong one if lost) */
-  roundsCompleted: number;
-  /** Whether the player won (all 10 correct) */
+  /** Whether the player got all 10 correct */
   won: boolean;
 }
 
@@ -29,24 +23,12 @@ export interface HigherLowerScore {
  * @returns HigherLowerScore object
  */
 export function calculateHigherLowerScore(results: boolean[]): HigherLowerScore {
-  let points = 0;
-  let roundsCompleted = 0;
-
-  for (let i = 0; i < results.length; i++) {
-    if (results[i]) {
-      points += i + 1;
-      roundsCompleted = i + 1;
-    } else {
-      roundsCompleted = i + 1;
-      break; // Game ends on first wrong answer
-    }
-  }
+  const points = results.filter(Boolean).length;
 
   return {
     points,
-    maxPoints: 55,
-    roundsCompleted,
-    won: results.length === 10 && results.every(Boolean),
+    maxPoints: 10,
+    won: points === 10,
   };
 }
 

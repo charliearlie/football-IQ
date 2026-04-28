@@ -20,6 +20,7 @@ export const GAME_MODE_ROUTE_MAP: Record<GameMode, string> = {
   the_thread: 'the-thread',
   topical_quiz: 'topical-quiz',
   top_tens: 'top-tens',
+  last_tens: 'last-tens',
   starting_xi: 'starting-xi',
   connections: 'connections',
   timeline: 'timeline',

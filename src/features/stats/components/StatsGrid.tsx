@@ -48,7 +48,7 @@ export function StatsGrid({
         />
         <StatCard
           value={`${accuracyPercent}%`}
-          label="ACCURACY"
+          label="AVG SCORE"
           accentColor={colors.pitchGreen}
         />
       </View>
@@ -80,8 +80,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: fonts.headline,
-    fontSize: 36,
-    lineHeight: 40,
+    fontSize: 28,
+    lineHeight: 32,
     letterSpacing: 1,
   },
   statLabel: {

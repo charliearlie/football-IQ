@@ -29,6 +29,7 @@ import {
   buildFinalImagePrompt,
 } from "./prompts";
 import type { GeneratedArticleRaw } from "./prompts";
+import { getActiveClusterForDate, sanitizeTags } from "./clusters";
 
 // ============================================================================
 // CONSTANTS
@@ -293,6 +294,7 @@ function parseArticleResponse(raw: string): GeneratedArticleRaw | null {
       excerpt: validated.excerpt,
       slug: validated.slug,
       content: validated.content,
+      tags: sanitizeTags(validated.tags),
     };
   } catch (error) {
     console.error("[ArticleGenerator] Failed to parse article JSON:", error);
@@ -310,8 +312,10 @@ async function generateArticleContent(
   footballData: DailyFootballData,
   researchContext: string,
 ): Promise<GeneratedArticleRaw | null> {
+  const cluster = getActiveClusterForDate(new Date(articleDate));
+
   console.log(
-    `[ArticleGenerator] Starting article generation with ${GENERATION_MODEL}`,
+    `[ArticleGenerator] Starting article generation with ${GENERATION_MODEL} — active cluster: ${cluster.name}`,
   );
 
   const userPrompt = buildGenerationPrompt(
@@ -319,6 +323,7 @@ async function generateArticleContent(
     articleDate,
     footballData,
     researchContext,
+    cluster,
   );
 
   const rawContent = await callOpenAI(
@@ -383,7 +388,8 @@ async function saveArticleToDatabase(
       raw_match_data: footballData as unknown as Json,
       research_data: { context: researchContext } as Json,
       generation_model: GENERATION_MODEL,
-    })
+      tags: article.tags && article.tags.length > 0 ? article.tags : undefined,
+    } as never)
     .select("id")
     .single();
 

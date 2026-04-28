@@ -46,6 +46,7 @@ const GAME_MODE_ICONS: Record<GameMode, LucideIcon> = {
   the_thread: Shirt,
   topical_quiz: Newspaper,
   top_tens: ListOrdered,
+  last_tens: ListOrdered,
   starting_xi: Users,
   connections: Grid3X3,
   timeline: Clock,

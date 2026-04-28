@@ -15,6 +15,8 @@ export interface ScoreDisplayOptions {
   date?: string;
   /** Include header text */
   includeHeader?: boolean;
+  /** Which Top Tens variant — affects share headline */
+  variant?: 'top_tens' | 'last_tens';
 }
 
 /**
@@ -63,7 +65,11 @@ export function generateTopTensScoreDisplay(
   const lines: string[] = [];
 
   if (options.includeHeader !== false) {
-    lines.push(`Name all 10? I got ${score.foundCount}`);
+    lines.push(
+      options.variant === 'last_tens'
+        ? `Bottom 10 — I got ${score.foundCount}/10`
+        : `Name all 10? I got ${score.foundCount}`
+    );
   }
 
   if (options.date) {

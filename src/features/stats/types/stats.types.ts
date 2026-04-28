@@ -16,6 +16,10 @@ import {
   BestDayInfo,
   WeakSpotInfo,
 } from './scoutReport.types';
+import { KnowledgeProfileResult } from '../utils/knowledgeProfile';
+import { ClutchRatingResult } from '../utils/clutchRating';
+import { FormTrendResult } from '../utils/formTrend';
+import { SpeedProfileResult } from '../utils/speedProfile';
 
 // Re-export existing score types for metadata parsing
 export { GameScore } from '@/features/career-path/utils/scoring';
@@ -40,6 +44,7 @@ export const GAME_MODE_DISPLAY: Record<
   the_thread: { displayName: 'Threads', skillName: 'Kit Historian' },
   topical_quiz: { displayName: 'Topical Quiz', skillName: 'Current Affairs' },
   top_tens: { displayName: 'Top Tens', skillName: 'Deep Knowledge' },
+  last_tens: { displayName: 'Last 10', skillName: 'Bottom-Table Knowledge' },
   starting_xi: { displayName: 'Starting XI', skillName: 'Squad Recall' },
   connections: { displayName: 'Connections', skillName: 'Group Recognition' },
   timeline: { displayName: 'Timeline', skillName: 'Chronological Memory' },
@@ -63,6 +68,7 @@ export const IQ_WEIGHTS: Record<GameMode, number> = {
   the_thread: 0.08, // 8% - kit history mode
   topical_quiz: 0.09, // 9%
   top_tens: 0.11, // 11% - premium mode
+  last_tens: 0, // new mode — no IQ weight until adoption is established
   starting_xi: 0.08, // 8%
   connections: 0.02, // 2% - new mode, low weight initially
   timeline: 0.02, // 2% - new mode, low weight initially
@@ -236,6 +242,16 @@ export interface PerformanceStats {
   bestDay: BestDayInfo | null;
   /** Weakest game mode for CTA */
   weakSpotMode: WeakSpotInfo | null;
+
+  // ─── Pro Advanced Stats ─────────────────────────────────────
+  /** Knowledge profile radar chart data */
+  knowledgeProfile: KnowledgeProfileResult | null;
+  /** Clutch rating (performance under pressure) */
+  clutchRating: ClutchRatingResult | null;
+  /** Rolling form trend (30-day sparkline) */
+  formTrend: FormTrendResult | null;
+  /** Speed profile (average solve time + archetype) */
+  speedProfile: SpeedProfileResult | null;
 }
 
 /**

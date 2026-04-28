@@ -11,6 +11,7 @@ import { BlurView } from 'expo-blur';
 import { Flag } from 'lucide-react-native';
 import { ElevatedButton } from '@/components';
 import { colors, fonts, spacing, borderRadius } from '@/theme';
+const MAX_ATTEMPTS = 5;
 
 export interface TimelineActionBarProps {
   canSubmit: boolean;
@@ -41,36 +42,48 @@ export function TimelineActionBar({
 
       {/* Content */}
       <View style={styles.glassOverlay}>
-        {/* Attempt counter */}
-        <Text style={styles.attemptText}>Attempt {attemptCount + 1} of 5</Text>
-
-        {/* Submit + Give Up row */}
-        <View style={styles.actionRow}>
-          <View style={styles.submitWrapper}>
-            <ElevatedButton
-              title="Submit Order"
-              onPress={onSubmit}
-              disabled={!canSubmit || disabled}
-              fullWidth
-              size="medium"
-              borderRadius={borderRadius.lg}
-              testID={`${testID}-submit`}
-            />
+        {/* Status row: label + attempt dots */}
+        <View style={styles.statusRow}>
+          <Text style={styles.statusText}>
+            {MAX_ATTEMPTS - attemptCount} {MAX_ATTEMPTS - attemptCount === 1 ? 'ATTEMPT' : 'ATTEMPTS'} LEFT
+          </Text>
+          <View style={styles.attemptDots}>
+            {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.attemptDot,
+                  i < attemptCount && styles.attemptDotUsed,
+                ]}
+              />
+            ))}
           </View>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.giveUpButton,
-              pressed && styles.giveUpButtonPressed,
-            ]}
-            onPress={onGiveUp}
-            hitSlop={8}
-            testID={`${testID}-giveup`}
-          >
-            <Flag size={12} color={colors.redCard} strokeWidth={2} />
-            <Text style={styles.giveUpText}>Give Up</Text>
-          </Pressable>
         </View>
+
+        {/* Full-width submit button */}
+        <ElevatedButton
+          title="SUBMIT ORDER"
+          onPress={onSubmit}
+          disabled={!canSubmit || disabled}
+          fullWidth
+          size="medium"
+          borderRadius={borderRadius.lg}
+          testID={`${testID}-submit`}
+        />
+
+        {/* Give up link */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.giveUpButton,
+            pressed && styles.giveUpButtonPressed,
+          ]}
+          onPress={onGiveUp}
+          hitSlop={8}
+          testID={`${testID}-giveup`}
+        >
+          <Flag size={12} color={colors.redCard} strokeWidth={2} />
+          <Text style={styles.giveUpText}>Give Up</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -89,22 +102,40 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.md,
     gap: spacing.xs,
   },
-  attemptText: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  actionRow: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xs,
   },
-  submitWrapper: {
-    flex: 1,
+  statusText: {
+    fontFamily: fonts.body,
+    fontWeight: '600',
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 1,
+  },
+  attemptDots: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  attemptDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.pitchGreen,
+    shadowColor: colors.pitchGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  attemptDotUsed: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   giveUpButton: {
     flexDirection: 'row',

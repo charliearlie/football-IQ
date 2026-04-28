@@ -124,6 +124,7 @@ export function getTopTensDefaults(): TopTensContent {
       name: "",
       aliases: [],
       info: "",
+      alternates: [],
     })),
   };
 }
@@ -166,6 +167,7 @@ export const defaultValuesMap: Record<GameMode, () => unknown> = {
   guess_the_goalscorers: getGoalscorerRecallDefaults,
   topical_quiz: getTopicalQuizDefaults,
   top_tens: getTopTensDefaults,
+  last_tens: getTopTensDefaults,
   starting_xi: getStartingXIDefaults,
   connections: () => ({
     groups: [

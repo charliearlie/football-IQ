@@ -35,6 +35,7 @@ export const EMPTY_FIELD_EXPERIENCE: FieldExperience = {
     the_thread: 0,
     topical_quiz: 0,
     top_tens: 0,
+    last_tens: 0,
     starting_xi: 0,
     connections: 0,
     timeline: 0,

@@ -1,7 +1,7 @@
 /**
  * HigherLowerActionZone Component
  *
- * Two large buttons for Higher and Lower answers,
+ * Two tall buttons for Higher and Lower answers that fill available space,
  * plus round progress indicator.
  */
 
@@ -48,7 +48,7 @@ export function HigherLowerActionZone({
           accessibilityLabel="Higher"
           accessibilityRole="button"
         >
-          <ArrowUp size={28} color={colors.stadiumNavy} strokeWidth={2.5} />
+          <ArrowUp size={32} color={colors.stadiumNavy} strokeWidth={2.5} />
           <Text style={styles.higherButtonText}>HIGHER</Text>
         </Pressable>
 
@@ -65,7 +65,7 @@ export function HigherLowerActionZone({
           accessibilityLabel="Lower"
           accessibilityRole="button"
         >
-          <ArrowDown size={28} color={colors.floodlightWhite} strokeWidth={2.5} />
+          <ArrowDown size={36} color={colors.floodlightWhite} strokeWidth={2.5} />
           <Text style={styles.lowerButtonText}>LOWER</Text>
         </Pressable>
       </View>
@@ -93,12 +93,11 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingVertical: spacing.md,
-    borderRadius: 14,
+    paddingVertical: spacing.lg,
+    borderRadius: 16,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -108,17 +107,17 @@ const styles = StyleSheet.create({
   },
   higherButtonText: {
     fontFamily: fonts.bodyBold,
-    fontSize: 18,
+    fontSize: 22,
     color: colors.stadiumNavy,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   lowerButton: {
     backgroundColor: colors.redCard,
   },
   lowerButtonText: {
     fontFamily: fonts.bodyBold,
-    fontSize: 18,
+    fontSize: 22,
     color: colors.floodlightWhite,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
 });

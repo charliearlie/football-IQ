@@ -8,7 +8,6 @@
 import { Trophy, XCircle } from 'lucide-react-native';
 import {
   BaseResultModal,
-  ScoreDisplay,
   ResultShareCard,
 } from '@/components/GameResultModal';
 import type { ResultShareData } from '@/components/GameResultModal';
@@ -96,7 +95,6 @@ export function TopTensResultModal({
     <BaseResultModal
       visible={visible}
       resultType={won ? 'win' : 'loss'}
-      iqEarned={score.points}
       icon={
         won ? (
           <Trophy size={32} color={colors.stadiumNavy} strokeWidth={2} />
@@ -104,23 +102,16 @@ export function TopTensResultModal({
           <XCircle size={32} color={colors.floodlightWhite} strokeWidth={2} />
         )
       }
-      title={won ? 'ALL FOUND!' : 'GAME OVER'}
-      message={
-        won
-          ? `Perfect score with ${score.wrongGuessCount} wrong guess${score.wrongGuessCount !== 1 ? 'es' : ''}!`
-          : `You found ${score.foundCount} out of 10`
-      }
+      title={won ? 'ALL FOUND!' : `${score.foundCount}/10`}
       onShare={onShare}
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
-      showNextPuzzle={showNextPuzzle}
       testID={testID}
       puzzleId={puzzleId}
       gameMode="top_tens"
       challengeScore={score.points}
     >
-      <ScoreDisplay value={`${score.foundCount}/10`} />
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="top_tens"

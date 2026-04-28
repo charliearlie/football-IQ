@@ -17,7 +17,7 @@ export function generateScoreDisplay(
 
   const firstLine = score.won
     ? 'I got a perfect 10 in Higher/Lower!'
-    : `I survived ${score.roundsCompleted - 1} round${score.roundsCompleted - 1 === 1 ? '' : 's'} of Higher/Lower!`;
+    : `I scored ${score.points}/10 in Higher/Lower!`;
 
   const lines: string[] = [firstLine];
 
@@ -42,7 +42,5 @@ export function generateScoreDisplay(
  */
 export function generateScoreDescription(score: HigherLowerScore): string {
   if (score.won) return 'Perfect 10 — got every round right!';
-  const survived = score.roundsCompleted - 1;
-  if (survived === 0) return 'Out on the first round!';
-  return `Survived ${survived} of 10 rounds`;
+  return `${score.points} out of 10 correct`;
 }

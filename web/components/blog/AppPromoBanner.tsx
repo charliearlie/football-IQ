@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { appStoreUrl, PLAY_STORE_URL } from "@/lib/constants";
+import { appStoreUrl } from "@/lib/constants";
+import { AndroidNotifyButton } from "@/components/AndroidNotifyButton";
 
 export function AppPromoBanner() {
   return (
@@ -38,18 +39,7 @@ export function AppPromoBanner() {
           />
         </Link>
 
-        <div className="relative flex items-center">
-          <Image
-            src="/images/play-store.svg"
-            alt="Football IQ on Google Play — Coming Soon"
-            width={156}
-            height={42}
-            className="h-[42px] w-auto opacity-40"
-          />
-          <span className="absolute inset-x-0 -bottom-4 text-center text-[10px] text-slate-600">
-            Coming Soon
-          </span>
-        </div>
+        <AndroidNotifyButton source="android-notify-blog" size="md" />
       </div>
     </aside>
   );

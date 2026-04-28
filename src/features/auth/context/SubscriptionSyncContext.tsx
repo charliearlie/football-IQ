@@ -89,27 +89,21 @@ export function SubscriptionSyncProvider({
         return;
       }
 
-      // Only sync UPGRADES to Supabase — never downgrade client-side.
-      // Revocation is handled server-side via RevenueCat webhook.
-      if (!hasPremium) {
-        console.log('[SubscriptionSync] RC says not premium — skipping Supabase downgrade');
-        lastPremiumStatusRef.current = hasPremium;
-        return;
-      }
-
       syncInProgressRef.current = true;
       try {
-        console.log('[SubscriptionSync] Upgrading to premium:', { userId });
+        const action = hasPremium ? 'Upgrading to' : 'Downgrading from';
+        console.log(`[SubscriptionSync] ${action} premium:`, { userId });
 
-        const { profile, error } = await syncPremiumToSupabase(userId, true);
+        const { profile, error } = await syncPremiumToSupabase(userId, hasPremium);
         if (error || !profile) {
-          console.error('[SubscriptionSync] Failed to sync premium upgrade:', error);
+          // Don't update lastPremiumStatusRef — next listener callback will retry
+          console.error(`[SubscriptionSync] Failed to sync premium ${hasPremium ? 'upgrade' : 'downgrade'}:`, error);
           return;
         }
 
         setProfileDirect(profile);
-        lastPremiumStatusRef.current = true;
-        console.log('[SubscriptionSync] Premium upgrade synced successfully');
+        lastPremiumStatusRef.current = hasPremium;
+        console.log(`[SubscriptionSync] Premium ${hasPremium ? 'upgrade' : 'downgrade'} synced successfully`);
       } finally {
         syncInProgressRef.current = false;
       }
@@ -223,22 +217,14 @@ export function SubscriptionSyncProvider({
       const customerInfo = await Purchases.getCustomerInfo();
       const { hasPremium } = checkPremiumEntitlement(customerInfo);
 
-      if (hasPremium) {
-        // Upgrade: sync premium to Supabase
-        const { profile, error } = await syncPremiumToSupabase(userId, true);
-        if (error || !profile) {
-          console.error('[SubscriptionSync] forceSync upgrade failed:', error);
-          return { success: false, isPremium: false };
-        }
-        setProfileDirect(profile);
-        lastPremiumStatusRef.current = true;
-        return { success: true, isPremium: true };
+      const { profile, error } = await syncPremiumToSupabase(userId, hasPremium);
+      if (error || !profile) {
+        console.error(`[SubscriptionSync] forceSync ${hasPremium ? 'upgrade' : 'downgrade'} failed:`, error);
+        return { success: false, isPremium: false };
       }
-
-      // RC says not premium — don't downgrade, just report current DB state
-      console.log('[SubscriptionSync] forceSync: RC not premium, preserving DB state');
-      lastPremiumStatusRef.current = false;
-      return { success: true, isPremium: false };
+      setProfileDirect(profile);
+      lastPremiumStatusRef.current = hasPremium;
+      return { success: true, isPremium: hasPremium };
     } catch (error) {
       console.error('[SubscriptionSync] forceSync error:', error);
       return { success: false, isPremium: false };

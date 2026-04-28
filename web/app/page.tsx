@@ -13,6 +13,7 @@ import { SocialProofStrip } from "@/components/landing/SocialProofStrip";
 import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
 import { JsonLd } from "@/components/JsonLd";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
+import { AndroidNotifyButton } from "@/components/AndroidNotifyButton";
 
 export const revalidate = 3600;
 
@@ -218,18 +219,7 @@ export default async function HomePage() {
                   className="h-[42px] w-auto"
                 />
               </Link>
-              <div className="relative">
-                <Image
-                  src="/images/play-store.svg"
-                  alt="Google Play — Coming Soon"
-                  width={156}
-                  height={42}
-                  className="h-[42px] w-auto opacity-40"
-                />
-                <span className="absolute left-0 right-0 text-center text-[10px] text-slate-600 mt-0.5">
-                  Coming Soon
-                </span>
-              </div>
+              <AndroidNotifyButton source="android-notify" size="md" />
             </div>
           </div>
         </section>

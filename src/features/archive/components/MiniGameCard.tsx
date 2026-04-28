@@ -18,6 +18,7 @@ import { Lock, Check, Play, ChevronRight } from 'lucide-react-native';
 import { ProBadge } from '@/components/ProBadge';
 import { GameModeIcon } from '@/components';
 import { colors, spacing, borderRadius } from '@/theme';
+import { getGameModeColor } from '@/theme/gameModeColors';
 import { triggerLight, triggerMedium } from '@/lib/haptics';
 import { ArchivePuzzle } from '../types/archive.types';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -44,6 +45,7 @@ export const GAME_MODE_TITLES: Record<GameMode, string> = {
   the_thread: 'Threads',
   topical_quiz: 'Quiz',
   top_tens: 'Top Tens',
+  last_tens: 'Last 10',
   starting_xi: 'Starting XI',
   connections: 'Connections',
   timeline: 'Timeline',
@@ -67,6 +69,7 @@ const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };
  */
 function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
   const scale = useSharedValue(1);
+  const modeColor = getGameModeColor(puzzle.gameMode);
 
   const isComplete = puzzle.status === 'done';
   const isLocked = puzzle.isLocked;
@@ -109,10 +112,10 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
   // Render status indicator (simple icons, not buttons)
   const renderStatus = () => {
     if (isComplete) {
-      // Done state: green checkmark
+      // Done state: checkmark in mode color
       return (
         <View style={styles.statusIndicator}>
-          <Check size={20} color={colors.pitchGreen} strokeWidth={3} />
+          <Check size={20} color={modeColor.primary} strokeWidth={3} />
         </View>
       );
     }
@@ -148,7 +151,7 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
       <Pressable
         style={[
           styles.card,
-          isComplete && styles.cardCompleted,
+          isComplete && { borderColor: modeColor.border },
           isLocked && styles.cardLocked,
         ]}
         onPress={handlePress}
@@ -159,12 +162,12 @@ function MiniGameCardComponent({ puzzle, onPress, testID }: MiniGameCardProps) {
         {/* Left side: Icon and title */}
         <View style={styles.leftContent}>
           <View style={styles.iconRow}>
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, { backgroundColor: modeColor.tint, borderColor: modeColor.border }]}>
               {iconElement}
 
               {/* Completion badge */}
               {isComplete && (
-                <View style={styles.completeBadge}>
+                <View style={[styles.completeBadge, { backgroundColor: modeColor.primary }]}>
                   <Check size={8} color={colors.stadiumNavy} strokeWidth={3} />
                 </View>
               )}
@@ -239,10 +242,10 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10, // Slightly more gap for visual balance
+    marginRight: 10,
     position: 'relative',
   },
   completeBadge: {

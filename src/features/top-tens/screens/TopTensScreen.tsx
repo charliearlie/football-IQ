@@ -32,7 +32,7 @@ import { TopTensAttemptMetadata, parseTopTensContent } from '../types/topTens.ty
 interface TopTensScreenProps {
   /**
    * Optional puzzle ID to load a specific puzzle.
-   * If not provided, loads today's top_tens puzzle.
+   * If not provided, loads today's puzzle for the given game mode.
    */
   puzzleId?: string;
   /**
@@ -40,6 +40,11 @@ interface TopTensScreenProps {
    * When true, shows all answers and the user's previous attempt.
    */
   isReviewMode?: boolean;
+  /**
+   * Engine variant. Defaults to 'top_tens'. Pass 'last_tens' for the
+   * Last 10 variant — same engine, different copy and rank-1 styling.
+   */
+  gameMode?: 'top_tens' | 'last_tens';
 }
 
 /**
@@ -54,16 +59,18 @@ interface TopTensScreenProps {
 export function TopTensScreen({
   puzzleId,
   isReviewMode = false,
+  gameMode = 'top_tens',
 }: TopTensScreenProps) {
   const router = useRouter();
+  const screenTitle = gameMode === 'last_tens' ? 'Last 10' : 'Top Tens';
 
   // Onboarding state - show intro for first-time users
-  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding('top_tens');
+  const { shouldShowIntro, isReady: isOnboardingReady, completeIntro } = useOnboarding(gameMode);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
 
-  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'top_tens');
+  const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? gameMode);
   const {
     state,
     puzzleContent,
@@ -74,7 +81,7 @@ export function TopTensScreen({
     handleClimbComplete,
     giveUp,
     shareResult,
-  } = useTopTensGame(puzzle);
+  } = useTopTensGame(puzzle, gameMode);
 
   // Fetch saved attempt data for review mode
   const {
@@ -126,7 +133,7 @@ export function TopTensScreen({
   // Onboarding loading state (prevent flash)
   if (!isOnboardingReady) {
     return (
-      <GameContainer title="Top Tens" testID="top-tens-screen">
+      <GameContainer title={screenTitle} testID="top-tens-screen">
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
         </View>
@@ -138,7 +145,7 @@ export function TopTensScreen({
   if (shouldShowIntro) {
     return (
       <GameIntroScreen
-        gameMode="top_tens"
+        gameMode={gameMode}
         onStart={completeIntro}
         testID="top-tens-intro"
       />
@@ -148,7 +155,7 @@ export function TopTensScreen({
   // Loading state
   if (isLoading) {
     return (
-      <GameContainer title="Top Tens" testID="top-tens-screen">
+      <GameContainer title={screenTitle} testID="top-tens-screen">
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.pitchGreen} />
           <Text style={[textStyles.body, styles.loadingText]}>
@@ -162,11 +169,11 @@ export function TopTensScreen({
   // No puzzle available
   if (!puzzle || !puzzleContent) {
     return (
-      <GameContainer title="Top Tens" testID="top-tens-screen">
+      <GameContainer title={screenTitle} testID="top-tens-screen">
         <View style={styles.centered}>
           <Text style={textStyles.h2}>No Game Today</Text>
           <Text style={[textStyles.bodySmall, styles.noPuzzleText]}>
-            Check back later for today's Top Tens challenge
+            Check back later for today's {screenTitle} challenge
           </Text>
         </View>
       </GameContainer>
@@ -200,7 +207,7 @@ export function TopTensScreen({
     }));
 
     return (
-      <GameContainer title="Top Tens - Review" testID="top-tens-review">
+      <GameContainer title={`${screenTitle} - Review`} testID="top-tens-review">
         <ScrollView
           contentContainerStyle={styles.reviewContent}
           showsVerticalScrollIndicator={false}
@@ -222,6 +229,7 @@ export function TopTensScreen({
                 isLatest={false}
                 isHighlighted={false}
                 highlightType={null}
+                gameMode={gameMode}
                 testID={`review-rank-${slot.rank}`}
               />
             ))}
@@ -251,7 +259,7 @@ export function TopTensScreen({
   // Active game
   return (
     <GameContainer
-      title="Top Tens"
+      title={screenTitle}
       onHelpPress={() => setShowHelpModal(true)}
       testID="top-tens-screen"
     >
@@ -270,6 +278,7 @@ export function TopTensScreen({
         isClimbing={isClimbing}
         climbTargetRank={state.climbing.targetRank}
         onClimbComplete={handleClimbComplete}
+        gameMode={gameMode}
         testID="rank-grid"
       />
 
@@ -315,7 +324,7 @@ export function TopTensScreen({
 
       {/* Help Modal */}
       <GameIntroModal
-        gameMode="top_tens"
+        gameMode={gameMode}
         visible={showHelpModal}
         onClose={() => setShowHelpModal(false)}
         testID="top-tens-help-modal"

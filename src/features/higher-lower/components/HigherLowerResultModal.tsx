@@ -8,7 +8,6 @@ import React from 'react';
 import { Trophy, XCircle } from 'lucide-react-native';
 import {
   BaseResultModal,
-  ScoreDisplay,
   ResultShareCard,
 } from '@/components/GameResultModal';
 import type { ResultShareData, ShareResult } from '@/components/GameResultModal';
@@ -49,11 +48,9 @@ export function HigherLowerResultModal({
   const isPerfect = isWin;
   const emojiGrid = generateHigherLowerEmojiGrid(results);
 
-  const resultTitle = isWin ? 'PERFECT 10!' : 'GAME OVER';
+  const resultTitle = isWin ? 'PERFECT 10!' : `${score.points}/10`;
 
-  const resultMessage = isWin
-    ? 'You got all 10 correct!'
-    : `Made it to round ${score.roundsCompleted}`;
+  const resultMessage = '';
 
   const shareData: ResultShareData = {
     gameMode: 'higher_lower',
@@ -81,7 +78,6 @@ export function HigherLowerResultModal({
     <BaseResultModal
       visible={visible}
       resultType={isWin ? 'win' : 'loss'}
-      iqEarned={score.points}
       icon={
         isWin ? (
           <Trophy
@@ -99,21 +95,15 @@ export function HigherLowerResultModal({
       shareCardContent={shareCardContent}
       shareData={shareData}
       onClose={onClose}
-      showNextPuzzle={showNextPuzzle}
       testID={testID}
       puzzleId={puzzleId}
       gameMode="higher_lower"
       challengeScore={score.points}
     >
-      <ScoreDisplay
-        label="Rounds Survived"
-        value={`${score.won ? score.roundsCompleted : score.roundsCompleted - 1}/10`}
-      />
-      <ScoreDisplay label="Score" value={`${score.points}/${score.maxPoints}`} />
       <ScoreDistributionContainer
         puzzleId={puzzleId}
         gameMode="higher_lower"
-        userScore={score.points}
+        userScore={score.points * 10}
         testID={testID ? `${testID}-distribution` : undefined}
       />
     </BaseResultModal>

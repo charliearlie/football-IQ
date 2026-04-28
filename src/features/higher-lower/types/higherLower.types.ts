@@ -2,7 +2,7 @@
  * Higher/Lower Game Types
  *
  * Type definitions for the "Higher/Lower" game mode where players
- * compare transfer fees across 10 rounds.
+ * compare stats (transfer fees, appearances, caps, goals, etc.) across 10 rounds.
  */
 
 // Re-export scoring types for convenience
@@ -13,25 +13,43 @@ export type { HigherLowerScore } from '../utils/scoring';
 // =============================================================================
 
 /**
- * A player entry in a transfer pair
+ * Known stat categories — drives value formatting.
  */
-export interface TransferPairPlayer {
-  /** Player name */
-  name: string;
-  /** Club involved in the transfer */
-  club: string;
-  /** Transfer fee in millions (e.g., 85.5 for €85.5m) */
-  fee: number;
-}
+export type StatType =
+  | 'transfer_fee'
+  | 'league_appearances'
+  | 'international_caps'
+  | 'goals'
+  | 'assists'
+  | 'clean_sheets';
 
 /**
- * A single transfer pair comparison in the puzzle
+ * A single entry in a Higher/Lower chain or pair.
+ */
+export interface HigherLowerEntry {
+  /** Player name */
+  name: string;
+  /** Club or national team */
+  context: string;
+  /** Human-readable stat label, e.g. "League Appearances", "Transfer Fee" */
+  statLabel: string;
+  /** Machine-readable stat category (drives formatting) */
+  statType: StatType;
+  /** The numeric stat value */
+  value: number;
+}
+
+/** @deprecated Use HigherLowerEntry */
+export type TransferPairPlayer = HigherLowerEntry;
+
+/**
+ * A single comparison pair in the puzzle
  */
 export interface TransferPair {
-  /** The revealed player (Player 1) */
-  player1: TransferPairPlayer;
-  /** The hidden player (Player 2) */
-  player2: TransferPairPlayer;
+  /** The revealed entry (Player 1) */
+  player1: HigherLowerEntry;
+  /** The hidden entry (Player 2) */
+  player2: HigherLowerEntry;
 }
 
 /**
@@ -41,8 +59,8 @@ export interface TransferPair {
  * - `pairs`: Legacy format — 10 independent pairs
  */
 export interface HigherLowerContent {
-  /** Chain of players — round N compares players[N] vs players[N+1] */
-  players?: TransferPairPlayer[];
+  /** Chain of entries — round N compares players[N] vs players[N+1] */
+  players?: HigherLowerEntry[];
   /** Legacy: independent pairs for each round */
   pairs: TransferPair[];
 }
@@ -112,9 +130,7 @@ export interface HigherLowerAttemptMetadata {
   answers: ('higher' | 'lower')[];
   /** Whether each answer was correct */
   results: boolean[];
-  /** Number of rounds completed */
-  roundsCompleted: number;
-  /** Whether player won (all 10 correct) */
+  /** Whether player got all 10 correct */
   won: boolean;
 }
 
@@ -145,31 +161,59 @@ export function createInitialState(): HigherLowerState {
 // =============================================================================
 
 /**
- * Validate a TransferPairPlayer object
+ * Normalize a raw entry to HigherLowerEntry.
+ * Accepts the new shape (context/statLabel/statType/value) or legacy shape (club/fee).
+ * Returns null if invalid.
  */
-function isValidTransferPairPlayer(value: unknown): value is TransferPairPlayer {
-  if (!value || typeof value !== 'object') return false;
+function normalizeEntry(value: unknown): HigherLowerEntry | null {
+  if (!value || typeof value !== 'object') return null;
   const obj = value as Record<string, unknown>;
-  return (
-    typeof obj.name === 'string' &&
-    obj.name.length > 0 &&
-    typeof obj.club === 'string' &&
-    obj.club.length > 0 &&
-    typeof obj.fee === 'number' &&
-    obj.fee >= 0
-  );
+
+  if (typeof obj.name !== 'string' || obj.name.length === 0) return null;
+
+  // New format: has context + value
+  if (typeof obj.context === 'string' && typeof obj.value === 'number') {
+    return {
+      name: obj.name,
+      context: obj.context,
+      statLabel: typeof obj.statLabel === 'string' ? obj.statLabel : 'Transfer Fee',
+      statType: isValidStatType(obj.statType) ? obj.statType : 'transfer_fee',
+      value: obj.value,
+    };
+  }
+
+  // Legacy format: has club + fee → normalize
+  if (typeof obj.club === 'string' && obj.club.length > 0 && typeof obj.fee === 'number' && obj.fee >= 0) {
+    return {
+      name: obj.name,
+      context: obj.club,
+      statLabel: 'Transfer Fee',
+      statType: 'transfer_fee',
+      value: obj.fee,
+    };
+  }
+
+  return null;
+}
+
+const VALID_STAT_TYPES: Set<string> = new Set([
+  'transfer_fee', 'league_appearances', 'international_caps', 'goals', 'assists', 'clean_sheets',
+]);
+
+function isValidStatType(value: unknown): value is StatType {
+  return typeof value === 'string' && VALID_STAT_TYPES.has(value);
 }
 
 /**
- * Validate a TransferPair object
+ * Validate and normalize a TransferPair object
  */
-function isValidTransferPair(value: unknown): value is TransferPair {
-  if (!value || typeof value !== 'object') return false;
+function normalizePair(value: unknown): TransferPair | null {
+  if (!value || typeof value !== 'object') return null;
   const obj = value as Record<string, unknown>;
-  return (
-    isValidTransferPairPlayer(obj.player1) &&
-    isValidTransferPairPlayer(obj.player2)
-  );
+  const player1 = normalizeEntry(obj.player1);
+  const player2 = normalizeEntry(obj.player2);
+  if (!player1 || !player2) return null;
+  return { player1, player2 };
 }
 
 /**
@@ -178,6 +222,8 @@ function isValidTransferPair(value: unknown): value is TransferPair {
  * Supports two content formats:
  * - `players` array (chain): 11+ players, derives pairs as [N] vs [N+1]
  * - `pairs` array (legacy): explicit independent pairs
+ *
+ * Both legacy (club/fee) and new (context/statLabel/statType/value) entry shapes are accepted.
  *
  * @param content - Raw puzzle content
  * @returns Validated HigherLowerContent or null if invalid
@@ -189,10 +235,12 @@ export function parseHigherLowerContent(content: unknown): HigherLowerContent | 
 
   // Chain format: players array → derive pairs
   if (Array.isArray(obj.players) && obj.players.length >= 2) {
-    for (const player of obj.players) {
-      if (!isValidTransferPairPlayer(player)) return null;
+    const players: HigherLowerEntry[] = [];
+    for (const raw of obj.players) {
+      const entry = normalizeEntry(raw);
+      if (!entry) return null;
+      players.push(entry);
     }
-    const players = obj.players as TransferPairPlayer[];
     const pairs: TransferPair[] = [];
     for (let i = 0; i < players.length - 1; i++) {
       pairs.push({ player1: players[i], player2: players[i + 1] });
@@ -205,11 +253,12 @@ export function parseHigherLowerContent(content: unknown): HigherLowerContent | 
     return null;
   }
 
-  for (const pair of obj.pairs) {
-    if (!isValidTransferPair(pair)) return null;
+  const pairs: TransferPair[] = [];
+  for (const raw of obj.pairs) {
+    const pair = normalizePair(raw);
+    if (!pair) return null;
+    pairs.push(pair);
   }
 
-  return {
-    pairs: obj.pairs as TransferPair[],
-  };
+  return { pairs };
 }

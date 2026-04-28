@@ -56,6 +56,64 @@ export function TopTensForm() {
     });
   };
 
+  // Joint 10th — alternates live only on rank 10 (answers index 9)
+  const addAlternate = () => {
+    const current = getValues(`content.answers.9.alternates`) || [];
+    setValue(
+      `content.answers.9.alternates`,
+      [...current, { name: "", aliases: [], info: "" }],
+      { shouldValidate: true }
+    );
+  };
+
+  const removeAlternate = (alternateIndex: number) => {
+    const current = getValues(`content.answers.9.alternates`) || [];
+    setValue(
+      `content.answers.9.alternates`,
+      current.filter((_, i) => i !== alternateIndex),
+      { shouldValidate: true }
+    );
+  };
+
+  const addAlternateAlias = (alternateIndex: number) => {
+    const current =
+      getValues(`content.answers.9.alternates.${alternateIndex}.aliases`) || [];
+    setValue(
+      `content.answers.9.alternates.${alternateIndex}.aliases`,
+      [...current, ""],
+      { shouldValidate: true }
+    );
+  };
+
+  const updateAlternateAlias = (
+    alternateIndex: number,
+    aliasIndex: number,
+    value: string
+  ) => {
+    const current =
+      getValues(`content.answers.9.alternates.${alternateIndex}.aliases`) || [];
+    const updated = [...current];
+    updated[aliasIndex] = value;
+    setValue(
+      `content.answers.9.alternates.${alternateIndex}.aliases`,
+      updated,
+      { shouldValidate: true }
+    );
+  };
+
+  const removeAlternateAlias = (
+    alternateIndex: number,
+    aliasIndex: number
+  ) => {
+    const current =
+      getValues(`content.answers.9.alternates.${alternateIndex}.aliases`) || [];
+    setValue(
+      `content.answers.9.alternates.${alternateIndex}.aliases`,
+      current.filter((_, i) => i !== aliasIndex),
+      { shouldValidate: true }
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* List Title */}
@@ -107,6 +165,10 @@ export function TopTensForm() {
 
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((answerIndex) => {
           const aliases = watch(`content.answers.${answerIndex}.aliases`) || [];
+          const alternates =
+            answerIndex === 9
+              ? watch(`content.answers.9.alternates`) || []
+              : [];
 
           return (
             <div key={answerIndex} className="glass-card p-4 space-y-3">
@@ -211,6 +273,154 @@ export function TopTensForm() {
                   </div>
                 )}
               </div>
+
+              {/* Joint 10th — tied entrants. Only available on rank 10. */}
+              {answerIndex === 9 && (
+                <div className="space-y-3 border-t border-white/10 pt-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-medium text-floodlight">
+                        Joint 10th (optional)
+                      </span>
+                      <FormDescription className="text-xs">
+                        Use this when 10th place is tied. Players can guess any of these alongside the primary answer.
+                      </FormDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={addAlternate}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add tied entrant
+                    </Button>
+                  </div>
+
+                  {alternates.map((_, alternateIndex) => {
+                    const alternateAliases =
+                      watch(
+                        `content.answers.9.alternates.${alternateIndex}.aliases`
+                      ) || [];
+                    return (
+                      <div
+                        key={alternateIndex}
+                        className="space-y-2 rounded border border-white/10 bg-white/5 p-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="w-8 justify-center">
+                            =10
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => removeAlternate(alternateIndex)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={control}
+                            name={`content.answers.9.alternates.${alternateIndex}.name`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs text-muted-foreground">
+                                  Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="e.g., Didier Drogba"
+                                    className="bg-white/5 border-white/10"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={control}
+                            name={`content.answers.9.alternates.${alternateIndex}.info`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs text-muted-foreground">
+                                  Info (optional)
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="e.g., 150 goals"
+                                    className="bg-white/5 border-white/10"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              Aliases
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() => addAlternateAlias(alternateIndex)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Add Alias
+                            </Button>
+                          </div>
+
+                          {alternateAliases.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {alternateAliases.map((alias, aliasIndex) => (
+                                <div
+                                  key={aliasIndex}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Input
+                                    value={alias}
+                                    onChange={(e) =>
+                                      updateAlternateAlias(
+                                        alternateIndex,
+                                        aliasIndex,
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Alias"
+                                    className="h-7 w-32 text-xs bg-white/5 border-white/10"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() =>
+                                      removeAlternateAlias(
+                                        alternateIndex,
+                                        aliasIndex
+                                      )
+                                    }
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

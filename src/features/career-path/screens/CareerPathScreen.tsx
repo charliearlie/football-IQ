@@ -450,10 +450,18 @@ export function CareerPathScreen({
       <Text style={styles.backLink}>Home</Text>
     </Pressable>
   ) : (
-    <Text style={[textStyles.body, styles.progress]}>
-      Step <Text style={styles.progressHighlight}>{state.revealedCount}</Text>{" "}
-      of <Text style={styles.progressHighlight}>{totalSteps}</Text>
-    </Text>
+    <View style={styles.progressDots}>
+      {Array.from({ length: totalSteps }, (_, i) => (
+        <View
+          key={i}
+          style={[
+            styles.progressDot,
+            i < state.revealedCount && styles.progressDotFilled,
+            i === state.revealedCount - 1 && styles.progressDotActive,
+          ]}
+        />
+      ))}
+    </View>
   );
 
   // Modal visibility: show when game over AND showResultModal is true AND not viewing full path AND not during victory reveal
@@ -607,6 +615,29 @@ const styles = StyleSheet.create({
   progressHighlight: {
     color: colors.pitchGreen,
     fontWeight: "600",
+  },
+  progressDots: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  progressDotFilled: {
+    backgroundColor: colors.pitchGreen,
+  },
+  progressDotActive: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    shadowColor: colors.pitchGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
   },
   bottomBar: {
     position: "absolute" as const,

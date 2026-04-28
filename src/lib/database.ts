@@ -1082,11 +1082,13 @@ export async function getCatalogEntriesPaginated(
 ): Promise<LocalCatalogEntry[]> {
   const database = getDatabase();
 
-  // Filter out future-dated puzzles at SQL level to ensure page 0 returns valid data
+  // Filter out future-dated puzzles at SQL level to ensure page 0 returns valid data.
+  // last_tens is excluded from archive listings (it's a single-current-puzzle mode).
   if (gameMode) {
     return database.getAllAsync<LocalCatalogEntry>(
       `SELECT * FROM puzzle_catalog
        WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime') AND is_special = 0
+         AND game_mode != 'last_tens'
        ORDER BY puzzle_date DESC
        LIMIT $limit OFFSET $offset`,
       { $gameMode: gameMode, $limit: limit, $offset: offset }
@@ -1096,6 +1098,7 @@ export async function getCatalogEntriesPaginated(
   return database.getAllAsync<LocalCatalogEntry>(
     `SELECT * FROM puzzle_catalog
      WHERE puzzle_date <= date('now', 'localtime') AND is_special = 0
+       AND game_mode != 'last_tens'
      ORDER BY puzzle_date DESC
      LIMIT $limit OFFSET $offset`,
     { $limit: limit, $offset: offset }
@@ -1111,11 +1114,13 @@ export async function getCatalogEntryCount(
 ): Promise<number> {
   const database = getDatabase();
 
-  // Filter out future-dated puzzles to match getCatalogEntriesPaginated
+  // Filter out future-dated puzzles to match getCatalogEntriesPaginated.
+  // last_tens is excluded from archive counts.
   if (gameMode) {
     const result = await database.getFirstAsync<{ count: number }>(
       `SELECT COUNT(*) as count FROM puzzle_catalog
-       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime') AND is_special = 0`,
+       WHERE game_mode = $gameMode AND puzzle_date <= date('now', 'localtime') AND is_special = 0
+         AND game_mode != 'last_tens'`,
       { $gameMode: gameMode }
     );
     return result?.count ?? 0;
@@ -1123,7 +1128,8 @@ export async function getCatalogEntryCount(
 
   const result = await database.getFirstAsync<{ count: number }>(
     `SELECT COUNT(*) as count FROM puzzle_catalog
-     WHERE puzzle_date <= date('now', 'localtime') AND is_special = 0`
+     WHERE puzzle_date <= date('now', 'localtime') AND is_special = 0
+       AND game_mode != 'last_tens'`
   );
   return result?.count ?? 0;
 }
@@ -1152,6 +1158,7 @@ export async function getCatalogEntriesIncomplete(
      LEFT JOIN attempts a ON pc.id = a.puzzle_id
      WHERE pc.puzzle_date <= date('now', 'localtime')
        AND pc.is_special = 0
+       AND pc.game_mode != 'last_tens'
        AND (a.id IS NULL OR a.completed = 0)
      GROUP BY pc.id
      ORDER BY pc.puzzle_date DESC
@@ -1174,6 +1181,7 @@ export async function getCatalogEntryCountIncomplete(): Promise<number> {
      LEFT JOIN attempts a ON pc.id = a.puzzle_id
      WHERE pc.puzzle_date <= date('now', 'localtime')
        AND pc.is_special = 0
+       AND pc.game_mode != 'last_tens'
        AND (a.id IS NULL OR a.completed = 0)`
   );
   return result?.count ?? 0;
@@ -1200,19 +1208,21 @@ export async function getRandomUnplayedPuzzle(
   const database = getDatabase();
 
   if (isPremium) {
-    // Premium: full backlog, all modes, only incomplete
+    // Premium: full backlog, all modes, only incomplete.
+    // Last 10 is excluded — it's a single-current-puzzle mode without archive history.
     return database.getFirstAsync<LocalCatalogEntry>(
       `SELECT pc.* FROM puzzle_catalog pc
        LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
        WHERE pc.puzzle_date <= date('now', 'localtime')
          AND pc.is_special = 0
+         AND pc.game_mode != 'last_tens'
          AND a.id IS NULL
        ORDER BY RANDOM()
        LIMIT 1`
     );
   }
 
-  // Non-premium: 3-day window OR ad-unlocked (premium mode filter temporarily removed for outreach)
+  // Non-premium: 3-day window OR ad-unlocked. Last 10 also excluded.
   return database.getFirstAsync<LocalCatalogEntry>(
     `SELECT pc.* FROM puzzle_catalog pc
      LEFT JOIN attempts a ON pc.id = a.puzzle_id AND a.completed = 1
@@ -1220,6 +1230,7 @@ export async function getRandomUnplayedPuzzle(
      WHERE pc.puzzle_date <= date('now', 'localtime')
        AND a.id IS NULL
        AND pc.is_special = 0
+       AND pc.game_mode != 'last_tens'
        AND (pc.puzzle_date >= $freeWindowStart OR up.puzzle_id IS NOT NULL)
      ORDER BY RANDOM()
      LIMIT 1`,

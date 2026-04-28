@@ -16,3 +16,4 @@ export type { TopTensActionZoneProps } from './TopTensActionZone';
 export { TopTensResultModal } from './TopTensResultModal';
 
 export { PremiumOnlyGate } from './PremiumOnlyGate';
+export { LastTensGate } from './LastTensGate';

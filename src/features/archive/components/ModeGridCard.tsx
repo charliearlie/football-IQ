@@ -15,6 +15,7 @@ import Animated, {
 import { Check } from 'lucide-react-native';
 import { HOME_COLORS, HOME_FONTS } from '@/theme/home-design';
 import { colors } from '@/theme';
+import { getGameModeColor } from '@/theme/gameModeColors';
 import { GameModeIcon } from '@/components';
 import { triggerLight } from '@/lib/haptics';
 import { GameMode } from '@/features/puzzles/types/puzzle.types';
@@ -63,15 +64,17 @@ function ModeGridCardComponent({
     translateY.value = withSpring(0, SPRING_CONFIG);
   };
 
+  const modeColor = getGameModeColor(gameMode);
+
   // Border colour reflects card state
   const isCompleted = playedCount === totalCount && totalCount > 0;
   const isFullyLocked = lockedCount === totalCount;
   const hasActiveUnplayed = hasUnplayed && lockedCount < totalCount;
 
   const borderColor = isCompleted
-    ? 'rgba(46,252,93,0.5)'
+    ? modeColor.border
     : hasActiveUnplayed
-    ? 'rgba(46,252,93,0.3)'
+    ? modeColor.border
     : isFullyLocked
     ? 'rgba(250,204,21,0.2)'
     : HOME_COLORS.border;
@@ -89,7 +92,7 @@ function ModeGridCardComponent({
       style={styles.outer}
     >
       {/* Shadow Layer */}
-      <View style={styles.shadowLayer} />
+      <View style={[styles.shadowLayer, { backgroundColor: modeColor.shadow }]} />
 
       {/* Top/Face Layer */}
       <Animated.View
@@ -103,7 +106,7 @@ function ModeGridCardComponent({
         {/* Top row: icon */}
         <View style={styles.topRow}>
           {/* Icon container */}
-          <View style={styles.iconContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: modeColor.tint, borderColor: modeColor.border }]}>
             <GameModeIcon gameMode={gameMode} size={26} />
 
             {/* Completion badge */}

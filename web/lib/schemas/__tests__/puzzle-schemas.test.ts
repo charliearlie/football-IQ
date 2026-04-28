@@ -588,6 +588,60 @@ describe("topTensContentSchema", () => {
     const result = topTensContentSchema.parse(minimal);
     expect(result.category).toBe("");
   });
+
+  describe("joint 10th alternates", () => {
+    const buildWithRank10Alternates = (alternates: unknown[]) => ({
+      ...validContent,
+      answers: [
+        ...Array.from({ length: 9 }, (_, i) => createAnswer(i + 1)),
+        {
+          name: "Answer 10",
+          aliases: [],
+          info: "",
+          alternates,
+        },
+      ],
+    });
+
+    it("accepts alternates on rank 10", () => {
+      const valid = buildWithRank10Alternates([
+        { name: "Tied A", aliases: ["A"], info: "" },
+        { name: "Tied B", aliases: [], info: "150 goals" },
+      ]);
+      const result = topTensContentSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects alternates on ranks other than 10", () => {
+      const invalid = {
+        ...validContent,
+        answers: validContent.answers.map((answer, i) =>
+          i === 8 // rank 9 (zero-indexed 8)
+            ? { ...answer, alternates: [{ name: "Tied", aliases: [], info: "" }] }
+            : answer
+        ),
+      };
+      const result = topTensContentSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((issue) => issue.message);
+        expect(messages).toContain("Joint alternates are only allowed on rank 10");
+      }
+    });
+
+    it("rejects nested alternates inside an alternate", () => {
+      const invalid = buildWithRank10Alternates([
+        {
+          name: "Tied A",
+          aliases: [],
+          info: "",
+          alternates: [{ name: "Nested", aliases: [], info: "" }],
+        },
+      ]);
+      const result = topTensContentSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+    });
+  });
 });
 
 // ============================================================================

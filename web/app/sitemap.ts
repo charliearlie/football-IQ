@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { MetadataRoute } from "next";
 import type { BlogArticleSitemapEntry } from "@/lib/blog/types";
+import { GAME_MODE_SEO } from "@/lib/seoData";
+import { WEB_PLAYABLE_GAMES } from "@/lib/constants";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.football-iq.app";
@@ -13,6 +15,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq("status", "published")
     .order("article_date", { ascending: false })
     .returns<BlogArticleSitemapEntry[]>();
+
+  // App-only mode landing pages — fall through the dynamic [gameMode] route.
+  // Generated from GAME_MODE_SEO so adding a new mode here picks up automatically.
+  const webPlayableSlugs = new Set(WEB_PLAYABLE_GAMES.map((g) => g.slug));
+  const appOnlyModePages: MetadataRoute.Sitemap = Object.keys(GAME_MODE_SEO)
+    .filter((slug) => !webPlayableSlugs.has(slug))
+    .map((slug) => ({
+      url: `${baseUrl}/play/${slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -74,6 +87,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/quiz/guess-the-footballer`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/quiz/la-liga`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/quiz/serie-a`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/quiz/bundesliga`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/quiz/fa-cup`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/quiz/international-football`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/quiz/football-history`,
       changeFrequency: "monthly",
       priority: 0.85,
     },
@@ -170,5 +213,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticPages, ...blogPages, ...articlePages, ...newsPages];
+  return [
+    ...staticPages,
+    ...appOnlyModePages,
+    ...blogPages,
+    ...articlePages,
+    ...newsPages,
+  ];
 }

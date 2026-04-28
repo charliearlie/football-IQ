@@ -683,6 +683,40 @@ export type Database = {
         Args: Record<string, never>
         Returns: number
       }
+      upgrade_to_premium: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          display_name: string | null
+          avatar_url: string | null
+          is_admin: boolean
+          is_premium: boolean | null
+          is_readonly: boolean
+          premium_purchased_at: string | null
+          referral_code: string | null
+          total_iq: number
+          created_at: string | null
+          updated_at: string | null
+          username: string | null
+        }[]
+      }
+      downgrade_from_premium: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          display_name: string | null
+          avatar_url: string | null
+          is_admin: boolean
+          is_premium: boolean | null
+          is_readonly: boolean
+          premium_purchased_at: string | null
+          referral_code: string | null
+          total_iq: number
+          created_at: string | null
+          updated_at: string | null
+          username: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

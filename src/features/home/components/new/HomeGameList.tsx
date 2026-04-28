@@ -21,7 +21,7 @@ const GAME_METADATA: Record<string, { title: string; subtitle: string }> = {
   connections: { title: 'CONNECTIONS', subtitle: 'Find the groups' },
   timeline: { title: 'TIMELINE', subtitle: 'Order the career' },
   who_am_i: { title: 'WHO AM I?', subtitle: 'Guess the player' },
-  higher_lower: { title: 'HIGHER/LOWER', subtitle: 'Compare the fees' },
+  higher_lower: { title: 'HIGHER/LOWER', subtitle: 'Compare the stats' },
   'whos-that': { title: "WHO'S THAT?", subtitle: 'Guess the player' },
 };
 
@@ -94,6 +94,7 @@ interface HomeGameListProps {
   onWatchAd: (card: DailyPuzzleCard) => void;
   onGoPro: () => void;
   isPremium: boolean;
+  isTrialEligible?: boolean;
 }
 
 export function HomeGameList({
@@ -102,6 +103,7 @@ export function HomeGameList({
   onWatchAd,
   onGoPro,
   isPremium,
+  isTrialEligible = false,
 }: HomeGameListProps) {
   const playableCards = cards.filter((card) => isPremium || !card.isPremiumOnly || card.isAdUnlocked);
   const allDone = playableCards.length > 0 && playableCards.every((card) => card.status === 'done');
@@ -125,6 +127,8 @@ export function HomeGameList({
             isAdUnlocked={card.isAdUnlocked}
             onWatchAd={() => onWatchAd(card)}
             onGoPro={onGoPro}
+            colorVariant="accent"
+            isTrialEligible={isTrialEligible}
           />
         );
       })}

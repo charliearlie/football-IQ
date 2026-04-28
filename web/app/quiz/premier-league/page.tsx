@@ -463,9 +463,9 @@ export default function PremierLeagueQuizPage() {
           ],
         }}
       />
-      <div className="min-h-screen bg-[#0a1628]">
+      <div className="min-h-screen bg-stadium-navy">
         {/* Header */}
-        <header className="border-b border-white/5 bg-[#0a1628]/80 backdrop-blur-sm sticky top-0 z-10">
+        <header className="border-b border-white/5 bg-stadium-navy/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
             <Link
               href="/"

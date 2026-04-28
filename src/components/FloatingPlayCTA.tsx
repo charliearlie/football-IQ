@@ -51,7 +51,7 @@ export function FloatingPlayCTA({ unplayedCount, onPress, insideTabBar = false }
     return null;
   }
 
-  const buttonTitle = `PLAY TODAY'S PUZZLES  ·  ${unplayedCount} LEFT`;
+  const buttonTitle = `PLAY TODAY'S GAMES  ·  ${unplayedCount} LEFT`;
 
   return (
     <Animated.View style={[styles.container, { opacity }, insideTabBar && { bottom: layout.tabBarHeight }]} pointerEvents="box-none">

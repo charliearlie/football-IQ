@@ -106,29 +106,40 @@ const LUCIDE_FALLBACK_COLOR = colors.pitchGreen;
 export interface GameModeIconProps {
   gameMode: GameMode;
   size?: number;
+  /** Override icon color (for colored card variants) */
+  color?: string;
 }
 
-function GameModeIconComponent({ gameMode, size = 24 }: GameModeIconProps) {
+function GameModeIconComponent({ gameMode, size = 24, color }: GameModeIconProps) {
   const svg = SVG_STRINGS[gameMode];
 
   if (svg) {
+    // When a color override is provided and it's white, we need to swap the SVG colors
+    // so the icon is visible on a colored background
+    if (color) {
+      const recoloredSvg = svg
+        .replace(new RegExp(colors.pitchGreen.replace('#', '#'), 'g'), color)
+        .replace(new RegExp(colors.grassShadow.replace('#', '#'), 'g'), color);
+      return <SvgXml xml={recoloredSvg} width={size} height={size} />;
+    }
     return <SvgXml xml={svg} width={size} height={size} />;
   }
 
   // Lucide fallbacks for modes without custom SVGs
+  const fallbackColor = color ?? LUCIDE_FALLBACK_COLOR;
   switch (gameMode) {
     case 'the_grid':
-      return <Grid3X3 size={size} color={LUCIDE_FALLBACK_COLOR} />;
+      return <Grid3X3 size={size} color={fallbackColor} />;
     case 'the_chain':
-      return <Link size={size} color={LUCIDE_FALLBACK_COLOR} />;
+      return <Link size={size} color={fallbackColor} />;
     case 'the_thread':
-      return <Shirt size={size} color={LUCIDE_FALLBACK_COLOR} />;
+      return <Shirt size={size} color={fallbackColor} />;
     case 'higher_lower':
-      return <TrendingUp size={size} color={LUCIDE_FALLBACK_COLOR} />;
+      return <TrendingUp size={size} color={fallbackColor} />;
     case 'whos-that':
-      return <Dices size={size} color={LUCIDE_FALLBACK_COLOR} />;
+      return <Dices size={size} color={fallbackColor} />;
     default:
-      return <HelpCircle size={size} color={colors.textSecondary} />;
+      return <HelpCircle size={size} color={color ?? colors.textSecondary} />;
   }
 }
 

@@ -44,6 +44,10 @@ const MODE_FLAVOUR: Record<GameMode, { strengthText: string; weaknessText: strin
     strengthText: 'An encyclopaedic knowledge of the game\'s elite.',
     weaknessText: 'Ranking the greats isn\'t their forte.',
   },
+  last_tens: {
+    strengthText: 'Knows the bottom-table contenders as well as the elite.',
+    weaknessText: 'Bottom-table knowledge needs sharpening.',
+  },
   starting_xi: {
     strengthText: 'Can recall any starting lineup from memory.',
     weaknessText: 'Squad recall needs sharpening.',

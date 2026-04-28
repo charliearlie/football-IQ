@@ -22,6 +22,12 @@ export interface TopTensAnswer {
   aliases?: string[];
   /** Optional additional info displayed when revealed (e.g., "260 goals") */
   info?: string;
+  /**
+   * Other entries tied at the same rank. Currently only meaningful on rank 10
+   * (joint 10th). Each alternate has the same shape as a TopTensAnswer but
+   * cannot itself contain alternates (no nesting).
+   */
+  alternates?: TopTensAnswer[];
 }
 
 /**
@@ -242,8 +248,16 @@ export function parseTopTensContent(content: unknown): TopTensContent | null {
 
 /**
  * Check if a value is a valid TopTensAnswer.
+ *
+ * @param value - Value to validate
+ * @param allowAlternates - When true (default), an `alternates` array of
+ *   nested TopTensAnswers is permitted. When false, `alternates` is rejected —
+ *   used to prevent nested alternates inside an alternate.
  */
-function isValidTopTensAnswer(value: unknown): value is TopTensAnswer {
+function isValidTopTensAnswer(
+  value: unknown,
+  allowAlternates: boolean = true
+): value is TopTensAnswer {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -270,6 +284,15 @@ function isValidTopTensAnswer(value: unknown): value is TopTensAnswer {
   // info must be string if present
   if (obj.info !== undefined && typeof obj.info !== 'string') {
     return false;
+  }
+
+  // alternates: only allowed at the top level, must be array of valid answers
+  if (obj.alternates !== undefined) {
+    if (!allowAlternates) return false;
+    if (!Array.isArray(obj.alternates)) return false;
+    for (const alt of obj.alternates) {
+      if (!isValidTopTensAnswer(alt, false)) return false;
+    }
   }
 
   return true;

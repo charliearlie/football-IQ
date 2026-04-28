@@ -40,7 +40,7 @@ export function generateHigherLowerShareText(
 
   const firstLine = score.won
     ? 'I got a perfect 10 in Higher/Lower!'
-    : `I survived ${score.roundsCompleted - 1} round${score.roundsCompleted - 1 === 1 ? '' : 's'} of Higher/Lower!`;
+    : `I scored ${score.points}/10 in Higher/Lower!`;
 
   const playUrl = puzzleDate
     ? `https://football-iq.app/play/higher-lower?ref=share&date=${puzzleDate}`

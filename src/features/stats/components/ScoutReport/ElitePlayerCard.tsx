@@ -41,9 +41,9 @@ import {
  * plus a matching glow color for radial SVG overlay and shadow.
  */
 const TIER_GRADIENT_COLORS: Record<number, { gradient: [string, string]; glow: string }> = {
-  1: { gradient: ['#1e293b', '#1e293b'], glow: '#6B7280' },
-  2: { gradient: ['#1e293b', '#1a1f2e'], glow: '#6B7280' },
-  3: { gradient: ['#1e293b', '#172554'], glow: '#3B82F6' },
+  1: { gradient: ['#0A0A0F', '#1A1A1F'], glow: 'rgba(255,255,255,0.10)' },
+  2: { gradient: ['#0A0A0F', '#1A1A1F'], glow: 'rgba(255,255,255,0.10)' },
+  3: { gradient: ['#111116', '#172554'], glow: '#3B82F6' },
   4: { gradient: ['#1e293b', '#14332a'], glow: '#22C55E' },
   5: { gradient: ['#1e293b', '#14332a'], glow: '#22C55E' },
   6: { gradient: ['#1e293b', '#14332a'], glow: '#22C55E' },
@@ -147,7 +147,11 @@ export function ElitePlayerCard({
   return (
     <Animated.View
       entering={FadeInDown.duration(400).springify()}
-      style={[styles.outerContainer, { borderColor: gradientColors.glow }, glowStyle]}
+      style={[
+        styles.outerContainer,
+        { borderColor: gradientColors.glow, backgroundColor: gradientColors.gradient[0] },
+        glowStyle,
+      ]}
       testID={testID}
     >
       <LinearGradient
@@ -156,21 +160,40 @@ export function ElitePlayerCard({
         end={{ x: 1, y: 1 }}
         style={styles.container}
       >
-        {/* SVG Radial Glow overlay */}
-        <Svg style={styles.radialGlow} width="100%" height="100%">
-          <Defs>
-            <RadialGradient id="cardGlow" cx="70%" cy="25%" rx="60%" ry="60%">
-              <Stop offset="0" stopColor={gradientColors.glow} stopOpacity="0.2" />
-              <Stop offset="0.6" stopColor={gradientColors.glow} stopOpacity="0.05" />
-              <Stop offset="1" stopColor={gradientColors.glow} stopOpacity="0" />
-            </RadialGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#cardGlow)" />
-        </Svg>
+        {/* SVG Radial Glow overlay — only for tiers with visible color */}
+        {tier.tier >= 3 && (
+          <Svg style={styles.radialGlow} width="100%" height="100%">
+            <Defs>
+              <RadialGradient id="cardGlow" cx="70%" cy="25%" rx="60%" ry="60%">
+                <Stop offset="0" stopColor={gradientColors.glow} stopOpacity="0.15" />
+                <Stop offset="0.6" stopColor={gradientColors.glow} stopOpacity="0.04" />
+                <Stop offset="1" stopColor={gradientColors.glow} stopOpacity="0" />
+              </RadialGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill="url(#cardGlow)" />
+          </Svg>
+        )}
 
-        {/* Header row: Share button */}
+        {/* Compact header: Avatar + Name + Share */}
         <View style={styles.headerRow}>
-          <View style={styles.spacer} />
+          <View style={[styles.avatar, { borderColor: tierColor }]}>
+            <User size={20} color={tierColor} strokeWidth={1.5} />
+          </View>
+          <View style={styles.nameBlock}>
+            <Text style={styles.displayName}>{displayName}</Text>
+            <View style={styles.tierRow}>
+              <TierCrest
+                tierName={tierLabel}
+                tierColor={tierColor}
+                tierLevel={tier.tier}
+                variant="dark"
+                testID={`${testID}-crest`}
+              />
+              {currentStreak > 0 && (
+                <Text style={styles.streakInline}>🔥 {currentStreak}</Text>
+              )}
+            </View>
+          </View>
           <Pressable
             onPress={onSharePress}
             style={styles.shareButton}
@@ -178,31 +201,8 @@ export function ElitePlayerCard({
             accessibilityLabel="Share Report"
             accessibilityRole="button"
           >
-            <Share2 size={20} color={colors.floodlightWhite} />
+            <Share2 size={18} color={colors.floodlightWhite} />
           </Pressable>
-        </View>
-
-        {/* Tier Crest - Dark variant pill */}
-        <View style={styles.crestSection}>
-          <TierCrest
-            tierName={tierLabel}
-            tierColor={tierColor}
-            tierLevel={tier.tier}
-            variant="dark"
-            testID={`${testID}-crest`}
-          />
-        </View>
-
-        {/* Player identity */}
-        <View style={styles.identitySection}>
-          <View style={styles.avatarContainer}>
-            <View style={[styles.avatar, { borderColor: tierColor }]}>
-              <User size={32} color={tierColor} strokeWidth={1.5} />
-            </View>
-          </View>
-
-          <Text style={styles.displayName}>{displayName}</Text>
-          <Text style={styles.memberSince}>{formatMemberSince(memberSince)}</Text>
         </View>
 
         {/* Progress to next tier */}
@@ -227,14 +227,8 @@ export function ElitePlayerCard({
           )}
         </View>
 
-        {/* Streak indicator (when active) */}
-        {currentStreak > 0 && (
-          <View style={styles.streakRow}>
-            <Text style={styles.streakText}>
-              🔥 {currentStreak} day streak
-            </Text>
-          </View>
-        )}
+        {/* Member since (compact) */}
+        <Text style={styles.memberSince}>{formatMemberSince(memberSince)}</Text>
       </LinearGradient>
     </Animated.View>
   );
@@ -242,13 +236,13 @@ export function ElitePlayerCard({
 
 const styles = StyleSheet.create({
   outerContainer: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: borderRadius['2xl'],
     marginBottom: spacing.lg,
     overflow: 'hidden',
   },
   container: {
-    padding: spacing.xl,
+    padding: spacing.lg,
   },
   radialGlow: {
     position: 'absolute',
@@ -259,16 +253,37 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    gap: spacing.md,
   },
-  spacer: {
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nameBlock: {
     flex: 1,
   },
+  tierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: 2,
+  },
+  streakInline: {
+    fontFamily: fonts.body,
+    fontWeight: fontWeights.medium,
+    fontSize: 13,
+    color: colors.floodlightWhite,
+  },
   shareButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -276,39 +291,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
-  crestSection: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  identitySection: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  avatarContainer: {
-    marginBottom: spacing.md,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   displayName: {
     fontFamily: fonts.headline,
-    fontSize: 28,
+    fontSize: 22,
     color: colors.floodlightWhite,
-    letterSpacing: 1,
-    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   memberSince: {
     fontFamily: fonts.body,
     fontWeight: fontWeights.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
   progressFooter: {
     paddingTop: spacing.md,
@@ -354,15 +349,5 @@ const styles = StyleSheet.create({
     color: colors.pitchGreen,
     textAlign: 'center',
     marginTop: spacing.xs,
-  },
-  streakRow: {
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  streakText: {
-    fontFamily: fonts.body,
-    fontWeight: fontWeights.medium,
-    fontSize: 14,
-    color: colors.floodlightWhite,
   },
 });

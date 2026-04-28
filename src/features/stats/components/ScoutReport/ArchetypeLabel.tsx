@@ -92,6 +92,11 @@ const ARCHETYPES: Record<GameMode, ArchetypeInfo> = {
     icon: ListOrdered,
     description: 'Lives and breathes football rankings',
   },
+  last_tens: {
+    name: 'Bottom-Table Analyst',
+    icon: ListOrdered,
+    description: 'Knows the relegation scrap as well as the title race',
+  },
   starting_xi: {
     name: 'Tactical Mind',
     icon: Users,

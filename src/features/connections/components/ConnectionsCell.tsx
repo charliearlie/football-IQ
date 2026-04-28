@@ -14,7 +14,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, depthColors, fonts, borderRadius, spacing, glows } from '@/theme';
+import { colors, depthColors, fonts, borderRadius, spacing } from '@/theme';
 import { depthOffset } from '@/theme/spacing';
 import { useHaptics } from '@/hooks/useHaptics';
 
@@ -105,14 +105,11 @@ export function ConnectionsCell({
     transform: [{ translateX: shakeX.value }],
   }));
 
-  // Determine colors based on state
-  const topColor = isSelected ? 'rgba(46, 252, 93, 0.25)' : colors.glassBackground;
-  const shadowColor = isSelected ? '#0D5A1E' : depthColors.stadiumNavy;
+  // Selected = solid green fill (like a pressed button), unselected = glass
+  const topColor = isSelected ? colors.pitchGreen : colors.glassBackground;
+  const shadowColor = isSelected ? depthColors.pitchGreen : depthColors.stadiumNavy;
   const borderColor = isSelected ? colors.pitchGreen : 'rgba(255, 255, 255, 0.1)';
-  const textColor = isSelected ? '#FFFFFF' : colors.floodlightWhite;
-
-  // Glow shadow for iOS when selected
-  const selectedGlowStyle = undefined;
+  const textColor = isSelected ? colors.stadiumNavy : colors.floodlightWhite;
 
   return (
     <Animated.View style={[styles.outerContainer, shakeStyle]}>
@@ -141,7 +138,6 @@ export function ConnectionsCell({
             styles.layer,
             styles.top,
             { backgroundColor: topColor, borderColor },
-            selectedGlowStyle,
             animatedTopStyle,
           ]}
         >

@@ -64,18 +64,32 @@ export class StringMatcher implements AnswerMatcher {
       }
 
       const answer = answers[i];
-      const namesToCheck = [answer.name, ...(answer.aliases || [])];
 
-      // Check primary name and all aliases
-      for (const name of namesToCheck) {
-        const result = validateGuess(trimmedGuess, name);
-        if (result.isMatch) {
-          return {
-            isMatch: true,
-            matchedIndex: i as RankIndex,
-            displayName: answer.name, // Always return primary display name
-            score: result.score,
-          };
+      // Build candidate name list. For rank 10 (index 9), include each
+      // alternate's name + aliases so any joint-10th entrant matches.
+      const candidates: { displayName: string; names: string[] }[] = [
+        { displayName: answer.name, names: [answer.name, ...(answer.aliases || [])] },
+      ];
+      if (i === 9 && answer.alternates) {
+        for (const alt of answer.alternates) {
+          candidates.push({
+            displayName: alt.name,
+            names: [alt.name, ...(alt.aliases || [])],
+          });
+        }
+      }
+
+      for (const candidate of candidates) {
+        for (const name of candidate.names) {
+          const result = validateGuess(trimmedGuess, name);
+          if (result.isMatch) {
+            return {
+              isMatch: true,
+              matchedIndex: i as RankIndex,
+              displayName: candidate.displayName,
+              score: result.score,
+            };
+          }
         }
       }
     }

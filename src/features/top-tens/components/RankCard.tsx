@@ -35,6 +35,11 @@ export interface RankCardProps {
   isHighlighted: boolean;
   /** Type of highlight effect */
   highlightType: HighlightType;
+  /**
+   * Engine variant. Top Tens (default) uses gold styling for rank 1;
+   * Last 10 uses the standard pitch-green for every rank.
+   */
+  gameMode?: 'top_tens' | 'last_tens';
   /** Test ID for testing */
   testID?: string;
 }
@@ -54,9 +59,23 @@ export function RankCard({
   isLatest,
   isHighlighted,
   highlightType,
+  gameMode = 'top_tens',
   testID,
 }: RankCardProps) {
-  const isGold = slot.rank === 1;
+  // Gold styling celebrates rank #1 in Top Tens. Last 10's rank 1 is the
+  // bottom of the bottom — not a jackpot — so render it green like the rest.
+  const isGold = slot.rank === 1 && gameMode === 'top_tens';
+
+  // Joint 10th: render every tied entrant so players see the full set on reveal
+  const hasJointAlternates =
+    slot.rank === 10 && (slot.answer?.alternates?.length ?? 0) > 0;
+  const displayName = slot.answer
+    ? hasJointAlternates
+      ? [slot.answer, ...(slot.answer.alternates ?? [])]
+          .map((a) => a.name.toUpperCase())
+          .join(' / ')
+      : slot.answer.name.toUpperCase()
+    : '';
 
   // Animation values
   const highlightOpacity = useSharedValue(0);
@@ -195,8 +214,11 @@ export function RankCard({
 
         {/* Player name - revealed on find */}
         <Animated.View style={[styles.nameContainer, contentAnimatedStyle]}>
-          <Text style={[styles.answerName, { color: textColor }]} numberOfLines={1}>
-            {slot.answer?.name?.toUpperCase() ?? ''}
+          <Text
+            style={[styles.answerName, { color: textColor }]}
+            numberOfLines={hasJointAlternates ? 2 : 1}
+          >
+            {displayName}
           </Text>
         </Animated.View>
 

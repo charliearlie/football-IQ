@@ -209,3 +209,64 @@ describe('validateTopTensGuess', () => {
     expect(result.matchedIndex).toBe(9);
   });
 });
+
+describe('joint 10th (alternates on rank 10)', () => {
+  const jointPuzzle: TopTensContent = {
+    title: 'Top 10 with joint 10th',
+    answers: [
+      ...mockPuzzleContent.answers.slice(0, 9),
+      {
+        name: 'Michael Owen',
+        aliases: ['Owen'],
+        info: '150 goals',
+        alternates: [
+          { name: 'Didier Drogba', aliases: ['Drogba'], info: '150 goals' },
+          { name: 'Ian Wright', aliases: ['Wright'], info: '150 goals' },
+        ],
+      },
+    ],
+  };
+
+  it('matches the primary rank-10 answer', () => {
+    const result = validateTopTensGuess('Michael Owen', jointPuzzle, new Set());
+    expect(result.isMatch).toBe(true);
+    expect(result.matchedIndex).toBe(9);
+    expect(result.displayName).toBe('Michael Owen');
+  });
+
+  it('matches an alternate by name', () => {
+    const result = validateTopTensGuess('Didier Drogba', jointPuzzle, new Set());
+    expect(result.isMatch).toBe(true);
+    expect(result.matchedIndex).toBe(9);
+    expect(result.displayName).toBe('Didier Drogba');
+  });
+
+  it('matches an alternate by alias', () => {
+    const result = validateTopTensGuess('Wright', jointPuzzle, new Set());
+    expect(result.isMatch).toBe(true);
+    expect(result.matchedIndex).toBe(9);
+    expect(result.displayName).toBe('Ian Wright');
+  });
+
+  it('treats subsequent joint-10th guesses as duplicates once index 9 is found', () => {
+    const found = new Set([9 as RankIndex]);
+    const result = validateTopTensGuess('Drogba', jointPuzzle, found);
+    expect(result.isMatch).toBe(false);
+  });
+
+  it('does NOT honour alternates on ranks other than 10', () => {
+    const wrongRankPuzzle: TopTensContent = {
+      title: 'Alternates on rank 1 should be ignored by the matcher',
+      answers: [
+        {
+          name: 'Alan Shearer',
+          aliases: ['Shearer'],
+          alternates: [{ name: 'Ian Wright', aliases: ['Wright'] }],
+        },
+        ...mockPuzzleContent.answers.slice(1),
+      ],
+    };
+    const result = validateTopTensGuess('Wright', wrongRankPuzzle, new Set());
+    expect(result.isMatch).toBe(false);
+  });
+});

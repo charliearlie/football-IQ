@@ -16,3 +16,4 @@ export {
   type ShadowLevel,
   type GlowColor,
 } from './shadows';
+export { getGameModeColor, type GameModeColorPalette } from './gameModeColors';

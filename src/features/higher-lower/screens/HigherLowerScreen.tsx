@@ -11,6 +11,7 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
@@ -19,13 +20,20 @@ import {
   useOnboarding,
   GameIntroScreen,
 } from '@/features/puzzles';
+import { useReviewMode } from '@/hooks';
 import { colors, spacing, fonts, textStyles } from '@/theme';
-import { GameContainer } from '@/components';
+import {
+  GameContainer,
+  ReviewModeBanner,
+  ReviewModeActionZone,
+} from '@/components';
 import { AdBanner } from '@/features/ads';
 import { useHigherLower } from '../hooks/useHigherLower';
 import { TransferCard } from '../components/TransferCard';
 import { HigherLowerActionZone } from '../components/HigherLowerActionZone';
 import { HigherLowerResultModal } from '../components/HigherLowerResultModal';
+import { HigherLowerReviewList } from '../components/HigherLowerReviewList';
+import { HigherLowerAttemptMetadata } from '../types/higherLower.types';
 
 interface HigherLowerScreenProps {
   puzzleId?: string;
@@ -49,7 +57,7 @@ export function HigherLowerScreen({
   // Puzzle loading
   const { puzzle, isLoading } = useStablePuzzle(puzzleId ?? 'higher_lower');
 
-  // Game hook
+  // Game hook (skip focus-driven persistence while in review mode)
   const {
     state,
     higherLowerContent,
@@ -57,7 +65,13 @@ export function HigherLowerScreen({
     isGameOver,
     submitAnswer,
     shareResult,
-  } = useHigherLower(puzzle, isFocused);
+  } = useHigherLower(puzzle, isFocused && !isReviewMode);
+
+  // Fetch saved attempt for review mode
+  const {
+    metadata: reviewMetadata,
+    isLoading: isReviewLoading,
+  } = useReviewMode<HigherLowerAttemptMetadata>(puzzleId, isReviewMode);
 
   // Modal state
   const [showResultModal, setShowResultModal] = useState(false);
@@ -141,6 +155,54 @@ export function HigherLowerScreen({
     );
   }
 
+  // Review mode: show all 10 rounds with answers revealed
+  if (isReviewMode) {
+    if (isReviewLoading) {
+      return (
+        <GameContainer title="Higher/Lower - Review" testID="higher-lower-review">
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={colors.pitchGreen} />
+            <Text style={[textStyles.body, styles.loadingText]}>
+              Loading review...
+            </Text>
+          </View>
+        </GameContainer>
+      );
+    }
+
+    const savedAnswers = reviewMetadata?.answers ?? [];
+    const savedResults = reviewMetadata?.results ?? [];
+    const correctCount = savedResults.filter(Boolean).length;
+
+    return (
+      <GameContainer title="Higher/Lower - Review" testID="higher-lower-review">
+        <ScrollView
+          contentContainerStyle={styles.reviewScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ReviewModeBanner testID="review-banner" />
+
+          <View style={styles.reviewSummary}>
+            <Text style={styles.reviewScore}>{correctCount}/10</Text>
+            <Text style={styles.reviewScoreLabel}>CORRECT</Text>
+          </View>
+
+          <HigherLowerReviewList
+            pairs={higherLowerContent.pairs}
+            answers={savedAnswers}
+            results={savedResults}
+            testID="review-list"
+          />
+        </ScrollView>
+
+        <ReviewModeActionZone
+          onClose={handleBackToHome}
+          testID="review-action-zone"
+        />
+      </GameContainer>
+    );
+  }
+
   const isButtonsDisabled = state.showingResult || isGameOver || !currentPair;
 
   // Determine the reveal state for player 2
@@ -152,47 +214,42 @@ export function HigherLowerScreen({
   return (
     <GameContainer title="Higher/Lower" testID="higher-lower-screen">
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>HIGHER / LOWER</Text>
-          <Text style={styles.headerSubtitle}>
-            Is Player 2's fee higher or lower?
-          </Text>
-        </View>
-
         {/* Cards area */}
         {currentPair && (
           <View style={styles.cardsContainer}>
-            {/* Player 1 — always revealed */}
+            {/* Player 1 — compact reference strip */}
             <TransferCard
               playerName={currentPair.player1.name}
-              club={currentPair.player1.club}
-              fee={currentPair.player1.fee}
+              context={currentPair.player1.context}
+              statLabel={currentPair.player1.statLabel}
+              statType={currentPair.player1.statType}
+              value={currentPair.player1.value}
               revealed={true}
+              variant="compact"
               testID="player1-card"
             />
 
-            {/* VS divider */}
+            {/* VS divider with question */}
             <View style={styles.vsDivider}>
               <View style={styles.vsLine} />
               <Text style={styles.vsText}>VS</Text>
               <View style={styles.vsLine} />
             </View>
 
-            {/* Player 2 — hidden until answer submitted */}
+            {/* Player 2 — hero guess card */}
             <TransferCard
               playerName={currentPair.player2.name}
-              club={currentPair.player2.club}
-              fee={currentPair.player2.fee}
+              context={currentPair.player2.context}
+              statLabel={currentPair.player2.statLabel}
+              statType={currentPair.player2.statType}
+              value={currentPair.player2.value}
               revealed={hasAnsweredCurrentRound}
               isCorrect={hasAnsweredCurrentRound ? currentResult : undefined}
+              variant="hero"
               testID="player2-card"
             />
           </View>
         )}
-
-        {/* Spacer */}
-        <View style={styles.spacer} />
 
         {/* Action Zone */}
         {!isGameOver && (
@@ -205,6 +262,9 @@ export function HigherLowerScreen({
             testID="action-zone"
           />
         )}
+
+        {/* Push ad to bottom */}
+        <View style={{ flex: 1 }} />
 
         {/* Ad Banner */}
         {!isGameOver && (
@@ -249,26 +309,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
   },
-  header: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.md,
-  },
-  headerTitle: {
-    fontFamily: fonts.headline,
-    fontSize: 32,
-    color: colors.cardYellow,
-    letterSpacing: 2,
-  },
-  headerSubtitle: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.5)',
-    marginTop: 4,
-  },
   cardsContainer: {
     paddingHorizontal: spacing.md,
-    gap: spacing.xs,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
   },
   vsDivider: {
     flexDirection: 'row',
@@ -287,7 +331,24 @@ const styles = StyleSheet.create({
     color: colors.floodlightWhite,
     letterSpacing: 2,
   },
-  spacer: {
-    flex: 1,
+  reviewScrollContent: {
+    paddingBottom: spacing.xl,
+  },
+  reviewSummary: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+  },
+  reviewScore: {
+    fontFamily: fonts.headline,
+    fontSize: 48,
+    color: colors.pitchGreen,
+    letterSpacing: 1,
+  },
+  reviewScoreLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    letterSpacing: 2,
+    marginTop: 4,
   },
 });

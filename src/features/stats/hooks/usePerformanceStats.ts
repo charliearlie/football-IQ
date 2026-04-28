@@ -38,6 +38,10 @@ import { calculateBestDay } from '../utils/bestDay';
 import { findWeakSpot } from '../utils/weakSpot';
 import { generateScoutingVerdict, generateShortVerdict } from '../utils/scoutingVerdict';
 import { getTierForPoints } from '../utils/tierProgression';
+import { buildKnowledgeProfile } from '../utils/knowledgeProfile';
+import { computeClutchRating } from '../utils/clutchRating';
+import { computeFormTrend } from '../utils/formTrend';
+import { computeSpeedProfile } from '../utils/speedProfile';
 import { StreakCategory, Trajectory } from '../types/scoutReport.types';
 import { normalizeScore } from '../utils/iqCalculation';
 
@@ -268,6 +272,12 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
       const scoutingVerdict = generateScoutingVerdict(verdictInput);
       const shortVerdict = generateShortVerdict(verdictInput);
 
+      // ─── Pro Advanced Stats ─────────────────────────────────
+      const knowledgeProfile = buildKnowledgeProfile(detailedModeStats);
+      const clutchRating = computeClutchRating(attempts);
+      const formTrend = computeFormTrend(attempts);
+      const speedProfile = computeSpeedProfile(attempts);
+
       setStats({
         globalIQ,
         proficiencies,
@@ -288,6 +298,10 @@ export function usePerformanceStats(): UsePerformanceStatsResult {
         nextMilestone,
         bestDay,
         weakSpotMode,
+        knowledgeProfile,
+        clutchRating,
+        formTrend,
+        speedProfile,
       });
       setError(null);
       lastLoadTime.current = Date.now();

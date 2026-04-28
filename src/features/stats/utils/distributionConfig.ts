@@ -98,7 +98,8 @@ export function getScoreLabelsForMode(
       // Timeline: one label per guess count (1-5)
       return ['1 guess', '2 guesses', '3 guesses', '4 guesses', '5 guesses'];
     case 'top_tens':
-      // Top Tens: show as X/10 format
+    case 'higher_lower':
+      // Top Tens / Higher-Lower: show as X/10 format
       return [
         '10/10',
         '9/10',

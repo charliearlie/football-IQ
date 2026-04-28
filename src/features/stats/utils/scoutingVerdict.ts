@@ -104,6 +104,10 @@ const STRENGTH_FRAGMENTS: Record<GameMode, string[]> = {
     "Deep knowledge of football's greatest — a true historian.",
     'Rankings and records are second nature.',
   ],
+  last_tens: [
+    'Knows the bottom of the league as well as the top.',
+    'Rankings and records are second nature, even at the wrong end.',
+  ],
   starting_xi: [
     'Can recall any starting lineup from memory.',
   ],

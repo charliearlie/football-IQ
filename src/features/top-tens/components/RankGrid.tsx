@@ -27,6 +27,8 @@ export interface RankGridProps {
   climbTargetRank: number | null;
   /** Called when climbing animation completes */
   onClimbComplete: () => void;
+  /** Engine variant. Forwarded to RankCard for rank-1 styling. */
+  gameMode?: 'top_tens' | 'last_tens';
   /** Test ID for testing */
   testID?: string;
 }
@@ -44,6 +46,7 @@ export function RankGrid({
   isClimbing,
   climbTargetRank,
   onClimbComplete,
+  gameMode = 'top_tens',
   testID,
 }: RankGridProps) {
   // Track which card is currently highlighted during climb
@@ -158,6 +161,7 @@ export function RankGrid({
           isLatest={index === latestFoundIndex && !isClimbing}
           isHighlighted={index === highlightIndex}
           highlightType={index === highlightIndex ? highlightType : null}
+          gameMode={gameMode}
           testID={`${testID}-rank-${slot.rank}`}
         />
       ))}

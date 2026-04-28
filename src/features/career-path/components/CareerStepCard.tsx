@@ -141,12 +141,12 @@ export function CareerStepCard({
   };
   
   const getBorderColor = () => {
-     if (isLoan) return 'transparent'; // Handled by wrapper or just transparent
+     if (isLoan) return 'transparent';
      if (isCurrentClub) return 'transparent';
      if (isWinningStep) return colors.pitchGreen;
      if (isMissedStep) return colors.dangerRed;
-     if (isLatest) return 'rgba(46, 252, 93, 0.4)'; // Neon green tinted border for active clue
-     return 'transparent'; // Default for standard cards!
+     if (isLatest) return 'rgba(46, 252, 93, 0.4)';
+     return 'rgba(255, 255, 255, 0.06)';
   };
 
   if (!showAsRevealed) {
@@ -199,14 +199,14 @@ export function CareerStepCard({
                     <>
                       {step.apps !== undefined && (
                         <View style={styles.statPill}>
-                           <Footprints size={12} color={colors.textSecondary} /> 
+                           <Footprints size={12} color={colors.pitchGreen} />
                            <Text style={styles.statText}>{step.apps}</Text>
                         </View>
                       )}
-                      
+
                       {step.goals !== undefined && (
                         <View style={styles.statPill}>
-                           <FootballIcon size={12} color={colors.textSecondary} />
+                           <FootballIcon size={12} color={colors.pitchGreen} />
                            <Text style={styles.statText}>{step.goals}</Text>
                         </View>
                       )}
@@ -320,15 +320,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // V2 glass stat badge background
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(46, 252, 93, 0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 252, 93, 0.12)',
   },
   statText: {
-    fontFamily: fonts.stats, // Space Grotesk for stat numbers
-    fontSize: 10,
-    color: colors.textSecondary,
+    fontFamily: fonts.stats,
+    fontSize: 12,
+    color: colors.floodlightWhite,
   },
   missedBadge: {
     position: 'absolute',

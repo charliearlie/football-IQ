@@ -9,9 +9,12 @@ import { CardStatus } from '../../hooks/useDailyPuzzles';
 import { ProBadge } from '@/components/ProBadge/ProBadge';
 import { GameModeIcon } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
+import { getGameModeColor } from '@/theme/gameModeColors';
 
 const SPRING_CONFIG = { damping: 15, stiffness: 300, mass: 0.5 };
 const CARD_DEPTH = depthOffset.button;
+
+export type CardColorVariant = 'default' | 'accent' | 'tinted' | 'bold';
 
 interface GlassGameCardProps {
   gameMode: GameMode;
@@ -24,6 +27,8 @@ interface GlassGameCardProps {
   isPremiumOnly?: boolean;
   isPremium?: boolean;
   isAdUnlocked?: boolean;
+  colorVariant?: CardColorVariant;
+  isTrialEligible?: boolean;
 }
 
 export function GlassGameCard({
@@ -37,9 +42,12 @@ export function GlassGameCard({
   isPremiumOnly,
   isPremium,
   isAdUnlocked,
+  colorVariant = 'default',
+  isTrialEligible = false,
 }: GlassGameCardProps) {
   const isLocked = isPremiumOnly && !isPremium && !isAdUnlocked;
   const { triggerLight } = useHaptics();
+  const modeColor = getGameModeColor(gameMode);
 
   const translateY = useSharedValue(0);
   const adTranslateY = useSharedValue(0);
@@ -86,19 +94,23 @@ export function GlassGameCard({
 
   // Locked Card Layout (Vertical Stack)
   if (isLocked) {
+    const lockedShadowColor = colorVariant === 'accent' ? modeColor.shadow : HOME_COLORS.surfaceShadow;
+    const lockedIconStyle = colorVariant === 'accent'
+      ? { backgroundColor: modeColor.tint, borderColor: modeColor.border }
+      : {};
     return (
       <View style={[styles.container, { paddingBottom: CARD_DEPTH }]}>
         {/* Shadow Layer */}
-        <View style={[styles.cardShadow, { top: CARD_DEPTH }]} />
+        <View style={[styles.cardShadow, { top: CARD_DEPTH, backgroundColor: lockedShadowColor }]} />
         {/* Top Face */}
         <View style={[styles.card, styles.lockedCard]}>
           {/* Header Row */}
           <View style={styles.lockedHeader}>
-            <View style={styles.iconBox}>
+            <View style={[styles.iconBox, lockedIconStyle]}>
               <GameModeIcon gameMode={gameMode} size={28} />
             </View>
             <View style={styles.content}>
-              <Text style={[styles.title, { color: HOME_COLORS.cardYellow }]}>{title}</Text>
+              <Text style={[styles.title, { color: colorVariant === 'accent' ? modeColor.primary : HOME_COLORS.cardYellow }]}>{title}</Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
           </View>
@@ -124,15 +136,49 @@ export function GlassGameCard({
               style={[styles.actionButton, styles.proButton]}
             >
               <Animated.View style={[styles.actionButtonInner, proAnimatedStyle]}>
-                <ProBadge size={16} color={HOME_COLORS.stadiumNavy} />
-                <Text style={styles.proButtonText}>GO PRO</Text>
+                {!isTrialEligible && <ProBadge size={16} color={HOME_COLORS.stadiumNavy} />}
+                <Text style={styles.proButtonText}>
+                  {isTrialEligible ? 'TRY FREE' : 'GO PRO'}
+                </Text>
               </Animated.View>
             </Pressable>
           </View>
+          {isTrialEligible && (
+            <Text style={styles.trialSubLabel}>3-day free trial · cancel anytime</Text>
+          )}
         </View>
       </View>
     );
   }
+
+  // Variant-specific styles
+  const variantCardStyle =
+    colorVariant === 'accent' ? { backgroundColor: HOME_COLORS.surface } :
+    colorVariant === 'tinted' ? { backgroundColor: modeColor.tint, borderColor: modeColor.border } :
+    colorVariant === 'bold' ? { backgroundColor: modeColor.tint, borderColor: modeColor.border, borderWidth: 1.5 } :
+    {};
+
+  const variantIconStyle =
+    colorVariant === 'accent' ? { backgroundColor: modeColor.tint, borderColor: modeColor.border } :
+    colorVariant === 'tinted' ? { backgroundColor: modeColor.tint, borderColor: modeColor.border } :
+    colorVariant === 'bold' ? { backgroundColor: modeColor.primary, borderColor: modeColor.primary } :
+    {};
+
+  // Only bold variant forces white icons (solid color background)
+  const variantIconColor =
+    colorVariant === 'bold' ? '#FFFFFF' : undefined;
+
+  const playBgColor =
+    colorVariant !== 'default' && status === 'play' ? modeColor.primary : undefined;
+
+  const playShadowColor =
+    colorVariant !== 'default' && status === 'play' ? modeColor.shadow : undefined;
+
+  // Accent: mode-colored shadow layer gives a subtle colored glow underneath
+  const cardShadowColor =
+    colorVariant === 'accent' ? modeColor.shadow :
+    colorVariant === 'bold' ? modeColor.shadow :
+    HOME_COLORS.surfaceShadow;
 
   // Standard Card Layout (Horizontal Row)
   return (
@@ -143,15 +189,15 @@ export function GlassGameCard({
       style={[styles.container, { paddingBottom: CARD_DEPTH }]}
     >
       {/* Shadow Layer */}
-      <View style={[styles.cardShadow, { top: CARD_DEPTH }]} />
+      <View style={[styles.cardShadow, { top: CARD_DEPTH, backgroundColor: cardShadowColor }]} />
       {/* Top Face */}
-      <Animated.View style={[styles.card, animatedStyle]}>
+      <Animated.View style={[styles.card, variantCardStyle, animatedStyle]}>
         {/* Left: Icon Box */}
-        <View style={styles.iconBox}>
-          <GameModeIcon gameMode={gameMode} size={28} />
+        <View style={[styles.iconBox, variantIconStyle]}>
+          <GameModeIcon gameMode={gameMode} size={28} color={variantIconColor} />
           {status === 'done' && (
-            <View style={styles.checkBadge}>
-              <Check size={10} color={HOME_COLORS.stadiumNavy} strokeWidth={4} />
+            <View style={[styles.checkBadge, colorVariant !== 'default' && { backgroundColor: modeColor.primary }]}>
+              <Check size={10} color={colorVariant === 'bold' ? '#FFFFFF' : HOME_COLORS.stadiumNavy} strokeWidth={4} />
             </View>
           )}
         </View>
@@ -165,6 +211,8 @@ export function GlassGameCard({
         {/* Right: Squircle Play Button */}
         <View style={[
           styles.playButton,
+          playBgColor && { backgroundColor: playBgColor },
+          playShadowColor && { borderBottomColor: playShadowColor },
           status === 'done' && styles.resultButton,
           status === 'resume' && styles.resumeButton,
         ]}>
@@ -257,6 +305,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Outfit-ExtraBold',
     fontSize: 16,
     color: HOME_COLORS.stadiumNavy,
+  },
+  trialSubLabel: {
+    fontFamily: 'Outfit-Regular',
+    fontSize: 11,
+    color: HOME_COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
   },
 
   // Standard Styles
