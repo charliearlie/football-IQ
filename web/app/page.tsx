@@ -14,6 +14,7 @@ import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
 import { JsonLd } from "@/components/JsonLd";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 import { AndroidNotifyButton } from "@/components/AndroidNotifyButton";
+import { Download } from "lucide-react";
 
 export const revalidate = 3600;
 
@@ -150,30 +151,62 @@ export default async function HomePage() {
 
       <div className="container mx-auto px-4 max-w-2xl">
         {/* Hero intro — gives first-time visitors context */}
-        <section className="pt-8 pb-6 text-center">
-          <h1 className="font-bebas text-5xl md:text-6xl tracking-wide text-floodlight leading-[0.95] mb-3">
-            FOOTBALL IQ <span className="text-pitch-green">GAMES</span>
+        <section className="pt-12 md:pt-20 pb-8 md:pb-10 text-center relative">
+          {/* Soft radial accent behind the headline */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-8 mx-auto h-40 max-w-md bg-pitch-green/[0.06] blur-3xl pointer-events-none"
+          />
+
+          {/* Eyebrow tag */}
+          <div className="relative inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full border border-pitch-green/30 bg-pitch-green/[0.06] text-pitch-green text-[11px] font-semibold uppercase tracking-[0.18em]">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-pitch-green opacity-70 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-pitch-green" />
+            </span>
+            New puzzles · {dayStr}
+          </div>
+
+          <h1 className="relative font-bebas text-6xl md:text-8xl tracking-tight text-floodlight leading-[0.9] mb-4">
+            PROVE YOUR
+            <br />
+            <span className="text-pitch-green">FOOTBALL IQ</span>
           </h1>
-          <p className="font-bebas text-2xl md:text-3xl tracking-wider text-slate-400 mb-3">
-            DAILY FOOTBALL QUIZZES & TRIVIA
+          <p className="relative text-slate-400 text-base md:text-lg max-w-md mx-auto leading-relaxed mb-8">
+            Five free daily puzzles. No download, no account. Six more modes,
+            streak tracking and the full archive in the app.
           </p>
-          <p className="text-slate-400 text-sm md:text-base max-w-md mx-auto">
-            Football IQ games are free daily football quizzes with new puzzles
-            every day. Test your football trivia knowledge across career paths,
-            transfers, connections and more. Play in your browser or get all 11 game modes in the app.
-          </p>
+
+          {/* CTA pair */}
+          <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <a
+              href="#games"
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-pitch-green text-stadium-navy font-bebas text-lg tracking-wider shadow-glow-green hover:opacity-90 active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
+            >
+              Play Today&apos;s Games →
+            </a>
+            <a
+              href={appStoreUrl("web_hero_cta")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white/[0.04] border border-white/10 text-floodlight font-semibold text-sm hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4" />
+              Get the App
+            </a>
+          </div>
         </section>
 
         {/* Date + Progress */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-slate-500 text-sm uppercase tracking-wider">
+        <div className="flex items-center justify-between mb-5">
+          <p className="text-slate-500 text-xs font-semibold uppercase tracking-[0.18em]">
             {dayStr} · {dateStr}
           </p>
           <DailyProgress />
         </div>
 
         {/* Game Grid */}
-        <section id="games" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <section id="games" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {WEB_PLAYABLE_GAMES.map((game, i) => (
             <GameHubCard
               key={game.slug}
@@ -192,34 +225,44 @@ export default async function HomePage() {
           <AdSlot variant="banner" />
         </div>
 
-        {/* App download pitch — compact, above the fold on most devices */}
-        <section className="py-8 border-t border-white/10">
-          <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-            <div className="flex-1 text-center sm:text-left">
-              <h2 className="font-bebas text-2xl tracking-wider text-floodlight mb-1">
-                7 MORE MODES IN THE APP
-              </h2>
-              <p className="text-slate-400 text-sm">
-                The Grid, Timeline, Top Tens, Goalscorer Recall and more.
-                Track your stats, build streaks, climb from Intern to The Gaffer.
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-2 shrink-0">
-              <Link
-                href={appStoreUrl('web_home')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-all hover:opacity-90 hover:scale-105"
-              >
-                <Image
-                  src="/images/app-store.svg"
-                  alt="Download on the App Store"
-                  width={140}
-                  height={42}
-                  className="h-[42px] w-auto"
-                />
-              </Link>
-              <AndroidNotifyButton source="android-notify" size="md" />
+        {/* App download pitch — featured card with subtle accent */}
+        <section className="my-10">
+          <div className="relative overflow-hidden rounded-2xl border border-pitch-green/20 bg-gradient-to-br from-pitch-green/[0.06] via-white/[0.02] to-transparent p-6 md:p-8">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-pitch-green/15 blur-3xl"
+            />
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-pitch-green mb-2">
+                  Football IQ App
+                </p>
+                <h2 className="font-bebas text-3xl md:text-4xl tracking-tight text-floodlight mb-2 leading-none">
+                  6 MORE MODES IN THE APP
+                </h2>
+                <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+                  The Grid, Higher/Lower, Top Tens, Goalscorer Recall and more.
+                  Track your stats, build streaks, climb from Intern to The
+                  Gaffer.
+                </p>
+              </div>
+              <div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
+                <Link
+                  href={appStoreUrl("web_home")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block transition-all duration-150 hover:opacity-90 active:scale-[0.97]"
+                >
+                  <Image
+                    src="/images/app-store.svg"
+                    alt="Download on the App Store"
+                    width={140}
+                    height={42}
+                    className="h-[42px] w-auto"
+                  />
+                </Link>
+                <AndroidNotifyButton source="android-notify" size="md" />
+              </div>
             </div>
           </div>
         </section>

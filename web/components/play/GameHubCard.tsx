@@ -57,25 +57,28 @@ export function GameHubCard({
   const card = (
     <div
       className={cn(
-        "relative rounded-xl border overflow-hidden transition-all",
-        featured && status === "available" && "min-h-[140px] flex flex-col justify-between",
-        featured && "col-span-2",
-        isClickable && "hover:border-white/20 hover:bg-white/[0.04] cursor-pointer",
-        status === "available" && "border-white/10 bg-white/[0.02]",
-        status === "completed" && "border-pitch-green/30 bg-pitch-green/[0.04]",
+        "relative rounded-xl border overflow-hidden transition-all duration-200 will-change-transform h-full min-h-[150px] flex flex-col",
+        "shadow-card",
+        isClickable &&
+          "hover:border-white/20 hover:bg-white/[0.05] hover:-translate-y-0.5 hover:shadow-elevated active:scale-[0.99] cursor-pointer",
+        status === "available" && "border-white/10 bg-white/[0.025]",
+        status === "completed" &&
+          "border-pitch-green/30 bg-gradient-to-br from-pitch-green/[0.07] via-pitch-green/[0.03] to-transparent",
         status === "no_puzzle" && "border-white/5 bg-white/[0.01] opacity-60",
-        status === "app_only" && "border-white/5 bg-white/[0.01] opacity-50"
+        status === "app_only" && "border-white/5 bg-white/[0.01] opacity-50",
       )}
     >
       {/* Accent color strip */}
       {!isAppOnly && (
         <div
           className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
-          style={{ backgroundColor: status === "app_only" ? "#334155" : accentColor }}
+          style={{
+            backgroundColor: status === "app_only" ? "#334155" : accentColor,
+          }}
         />
       )}
 
-      <div className="pl-5 p-5">
+      <div className="relative pl-5 p-5 flex-1 flex flex-col">
         {/* Badge */}
         <div className="flex items-center gap-2 mb-2">
           {status === "available" && (
@@ -115,7 +118,7 @@ export function GameHubCard({
 
         {/* Title */}
         <h3
-          className="font-bebas text-lg tracking-wide mb-1"
+          className="font-bebas text-xl tracking-wide mb-1.5 leading-none"
           style={{ color: status === "app_only" ? "#64748B" : accentColor }}
         >
           {title.toUpperCase()}
@@ -131,14 +134,15 @@ export function GameHubCard({
           </p>
         )}
 
-        {/* CTA */}
+        {/* CTA — pinned to bottom so all cards line up */}
         {status === "available" && (
-          <div className="mt-3">
+          <div className="mt-auto pt-3">
             <span
-              className="text-xs font-bold uppercase tracking-wider"
+              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider transition-transform group-hover:translate-x-0.5"
               style={{ color: accentColor }}
             >
-              Play today&apos;s game &rarr;
+              Play today&apos;s game
+              <span aria-hidden>→</span>
             </span>
           </div>
         )}
@@ -147,7 +151,11 @@ export function GameHubCard({
   );
 
   if (isClickable && slug) {
-    return <Link href={`/play/${slug}`}>{card}</Link>;
+    return (
+      <Link href={`/play/${slug}`} className="group block">
+        {card}
+      </Link>
+    );
   }
 
   return card;
