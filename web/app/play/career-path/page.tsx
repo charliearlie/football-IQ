@@ -1,12 +1,7 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle } from "@/lib/fetchDailyPuzzle";
-import { FALLBACK_CAREER_PUZZLE } from "@/lib/constants";
-import type { CareerPathContent } from "@/types/careerPath";
-import { GamePageShell } from "@/components/play/GamePageShell";
-import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
-import { CareerPathGame } from "@/components/play/CareerPathGame";
 import { JsonLd } from "@/components/JsonLd";
 import { HowToPlay } from "@/components/play/HowToPlay";
+import { DailyPuzzleGame } from "@/components/play/DailyPuzzleGame";
 
 export const revalidate = 3600;
 
@@ -61,12 +56,6 @@ interface PageProps {
 
 export default async function CareerPathPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const puzzle = await fetchDailyPuzzle("career_path", params.date);
-  const puzzleDate =
-    puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content =
-    (puzzle?.content as unknown as CareerPathContent) ??
-    FALLBACK_CAREER_PUZZLE;
 
   return (
     <>
@@ -144,15 +133,7 @@ export default async function CareerPathPage({ searchParams }: PageProps) {
           ],
         }}
       />
-      <GamePageShell title="Career Path" gameSlug="career-path">
-        <PlayedTodayGate gameSlug="career-path">
-          <CareerPathGame
-            careerSteps={content.career_steps}
-            answer={content.answer}
-            puzzleDate={puzzleDate}
-          />
-        </PlayedTodayGate>
-      </GamePageShell>
+      <DailyPuzzleGame mode="career-path" date={params.date} />
       <HowToPlay
         title="Career Path"
         rules={[
