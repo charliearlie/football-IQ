@@ -1,4 +1,6 @@
 // web/lib/play/registry.ts
+"use client";
+
 import { CareerPathGame } from "@/components/play/CareerPathGame";
 import { TransferGuessGame } from "@/components/play/TransferGuessGame";
 import { ConnectionsGame } from "@/components/play/ConnectionsGame";
@@ -32,35 +34,30 @@ export type AnyGameRegistryEntry =
 
 export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
   "career-path": {
-    slug: "career-path",
     dbMode: "career_path",
     title: "Career Path",
     component: CareerPathGame,
     fallbackContent: FALLBACK_CAREER_PUZZLE as CareerPathContent,
   },
   "transfer-guess": {
-    slug: "transfer-guess",
     dbMode: "guess_the_transfer",
     title: "Transfer Guess",
     component: TransferGuessGame,
     fallbackContent: FALLBACK_TRANSFER_PUZZLE as TransferGuessContent,
   },
   "connections": {
-    slug: "connections",
     dbMode: "connections",
     title: "Connections",
     component: ConnectionsGame,
     fallbackContent: FALLBACK_CONNECTIONS_PUZZLE as ConnectionsContent,
   },
   "topical-quiz": {
-    slug: "topical-quiz",
     dbMode: "topical_quiz",
     title: "Topical Quiz",
     component: TopicalQuizGame,
     fallbackContent: FALLBACK_QUIZ_PUZZLE as TopicalQuizContent,
   },
   "timeline": {
-    slug: "timeline",
     dbMode: "timeline",
     title: "Timeline",
     component: TimelineGame,

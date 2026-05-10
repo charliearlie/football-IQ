@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 
 /**
  * Result a game reports when it ends. Drives post-game CTA rendering.
@@ -22,13 +22,13 @@ export interface GameProps<TContent> {
 }
 
 /**
- * Registry entry per playable game mode. Lives client-side because it carries
- * a React component reference. The server-side <DailyPuzzleGame> only reads
- * `dbMode`, `title`, and `fallbackContent` (all serializable).
+ * Registry entry per playable game mode. The slug is the record key in
+ * GAME_REGISTRY — not duplicated as a field on the entry. Lives client-side
+ * because it carries a React component reference; the server-side
+ * <DailyPuzzleGame> only reads `dbMode` and `title` from the entry, both
+ * serializable.
  */
 export interface GameRegistryEntry<TContent> {
-  /** URL slug, e.g. "career-path". */
-  slug: string;
   /** Database game_mode value, e.g. "career_path". */
   dbMode: string;
   /** Display title, used by GamePageShell. */
@@ -37,6 +37,4 @@ export interface GameRegistryEntry<TContent> {
   fallbackContent: TContent;
   /** The game UI component conforming to GameProps<TContent>. */
   component: ComponentType<GameProps<TContent>>;
-  /** Optional how-to-play / SEO node rendered below the game. */
-  howToPlay?: ReactNode;
 }
