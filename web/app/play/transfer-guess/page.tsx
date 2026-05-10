@@ -1,10 +1,5 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle } from "@/lib/fetchDailyPuzzle";
-import { FALLBACK_TRANSFER_PUZZLE } from "@/lib/constants";
-import type { TransferGuessContent } from "@/lib/schemas/puzzle-schemas";
-import { GamePageShell } from "@/components/play/GamePageShell";
-import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
-import { TransferGuessGame } from "@/components/play/TransferGuessGame";
+import { DailyPuzzleGame } from "@/components/play/DailyPuzzleGame";
 import { JsonLd } from "@/components/JsonLd";
 import { HowToPlay } from "@/components/play/HowToPlay";
 
@@ -61,12 +56,6 @@ interface PageProps {
 
 export default async function TransferGuessPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const puzzle = await fetchDailyPuzzle("guess_the_transfer", params.date);
-  const puzzleDate =
-    puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content =
-    (puzzle?.content as unknown as TransferGuessContent) ??
-    FALLBACK_TRANSFER_PUZZLE;
 
   return (
     <>
@@ -144,11 +133,7 @@ export default async function TransferGuessPage({ searchParams }: PageProps) {
           ],
         }}
       />
-      <GamePageShell title="Transfer Guess" gameSlug="transfer-guess">
-        <PlayedTodayGate gameSlug="transfer-guess">
-          <TransferGuessGame content={content} puzzleDate={puzzleDate} />
-        </PlayedTodayGate>
-      </GamePageShell>
+      <DailyPuzzleGame mode="transfer-guess" date={params.date} />
       <HowToPlay
         title="Transfer Guess"
         rules={[
