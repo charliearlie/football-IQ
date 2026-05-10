@@ -4,13 +4,13 @@ import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { ArrowRight, Lock, Search, Lightbulb, Calendar, Shirt, Flag } from "lucide-react";
 import type { TransferGuessContent } from "@/lib/schemas/puzzle-schemas";
+import type { GameProps } from "@/lib/play/types";
 import { validateGuess } from "@/lib/validation";
 import { generateTransferGuessShareText } from "@/lib/shareText";
 import { Input } from "@/components/ui/input";
 import { CTAButton } from "@/components/landing/CTAButton";
 import { FlagIcon } from "@/components/ui/flag-icon";
 import { cn } from "@/lib/utils";
-import { useGameComplete } from "./GamePageShell";
 import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
@@ -103,11 +103,6 @@ export function transferGuessReducer(
 // COMPONENT
 // ============================================================================
 
-interface TransferGuessGameProps {
-  content: TransferGuessContent;
-  puzzleDate: string;
-}
-
 function triggerConfetti() {
   const count = 200;
   const defaults = { origin: { y: 0.7 }, zIndex: 9999 };
@@ -125,8 +120,11 @@ function triggerConfetti() {
 const HINT_LABELS = ["Year", "Position", "Nationality"] as const;
 const HINT_ICONS = [Calendar, Shirt, Flag] as const;
 
-export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProps) {
-  const onGameComplete = useGameComplete();
+export function TransferGuessGame({
+  content,
+  puzzleDate,
+  onComplete,
+}: GameProps<TransferGuessContent>) {
   const { trackGameStarted, trackGameCompleted } = useGameTracking(
     "guess_the_transfer",
     puzzleDate
@@ -165,7 +163,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
         puzzleDate
       );
       trackGameCompleted("won", `${state.hintsRevealed}/3`);
-      onGameComplete({ won: true, answer: content.answer, shareText });
+      onComplete({ won: true, answer: content.answer, shareText });
     } else {
       const newIncorrectCount = incorrectGuesses.length + 1;
       if (newIncorrectCount >= 3) {
@@ -178,7 +176,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
           puzzleDate
         );
         trackGameCompleted("lost", `${state.hintsRevealed}/3`);
-        onGameComplete({ won: false, answer: content.answer, shareText });
+        onComplete({ won: false, answer: content.answer, shareText });
       }
       setTimeout(() => dispatch({ type: "CLEAR_SHAKE" }), 500);
     }
@@ -189,7 +187,7 @@ export function TransferGuessGame({ content, puzzleDate }: TransferGuessGameProp
     state.gameStatus,
     content.answer,
     puzzleDate,
-    onGameComplete,
+    onComplete,
     trackGameCompleted,
   ]);
 
