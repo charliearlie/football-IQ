@@ -2,10 +2,10 @@
 
 import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
+import type { GameProps } from "@/lib/play/types";
 import type { TopicalQuizContent } from "@/lib/schemas/puzzle-schemas";
 import { generateTopicalQuizShareText } from "@/lib/shareText";
 import { cn } from "@/lib/utils";
-import { useGameComplete } from "./GamePageShell";
 import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
@@ -98,13 +98,11 @@ function triggerConfetti() {
 // COMPONENT
 // ============================================================================
 
-interface TopicalQuizGameProps {
-  content: TopicalQuizContent;
-  puzzleDate: string;
-}
-
-export function TopicalQuizGame({ content, puzzleDate }: TopicalQuizGameProps) {
-  const onGameComplete = useGameComplete();
+export function TopicalQuizGame({
+  content,
+  puzzleDate,
+  onComplete,
+}: GameProps<TopicalQuizContent>) {
   const { trackGameStarted, trackGameCompleted } = useGameTracking(
     "topical_quiz",
     puzzleDate
@@ -152,7 +150,7 @@ export function TopicalQuizGame({ content, puzzleDate }: TopicalQuizGameProps) {
             correctCount >= 3 ? "won" : "lost",
             `${correctCount}/${content.questions.length}`
           );
-          onGameComplete({
+          onComplete({
             won: correctCount >= 3,
             answer: `${correctCount * 2}/10`,
             shareText,
@@ -172,7 +170,7 @@ export function TopicalQuizGame({ content, puzzleDate }: TopicalQuizGameProps) {
       state.answers,
       content,
       puzzleDate,
-      onGameComplete,
+      onComplete,
       trackGameCompleted,
     ]
   );
