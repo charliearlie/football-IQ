@@ -4,13 +4,13 @@ import { useReducer, useCallback, useMemo, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { Shuffle, X, ChevronRight } from "lucide-react";
 import type { ConnectionsContent } from "@/lib/schemas/puzzle-schemas";
+import type { GameProps } from "@/lib/play/types";
 import {
   generateConnectionsShareText,
   type ConnectionsGuessResult,
   type ConnectionsGroupInfo,
 } from "@/lib/shareText";
 import { cn } from "@/lib/utils";
-import { useGameComplete } from "./GamePageShell";
 import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
@@ -287,11 +287,6 @@ const DIFFICULTY_TEXT_CLASSES: Record<string, string> = {
 // COMPONENT
 // ============================================================================
 
-interface ConnectionsGameProps {
-  content: ConnectionsContent;
-  puzzleDate: string;
-}
-
 function triggerConfetti() {
   const count = 200;
   const defaults = { origin: { y: 0.7 }, zIndex: 9999 };
@@ -306,8 +301,11 @@ function triggerConfetti() {
   fire(0.1, { spread: 120, startVelocity: 45 });
 }
 
-export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
-  const onGameComplete = useGameComplete();
+export function ConnectionsGame({
+  content,
+  puzzleDate,
+  onComplete,
+}: GameProps<ConnectionsContent>) {
   const { trackGameStarted, trackGameCompleted } = useGameTracking(
     "connections",
     puzzleDate
@@ -370,13 +368,13 @@ export function ConnectionsGame({ content, puzzleDate }: ConnectionsGameProps) {
     if (state.gameStatus === "won") {
       triggerConfetti();
       trackGameCompleted("won", `${state.solvedGroups.length}/4`);
-      onGameComplete({ won: true, answer: "Connections", shareText });
+      onComplete({ won: true, answer: "Connections", shareText });
     } else {
       trackGameCompleted("lost", `${state.solvedGroups.length}/4`);
-      onGameComplete({ won: false, answer: "Connections", shareText });
+      onComplete({ won: false, answer: "Connections", shareText });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.gameStatus]);
+  }, [state.gameStatus, onComplete]);
 
   const handleSubmit = useCallback(() => {
     dispatch({ type: "SUBMIT_GUESS", groups });
