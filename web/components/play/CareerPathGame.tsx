@@ -9,8 +9,9 @@ import { generateCareerPathShareText } from "@/lib/shareText";
 import { Input } from "@/components/ui/input";
 import { CTAButton } from "@/components/landing/CTAButton";
 import { cn } from "@/lib/utils";
-import { useGameComplete } from "./GamePageShell";
 import { useGameTracking } from "@/hooks/use-game-tracking";
+import type { GameProps } from "@/lib/play/types";
+import type { CareerPathContent } from "@/lib/schemas/puzzle-schemas";
 
 // ============================================================================
 // TYPES & REDUCER
@@ -97,12 +98,6 @@ function careerPathReducer(
 // COMPONENT
 // ============================================================================
 
-interface CareerPathGameProps {
-  careerSteps: CareerStep[];
-  answer: string;
-  puzzleDate: string;
-}
-
 function triggerConfetti() {
   const count = 200;
   const defaults = { origin: { y: 0.7 }, zIndex: 9999 };
@@ -118,11 +113,11 @@ function triggerConfetti() {
 }
 
 export function CareerPathGame({
-  careerSteps,
-  answer,
+  content,
   puzzleDate,
-}: CareerPathGameProps) {
-  const onGameComplete = useGameComplete();
+  onComplete,
+}: GameProps<CareerPathContent>) {
+  const { career_steps: careerSteps, answer } = content;
   const { trackGameStarted, trackGameCompleted } = useGameTracking(
     "career_path",
     puzzleDate
@@ -157,7 +152,7 @@ export function CareerPathGame({
         puzzleDate
       );
       trackGameCompleted("won", `${state.revealedCount}/${careerSteps.length}`);
-      onGameComplete({ won: true, answer, shareText });
+      onComplete({ won: true, answer, shareText });
     } else {
       // Check if this guess causes game over
       const newRevealed = state.revealedCount + 1;
@@ -167,11 +162,11 @@ export function CareerPathGame({
           puzzleDate
         );
         trackGameCompleted("lost", `${careerSteps.length}/${careerSteps.length}`);
-        onGameComplete({ won: false, answer, shareText });
+        onComplete({ won: false, answer, shareText });
       }
       setTimeout(() => dispatch({ type: "CLEAR_SHAKE" }), 500);
     }
-  }, [state.currentGuess, state.revealedCount, state.gameStatus, answer, careerSteps.length, puzzleDate, onGameComplete, trackGameCompleted]);
+  }, [state.currentGuess, state.revealedCount, state.gameStatus, answer, careerSteps.length, puzzleDate, onComplete, trackGameCompleted]);
 
   const handleRevealNext = useCallback(() => {
     dispatch({ type: "REVEAL_NEXT", totalSteps: careerSteps.length });
