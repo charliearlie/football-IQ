@@ -3,7 +3,6 @@
 import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { Shield, PlaneTakeoff, Lock, Search, Lightbulb, Footprints, Circle } from "lucide-react";
-import type { CareerStep } from "@/types/careerPath";
 import { validateGuess } from "@/lib/validation";
 import { generateCareerPathShareText } from "@/lib/shareText";
 import { Input } from "@/components/ui/input";
