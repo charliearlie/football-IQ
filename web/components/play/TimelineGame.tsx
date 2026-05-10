@@ -27,10 +27,10 @@ const restrictToVerticalAxis: Modifier = ({ transform }) => ({
   ...transform,
   x: 0,
 });
+import type { GameProps } from "@/lib/play/types";
 import type { TimelineContent } from "@/lib/schemas/puzzle-schemas";
 import { generateTimelineShareText } from "@/lib/shareText";
 import { cn } from "@/lib/utils";
-import { useGameComplete } from "./GamePageShell";
 import { useGameTracking } from "@/hooks/use-game-tracking";
 
 // ============================================================================
@@ -367,13 +367,11 @@ function triggerConfetti() {
   fire(0.1, { spread: 120, startVelocity: 45 });
 }
 
-interface TimelineGameProps {
-  content: TimelineContent;
-  puzzleDate: string;
-}
-
-export function TimelineGame({ content, puzzleDate }: TimelineGameProps) {
-  const onGameComplete = useGameComplete();
+export function TimelineGame({
+  content,
+  puzzleDate,
+  onComplete,
+}: GameProps<TimelineContent>) {
   const { trackGameStarted, trackGameCompleted } = useGameTracking(
     "timeline",
     puzzleDate
@@ -450,21 +448,21 @@ export function TimelineGame({ content, puzzleDate }: TimelineGameProps) {
     if (state.gameStatus === "won") {
       triggerConfetti();
       trackGameCompleted("won", `${state.attemptCount}/${MAX_ATTEMPTS}`);
-      onGameComplete({
+      onComplete({
         won: true,
         answer: content.title || content.subject || "Timeline",
         shareText,
       });
     } else {
       trackGameCompleted("lost", `${state.attemptCount}/${MAX_ATTEMPTS}`);
-      onGameComplete({
+      onComplete({
         won: false,
         answer: content.title || content.subject || "Timeline",
         shareText,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.gameStatus]);
+  }, [state.gameStatus, onComplete]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
