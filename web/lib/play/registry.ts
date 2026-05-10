@@ -1,0 +1,73 @@
+// web/lib/play/registry.ts
+import { CareerPathGame } from "@/components/play/CareerPathGame";
+import { TransferGuessGame } from "@/components/play/TransferGuessGame";
+import { ConnectionsGame } from "@/components/play/ConnectionsGame";
+import { TopicalQuizGame } from "@/components/play/TopicalQuizGame";
+import { TimelineGame } from "@/components/play/TimelineGame";
+
+import {
+  FALLBACK_CAREER_PUZZLE,
+  FALLBACK_TRANSFER_PUZZLE,
+  FALLBACK_CONNECTIONS_PUZZLE,
+  FALLBACK_QUIZ_PUZZLE,
+  FALLBACK_TIMELINE_PUZZLE,
+} from "@/lib/constants";
+
+import type { GameRegistryEntry } from "./types";
+import type {
+  CareerPathContent,
+  TransferGuessContent,
+  ConnectionsContent,
+  TopicalQuizContent,
+  TimelineContent,
+} from "@/lib/schemas/puzzle-schemas";
+
+// Use a discriminated entry type so the registry remains typed end-to-end.
+export type AnyGameRegistryEntry =
+  | GameRegistryEntry<CareerPathContent>
+  | GameRegistryEntry<TransferGuessContent>
+  | GameRegistryEntry<ConnectionsContent>
+  | GameRegistryEntry<TopicalQuizContent>
+  | GameRegistryEntry<TimelineContent>;
+
+export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
+  "career-path": {
+    slug: "career-path",
+    dbMode: "career_path",
+    title: "Career Path",
+    component: CareerPathGame,
+    fallbackContent: FALLBACK_CAREER_PUZZLE as CareerPathContent,
+  },
+  "transfer-guess": {
+    slug: "transfer-guess",
+    dbMode: "guess_the_transfer",
+    title: "Transfer Guess",
+    component: TransferGuessGame,
+    fallbackContent: FALLBACK_TRANSFER_PUZZLE as TransferGuessContent,
+  },
+  "connections": {
+    slug: "connections",
+    dbMode: "connections",
+    title: "Connections",
+    component: ConnectionsGame,
+    fallbackContent: FALLBACK_CONNECTIONS_PUZZLE as ConnectionsContent,
+  },
+  "topical-quiz": {
+    slug: "topical-quiz",
+    dbMode: "topical_quiz",
+    title: "Topical Quiz",
+    component: TopicalQuizGame,
+    fallbackContent: FALLBACK_QUIZ_PUZZLE as TopicalQuizContent,
+  },
+  "timeline": {
+    slug: "timeline",
+    dbMode: "timeline",
+    title: "Timeline",
+    component: TimelineGame,
+    fallbackContent: FALLBACK_TIMELINE_PUZZLE as TimelineContent,
+  },
+};
+
+export function getGameEntry(slug: string): AnyGameRegistryEntry | null {
+  return GAME_REGISTRY[slug] ?? null;
+}
