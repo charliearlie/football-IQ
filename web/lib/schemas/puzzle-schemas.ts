@@ -372,6 +372,20 @@ export const whoAmIContentSchema = z.object({
 export type WhoAmIContent = z.infer<typeof whoAmIContentSchema>;
 export type WhoAmIClue = z.infer<typeof whoAmIClueSchema>;
 
+export const whosThatContentSchema = z.object({
+  answer: z.object({
+    player_name: z.string(),
+    player_id: z.string(),
+    club: z.string(),
+    league: z.string(),
+    nationality: z.string(),
+    position: z.string(),
+    birth_year: z.number(),
+  }),
+});
+
+export type WhosThatContent = z.infer<typeof whosThatContentSchema>;
+
 // ============================================================================
 // CONTENT SCHEMA MAP
 // ============================================================================
@@ -391,17 +405,7 @@ export const contentSchemaMap = {
   connections: connectionsContentSchema,
   timeline: timelineContentSchema,
   who_am_i: whoAmIContentSchema,
-  'whos-that': z.object({
-    answer: z.object({
-      player_name: z.string(),
-      player_id: z.string(),
-      club: z.string(),
-      league: z.string(),
-      nationality: z.string(),
-      position: z.string(),
-      birth_year: z.number(),
-    }),
-  }),
+  'whos-that': whosThatContentSchema,
   higher_lower: z.object({
     // Chain format: 11+ entries, round N compares players[N] vs players[N+1]
     players: z.array(z.union([

@@ -1,19 +1,12 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle } from "@/lib/fetchDailyPuzzle";
-import { FALLBACK_QUIZ_PUZZLE } from "@/lib/constants";
-import type { TopicalQuizContent } from "@/lib/schemas/puzzle-schemas";
-import { GamePageShell } from "@/components/play/GamePageShell";
-import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
-import { TopicalQuizGame } from "@/components/play/TopicalQuizGame";
 import { JsonLd } from "@/components/JsonLd";
 import { HowToPlay } from "@/components/play/HowToPlay";
+import { DailyPuzzleGame } from "@/components/play/DailyPuzzleGame";
 
 export const revalidate = 3600;
 
-const today = () => new Date().toISOString().split("T")[0];
-
 export async function generateMetadata(): Promise<Metadata> {
-  const ogDate = today();
+  const ogDate = new Date().toISOString().split("T")[0];
   // Topical quiz isn't guaranteed daily — use dynamic route as primary
   const ogImage = `/api/og/play/topical-quiz?date=${ogDate}`;
   return {
@@ -59,12 +52,6 @@ interface PageProps {
 
 export default async function TopicalQuizPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const puzzle = await fetchDailyPuzzle("topical_quiz", params.date);
-  const puzzleDate =
-    puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const content =
-    (puzzle?.content as unknown as TopicalQuizContent) ??
-    FALLBACK_QUIZ_PUZZLE;
 
   return (
     <>
@@ -142,11 +129,7 @@ export default async function TopicalQuizPage({ searchParams }: PageProps) {
           ],
         }}
       />
-      <GamePageShell title="Topical Quiz" gameSlug="topical-quiz">
-        <PlayedTodayGate gameSlug="topical-quiz">
-          <TopicalQuizGame content={content} puzzleDate={puzzleDate} />
-        </PlayedTodayGate>
-      </GamePageShell>
+      <DailyPuzzleGame mode="topical-quiz" date={params.date} />
       <HowToPlay
         title="Topical Quiz"
         rules={[

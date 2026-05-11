@@ -1,10 +1,5 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle, fetchNextPuzzleDate } from "@/lib/fetchDailyPuzzle";
-import type { TimelineContent } from "@/lib/schemas/puzzle-schemas";
-import { GamePageShell } from "@/components/play/GamePageShell";
-import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
-import { TimelineGame } from "@/components/play/TimelineGame";
-import { NoPuzzleToday } from "@/components/play/NoPuzzleToday";
+import { DailyPuzzleGame } from "@/components/play/DailyPuzzleGame";
 import { JsonLd } from "@/components/JsonLd";
 import { HowToPlay } from "@/components/play/HowToPlay";
 
@@ -58,14 +53,6 @@ interface PageProps {
 
 export default async function TimelinePage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const puzzle = await fetchDailyPuzzle("timeline", params.date);
-  const content = puzzle?.content as unknown as TimelineContent | undefined;
-  const puzzleDate =
-    puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const hasContent = !!content;
-
-  const nextDate =
-    !hasContent ? await fetchNextPuzzleDate("timeline") : null;
 
   return (
     <>
@@ -143,19 +130,7 @@ export default async function TimelinePage({ searchParams }: PageProps) {
           ],
         }}
       />
-      <GamePageShell title="Timeline" gameSlug="timeline">
-        {hasContent ? (
-          <PlayedTodayGate gameSlug="timeline">
-            <TimelineGame content={content} puzzleDate={puzzleDate} />
-          </PlayedTodayGate>
-        ) : (
-          <NoPuzzleToday
-            gameSlug="timeline"
-            gameTitle="Timeline"
-            nextDate={nextDate}
-          />
-        )}
-      </GamePageShell>
+      <DailyPuzzleGame mode="timeline" date={params.date} />
       <HowToPlay
         title="Timeline"
         rules={[

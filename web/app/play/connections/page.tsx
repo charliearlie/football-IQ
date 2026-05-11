@@ -1,12 +1,7 @@
 import { Metadata } from "next";
-import { fetchDailyPuzzle, fetchNextPuzzleDate } from "@/lib/fetchDailyPuzzle";
-import type { ConnectionsContent } from "@/lib/schemas/puzzle-schemas";
-import { GamePageShell } from "@/components/play/GamePageShell";
-import { PlayedTodayGate } from "@/components/play/PlayedTodayGate";
-import { ConnectionsGame } from "@/components/play/ConnectionsGame";
-import { NoPuzzleToday } from "@/components/play/NoPuzzleToday";
 import { JsonLd } from "@/components/JsonLd";
 import { HowToPlay } from "@/components/play/HowToPlay";
+import { DailyPuzzleGame } from "@/components/play/DailyPuzzleGame";
 
 export const revalidate = 3600;
 
@@ -59,14 +54,6 @@ interface PageProps {
 
 export default async function ConnectionsPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const puzzle = await fetchDailyPuzzle("connections", params.date);
-  const content = puzzle?.content as unknown as ConnectionsContent | undefined;
-  const puzzleDate =
-    puzzle?.puzzle_date ?? new Date().toISOString().split("T")[0];
-  const hasContent = !!content;
-
-  const nextDate =
-    !hasContent ? await fetchNextPuzzleDate("connections") : null;
 
   return (
     <>
@@ -144,19 +131,7 @@ export default async function ConnectionsPage({ searchParams }: PageProps) {
           ],
         }}
       />
-      <GamePageShell title="Connections" gameSlug="connections">
-        {hasContent ? (
-          <PlayedTodayGate gameSlug="connections">
-            <ConnectionsGame content={content} puzzleDate={puzzleDate} />
-          </PlayedTodayGate>
-        ) : (
-          <NoPuzzleToday
-            gameSlug="connections"
-            gameTitle="Connections"
-            nextDate={nextDate}
-          />
-        )}
-      </GamePageShell>
+      <DailyPuzzleGame mode="connections" date={params.date} />
       <HowToPlay
         title="Connections"
         rules={[
