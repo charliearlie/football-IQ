@@ -134,6 +134,13 @@ export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
     description: "Sort 6 events into chronological order",
     accentColor: COLORS.amber,
   },
+  {
+    dbMode: "whos-that",
+    slug: "whos-that",
+    title: "Who's That?",
+    description: "Wordle for footballers — 6 guesses, attribute feedback",
+    accentColor: "#A855F7",
+  },
 ];
 
 // App-only modes shown as teasers in the /play hub
@@ -147,7 +154,6 @@ export const APP_ONLY_GAMES: { title: string; description: string }[] = [
   { title: "Starting XI", description: "Find the missing players in iconic lineups" },
   { title: "Who Am I?", description: "Guess the footballer from 5 progressive clues" },
   { title: "Higher/Lower", description: "Higher or lower? Compare real player stats" },
-  { title: "Who's That?", description: "Wordle for footballers — 6 guesses, attribute feedback" },
 ];
 
 // Fallback puzzle data for when no puzzle exists for today
@@ -253,4 +259,16 @@ export const FALLBACK_QUIZ_PUZZLE = {
       correctIndex: 0,
     },
   ],
+};
+
+export const FALLBACK_WHOS_THAT_PUZZLE = {
+  answer: {
+    player_name: "Mohamed Salah",
+    player_id: "Q346551",
+    club: "Liverpool",
+    league: "Premier League",
+    nationality: "Egypt",
+    position: "Right Winger",
+    birth_year: 1992,
+  },
 };
