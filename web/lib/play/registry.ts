@@ -6,6 +6,7 @@ import { TransferGuessGame } from "@/components/play/TransferGuessGame";
 import { ConnectionsGame } from "@/components/play/ConnectionsGame";
 import { TopicalQuizGame } from "@/components/play/TopicalQuizGame";
 import { TimelineGame } from "@/components/play/TimelineGame";
+import { WhosThatGame } from "@/components/play/games/whos-that/WhosThatGame";
 
 import {
   FALLBACK_CAREER_PUZZLE,
@@ -13,6 +14,7 @@ import {
   FALLBACK_CONNECTIONS_PUZZLE,
   FALLBACK_QUIZ_PUZZLE,
   FALLBACK_TIMELINE_PUZZLE,
+  FALLBACK_WHOS_THAT_PUZZLE,
 } from "@/lib/constants";
 
 import type { GameRegistryEntry } from "./types";
@@ -23,6 +25,7 @@ import type {
   TopicalQuizContent,
   TimelineContent,
 } from "@/lib/schemas/puzzle-schemas";
+import type { WhosThatContent } from "@/lib/whos-that/types";
 
 // Use a discriminated entry type so the registry remains typed end-to-end.
 export type AnyGameRegistryEntry =
@@ -30,7 +33,8 @@ export type AnyGameRegistryEntry =
   | GameRegistryEntry<TransferGuessContent>
   | GameRegistryEntry<ConnectionsContent>
   | GameRegistryEntry<TopicalQuizContent>
-  | GameRegistryEntry<TimelineContent>;
+  | GameRegistryEntry<TimelineContent>
+  | GameRegistryEntry<WhosThatContent>;
 
 export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
   "career-path": {
@@ -62,6 +66,12 @@ export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
     title: "Timeline",
     component: TimelineGame,
     fallbackContent: FALLBACK_TIMELINE_PUZZLE as TimelineContent,
+  },
+  "whos-that": {
+    dbMode: "whos-that",
+    title: "Who's That?",
+    component: WhosThatGame,
+    fallbackContent: FALLBACK_WHOS_THAT_PUZZLE as WhosThatContent,
   },
 };
 
