@@ -90,7 +90,7 @@ export function HigherLowerGame({
   useEffect(() => {
     if (state.gameStatus === "playing") return;
     const won = state.gameStatus === "won";
-    const score = calculateHigherLowerScore(state.results);
+    const score = calculateHigherLowerScore(state.results, state.totalRounds);
     const shareText = generateHigherLowerShareText(score, state.results, puzzleDate);
 
     if (won) {
@@ -178,6 +178,7 @@ export function HigherLowerGame({
         <Button
           type="button"
           onClick={handleNext}
+          disabled={transitioning}
           className="w-full h-12 bg-pitch-green text-stadium-navy hover:bg-pitch-green/90"
           aria-label="Next round"
         >

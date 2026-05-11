@@ -22,8 +22,8 @@ export function generateHigherLowerShareText(
   const emojiGrid = generateHigherLowerEmojiGrid(results);
 
   const firstLine = score.won
-    ? "I got a perfect 10 in Higher/Lower!"
-    : `I scored ${score.points}/10 in Higher/Lower!`;
+    ? `I got a perfect ${score.maxPoints} in Higher/Lower!`
+    : `I scored ${score.points}/${score.maxPoints} in Higher/Lower!`;
 
   const playUrl = puzzleDate
     ? `https://football-iq.app/play/higher-lower?ref=share&date=${puzzleDate}`

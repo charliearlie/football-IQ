@@ -38,4 +38,15 @@ describe("generateHigherLowerShareText", () => {
     expect(text).toContain("I scored 7/10 in Higher/Lower!");
     expect(text).toContain("7/10 IQ");
   });
+
+  it("uses score.maxPoints (not hardcoded 10) for malformed-puzzle wins", () => {
+    // Puzzle had only 8 pairs; player got all 8 right → maxPoints=8, won=true
+    const text = generateHigherLowerShareText(
+      { points: 8, maxPoints: 8, won: true },
+      Array(8).fill(true),
+      "2026-05-11"
+    );
+    expect(text).toContain("I got a perfect 8 in Higher/Lower!");
+    expect(text).toContain("8/8 IQ");
+  });
 });

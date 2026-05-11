@@ -26,6 +26,23 @@ describe("calculateHigherLowerScore", () => {
       won: false,
     });
   });
+
+  it("uses provided totalRounds for maxPoints + won when puzzle has fewer pairs", () => {
+    const eightCorrect = Array(8).fill(true);
+    expect(calculateHigherLowerScore(eightCorrect, 8)).toEqual({
+      points: 8,
+      maxPoints: 8,
+      won: true,
+    });
+  });
+
+  it("won is false when totalRounds is 0", () => {
+    expect(calculateHigherLowerScore([], 0)).toEqual({
+      points: 0,
+      maxPoints: 0,
+      won: false,
+    });
+  });
 });
 
 describe("formatHigherLowerScore", () => {
