@@ -7,6 +7,7 @@ import { ConnectionsGame } from "@/components/play/ConnectionsGame";
 import { TopicalQuizGame } from "@/components/play/TopicalQuizGame";
 import { TimelineGame } from "@/components/play/TimelineGame";
 import { WhosThatGame } from "@/components/play/games/whos-that/WhosThatGame";
+import { HigherLowerGame } from "@/components/play/games/higher-lower/HigherLowerGame";
 
 import {
   FALLBACK_CAREER_PUZZLE,
@@ -15,6 +16,7 @@ import {
   FALLBACK_QUIZ_PUZZLE,
   FALLBACK_TIMELINE_PUZZLE,
   FALLBACK_WHOS_THAT_PUZZLE,
+  FALLBACK_HIGHER_LOWER_PUZZLE,
 } from "@/lib/constants";
 
 import type { GameRegistryEntry } from "./types";
@@ -26,6 +28,7 @@ import type {
   TimelineContent,
 } from "@/lib/schemas/puzzle-schemas";
 import type { WhosThatContent } from "@/lib/whos-that/types";
+import type { HigherLowerContent } from "@/lib/higher-lower/types";
 
 // Use a discriminated entry type so the registry remains typed end-to-end.
 export type AnyGameRegistryEntry =
@@ -34,7 +37,8 @@ export type AnyGameRegistryEntry =
   | GameRegistryEntry<ConnectionsContent>
   | GameRegistryEntry<TopicalQuizContent>
   | GameRegistryEntry<TimelineContent>
-  | GameRegistryEntry<WhosThatContent>;
+  | GameRegistryEntry<WhosThatContent>
+  | GameRegistryEntry<HigherLowerContent>;
 
 export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
   "career-path": {
@@ -72,6 +76,12 @@ export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
     title: "Who's That?",
     component: WhosThatGame,
     fallbackContent: FALLBACK_WHOS_THAT_PUZZLE as WhosThatContent,
+  },
+  "higher-lower": {
+    dbMode: "higher_lower",
+    title: "Higher/Lower",
+    component: HigherLowerGame,
+    fallbackContent: FALLBACK_HIGHER_LOWER_PUZZLE as HigherLowerContent,
   },
 };
 
