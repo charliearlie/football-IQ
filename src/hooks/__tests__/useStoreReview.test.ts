@@ -80,7 +80,7 @@ describe('useStoreReview', () => {
   describe('when visible transitions to true', () => {
     it('does not call requestReview when result is loss', async () => {
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, resultType: 'loss' as const, visible: false } }
       );
 
@@ -97,7 +97,7 @@ describe('useStoreReview', () => {
 
     it('does not call requestReview when result is draw', async () => {
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, resultType: 'draw' as const, visible: false } }
       );
 
@@ -113,7 +113,7 @@ describe('useStoreReview', () => {
 
     it('resets the prompted guard when modal becomes hidden', () => {
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: true } }
       );
 
@@ -137,7 +137,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false } }
       );
 
@@ -163,7 +163,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 
@@ -189,7 +189,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 
@@ -213,7 +213,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         {
           initialProps: {
             ...defaultProps,
@@ -247,7 +247,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         {
           initialProps: {
             ...defaultProps,
@@ -280,7 +280,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 
@@ -303,7 +303,7 @@ describe('useStoreReview', () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 
@@ -326,7 +326,7 @@ describe('useStoreReview', () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 3 } }
       );
 
@@ -347,7 +347,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 2 } }
       );
 
@@ -370,7 +370,7 @@ describe('useStoreReview', () => {
       });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         {
           initialProps: {
             ...defaultProps,
@@ -406,7 +406,7 @@ describe('useStoreReview', () => {
       (usePostHog as jest.Mock).mockReturnValue({ capture: mockCapture });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 
@@ -434,7 +434,7 @@ describe('useStoreReview', () => {
       (usePostHog as jest.Mock).mockReturnValue({ capture: mockCapture });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         {
           initialProps: {
             ...defaultProps,
@@ -473,7 +473,7 @@ describe('useStoreReview', () => {
       (usePostHog as jest.Mock).mockReturnValue({ capture: mockCapture });
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         {
           initialProps: {
             ...defaultProps,
@@ -508,7 +508,7 @@ describe('useStoreReview', () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 
@@ -527,7 +527,7 @@ describe('useStoreReview', () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
       const { rerender } = renderHook(
-        (props) => useStoreReview(props),
+        useStoreReview,
         { initialProps: { ...defaultProps, visible: false, streakDays: 5 } }
       );
 

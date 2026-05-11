@@ -533,6 +533,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_balldle_attributes: {
+        Args: { p_player_id: string }
+        Returns: Json
+      }
       get_daily_leaderboard: {
         Args: {
           for_date?: string

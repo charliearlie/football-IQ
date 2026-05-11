@@ -4,15 +4,15 @@ import type { RankIndex } from "../types";
 import type { TopTenAnswer } from "@/lib/schemas/puzzle-schemas";
 
 const answers: TopTenAnswer[] = [
-  { name: "Alan Shearer", aliases: ["Shearer"], info: "260 goals" },
-  { name: "Harry Kane", aliases: ["Kane"], info: "213 goals" },
-  { name: "Wayne Rooney", aliases: ["Rooney"], info: "208 goals" },
-  { name: "Andy Cole", aliases: ["Andrew Cole", "Cole"], info: "187 goals" },
-  { name: "Sergio Agüero", aliases: ["Aguero", "Sergio Aguero"], info: "184 goals" },
-  { name: "Frank Lampard", aliases: ["Lampard"], info: "177 goals" },
-  { name: "Thierry Henry", aliases: ["Henry"], info: "175 goals" },
-  { name: "Mohamed Salah", aliases: ["Salah"], info: "169 goals" },
-  { name: "Robbie Fowler", aliases: ["Fowler"], info: "163 goals" },
+  { name: "Alan Shearer", aliases: ["Shearer"], info: "260 goals", alternates: [] },
+  { name: "Harry Kane", aliases: ["Kane"], info: "213 goals", alternates: [] },
+  { name: "Wayne Rooney", aliases: ["Rooney"], info: "208 goals", alternates: [] },
+  { name: "Andy Cole", aliases: ["Andrew Cole", "Cole"], info: "187 goals", alternates: [] },
+  { name: "Sergio Agüero", aliases: ["Aguero", "Sergio Aguero"], info: "184 goals", alternates: [] },
+  { name: "Frank Lampard", aliases: ["Lampard"], info: "177 goals", alternates: [] },
+  { name: "Thierry Henry", aliases: ["Henry"], info: "175 goals", alternates: [] },
+  { name: "Mohamed Salah", aliases: ["Salah"], info: "169 goals", alternates: [] },
+  { name: "Robbie Fowler", aliases: ["Fowler"], info: "163 goals", alternates: [] },
   {
     name: "Jermain Defoe",
     aliases: ["Defoe"],
@@ -78,7 +78,8 @@ describe("findMatchingAnswer", () => {
       {
         name: "X",
         aliases: [],
-        alternates: [{ name: "Y", aliases: [] }],
+        info: "",
+        alternates: [{ name: "Y", aliases: [], info: "" }],
       },
       ...answers.slice(1),
     ];
