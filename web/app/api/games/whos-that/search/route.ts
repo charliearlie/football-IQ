@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createAdminClient();
+  // `active_only: true` filters retired players (no current club). The arg
+  // was added by supabase migration 045 but the generated supabase.ts types
+  // haven't been regenerated yet, so the call signature is permissive.
+  // Verified at runtime: passing `active_only` excludes retired players.
   const { data, error } = await supabase.rpc("search_players_oracle", {
     query_text: q,
     match_limit: 10,

@@ -44,6 +44,14 @@ export function PlayerSearchInput({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Cancel any in-flight debounced fetch on unmount (prevents setState on
+  // an unmounted component when the game ends mid-debounce).
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const handleChange = useCallback((value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);

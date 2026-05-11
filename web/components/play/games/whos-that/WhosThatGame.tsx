@@ -60,6 +60,14 @@ export function WhosThatGame({
         const res = await fetch(
           `/api/games/whos-that/player/${encodeURIComponent(player.id)}`
         );
+
+        // Distinguish HTTP errors (lookup failed) from valid "retired player"
+        // responses (200 with empty club). On HTTP error, bail silently —
+        // don't spend a guess and don't mislead with the retired-player warning.
+        if (!res.ok) {
+          return;
+        }
+
         const attrs = (await res.json()) as {
           club: string;
           league: string;
