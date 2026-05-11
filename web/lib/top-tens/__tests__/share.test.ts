@@ -6,7 +6,7 @@ const playedSlots: RankSlotState[] = Array.from({ length: 10 }, (_, i) => ({
   rank: i + 1,
   found: i < 4,
   autoRevealed: i >= 4,
-  answer: { name: `Player ${i + 1}` },
+  answer: { name: `Player ${i + 1}`, aliases: [], info: "", alternates: [] },
 }));
 
 describe("generateTopTensShareText", () => {
@@ -30,7 +30,7 @@ describe("generateTopTensShareText", () => {
       rank: i + 1,
       found: true,
       autoRevealed: false,
-      answer: { name: `Player ${i + 1}` },
+      answer: { name: `Player ${i + 1}`, aliases: [], info: "", alternates: [] },
     }));
     const score: TopTensScore = { points: 8, maxPoints: 8, foundCount: 10, wrongGuessCount: 0, won: true };
     const text = generateTopTensShareText("Top 10 Test", allFound, score, "2026-05-11");
