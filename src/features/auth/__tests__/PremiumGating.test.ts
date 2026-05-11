@@ -8,15 +8,28 @@
  * - RLS correctly blocks old puzzles for free users
  */
 
+// Mock @/lib/time so getAuthorizedDateUnsafe returns the current real-time
+// date (the module-level `lastAuthorizedDate` would otherwise be frozen at
+// module-load and drift from `new Date()` used in the date helper below).
+jest.mock('@/lib/time', () => ({
+  getAuthorizedDateUnsafe: () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  },
+}));
+
 import { isPuzzleLocked, isWithinFreeWindow } from '@/features/archive/utils/dateGrouping';
 
 /**
- * Get a date string N days ago in YYYY-MM-DD format.
+ * Get a LOCAL-timezone YYYY-MM-DD date string N days ago. Local matters
+ * here so the value matches the mocked getAuthorizedDateUnsafe above
+ * (which also returns local). toISOString returns UTC and can drift by
+ * a day around midnight, breaking boundary tests.
  */
 function getDateDaysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
-  return date.toISOString().split('T')[0];
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 describe('Premium Gating - RLS Simulation', () => {

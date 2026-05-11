@@ -18,8 +18,28 @@
  * - Revenue loss if free users bypass locks
  */
 
+// Mock @/lib/time so getAuthorizedDateUnsafe returns the current real-time
+// date (the module-level `lastAuthorizedDate` would otherwise be frozen at
+// module-load and drift from `new Date()` used in the date helpers below).
+jest.mock('@/lib/time', () => ({
+  getAuthorizedDateUnsafe: () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  },
+}));
+
 import { isPuzzleLocked, isWithinFreeWindow, hasValidAdUnlock } from '@/features/archive/utils/dateGrouping';
 import { UnlockedPuzzle } from '@/types/database';
+
+/**
+ * Format a Date as a LOCAL-timezone YYYY-MM-DD string. Local matters so the
+ * value matches the mocked getAuthorizedDateUnsafe above (which also returns
+ * a local date). toISOString returns UTC and can drift by one day around
+ * midnight, breaking boundary tests.
+ */
+function toLocalDateString(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 
 describe('Lock Hierarchy Priority Order', () => {
   const OLD_DATE = '2024-12-01'; // 40+ days ago (outside 3-day window)
@@ -168,7 +188,7 @@ describe('Lock Hierarchy Priority Order', () => {
     it('puzzle from 2 days ago is unlocked (within 3-day window)', () => {
       const sixDaysAgo = new Date();
       sixDaysAgo.setDate(sixDaysAgo.getDate() - 2);
-      const dateStr = sixDaysAgo.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(sixDaysAgo);
 
       const result = isPuzzleLocked(
         dateStr,
