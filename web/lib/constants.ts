@@ -141,6 +141,13 @@ export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
     description: "Wordle for footballers — 6 guesses, attribute feedback",
     accentColor: "#A855F7",
   },
+  {
+    dbMode: "higher_lower",
+    slug: "higher-lower",
+    title: "Higher/Lower",
+    description: "Higher or lower? Compare real player stats over 10 rounds",
+    accentColor: "#F59E0B",
+  },
 ];
 
 // App-only modes shown as teasers in the /play hub
@@ -153,7 +160,6 @@ export const APP_ONLY_GAMES: { title: string; description: string }[] = [
   { title: "Goalscorer Recall", description: "Name every scorer from a classic match" },
   { title: "Starting XI", description: "Find the missing players in iconic lineups" },
   { title: "Who Am I?", description: "Guess the footballer from 5 progressive clues" },
-  { title: "Higher/Lower", description: "Higher or lower? Compare real player stats" },
 ];
 
 // Fallback puzzle data for when no puzzle exists for today
@@ -271,4 +277,20 @@ export const FALLBACK_WHOS_THAT_PUZZLE = {
     position: "Right Winger",
     birth_year: 1992,
   },
+};
+
+export const FALLBACK_HIGHER_LOWER_PUZZLE = {
+  players: [
+    { name: "Neymar Jr.", context: "Barcelona → PSG", statLabel: "Transfer Fee", statType: "transfer_fee", value: 222 },
+    { name: "Kylian Mbappé", context: "Monaco → PSG", statLabel: "Transfer Fee", statType: "transfer_fee", value: 180 },
+    { name: "Philippe Coutinho", context: "Liverpool → Barcelona", statLabel: "Transfer Fee", statType: "transfer_fee", value: 145 },
+    { name: "João Félix", context: "Benfica → Atlético", statLabel: "Transfer Fee", statType: "transfer_fee", value: 126 },
+    { name: "Antoine Griezmann", context: "Atlético → Barcelona", statLabel: "Transfer Fee", statType: "transfer_fee", value: 120 },
+    { name: "Paul Pogba", context: "Juventus → Man United", statLabel: "Transfer Fee", statType: "transfer_fee", value: 105 },
+    { name: "Gareth Bale", context: "Tottenham → Real Madrid", statLabel: "Transfer Fee", statType: "transfer_fee", value: 100 },
+    { name: "Cristiano Ronaldo", context: "Man United → Real Madrid", statLabel: "Transfer Fee", statType: "transfer_fee", value: 94 },
+    { name: "Eden Hazard", context: "Chelsea → Real Madrid", statLabel: "Transfer Fee", statType: "transfer_fee", value: 89 },
+    { name: "Romelu Lukaku", context: "Everton → Man United", statLabel: "Transfer Fee", statType: "transfer_fee", value: 85 },
+    { name: "Virgil van Dijk", context: "Southampton → Liverpool", statLabel: "Transfer Fee", statType: "transfer_fee", value: 84 },
+  ],
 };

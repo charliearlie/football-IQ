@@ -386,6 +386,43 @@ export const whosThatContentSchema = z.object({
 
 export type WhosThatContent = z.infer<typeof whosThatContentSchema>;
 
+const higherLowerEntrySchema = z.union([
+  // New format: generic stat entry
+  z.object({
+    name: z.string(),
+    context: z.string(),
+    statLabel: z.string(),
+    statType: z.string(),
+    value: z.number(),
+  }),
+  // Legacy format: transfer fee only
+  z.object({
+    name: z.string(),
+    club: z.string(),
+    fee: z.number(),
+  }),
+]);
+
+export const higherLowerContentSchema = z
+  .object({
+    // Chain format: 11+ entries, round N compares players[N] vs players[N+1]
+    players: z.array(higherLowerEntrySchema).optional(),
+    // Legacy format: independent pairs
+    pairs: z
+      .array(
+        z.object({
+          player1: higherLowerEntrySchema,
+          player2: higherLowerEntrySchema,
+        })
+      )
+      .optional(),
+  })
+  .refine((data) => data.players || data.pairs, {
+    message: "Either 'players' (chain) or 'pairs' (legacy) must be provided",
+  });
+
+export type HigherLowerContent = z.infer<typeof higherLowerContentSchema>;
+
 // ============================================================================
 // CONTENT SCHEMA MAP
 // ============================================================================
@@ -406,28 +443,7 @@ export const contentSchemaMap = {
   timeline: timelineContentSchema,
   who_am_i: whoAmIContentSchema,
   'whos-that': whosThatContentSchema,
-  higher_lower: z.object({
-    // Chain format: 11+ entries, round N compares players[N] vs players[N+1]
-    players: z.array(z.union([
-      // New format: generic stat entry
-      z.object({ name: z.string(), context: z.string(), statLabel: z.string(), statType: z.string(), value: z.number() }),
-      // Legacy format: transfer fee only
-      z.object({ name: z.string(), club: z.string(), fee: z.number() }),
-    ])).optional(),
-    // Legacy format: independent pairs
-    pairs: z.array(z.object({
-      player1: z.union([
-        z.object({ name: z.string(), context: z.string(), statLabel: z.string(), statType: z.string(), value: z.number() }),
-        z.object({ name: z.string(), club: z.string(), fee: z.number() }),
-      ]),
-      player2: z.union([
-        z.object({ name: z.string(), context: z.string(), statLabel: z.string(), statType: z.string(), value: z.number() }),
-        z.object({ name: z.string(), club: z.string(), fee: z.number() }),
-      ]),
-    })).optional(),
-  }).refine(data => data.players || data.pairs, {
-    message: "Either 'players' (chain) or 'pairs' (legacy) must be provided",
-  }),
+  higher_lower: higherLowerContentSchema,
 } as const;
 
 // Union type for all content types
