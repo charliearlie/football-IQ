@@ -148,11 +148,17 @@ export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
     description: "Higher or lower? Compare real player stats over 10 rounds",
     accentColor: "#F59E0B",
   },
+  {
+    dbMode: "top_tens",
+    slug: "top-tens",
+    title: "Top Tens",
+    description: "Guess all 10 entries in a top-10 list — Tenable style",
+    accentColor: "#FF6B6B",
+  },
 ];
 
 // App-only modes shown as teasers in the /play hub
 export const APP_ONLY_GAMES: { title: string; description: string }[] = [
-  { title: "Top Tens", description: "Guess the top 10 in each category" },
   { title: "Career Path Pro", description: "Expert mode — fewer clues, harder players" },
   { title: "The Grid", description: "Fill the 3x3 grid matching criteria" },
   { title: "The Chain", description: "Link players through shared clubs" },
@@ -294,5 +300,22 @@ export const FALLBACK_HIGHER_LOWER_PUZZLE = {
     { name: "Gareth Bale", context: "Tottenham → Real Madrid", statLabel: "Transfer Fee", statType: "transfer_fee", value: 100 },
     { name: "Antoine Griezmann", context: "Atlético → Barcelona", statLabel: "Transfer Fee", statType: "transfer_fee", value: 120 },
     { name: "Romelu Lukaku", context: "Everton → Man United", statLabel: "Transfer Fee", statType: "transfer_fee", value: 85 },
+  ],
+};
+
+export const FALLBACK_TOP_TENS_PUZZLE = {
+  title: "Top 10 Premier League All-Time Goalscorers",
+  category: "Premier League",
+  answers: [
+    { name: "Alan Shearer", aliases: ["Shearer"], info: "260 goals" },
+    { name: "Harry Kane", aliases: ["Kane"], info: "213 goals" },
+    { name: "Wayne Rooney", aliases: ["Rooney"], info: "208 goals" },
+    { name: "Andy Cole", aliases: ["Andrew Cole", "Cole"], info: "187 goals" },
+    { name: "Sergio Agüero", aliases: ["Aguero", "Sergio Aguero"], info: "184 goals" },
+    { name: "Frank Lampard", aliases: ["Lampard"], info: "177 goals" },
+    { name: "Thierry Henry", aliases: ["Henry"], info: "175 goals" },
+    { name: "Mohamed Salah", aliases: ["Salah", "Mo Salah"], info: "169 goals" },
+    { name: "Robbie Fowler", aliases: ["Fowler"], info: "163 goals" },
+    { name: "Jermain Defoe", aliases: ["Defoe"], info: "162 goals" },
   ],
 };
