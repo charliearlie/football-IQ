@@ -40,31 +40,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.95,
     },
-    {
-      url: `${baseUrl}/play/career-path`,
-      changeFrequency: "daily",
+    // All 12 web-playable game routes get high-priority daily entries —
+    // mirrors WEB_PLAYABLE_GAMES order so the most important come first.
+    ...WEB_PLAYABLE_GAMES.map((game) => ({
+      url: `${baseUrl}/play/${game.slug}`,
+      changeFrequency: "daily" as const,
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/play/transfer-guess`,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/play/connections`,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/play/topical-quiz`,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/play/timeline`,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
+    })),
     {
       url: `${baseUrl}/football-trivia-questions`,
       changeFrequency: "monthly",

@@ -98,6 +98,9 @@ export interface WebPlayableGame {
   accentColor: string;
 }
 
+// Ordered for the /play hub + homepage. Flagship daily games first (the ones
+// we run new content for), then the engine-reuse variants, then the older
+// modes that still publish but are less central.
 export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
   {
     dbMode: "career_path",
@@ -105,34 +108,6 @@ export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
     title: "Career Path",
     description: "Guess the player from their career history",
     accentColor: COLORS.pitchGreen,
-  },
-  {
-    dbMode: "guess_the_transfer",
-    slug: "transfer-guess",
-    title: "Transfer Guess",
-    description: "Name the player from a single transfer",
-    accentColor: COLORS.cardYellow,
-  },
-  {
-    dbMode: "connections",
-    slug: "connections",
-    title: "Connections",
-    description: "Group 16 players into 4 categories",
-    accentColor: "#3B82F6",
-  },
-  {
-    dbMode: "topical_quiz",
-    slug: "topical-quiz",
-    title: "Topical Quiz",
-    description: "5 questions on this week's headlines",
-    accentColor: "#FF6B6B",
-  },
-  {
-    dbMode: "timeline",
-    slug: "timeline",
-    title: "Timeline",
-    description: "Sort 6 events into chronological order",
-    accentColor: COLORS.amber,
   },
   {
     dbMode: "whos-that",
@@ -155,17 +130,71 @@ export const WEB_PLAYABLE_GAMES: WebPlayableGame[] = [
     description: "Guess all 10 entries in a top-10 list — Tenable style",
     accentColor: "#FF6B6B",
   },
+  {
+    dbMode: "last_tens",
+    slug: "last-tens",
+    title: "Last 10",
+    description: "Name the last 10 winners, scorers or transfers",
+    accentColor: "#FB923C",
+  },
+  {
+    dbMode: "who_am_i",
+    slug: "who-am-i",
+    title: "Who Am I?",
+    description: "Guess the footballer from 5 progressive clues",
+    accentColor: "#22D3EE",
+  },
+  {
+    dbMode: "the_thread",
+    slug: "the-thread",
+    title: "The Thread",
+    description: "Trace a club's kit-sponsor or supplier history",
+    accentColor: "#EC4899",
+  },
+  {
+    dbMode: "career_path_pro",
+    slug: "career-path-pro",
+    title: "Career Path Pro",
+    description: "Career Path turned up to 11 — longer chain, deeper cuts",
+    accentColor: COLORS.pitchGreen,
+  },
+  {
+    dbMode: "connections",
+    slug: "connections",
+    title: "Connections",
+    description: "Group 16 players into 4 categories",
+    accentColor: "#3B82F6",
+  },
+  {
+    dbMode: "guess_the_transfer",
+    slug: "transfer-guess",
+    title: "Transfer Guess",
+    description: "Name the player from a single transfer",
+    accentColor: COLORS.cardYellow,
+  },
+  {
+    dbMode: "timeline",
+    slug: "timeline",
+    title: "Timeline",
+    description: "Sort 6 events into chronological order",
+    accentColor: COLORS.amber,
+  },
+  {
+    dbMode: "topical_quiz",
+    slug: "topical-quiz",
+    title: "Topical Quiz",
+    description: "5 questions on this week's headlines",
+    accentColor: "#FF6B6B",
+  },
 ];
 
-// App-only modes shown as teasers in the /play hub
+// App-only modes shown as teasers in the /play hub. Only modes we don't
+// currently publish daily content for — the rest now live in the browser.
 export const APP_ONLY_GAMES: { title: string; description: string }[] = [
-  { title: "Career Path Pro", description: "Expert mode — fewer clues, harder players" },
   { title: "The Grid", description: "Fill the 3x3 grid matching criteria" },
   { title: "The Chain", description: "Link players through shared clubs" },
-  { title: "Threads", description: "Identify the club from kit history" },
   { title: "Goalscorer Recall", description: "Name every scorer from a classic match" },
   { title: "Starting XI", description: "Find the missing players in iconic lineups" },
-  { title: "Who Am I?", description: "Guess the footballer from 5 progressive clues" },
 ];
 
 // Fallback puzzle data for when no puzzle exists for today
@@ -364,4 +393,24 @@ export const FALLBACK_CAREER_PATH_PRO_PUZZLE = {
     { type: "club" as const, text: "Sporting CP Academy", year: "1997-2002" },
     { type: "club" as const, text: "Andorinha (youth)", year: "1992-1995" },
   ],
+};
+
+// Liverpool's kit-supplier chronology — 3 entries hidden, 6 visible. Hidden
+// brand count must be exactly 0 or 3 (schema invariant).
+export const FALLBACK_THE_THREAD_PUZZLE = {
+  thread_type: "supplier" as const,
+  path: [
+    { brand_name: "Umbro", years: "1973-1985", is_hidden: false },
+    { brand_name: "Adidas", years: "1985-1996", is_hidden: true },
+    { brand_name: "Reebok", years: "1996-2006", is_hidden: false },
+    { brand_name: "Adidas", years: "2006-2012", is_hidden: true },
+    { brand_name: "Warrior", years: "2012-2015", is_hidden: false },
+    { brand_name: "New Balance", years: "2015-2020", is_hidden: false },
+    { brand_name: "Nike", years: "2020-", is_hidden: true },
+  ],
+  correct_club_id: "Q1130849",
+  correct_club_name: "Liverpool",
+  kit_lore: {
+    fun_fact: "Liverpool's 2020 Nike deal followed a public lawsuit with New Balance over a 'matched offer' clause — won by Nike.",
+  },
 };
