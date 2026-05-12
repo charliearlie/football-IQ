@@ -6,9 +6,9 @@ import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants
 const BASE_URL = "https://www.football-iq.app";
 
 export const metadata: Metadata = {
-  title: "Play Football Quizzes Free in Your Browser | Football IQ",
+  title: "Play 12 Free Daily Football Quizzes in Your Browser | Football IQ",
   description:
-    "5 daily football quiz games you can play free in your browser — no download needed. Career Path, Transfer Guess, Connections, Timeline, and Topical Quiz. New puzzles every day.",
+    "12 daily football quiz games you can play free in your browser — no download, no account. Career Path, Who's That?, Higher/Lower, Top Tens, Last 10, Who Am I?, The Thread, Career Path Pro, Connections, Transfer Guess, Timeline and Topical Quiz. New puzzles every day.",
   alternates: {
     canonical: `${BASE_URL}/play`,
   },
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     "max-image-preview": "large" as const,
   },
   openGraph: {
-    title: "Play Football Quizzes Free | Football IQ",
+    title: "Play 12 Free Daily Football Quizzes | Football IQ",
     description:
-      "5 daily football quiz games in your browser. Guess players, test your knowledge, solve puzzles. Free to play — no account needed.",
+      "12 daily football quiz games in your browser. Guess players, trace careers, sort timelines. Free to play — no account needed.",
     url: `${BASE_URL}/play`,
     type: "website",
     images: [
@@ -28,15 +28,15 @@ export const metadata: Metadata = {
         url: `${BASE_URL}/api/og/play`,
         width: 1200,
         height: 630,
-        alt: "Football IQ - Play free football quizzes in your browser",
+        alt: "Football IQ - Play 12 free football quizzes in your browser",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Play Football Quizzes Free | Football IQ",
+    title: "Play 12 Free Daily Football Quizzes | Football IQ",
     description:
-      "5 daily football quiz games in your browser. Free to play — no account needed.",
+      "12 daily football quiz games in your browser. Free to play — no account needed.",
     images: [`${BASE_URL}/api/og/play`],
   },
 };
@@ -109,14 +109,14 @@ export default function PlayPage() {
               Play Football Quizzes
             </h1>
             <p className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed">
-              5 daily football puzzles you can play free in your browser. No app, no account, no download. New content every day.
+              {WEB_PLAYABLE_GAMES.length} daily football puzzles, free in your browser. No app, no account, no download. New content every day.
             </p>
           </section>
 
           {/* Web-playable games grid */}
           <section className="space-y-4">
             <h2 className="font-bebas text-2xl tracking-wider text-slate-300">
-              Play Free in Your Browser
+              {WEB_PLAYABLE_GAMES.length} Free Games in Your Browser
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {WEB_PLAYABLE_GAMES.map((game) => (
@@ -169,7 +169,7 @@ export default function PlayPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-bebas text-2xl tracking-wider text-slate-300">
-                More Modes in the App
+                App-Only Modes (Coming Soon to Web)
               </h2>
               <a
                 href={appStoreUrl('web_play')}
@@ -200,10 +200,10 @@ export default function PlayPage() {
           {/* App CTA */}
           <section className="rounded-xl border border-white/5 bg-white/[0.02] p-8 text-center space-y-4">
             <h2 className="font-bebas text-3xl tracking-wider">
-              Get All 11 Modes
+              Get Every Mode in the App
             </h2>
             <p className="text-slate-400 max-w-md mx-auto leading-relaxed text-sm">
-              The app includes everything here plus 6 more game modes, a full puzzle archive, streaks, achievements, and weekly tournaments.
+              All 12 web games plus 4 app-exclusive modes. Full puzzle archive, streak tracking, achievements, and weekly tournaments.
             </p>
             <a
               href={appStoreUrl('web_play')}
