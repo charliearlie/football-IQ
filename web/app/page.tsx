@@ -68,6 +68,17 @@ export default async function HomePage() {
 
   const liveModes = new Set(data?.map((r) => r.game_mode) ?? []);
 
+  // Sort active games (live puzzle today) to the top of the grid so the
+  // user lands on something they can actually play. Stable sort preserves
+  // the curated registry order within each bucket.
+  const sortedGames = [...WEB_PLAYABLE_GAMES].sort(
+    (a, b) =>
+      Number(liveModes.has(b.dbMode)) - Number(liveModes.has(a.dbMode)),
+  );
+  const activeSlugs = WEB_PLAYABLE_GAMES.filter((g) =>
+    liveModes.has(g.dbMode),
+  ).map((g) => g.slug);
+
   // Total games played for social proof (cached via revalidate)
   const { count: gamesPlayed } = await supabase
     .from("puzzle_attempts")
@@ -185,12 +196,12 @@ export default async function HomePage() {
           <p className="text-slate-500 text-xs font-semibold uppercase tracking-[0.18em]">
             {dayStr} · {dateStr}
           </p>
-          <DailyProgress />
+          <DailyProgress activeSlugs={activeSlugs} />
         </div>
 
         {/* Game Grid */}
         <section id="games" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {WEB_PLAYABLE_GAMES.map((game, i) => (
+          {sortedGames.map((game, i) => (
             <GameHubCard
               key={game.slug}
               title={game.title}
@@ -198,7 +209,7 @@ export default async function HomePage() {
               slug={game.slug}
               hasLivePuzzle={liveModes.has(game.dbMode)}
               accentColor={game.accentColor}
-              featured={i === 0}
+              featured={i === 0 && liveModes.has(game.dbMode)}
             />
           ))}
         </section>
