@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
 import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/server";
 
 const BASE_URL = "https://www.football-iq.app";
 
@@ -41,7 +42,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PlayPage() {
+export default async function PlayPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isSignedIn = Boolean(user) && !user?.is_anonymous;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -91,14 +98,22 @@ export default function PlayPage() {
             <Link href="/" className="font-bebas text-xl tracking-wider text-pitch-green">
               Football IQ
             </Link>
-            <a
-              href={appStoreUrl('web_play')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-semibold text-stadium-navy bg-pitch-green px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
-            >
-              Get the App
-            </a>
+            <div className="flex items-center gap-4">
+              <Link
+                href={isSignedIn ? "/account" : "/account/sign-in"}
+                className="text-sm font-medium text-slate-300 hover:text-floodlight transition-colors"
+              >
+                {isSignedIn ? "Account" : "Sign in"}
+              </Link>
+              <a
+                href={appStoreUrl('web_play')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-stadium-navy bg-pitch-green px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+              >
+                Get the App
+              </a>
+            </div>
           </div>
         </nav>
 
