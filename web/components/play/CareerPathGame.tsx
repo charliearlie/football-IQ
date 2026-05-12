@@ -4,7 +4,7 @@ import { useReducer, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { Shield, PlaneTakeoff, Lock, Search, Lightbulb, Footprints, Circle } from "lucide-react";
 import { validateGuess } from "@/lib/validation";
-import { generateCareerPathShareText } from "@/lib/shareText";
+import { generateCareerPathShareText, type CareerPathVariant } from "@/lib/shareText";
 import { Input } from "@/components/ui/input";
 import { CTAButton } from "@/components/landing/CTAButton";
 import { cn } from "@/lib/utils";
@@ -111,14 +111,20 @@ function triggerConfetti() {
   fire(0.1, { spread: 120, startVelocity: 45 });
 }
 
+interface CareerPathGameProps extends GameProps<CareerPathContent> {
+  /** Engine variant — drives tracking name + share-URL slug. */
+  variant?: CareerPathVariant;
+}
+
 export function CareerPathGame({
   content,
   puzzleDate,
   onComplete,
-}: GameProps<CareerPathContent>) {
+  variant = "career-path",
+}: CareerPathGameProps) {
   const { career_steps: careerSteps, answer } = content;
   const { trackGameStarted, trackGameCompleted } = useGameTracking(
-    "career_path",
+    variant,
     puzzleDate
   );
   const [state, dispatch] = useReducer(careerPathReducer, {
@@ -148,7 +154,8 @@ export function CareerPathGame({
       triggerConfetti();
       const shareText = generateCareerPathShareText(
         { won: true, cluesUsed: state.revealedCount, totalClues: careerSteps.length },
-        puzzleDate
+        puzzleDate,
+        variant
       );
       trackGameCompleted("won", `${state.revealedCount}/${careerSteps.length}`);
       onComplete({ won: true, answer, shareText });
@@ -158,7 +165,8 @@ export function CareerPathGame({
       if (newRevealed >= careerSteps.length) {
         const shareText = generateCareerPathShareText(
           { won: false, cluesUsed: careerSteps.length, totalClues: careerSteps.length },
-          puzzleDate
+          puzzleDate,
+          variant
         );
         trackGameCompleted("lost", `${careerSteps.length}/${careerSteps.length}`);
         onComplete({ won: false, answer, shareText });

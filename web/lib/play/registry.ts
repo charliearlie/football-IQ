@@ -10,6 +10,8 @@ import { WhosThatGame } from "@/components/play/games/whos-that/WhosThatGame";
 import { HigherLowerGame } from "@/components/play/games/higher-lower/HigherLowerGame";
 import { TopTensGame } from "@/components/play/games/top-tens/TopTensGame";
 import { WhoAmIGame } from "@/components/play/games/who-am-i/WhoAmIGame";
+import { LastTensGame } from "@/components/play/games/last-tens/LastTensGame";
+import { CareerPathProGame } from "@/components/play/games/career-path-pro/CareerPathProGame";
 
 import {
   FALLBACK_CAREER_PUZZLE,
@@ -21,6 +23,8 @@ import {
   FALLBACK_HIGHER_LOWER_PUZZLE,
   FALLBACK_TOP_TENS_PUZZLE,
   FALLBACK_WHO_AM_I_PUZZLE,
+  FALLBACK_LAST_TENS_PUZZLE,
+  FALLBACK_CAREER_PATH_PRO_PUZZLE,
 } from "@/lib/constants";
 
 import type { GameRegistryEntry } from "./types";
@@ -102,6 +106,18 @@ export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
     title: "Who Am I?",
     component: WhoAmIGame,
     fallbackContent: FALLBACK_WHO_AM_I_PUZZLE as WhoAmIContent,
+  },
+  "last-tens": {
+    dbMode: "last_tens",
+    title: "Last 10",
+    component: LastTensGame,
+    fallbackContent: FALLBACK_LAST_TENS_PUZZLE as TopTensContent,
+  },
+  "career-path-pro": {
+    dbMode: "career_path_pro",
+    title: "Career Path Pro",
+    component: CareerPathProGame,
+    fallbackContent: FALLBACK_CAREER_PATH_PRO_PUZZLE as CareerPathContent,
   },
 };
 
