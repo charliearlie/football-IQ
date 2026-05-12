@@ -717,6 +717,10 @@ export type Database = {
           username: string | null
         }[]
       }
+      get_balldle_attributes: {
+        Args: { p_player_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
