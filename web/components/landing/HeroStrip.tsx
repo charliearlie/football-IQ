@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { appStoreUrl } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/server";
 
-export function HeroStrip() {
+export async function HeroStrip() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isSignedIn = Boolean(user) && !user?.is_anonymous;
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/8 bg-stadium-navy/80 backdrop-blur-lg supports-[backdrop-filter]:bg-stadium-navy/70">
       <div className="container mx-auto px-4 max-w-2xl flex items-center justify-between h-14">
@@ -25,6 +32,22 @@ export function HeroStrip() {
           >
             Daily Digest
           </Link>
+
+          {isSignedIn ? (
+            <Link
+              href="/account"
+              className="text-sm font-medium text-slate-300 hover:text-floodlight transition-colors"
+            >
+              Account
+            </Link>
+          ) : (
+            <Link
+              href="/account/sign-in"
+              className="text-sm font-medium text-slate-300 hover:text-floodlight transition-colors"
+            >
+              Sign in
+            </Link>
+          )}
 
           {/* GET APP pill — now glows + has press feedback */}
           <Link
