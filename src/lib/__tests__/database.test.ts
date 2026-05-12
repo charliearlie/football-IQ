@@ -71,8 +71,8 @@ describe('database', () => {
     });
 
     it('skips migration if already at current version', async () => {
-      // Arrange - version 15 is current SCHEMA_VERSION
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
+      // Arrange - version 16 is current SCHEMA_VERSION
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 16 });
 
       // Act
       await initDatabase();

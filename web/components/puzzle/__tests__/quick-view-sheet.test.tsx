@@ -154,9 +154,10 @@ describe("QuickViewSheet", () => {
 
     it("shows Not Set badge for missing optional puzzles", () => {
       render(<QuickViewSheet {...defaultProps} />);
-      // 8 optional modes, 1 populated (the_grid), 7 missing
-      // Missing optional: the_chain, the_thread, guess_the_goalscorers, topical_quiz, starting_xi, connections, timeline -> "Not Set"
-      expect(screen.getAllByText("Not Set").length).toBe(7);
+      // 12 optional modes, 1 populated (the_grid), 11 missing
+      // Missing optional: the_chain, the_thread, guess_the_goalscorers, topical_quiz,
+      // last_tens, starting_xi, connections, timeline, who_am_i, higher_lower, whos-that -> "Not Set"
+      expect(screen.getAllByText("Not Set").length).toBe(11);
     });
 
     it("shows difficulty badge when present", () => {
@@ -267,8 +268,10 @@ describe("QuickViewSheet", () => {
       render(<QuickViewSheet {...defaultProps} puzzles={[]} />);
       // Monday has 4 mandatory modes -> 4 "Gap" badges
       expect(screen.getAllByText("Gap").length).toBe(4);
-      // Monday has 8 optional modes (the_grid, the_chain, the_thread, guess_the_goalscorers, topical_quiz, starting_xi, connections, timeline) -> 8 "Not Set" badges
-      expect(screen.getAllByText("Not Set").length).toBe(8);
+      // Monday has 12 optional modes (the_grid, the_chain, the_thread, guess_the_goalscorers,
+      // topical_quiz, last_tens, starting_xi, connections, timeline, who_am_i, higher_lower,
+      // whos-that) -> 12 "Not Set" badges
+      expect(screen.getAllByText("Not Set").length).toBe(12);
     });
   });
 
@@ -280,7 +283,7 @@ describe("QuickViewSheet", () => {
 
     it("renders Optional section header", () => {
       render(<QuickViewSheet {...defaultProps} />);
-      expect(screen.getByText(/optional \(1\/8\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/optional \(1\/12\)/i)).toBeInTheDocument();
     });
   });
 

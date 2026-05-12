@@ -128,7 +128,7 @@ describe('StatsGrid', () => {
     expect(screen.getByText('7')).toBeTruthy();
 
     expect(screen.getByText('MATCHES PLAYED')).toBeTruthy();
-    expect(screen.getByText('ACCURACY')).toBeTruthy();
+    expect(screen.getByText('AVG SCORE')).toBeTruthy();
     expect(screen.getByText('BEST SCORE')).toBeTruthy();
     expect(screen.getByText('PERFECT GAMES')).toBeTruthy();
   });

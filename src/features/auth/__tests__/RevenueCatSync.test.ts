@@ -117,12 +117,15 @@ describe('SubscriptionSync Service', () => {
       expect(mockSupabaseRpc).toHaveBeenCalledWith('upgrade_to_premium');
     });
 
-    it('is a no-op when called with isPremium=false', async () => {
+    it('calls downgrade_from_premium RPC and returns profile when isPremium=false', async () => {
+      const mockProfile = { id: 'user-123', is_premium: false, premium_purchased_at: null };
+      mockSupabaseRpc.mockResolvedValue({ data: [mockProfile], error: null });
+
       const result = await syncPremiumToSupabase('user-123', false);
 
       expect(result.error).toBeNull();
-      expect(result.profile).toBeNull();
-      expect(mockSupabaseRpc).not.toHaveBeenCalled();
+      expect(result.profile).toEqual(mockProfile);
+      expect(mockSupabaseRpc).toHaveBeenCalledWith('downgrade_from_premium');
     });
 
     it('returns error when RPC fails', async () => {

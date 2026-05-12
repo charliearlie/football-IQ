@@ -319,3 +319,16 @@ export const FALLBACK_TOP_TENS_PUZZLE = {
     { name: "Jermain Defoe", aliases: ["Defoe"], info: "162 goals" },
   ],
 };
+
+export const FALLBACK_WHO_AM_I_PUZZLE = {
+  clues: [
+    { number: 1, text: "I came through the youth ranks of a Catalan giant." },
+    { number: 2, text: "I've won the Ballon d'Or more times than anyone in history." },
+    { number: 3, text: "I left Barcelona on a tearful press conference in 2021." },
+    { number: 4, text: "I led my national team to a World Cup in 2022." },
+    { number: 5, text: "I was born in Rosario, Argentina, in 1987." },
+  ],
+  correct_player_name: "Lionel Messi",
+  correct_player_id: "Q615",
+  fun_fact: "Messi holds the record for most goals scored in a single calendar year (91 in 2012).",
+};

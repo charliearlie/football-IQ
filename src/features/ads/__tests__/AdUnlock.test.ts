@@ -68,8 +68,8 @@ describe('Ad Unlock Feature', () => {
     });
 
     it('skips migration if already at current version', async () => {
-      // Arrange - version 15 is current
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
+      // Arrange - version 16 is current SCHEMA_VERSION
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 16 });
 
       // Act
       await initDatabase();
@@ -81,7 +81,9 @@ describe('Ad Unlock Feature', () => {
 
   describe('saveAdUnlock', () => {
     beforeEach(async () => {
-      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 15 });
+      // Mock at current SCHEMA_VERSION so migrations don't run and pollute
+      // mockDb.runAsync.mock.calls[] before the INSERT under test.
+      mockDb.getFirstAsync.mockResolvedValueOnce({ user_version: 16 });
       await initDatabase();
     });
 
@@ -104,7 +106,8 @@ describe('Ad Unlock Feature', () => {
       await saveAdUnlock('puzzle-123');
 
       // Assert
-      // First call is PRAGMA busy_timeout, second is the actual INSERT
+      // First runAsync call is `PRAGMA busy_timeout = 5000` from
+      // initDatabase; second is the saveAdUnlock INSERT.
       const insertCallArgs = mockDb.runAsync.mock.calls[1][1];
       const unlockedAt = new Date(insertCallArgs.$unlocked_at);
 
@@ -118,7 +121,8 @@ describe('Ad Unlock Feature', () => {
       await saveAdUnlock('puzzle-123');
 
       // Assert
-      // First call is PRAGMA busy_timeout, second is the actual INSERT
+      // First runAsync call is `PRAGMA busy_timeout = 5000` from
+      // initDatabase; second is the saveAdUnlock INSERT.
       const insertCallArgs = mockDb.runAsync.mock.calls[1][1];
       expect(insertCallArgs.$expires_at).toBeUndefined();
     });

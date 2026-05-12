@@ -58,6 +58,7 @@ describe('searchPlayersOracle', () => {
     expect(mockRpc).toHaveBeenCalledWith('search_players_oracle', {
       query_text: 'ronaldo',
       match_limit: 10,
+      active_only: false,
     });
     expect(results).toEqual(mockData);
   });
@@ -73,6 +74,7 @@ describe('searchPlayersOracle', () => {
     expect(mockRpc).toHaveBeenCalledWith('search_players_oracle', {
       query_text: 'messi',
       match_limit: 5,
+      active_only: false,
     });
   });
 

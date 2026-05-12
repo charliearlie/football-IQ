@@ -9,6 +9,7 @@ import { TimelineGame } from "@/components/play/TimelineGame";
 import { WhosThatGame } from "@/components/play/games/whos-that/WhosThatGame";
 import { HigherLowerGame } from "@/components/play/games/higher-lower/HigherLowerGame";
 import { TopTensGame } from "@/components/play/games/top-tens/TopTensGame";
+import { WhoAmIGame } from "@/components/play/games/who-am-i/WhoAmIGame";
 
 import {
   FALLBACK_CAREER_PUZZLE,
@@ -19,6 +20,7 @@ import {
   FALLBACK_WHOS_THAT_PUZZLE,
   FALLBACK_HIGHER_LOWER_PUZZLE,
   FALLBACK_TOP_TENS_PUZZLE,
+  FALLBACK_WHO_AM_I_PUZZLE,
 } from "@/lib/constants";
 
 import type { GameRegistryEntry } from "./types";
@@ -29,6 +31,7 @@ import type {
   TopicalQuizContent,
   TimelineContent,
   TopTensContent,
+  WhoAmIContent,
 } from "@/lib/schemas/puzzle-schemas";
 import type { WhosThatContent } from "@/lib/whos-that/types";
 import type { HigherLowerContent } from "@/lib/higher-lower/types";
@@ -42,7 +45,8 @@ export type AnyGameRegistryEntry =
   | GameRegistryEntry<TimelineContent>
   | GameRegistryEntry<WhosThatContent>
   | GameRegistryEntry<HigherLowerContent>
-  | GameRegistryEntry<TopTensContent>;
+  | GameRegistryEntry<TopTensContent>
+  | GameRegistryEntry<WhoAmIContent>;
 
 export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
   "career-path": {
@@ -92,6 +96,12 @@ export const GAME_REGISTRY: Record<string, AnyGameRegistryEntry> = {
     title: "Top Tens",
     component: TopTensGame,
     fallbackContent: FALLBACK_TOP_TENS_PUZZLE as TopTensContent,
+  },
+  "who-am-i": {
+    dbMode: "who_am_i",
+    title: "Who Am I?",
+    component: WhoAmIGame,
+    fallbackContent: FALLBACK_WHO_AM_I_PUZZLE as WhoAmIContent,
   },
 };
 

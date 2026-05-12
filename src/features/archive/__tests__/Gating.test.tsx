@@ -15,6 +15,17 @@ import { UniversalGameCard } from '@/components';
 import { isPuzzleLocked, isWithinFreeWindow } from '../utils/dateGrouping';
 import { ArchivePuzzle } from '../types/archive.types';
 
+// Mock @/lib/time so getAuthorizedDateUnsafe returns the current real-time date
+// (the module-level `lastAuthorizedDate` is otherwise frozen at module load and
+// drifts from `new Date()` used by `getDateDaysAgo` below, causing boundary tests
+// to fail near day rollovers).
+jest.mock('@/lib/time', () => ({
+  getAuthorizedDateUnsafe: () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  },
+}));
+
 // Mock expo-blur
 jest.mock('expo-blur', () => ({
   BlurView: 'BlurView',
@@ -81,12 +92,15 @@ function createMockPuzzle(overrides: Partial<ArchivePuzzle> = {}): ArchivePuzzle
 }
 
 /**
- * Get a date string N days ago.
+ * Get a LOCAL-timezone date string N days ago. Local matters here so the
+ * value matches the mocked getAuthorizedDateUnsafe above (which also
+ * returns a local date). Using toISOString would return a UTC date and
+ * can drift by one day from local around midnight, breaking boundary tests.
  */
 function getDateDaysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
-  return date.toISOString().split('T')[0];
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 describe('Archive Gating', () => {
