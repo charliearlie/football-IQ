@@ -38,4 +38,24 @@ describe("generateTopTensShareText", () => {
     expect(text).toContain("✅".repeat(10));
     expect(text).toContain("8/8 IQ");
   });
+
+  it("uses /play/last-tens in the URL when variant is last-tens", () => {
+    const score: TopTensScore = { points: 4, maxPoints: 8, foundCount: 6, wrongGuessCount: 2, won: false };
+    const text = generateTopTensShareText(
+      "Last 10 Premier League Champions",
+      playedSlots,
+      score,
+      "2026-05-11",
+      "last-tens"
+    );
+    expect(text).toContain("https://football-iq.app/play/last-tens?ref=share&date=2026-05-11");
+    expect(text).not.toContain("/play/top-tens");
+  });
+
+  it("defaults to /play/top-tens when no variant is provided", () => {
+    const score: TopTensScore = { points: 2, maxPoints: 8, foundCount: 4, wrongGuessCount: 1, won: false };
+    const text = generateTopTensShareText("Top 10 Test", playedSlots, score);
+    expect(text).toContain("https://football-iq.app/play/top-tens?ref=share");
+    expect(text).not.toContain("date=");
+  });
 });

@@ -32,19 +32,18 @@ export interface CareerPathResult {
   totalClues: number;
 }
 
+export type CareerPathVariant = "career-path" | "career-path-pro";
+
 /**
- * Generate share text for Career Path result.
+ * Generate share text for a Career Path / Career Path Pro result.
  *
- * Example:
- * Football IQ - Career Path
- * 19 Feb
- * Solved in 3/6 clues
- * 🔓🔓🔓🔒🔒🔒
- * https://football-iq.app/play/career-path
+ * The Pro variant uses a longer chain (8 steps vs 6) and a different
+ * play URL slug, so the share-text URL switches based on `variant`.
  */
 export function generateCareerPathShareText(
   result: CareerPathResult,
-  puzzleDate: string
+  puzzleDate: string,
+  variant: CareerPathVariant = "career-path"
 ): string {
   const dateStr = formatShareDate(puzzleDate);
 
@@ -65,7 +64,7 @@ export function generateCareerPathShareText(
     dateStr,
     resultLine,
     emojiRow,
-    "https://football-iq.app/play/career-path",
+    `https://football-iq.app/play/${variant}`,
   ].join("\n");
 }
 

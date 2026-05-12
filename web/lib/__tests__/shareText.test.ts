@@ -80,6 +80,20 @@ describe("generateCareerPathShareText", () => {
     const lines = text.split("\n");
     expect(lines.length).toBe(5);
   });
+
+  it("uses /play/career-path-pro in the URL when variant is career-path-pro", () => {
+    const result: CareerPathResult = { won: true, cluesUsed: 4, totalClues: 8 };
+    const text = generateCareerPathShareText(result, puzzleDate, "career-path-pro");
+    expect(text).toContain("https://football-iq.app/play/career-path-pro");
+    expect(text).not.toContain("/play/career-path\n");
+  });
+
+  it("defaults to /play/career-path when no variant is provided", () => {
+    const result: CareerPathResult = { won: true, cluesUsed: 3, totalClues: 6 };
+    const text = generateCareerPathShareText(result, puzzleDate);
+    expect(text).toContain("https://football-iq.app/play/career-path");
+    expect(text).not.toContain("/play/career-path-pro");
+  });
 });
 
 // ============================================================================

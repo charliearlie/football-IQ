@@ -332,3 +332,36 @@ export const FALLBACK_WHO_AM_I_PUZZLE = {
   correct_player_id: "Q615",
   fun_fact: "Messi holds the record for most goals scored in a single calendar year (91 in 2012).",
 };
+
+export const FALLBACK_LAST_TENS_PUZZLE = {
+  title: "Last 10 Premier League Top Scorers (Golden Boot Winners)",
+  category: "Premier League",
+  answers: [
+    { name: "Erling Haaland", aliases: ["Haaland"], info: "2023-24 (27 goals)" },
+    { name: "Erling Haaland", aliases: ["Haaland"], info: "2022-23 (36 goals)" },
+    { name: "Mohamed Salah", aliases: ["Salah", "Mo Salah"], info: "2021-22 (23 goals)" },
+    { name: "Son Heung-min", aliases: ["Son"], info: "2021-22 (23 goals — shared)" },
+    { name: "Harry Kane", aliases: ["Kane"], info: "2020-21 (23 goals)" },
+    { name: "Jamie Vardy", aliases: ["Vardy"], info: "2019-20 (23 goals)" },
+    { name: "Pierre-Emerick Aubameyang", aliases: ["Aubameyang"], info: "2018-19 (22 goals — shared)" },
+    { name: "Sadio Mané", aliases: ["Mane", "Sadio Mane"], info: "2018-19 (22 goals — shared)" },
+    { name: "Mohamed Salah", aliases: ["Salah", "Mo Salah"], info: "2018-19 (22 goals — shared)" },
+    { name: "Mohamed Salah", aliases: ["Salah", "Mo Salah"], info: "2017-18 (32 goals)" },
+  ],
+};
+
+// Longer chain (8 steps) than the standard Career Path puzzle, which is the
+// Pro variant's signature difficulty bump.
+export const FALLBACK_CAREER_PATH_PRO_PUZZLE = {
+  answer: "Cristiano Ronaldo",
+  career_steps: [
+    { type: "club" as const, text: "Sporting CP", year: "2002-2003", apps: 25, goals: 5 },
+    { type: "club" as const, text: "Manchester United", year: "2003-2009", apps: 196, goals: 84 },
+    { type: "club" as const, text: "Real Madrid", year: "2009-2018", apps: 292, goals: 311 },
+    { type: "club" as const, text: "Juventus", year: "2018-2021", apps: 98, goals: 81 },
+    { type: "club" as const, text: "Manchester United", year: "2021-2022", apps: 41, goals: 18 },
+    { type: "club" as const, text: "Al-Nassr", year: "2023-present", apps: 60, goals: 50 },
+    { type: "club" as const, text: "Sporting CP Academy", year: "1997-2002" },
+    { type: "club" as const, text: "Andorinha (youth)", year: "1992-1995" },
+  ],
+};

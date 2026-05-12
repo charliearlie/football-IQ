@@ -12,7 +12,7 @@ import type {
 import { createInitialState } from "@/lib/top-tens/types";
 import { findMatchingAnswer } from "@/lib/top-tens/validation";
 import { calculateTopTensScore } from "@/lib/top-tens/scoring";
-import { generateTopTensShareText } from "@/lib/top-tens/share";
+import { generateTopTensShareText, type TopTensVariant } from "@/lib/top-tens/share";
 import { useGameTracking } from "@/hooks/use-game-tracking";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,14 +60,20 @@ function reducer(state: TopTensState, action: TopTensAction): TopTensState {
   }
 }
 
+interface TopTensGameProps extends GameProps<TopTensContent> {
+  /** Engine variant — drives the tracking name + share-URL slug. */
+  variant?: TopTensVariant;
+}
+
 export function TopTensGame({
   content,
   puzzleDate,
   onComplete,
-}: GameProps<TopTensContent>) {
+  variant = "top-tens",
+}: TopTensGameProps) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
   const [currentGuess, setCurrentGuess] = useState("");
-  const { trackGameCompleted } = useGameTracking("top-tens", puzzleDate);
+  const { trackGameCompleted } = useGameTracking(variant, puzzleDate);
 
   const foundIndices = useMemo(() => {
     const set = new Set<RankIndex>();
@@ -123,7 +129,7 @@ export function TopTensGame({
     if (state.gameStatus === "playing") return;
     const won = state.gameStatus === "won";
     const score = calculateTopTensScore(state.foundCount, state.wrongGuessCount, won);
-    const shareText = generateTopTensShareText(content.title, state.rankSlots, score, puzzleDate);
+    const shareText = generateTopTensShareText(content.title, state.rankSlots, score, puzzleDate, variant);
 
     if (won) {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
