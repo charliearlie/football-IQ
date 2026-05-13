@@ -61,9 +61,10 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
 };
 
 // Premium-only modes. Free users hit the orchestrator paywall when they open
-// any of these. Mobile already gates Career Path Pro via hardcoded checks
-// (`useDailyPuzzles.ts`); this brings web to parity.
-export const PREMIUM_MODES: GameMode[] = ["career_path_pro"];
+// any of these. Mirrors mobile's hardcoded checks in `useDailyPuzzles.ts`
+// (`gameMode === 'top_tens' || gameMode === 'career_path_pro'`) and the
+// archive components — full cross-platform parity on which modes paywall.
+export const PREMIUM_MODES: GameMode[] = ["career_path_pro", "top_tens"];
 
 // Design tokens (matching mobile app)
 export const COLORS = {
