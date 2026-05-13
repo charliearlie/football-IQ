@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, type ReactNode } from "react";
+import Link from "next/link";
 import { GameNav } from "./GameNav";
 import { AdSlot } from "./AdSlot";
 import { PostGameCTA } from "./PostGameCTA";
@@ -60,7 +61,13 @@ export function GamePageShell({
         )}
       </div>
 
-      <footer className="py-4 text-center border-t border-white/5">
+      <footer className="py-4 text-center border-t border-white/5 space-y-2">
+        <Link
+          href={`/play/${gameSlug}/archive`}
+          className="text-xs font-semibold text-slate-400 hover:text-pitch-green transition-colors"
+        >
+          Browse {title} archive →
+        </Link>
         <p className="text-slate-600 text-xs">football-iq.app</p>
       </footer>
     </div>
