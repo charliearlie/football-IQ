@@ -6,6 +6,7 @@ import {
   DeleteAccountButton,
   SignOutButton,
 } from "@/components/account/AccountActions";
+import { ManageSubscription } from "@/components/account/ManageSubscription";
 
 export const metadata: Metadata = {
   title: "Your Football IQ account",
@@ -93,10 +94,17 @@ export default async function AccountPage() {
               ? "You have full access to the archive, ad-free play, and Career Path Pro."
               : "Upgrade to unlock the archive, Career Path Pro, and remove ads."}
           </p>
-          <p className="text-xs text-slate-500" data-testid="manage-subscription-note">
-            Subscription management is coming soon. For now, manage billing in the iOS or
-            Android app.
-          </p>
+          {isPremium ? (
+            <ManageSubscription isPremium={isPremium} />
+          ) : (
+            <Link
+              href="/play/career-path-pro"
+              className="inline-flex items-center text-xs font-semibold text-pitch-green hover:text-pitch-green/80 transition-colors"
+              data-testid="account-upgrade-cta"
+            >
+              See Football IQ Pro →
+            </Link>
+          )}
         </section>
 
         <section className="rounded-xl border border-white/5 bg-white/[0.02] p-5 space-y-3">

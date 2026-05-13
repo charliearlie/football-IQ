@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { usePremium } from "@/lib/billing/usePremium";
 
 declare global {
   interface Window {
@@ -26,9 +27,14 @@ export function AdSlot({
 }: AdSlotProps) {
   const pushed = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const premium = usePremium();
+
+  // Premium users are ad-free everywhere (web + mobile parity). Hold the slot
+  // until the entitlement resolves so we don't flash an ad to a paying user.
+  const shouldRender = visible && !(premium.ready && premium.isPremium);
 
   useEffect(() => {
-    if (!visible || pushed.current) return;
+    if (!shouldRender || pushed.current) return;
 
     const tryPush = () => {
       const el = containerRef.current;
@@ -51,9 +57,9 @@ export function AdSlot({
     }, 200);
 
     return () => clearInterval(interval);
-  }, [visible]);
+  }, [shouldRender]);
 
-  if (!visible) return null;
+  if (!shouldRender) return null;
 
   return (
     <div

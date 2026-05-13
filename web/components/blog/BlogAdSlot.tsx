@@ -1,4 +1,11 @@
+"use client";
+
+import { usePremium } from "@/lib/billing/usePremium";
+
 export function BlogAdSlot() {
+  const premium = usePremium();
+  if (premium.ready && premium.isPremium) return null;
+
   return (
     <div className="my-8 flex justify-center">
       <div className="w-full max-w-2xl rounded-lg bg-white/5 border border-white/10 p-4 text-center">
@@ -10,7 +17,6 @@ export function BlogAdSlot() {
           data-ad-format="fluid"
           data-ad-client="ca-pub-9426782115883407"
           data-ad-slot=""
-          // Note: fill data-ad-slot with your actual in-article ad unit ID from AdSense dashboard
         />
       </div>
     </div>

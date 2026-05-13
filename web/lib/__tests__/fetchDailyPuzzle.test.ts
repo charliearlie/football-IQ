@@ -71,14 +71,36 @@ describe("fetchDailyPuzzle", () => {
       expect(client.from).toHaveBeenCalledWith("daily_puzzles");
     });
 
-    it("selects content and puzzle_date columns", async () => {
-      const puzzleRow = { content: {}, puzzle_date: "2026-02-19" };
+    it("selects content, puzzle_date, and is_premium columns", async () => {
+      const puzzleRow = { content: {}, puzzle_date: "2026-02-19", is_premium: false };
       const client = makeSupabaseClient({ data: puzzleRow, error: null });
       vi.mocked(createAdminClient).mockResolvedValue(client as never);
 
       await fetchDailyPuzzle("career_path", "2026-02-19");
 
-      expect(client._builder.select).toHaveBeenCalledWith("content, puzzle_date");
+      expect(client._builder.select).toHaveBeenCalledWith(
+        "content, puzzle_date, is_premium",
+      );
+    });
+
+    it("returns is_premium=true when the row is flagged premium", async () => {
+      const puzzleRow = { content: {}, puzzle_date: "2026-02-19", is_premium: true };
+      const client = makeSupabaseClient({ data: puzzleRow, error: null });
+      vi.mocked(createAdminClient).mockResolvedValue(client as never);
+
+      const result = await fetchDailyPuzzle("career_path", "2026-02-19");
+
+      expect(result?.is_premium).toBe(true);
+    });
+
+    it("defaults is_premium to false when the column is null", async () => {
+      const puzzleRow = { content: {}, puzzle_date: "2026-02-19", is_premium: null };
+      const client = makeSupabaseClient({ data: puzzleRow, error: null });
+      vi.mocked(createAdminClient).mockResolvedValue(client as never);
+
+      const result = await fetchDailyPuzzle("career_path", "2026-02-19");
+
+      expect(result?.is_premium).toBe(false);
     });
 
     it("filters by game_mode", async () => {
