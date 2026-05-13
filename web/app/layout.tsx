@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Space_Grotesk, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import { RevenueCatProvider } from "@/components/billing/RevenueCatProvider";
 import { JsonLd } from "@/components/JsonLd";
 
 const outfit = Outfit({
@@ -85,6 +86,7 @@ export default function RootLayout({
       </head>
       <body className={`${outfit.variable} ${spaceGrotesk.variable} ${bebasNeue.variable} font-sans`}>
         <PostHogProvider>
+          <RevenueCatProvider />
           {children}
         </PostHogProvider>
         <JsonLd

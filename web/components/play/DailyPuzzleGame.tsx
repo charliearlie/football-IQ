@@ -29,6 +29,7 @@ export async function DailyPuzzleGame({ mode, date }: DailyPuzzleGameProps) {
       mode={mode}
       content={puzzle?.content ?? null}
       puzzleDate={puzzleDate}
+      puzzleIsPremium={puzzle?.is_premium ?? false}
     />
   );
 }

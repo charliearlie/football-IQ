@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 export interface DailyPuzzle {
   content: unknown;
   puzzle_date: string;
+  is_premium: boolean;
 }
 
 /**
@@ -26,13 +27,16 @@ export async function fetchDailyPuzzle(
   const supabase = await createAdminClient();
   const puzzleDate = date ?? new Date().toISOString().split("T")[0];
 
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from("daily_puzzles")
-    .select("content, puzzle_date")
+    .select("content, puzzle_date, is_premium")
     .eq("game_mode", gameMode)
     .eq("puzzle_date", puzzleDate)
     .eq("status", "live")
-    .single();
+    .single()) as {
+    data: { content: unknown; puzzle_date: string | null; is_premium: boolean | null } | null;
+    error: unknown;
+  };
 
   if (error || !data) {
     return null;
@@ -41,6 +45,7 @@ export async function fetchDailyPuzzle(
   return {
     content: data.content,
     puzzle_date: data.puzzle_date ?? puzzleDate,
+    is_premium: data.is_premium ?? false,
   };
 }
 
