@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
 import { createAdminClient } from "@/lib/supabase/server";
-import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, appStoreUrl } from "@/lib/constants";
+import { WEB_PLAYABLE_GAMES, APP_ONLY_GAMES, appStoreUrl, PREMIUM_MODES } from "@/lib/constants";
 import { GameHubCard } from "@/components/play/GameHubCard";
 import { AdSlot } from "@/components/play/AdSlot";
 import { HeroStrip } from "@/components/landing/HeroStrip";
@@ -210,6 +210,7 @@ export default async function HomePage() {
               hasLivePuzzle={liveModes.has(game.dbMode)}
               accentColor={game.accentColor}
               featured={i === 0 && liveModes.has(game.dbMode)}
+              isPremiumOnly={PREMIUM_MODES.includes(game.dbMode)}
             />
           ))}
         </section>

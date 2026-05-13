@@ -60,8 +60,10 @@ export const GAME_MODE_SHORT_NAMES: Record<GameMode, string> = {
   "whos-that": "WT",
 };
 
-// Premium-only modes — temporarily disabled for outreach
-export const PREMIUM_MODES: GameMode[] = []; // Temporarily disabled — all modes free for outreach
+// Premium-only modes. Free users hit the orchestrator paywall when they open
+// any of these. Mobile already gates Career Path Pro via hardcoded checks
+// (`useDailyPuzzles.ts`); this brings web to parity.
+export const PREMIUM_MODES: GameMode[] = ["career_path_pro"];
 
 // Design tokens (matching mobile app)
 export const COLORS = {
