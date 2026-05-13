@@ -6,6 +6,7 @@ import { PlayedTodayGate } from "./PlayedTodayGate";
 import { Paywall } from "@/components/billing/PaywallModal";
 import { usePremium } from "@/lib/billing/usePremium";
 import { getGameEntry } from "@/lib/play/registry";
+import { isWithinFreeWindow } from "@/lib/archive/freeWindow";
 import { PREMIUM_MODES } from "@/lib/constants";
 import type { GameProps, GameResult } from "@/lib/play/types";
 
@@ -37,17 +38,25 @@ export function DailyPuzzleClient({
   const modeIsPremium = (PREMIUM_MODES as readonly string[]).includes(
     entry.dbMode,
   );
-  const requiresPremium = modeIsPremium || puzzleIsPremium;
+  const dateIsLocked = !isWithinFreeWindow(puzzleDate);
+  const requiresPremium = modeIsPremium || puzzleIsPremium || dateIsLocked;
   const showPaywall = requiresPremium && premium.ready && !premium.isPremium;
 
   if (showPaywall) {
+    const isDateOnlyLock = dateIsLocked && !modeIsPremium && !puzzleIsPremium;
+    const headline = isDateOnlyLock
+      ? `Unlock this ${entry.title} puzzle`
+      : `${entry.title} is a Football IQ Pro game`;
+    const subheadline = isDateOnlyLock
+      ? "Today plus the last two days are free. Subscribe to replay the full archive."
+      : "Subscribe to unlock the full archive, Career Path Pro, and ad-free play across web and mobile.";
     return (
       <GamePageShell title={entry.title} gameSlug={mode} result={null}>
         <Paywall
-          source={`game_${mode}`}
-          redirectPath={`/play/${mode}`}
-          headline={`${entry.title} is a Football IQ Pro game`}
-          subheadline="Subscribe to unlock the full archive, Career Path Pro, and ad-free play across web and mobile."
+          source={isDateOnlyLock ? `archive_${mode}` : `game_${mode}`}
+          redirectPath={`/play/${mode}${isDateOnlyLock ? `?date=${puzzleDate}` : ""}`}
+          headline={headline}
+          subheadline={subheadline}
         />
       </GamePageShell>
     );
