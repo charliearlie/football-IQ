@@ -17,6 +17,8 @@ interface GameHubCardProps {
   accentColor: string;
   isAppOnly?: boolean;
   featured?: boolean;
+  /** Renders a PRO pill so free users know clicking it leads to the paywall. */
+  isPremiumOnly?: boolean;
 }
 
 export function GameHubCard({
@@ -27,6 +29,7 @@ export function GameHubCard({
   accentColor,
   isAppOnly = false,
   featured = false,
+  isPremiumOnly = false,
 }: GameHubCardProps) {
   const [playedToday, setPlayedToday] = useState(false);
   const [playResult, setPlayResult] = useState<{ won: boolean; shareText: string } | null>(null);
@@ -112,6 +115,12 @@ export function GameHubCard({
             <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
               <Lock className="w-3 h-3" />
               APP ONLY
+            </span>
+          )}
+          {isPremiumOnly && status !== "app_only" && (
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-card-yellow bg-card-yellow/15 px-1.5 py-0.5 rounded">
+              <Lock className="w-3 h-3" />
+              PRO
             </span>
           )}
         </div>
