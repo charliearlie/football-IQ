@@ -31,11 +31,23 @@ let useOfferingMock: {
   error: false,
 };
 let usePurchaseFlowMock: {
-  state: { status: string; pendingPackageId: string | null; error: string | null };
+  state: {
+    status: string;
+    pendingPackageId: string | null;
+    error: string | null;
+    claimEmailSent: boolean;
+    claimEmail: string | null;
+  };
   buy: typeof buyMock;
   reset: typeof resetMock;
 } = {
-  state: { status: "idle", pendingPackageId: null, error: null },
+  state: {
+    status: "idle",
+    pendingPackageId: null,
+    error: null,
+    claimEmailSent: false,
+    claimEmail: null,
+  },
   buy: buyMock,
   reset: resetMock,
 };
@@ -83,49 +95,131 @@ describe("Paywall", () => {
       error: false,
     };
     usePurchaseFlowMock = {
-      state: { status: "idle", pendingPackageId: null, error: null },
+      state: {
+        status: "idle",
+        pendingPackageId: null,
+        error: null,
+        claimEmailSent: false,
+        claimEmail: null,
+      },
       buy: buyMock,
       reset: resetMock,
     };
   });
 
-  it("renders the price buttons for a signed-in user", () => {
-    render(<Paywall source="test" />);
-    expect(screen.getByText("£3.99 / month")).toBeInTheDocument();
-    expect(screen.getByText("£19.99 / year")).toBeInTheDocument();
-  });
+  describe("signed-in user", () => {
+    it("renders the price buttons", () => {
+      render(<Paywall source="test" />);
+      expect(screen.getByText("£3.99 / month")).toBeInTheDocument();
+      expect(screen.getByText("£19.99 / year")).toBeInTheDocument();
+    });
 
-  it("captures a paywall_viewed event on mount with the given source", () => {
-    render(<Paywall source="career_path_pro_page" />);
-    expect(captureMock).toHaveBeenCalledWith("paywall_viewed", {
-      source: "career_path_pro_page",
+    it("does not render the email input", () => {
+      render(<Paywall source="test" />);
+      expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    });
+
+    it("invokes the purchase flow with no email when an offer is clicked", async () => {
+      const user = userEvent.setup();
+      render(<Paywall source="test" />);
+
+      await user.click(screen.getByText("£19.99 / year"));
+
+      expect(buyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "$rc_annual" }),
+        "test",
+        undefined,
+      );
+    });
+
+    it("captures a paywall_viewed event with signed_in=true", () => {
+      render(<Paywall source="career_path_pro_page" />);
+      expect(captureMock).toHaveBeenCalledWith("paywall_viewed", {
+        source: "career_path_pro_page",
+        signed_in: true,
+      });
     });
   });
 
-  it("invokes the purchase flow when an offer is clicked", async () => {
-    const user = userEvent.setup();
-    render(<Paywall source="test" />);
+  describe("anonymous user", () => {
+    beforeEach(() => {
+      useAuthUserMock = { ready: true, user: null };
+    });
 
-    await user.click(screen.getByText("£19.99 / year"));
+    it("renders price buttons + email input (no sign-in CTA)", () => {
+      render(<Paywall source="test" redirectPath="/play/career-path-pro" />);
 
-    expect(buyMock).toHaveBeenCalledWith(
-      expect.objectContaining({ identifier: "$rc_annual" }),
-      "test",
-    );
-  });
+      expect(screen.getByText("£3.99 / month")).toBeInTheDocument();
+      expect(screen.getByText("£19.99 / year")).toBeInTheDocument();
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /sign in to subscribe/i }),
+      ).not.toBeInTheDocument();
+    });
 
-  it("shows a sign-in CTA when the user is anonymous", () => {
-    useAuthUserMock = {
-      ready: true,
-      user: { id: "anon", is_anonymous: true },
-    };
-    render(<Paywall source="test" redirectPath="/play/career-path-pro" />);
+    it("disables the subscribe buttons until a valid email is entered", async () => {
+      const user = userEvent.setup();
+      render(<Paywall source="test" />);
 
-    const link = screen.getByRole("link", { name: /sign in to subscribe/i });
-    expect(link).toHaveAttribute(
-      "href",
-      "/account/sign-in?next=%2Fplay%2Fcareer-path-pro",
-    );
+      const annualButton = screen.getByRole("button", { name: /yearly/i });
+      expect(annualButton).toBeDisabled();
+
+      await user.type(screen.getByLabelText(/email/i), "not-an-email");
+      expect(annualButton).toBeDisabled();
+
+      await user.clear(screen.getByLabelText(/email/i));
+      await user.type(screen.getByLabelText(/email/i), "buyer@example.com");
+      expect(annualButton).toBeEnabled();
+    });
+
+    it("passes the email through to the purchase flow on click", async () => {
+      const user = userEvent.setup();
+      render(<Paywall source="archive_career-path" />);
+
+      await user.type(screen.getByLabelText(/email/i), "  Buyer@Example.com  ");
+      await user.click(screen.getByRole("button", { name: /yearly/i }));
+
+      expect(buyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: "$rc_annual" }),
+        "archive_career-path",
+        "Buyer@Example.com",
+      );
+    });
+
+    it("shows a success state with the claim email after purchase succeeds", () => {
+      usePurchaseFlowMock = {
+        state: {
+          status: "success",
+          pendingPackageId: null,
+          error: null,
+          claimEmailSent: true,
+          claimEmail: "buyer@example.com",
+        },
+        buy: buyMock,
+        reset: resetMock,
+      };
+      render(<Paywall source="test" />);
+      expect(screen.getByText(/Subscription active/i)).toBeInTheDocument();
+      expect(screen.getByText("buyer@example.com")).toBeInTheDocument();
+    });
+
+    it("shows a fallback when the claim email failed to send", () => {
+      usePurchaseFlowMock = {
+        state: {
+          status: "success",
+          pendingPackageId: null,
+          error: null,
+          claimEmailSent: false,
+          claimEmail: null,
+        },
+        buy: buyMock,
+        reset: resetMock,
+      };
+      render(<Paywall source="test" />);
+      expect(
+        screen.getByText(/couldn['’]t send the claim email/i),
+      ).toBeInTheDocument();
+    });
   });
 
   it("renders a fallback message when the offering is missing", () => {
@@ -148,6 +242,8 @@ describe("Paywall", () => {
         status: "error",
         pendingPackageId: null,
         error: "Card declined.",
+        claimEmailSent: false,
+        claimEmail: null,
       },
       buy: buyMock,
       reset: resetMock,

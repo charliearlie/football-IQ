@@ -59,6 +59,15 @@ export function hasActiveEntitlement(customerInfo: CustomerInfo): boolean {
   return Boolean(customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID]);
 }
 
+/**
+ * Returns the App User ID currently configured in the SDK, or null if RC
+ * hasn't been initialised yet. Used by the post-purchase claim flow to
+ * thread the anonymous RC ID into the magic-link redirect.
+ */
+export function getCurrentAppUserId(): string | null {
+  return configuredForUser;
+}
+
 export async function getCurrentCustomerInfo(): Promise<CustomerInfo | null> {
   if (!isRevenueCatConfigured() || !cachedInstance) return null;
   return cachedInstance.getCustomerInfo();
