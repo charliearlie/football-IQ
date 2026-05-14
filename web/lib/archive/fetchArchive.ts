@@ -1,10 +1,9 @@
 /**
  * Server-side fetcher for archived live puzzles in a given game mode.
  *
- * Pulls every live puzzle with a populated `puzzle_date`, ordered newest
- * first. The list is intentionally complete — pagination on the page is
- * unnecessary for ~100 entries and the orchestrator's gating handles whether
- * each entry is playable.
+ * Pulls every live puzzle with a populated `puzzle_date` up to and including
+ * today, ordered newest first. Future-dated scheduled puzzles are excluded —
+ * the archive is past + present, not a content schedule preview.
  */
 
 import { createAdminClient } from "@/lib/supabase/server";
@@ -18,6 +17,7 @@ export async function fetchArchivePuzzles(
   gameMode: string,
 ): Promise<ArchivePuzzleEntry[]> {
   const supabase = await createAdminClient();
+  const today = new Date().toISOString().split("T")[0];
 
   const { data, error } = (await supabase
     .from("daily_puzzles")
@@ -25,6 +25,7 @@ export async function fetchArchivePuzzles(
     .eq("game_mode", gameMode)
     .eq("status", "live")
     .not("puzzle_date", "is", null)
+    .lte("puzzle_date", today)
     .order("puzzle_date", { ascending: false })) as {
     data: Array<{ puzzle_date: string | null; is_premium: boolean | null }> | null;
     error: unknown;
