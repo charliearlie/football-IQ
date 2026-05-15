@@ -112,6 +112,23 @@ describe("DailyPuzzleClient", () => {
     expect(screen.getByText(/Arsenal/i)).toBeInTheDocument();
   });
 
+  it("never shows the paywall when the subscriptions flag is off", () => {
+    delete process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED;
+    dateInFreeWindow = false;
+    render(
+      <DailyPuzzleClient
+        mode="career-path"
+        content={null}
+        puzzleDate="2026-04-01"
+        puzzleIsPremium
+      />
+    );
+    // Flag off → game renders even though it's a premium, out-of-window puzzle.
+    expect(screen.queryByTestId("paywall-stub")).not.toBeInTheDocument();
+    expect(screen.getByText(/Arsenal/i)).toBeInTheDocument();
+    process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED = "true";
+  });
+
   it("returns null for an unregistered mode", () => {
     const { container } = render(
       <DailyPuzzleClient

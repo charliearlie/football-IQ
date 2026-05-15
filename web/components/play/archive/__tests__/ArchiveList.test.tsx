@@ -79,6 +79,24 @@ describe("ArchiveList", () => {
     expect(screen.queryByText("PRO")).not.toBeInTheDocument();
   });
 
+  it("never locks a day when the subscriptions flag is off", () => {
+    delete process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED;
+    render(
+      <ArchiveList
+        modeSlug="career-path"
+        accentColor="#2EFC5D"
+        today={TODAY}
+        entries={[
+          { date: "2026-05-13", isPremium: false },
+          { date: "2026-05-01", isPremium: false }, // would be locked if flag on
+          { date: "2026-04-20", isPremium: true }, // would be locked if flag on
+        ]}
+      />
+    );
+    expect(screen.queryByText("PRO")).not.toBeInTheDocument();
+    process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED = "true";
+  });
+
   it("highlights today's puzzle with a Play today CTA", () => {
     render(
       <ArchiveList

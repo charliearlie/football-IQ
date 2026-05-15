@@ -5,6 +5,7 @@ import { GamePageShell } from "./GamePageShell";
 import { PlayedTodayGate } from "./PlayedTodayGate";
 import { Paywall } from "@/components/billing/PaywallModal";
 import { usePremium } from "@/lib/billing/usePremium";
+import { isSubscriptionsEnabled } from "@/lib/billing/config";
 import { getGameEntry } from "@/lib/play/registry";
 import { isWithinFreeWindow } from "@/lib/archive/freeWindow";
 import { PREMIUM_MODES } from "@/lib/constants";
@@ -40,7 +41,13 @@ export function DailyPuzzleClient({
   );
   const dateIsLocked = !isWithinFreeWindow(puzzleDate);
   const requiresPremium = modeIsPremium || puzzleIsPremium || dateIsLocked;
-  const showPaywall = requiresPremium && premium.ready && !premium.isPremium;
+  // The subscriptions feature flag is the master switch — when off, nothing
+  // is ever paywalled regardless of mode/date/premium-flag.
+  const showPaywall =
+    isSubscriptionsEnabled() &&
+    requiresPremium &&
+    premium.ready &&
+    !premium.isPremium;
 
   if (showPaywall) {
     const isDateOnlyLock = dateIsLocked && !modeIsPremium && !puzzleIsPremium;

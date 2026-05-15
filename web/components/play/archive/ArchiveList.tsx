@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ArchiveCard } from "./ArchiveCard";
 import { isWithinFreeWindow, getTodayDateString } from "@/lib/archive/freeWindow";
 import { usePremium } from "@/lib/billing/usePremium";
+import { isSubscriptionsEnabled } from "@/lib/billing/config";
 
 export interface ArchiveListEntry {
   date: string;
@@ -30,6 +31,7 @@ export function ArchiveList({
   today,
 }: ArchiveListProps) {
   const premium = usePremium();
+  const subscriptionsEnabled = isSubscriptionsEnabled();
   const groups = useMemo(() => groupByMonth(entries), [entries]);
 
   if (entries.length === 0) {
@@ -50,12 +52,14 @@ export function ArchiveList({
           <div className="space-y-2">
             {group.entries.map((entry) => {
               const isToday = entry.date === today;
-              // A puzzle is locked when it's outside the free window
-              // OR the puzzle itself is flagged premium — and the user
+              // A puzzle is locked when subscriptions are live AND it's
+              // outside the free window (or flagged premium) AND the user
               // hasn't unlocked premium. Today is always free.
               const inFreeWindow = isWithinFreeWindow(entry.date, today);
               const locked =
-                !premium.isPremium && (!inFreeWindow || entry.isPremium);
+                subscriptionsEnabled &&
+                !premium.isPremium &&
+                (!inFreeWindow || entry.isPremium);
               return (
                 <ArchiveCard
                   key={entry.date}

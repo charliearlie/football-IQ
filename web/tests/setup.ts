@@ -1,6 +1,11 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 
+// Subscriptions feature flag defaults ON in tests so the paywall / archive-lock
+// behaviour suites exercise the gated path. Flag-OFF behaviour is covered by
+// dedicated tests that delete this env var within the test body.
+process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED = "true";
+
 // Mock Next.js navigation
 vi.mock("next/navigation", () => ({
   useRouter: () => ({

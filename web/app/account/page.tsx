@@ -7,6 +7,7 @@ import {
   SignOutButton,
 } from "@/components/account/AccountActions";
 import { ManageSubscription } from "@/components/account/ManageSubscription";
+import { isSubscriptionsEnabled } from "@/lib/billing/config";
 
 export const metadata: Metadata = {
   title: "Your Football IQ account",
@@ -42,6 +43,10 @@ export default async function AccountPage() {
   };
 
   const isPremium = profile?.is_premium ?? false;
+  // Show the subscription section when the user already has premium (so they
+  // can manage it) or when the web subscription system is live. With the
+  // feature flag off and a free user, the section is just noise — hide it.
+  const showSubscriptionSection = isPremium || isSubscriptionsEnabled();
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString(undefined, {
         year: "numeric",
@@ -74,38 +79,40 @@ export default async function AccountPage() {
           <p className="text-sm text-slate-400">{user.email}</p>
         </header>
 
-        <section className="rounded-xl border border-white/5 bg-white/[0.02] p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Subscription
-            </span>
-            <span
-              className={
-                isPremium
-                  ? "text-xs font-semibold px-2 py-0.5 rounded-full bg-pitch-green/20 text-pitch-green border border-pitch-green/30"
-                  : "text-xs font-semibold px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/10"
-              }
-            >
-              {isPremium ? "Premium" : "Free"}
-            </span>
-          </div>
-          <p className="text-sm text-slate-300">
-            {isPremium
-              ? "You have full access to the archive, ad-free play, and Career Path Pro."
-              : "Upgrade to unlock the archive, Career Path Pro, and remove ads."}
-          </p>
-          {isPremium ? (
-            <ManageSubscription isPremium={isPremium} />
-          ) : (
-            <Link
-              href="/play/career-path-pro"
-              className="inline-flex items-center text-xs font-semibold text-pitch-green hover:text-pitch-green/80 transition-colors"
-              data-testid="account-upgrade-cta"
-            >
-              See Football IQ Pro →
-            </Link>
-          )}
-        </section>
+        {showSubscriptionSection && (
+          <section className="rounded-xl border border-white/5 bg-white/[0.02] p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Subscription
+              </span>
+              <span
+                className={
+                  isPremium
+                    ? "text-xs font-semibold px-2 py-0.5 rounded-full bg-pitch-green/20 text-pitch-green border border-pitch-green/30"
+                    : "text-xs font-semibold px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/10"
+                }
+              >
+                {isPremium ? "Premium" : "Free"}
+              </span>
+            </div>
+            <p className="text-sm text-slate-300">
+              {isPremium
+                ? "You have full access to the archive, ad-free play, and Career Path Pro."
+                : "Upgrade to unlock the archive, Career Path Pro, and remove ads."}
+            </p>
+            {isPremium ? (
+              <ManageSubscription isPremium={isPremium} />
+            ) : (
+              <Link
+                href="/play/career-path-pro"
+                className="inline-flex items-center text-xs font-semibold text-pitch-green hover:text-pitch-green/80 transition-colors"
+                data-testid="account-upgrade-cta"
+              >
+                See Football IQ Pro →
+              </Link>
+            )}
+          </section>
+        )}
 
         <section className="rounded-xl border border-white/5 bg-white/[0.02] p-5 space-y-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">

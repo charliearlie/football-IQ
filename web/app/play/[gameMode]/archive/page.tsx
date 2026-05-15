@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { WEB_PLAYABLE_GAMES } from "@/lib/constants";
 import { fetchArchivePuzzles } from "@/lib/archive/fetchArchive";
 import { getTodayDateString } from "@/lib/archive/freeWindow";
+import { isSubscriptionsEnabled } from "@/lib/billing/config";
 import { ArchiveList } from "@/components/play/archive/ArchiveList";
 import { GameNav } from "@/components/play/GameNav";
 
@@ -22,7 +23,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${game.title} Archive — Past Puzzles | Football IQ`,
-    description: `Replay past ${game.title} puzzles. Today plus the last two days are free; the full archive is included with Football IQ Pro.`,
+    description: isSubscriptionsEnabled()
+      ? `Replay past ${game.title} puzzles. Today plus the last two days are free; the full archive is included with Football IQ Pro.`
+      : `Replay every past ${game.title} puzzle, free in your browser. A new puzzle every day.`,
     alternates: {
       canonical: `${BASE_URL}/play/${game.slug}/archive`,
     },
@@ -59,14 +62,20 @@ export default async function ArchivePage({ params }: PageProps) {
           <h1 className="font-bebas text-3xl tracking-wider text-floodlight">
             {game.title} archive
           </h1>
-          <p className="text-sm text-slate-400">
-            Today plus the last two days are free. The full archive is included
-            with{" "}
-            <Link href="/account" className="text-pitch-green hover:underline">
-              Football IQ Pro
-            </Link>
-            .
-          </p>
+          {isSubscriptionsEnabled() ? (
+            <p className="text-sm text-slate-400">
+              Today plus the last two days are free. The full archive is
+              included with{" "}
+              <Link href="/account" className="text-pitch-green hover:underline">
+                Football IQ Pro
+              </Link>
+              .
+            </p>
+          ) : (
+            <p className="text-sm text-slate-400">
+              Replay any past {game.title} puzzle. A new one every day.
+            </p>
+          )}
         </header>
 
         <ArchiveList
