@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePostHog } from "posthog-js/react";
 import type { Package } from "@revenuecat/purchases-js";
-import { useOffering } from "@/lib/billing/useOffering";
+import { useOffering, type OfferingState } from "@/lib/billing/useOffering";
 import { usePurchaseFlow } from "@/lib/billing/usePurchaseFlow";
 import { useAuthUser } from "@/lib/auth/useAuthUser";
 
@@ -151,10 +151,57 @@ export function Paywall({
         </div>
       )}
 
-      <p className="text-xs text-slate-600">
-        Subscriptions renew automatically. Cancel anytime in your{" "}
+      <PaywallDisclosure offering={offering} />
+    </div>
+  );
+}
+
+/**
+ * Subscription-terms fine print. UK/EU consumer law and Stripe require showing
+ * price, billing period, free-trial terms, auto-renew wording and Terms/Privacy
+ * links before purchase. Per-plan lines render once the RC offering resolves;
+ * the auto-renew and legal copy always shows.
+ */
+function PaywallDisclosure({ offering }: { offering: OfferingState }) {
+  const annualPrice =
+    offering.annual?.webBillingProduct?.currentPrice?.formattedPrice ?? null;
+  const monthlyPrice =
+    offering.monthly?.webBillingProduct?.currentPrice?.formattedPrice ?? null;
+
+  return (
+    <div className="space-y-2 text-xs text-slate-600 leading-relaxed">
+      {(annualPrice || monthlyPrice) && (
+        <p>
+          {annualPrice && (
+            <>
+              Yearly plan: {annualPrice}
+              {offering.annualTrial ? ` after a ${offering.annualTrial}` : ""}.{" "}
+            </>
+          )}
+          {monthlyPrice && (
+            <>
+              Monthly plan: {monthlyPrice}
+              {offering.monthlyTrial ? ` after a ${offering.monthlyTrial}` : ""}
+              .
+            </>
+          )}
+        </p>
+      )}
+      <p>
+        Plans renew automatically until cancelled. Cancel anytime from your{" "}
         <Link href="/account" className="underline">
           account
+        </Link>
+        . Payments are processed securely by Stripe.
+      </p>
+      <p>
+        By subscribing you agree to our{" "}
+        <Link href="/terms" className="underline">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline">
+          Privacy Policy
         </Link>
         .
       </p>

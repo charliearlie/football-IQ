@@ -16,6 +16,8 @@ let useOfferingMock: {
   offering: object | null;
   monthly: object | null;
   annual: object | null;
+  monthlyTrial: string | null;
+  annualTrial: string | null;
   error: boolean;
 } = {
   ready: true,
@@ -28,6 +30,8 @@ let useOfferingMock: {
     identifier: "$rc_annual",
     webBillingProduct: { currentPrice: { formattedPrice: "£19.99 / year" } },
   },
+  monthlyTrial: null,
+  annualTrial: "3-day free trial",
   error: false,
 };
 let usePurchaseFlowMock: {
@@ -80,6 +84,8 @@ describe("Paywall", () => {
         identifier: "$rc_annual",
         webBillingProduct: { currentPrice: { formattedPrice: "£19.99 / year" } },
       },
+      monthlyTrial: null,
+      annualTrial: "3-day free trial",
       error: false,
     };
     usePurchaseFlowMock = {
@@ -128,12 +134,32 @@ describe("Paywall", () => {
     );
   });
 
+  it("renders the subscription-terms disclosure with per-plan pricing and trial", () => {
+    render(<Paywall source="test" />);
+    expect(
+      screen.getByText(/Yearly plan: £19\.99 \/ year after a 3-day free trial/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Monthly plan: £3\.99 \/ month/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/processed securely by Stripe/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute(
+      "href",
+      "/terms",
+    );
+    expect(
+      screen.getByRole("link", { name: /Privacy Policy/i }),
+    ).toHaveAttribute("href", "/privacy");
+  });
+
   it("renders a fallback message when the offering is missing", () => {
     useOfferingMock = {
       ready: true,
       offering: null,
       monthly: null,
       annual: null,
+      monthlyTrial: null,
+      annualTrial: null,
       error: true,
     };
     render(<Paywall source="test" />);
