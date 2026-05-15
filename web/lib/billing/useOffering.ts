@@ -14,6 +14,10 @@ export interface OfferingState {
   monthly: Package | null;
   /** The annual package, if attached to the offering. */
   annual: Package | null;
+  /** Free-trial descriptor for the monthly plan, e.g. "3-day free trial". */
+  monthlyTrial: string | null;
+  /** Free-trial descriptor for the annual plan, e.g. "3-day free trial". */
+  annualTrial: string | null;
   /** True when fetch failed (network, ad-blocker, misconfigured offering). */
   error: boolean;
 }
@@ -23,8 +27,22 @@ const INITIAL: OfferingState = {
   offering: null,
   monthly: null,
   annual: null,
+  monthlyTrial: null,
+  annualTrial: null,
   error: false,
 };
+
+/**
+ * Builds a short free-trial descriptor from a package's RC product, or null
+ * when there's no trial. Read defensively — if the SDK's product shape doesn't
+ * surface a trial phase, the paywall simply omits the trial copy rather than
+ * showing something wrong.
+ */
+function describeTrial(pkg: Package | null): string | null {
+  const period = pkg?.webBillingProduct?.freeTrialPhase?.period;
+  if (!period || period.number <= 0) return null;
+  return `${period.number}-${period.unit} free trial`;
+}
 
 /**
  * Fetches the `web_default_offering` from RevenueCat and resolves its monthly
@@ -50,11 +68,17 @@ export function useOffering(): OfferingState {
         const offerings = await purchases.getOfferings();
         const offering = offerings.all[WEB_OFFERING_ID] ?? null;
         if (cancelled) return;
+        const monthly =
+          offering?.availablePackages.find((p) => p.identifier === "$rc_monthly") ?? null;
+        const annual =
+          offering?.availablePackages.find((p) => p.identifier === "$rc_annual") ?? null;
         setState({
           ready: true,
           offering,
-          monthly: offering?.availablePackages.find((p) => p.identifier === "$rc_monthly") ?? null,
-          annual: offering?.availablePackages.find((p) => p.identifier === "$rc_annual") ?? null,
+          monthly,
+          annual,
+          monthlyTrial: describeTrial(monthly),
+          annualTrial: describeTrial(annual),
           error: !offering,
         });
       } catch {
