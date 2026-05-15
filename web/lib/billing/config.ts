@@ -28,3 +28,19 @@ export function getWebRevenueCatApiKey(): string | null {
 export function isRevenueCatConfigured(): boolean {
   return Boolean(getWebRevenueCatApiKey());
 }
+
+/**
+ * Master feature flag for the web subscription system.
+ *
+ * When disabled (the default), no paywall is ever shown, the archive never
+ * locks, and the upgrade affordances are hidden — every game is free. Existing
+ * entitlements (e.g. a mobile subscriber visiting the web) are still honoured
+ * for ad-free play; the flag only governs whether we *sell* on web.
+ *
+ * Set `NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED=true` per environment to turn it on.
+ * Keep it off on Production until the billing flow is verified; flip it on
+ * Preview to test end-to-end.
+ */
+export function isSubscriptionsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED === "true";
+}
